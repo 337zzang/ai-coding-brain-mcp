@@ -52,11 +52,19 @@ def main():
         if command == "status":
             result = git_manager.git_status()
             if result:
+                # 디버깅 정보 추가
+                debug_info = f"\n[DEBUG] Branch: {result.get('branch')}"
+                debug_info += f"\n[DEBUG] Working dir: {project_root}"
+                debug_info += f"\n[DEBUG] Modified: {result.get('modified', [])}"
+                debug_info += f"\n[DEBUG] Staged: {result.get('staged', [])}"
+                debug_info += f"\n[DEBUG] Untracked: {result.get('untracked', [])}"
+                
                 message = f"Current branch: {result.get('branch', 'unknown')}\n"
                 message += f"Modified files: {len(result.get('modified', []))} files\n"
                 message += f"Staged files: {len(result.get('staged', []))} files\n"
                 message += f"Untracked files: {len(result.get('untracked', []))} files\n"
                 message += f"Clean status: {'Yes' if result.get('clean') else 'No'}"
+                # message += debug_info  # 디버깅 시 주석 해제
                 
                 output = {
                     "success": True,

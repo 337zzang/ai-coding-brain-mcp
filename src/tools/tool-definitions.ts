@@ -499,5 +499,80 @@ Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
             },
             required: ['project_name']
         }
+    },
+    
+    // AI 이미지 생성 도구
+    {
+        name: 'generate_ai_image',
+        description: `AI(DALL-E 3)를 사용하여 이미지를 생성하고 저장합니다.
+    
+OpenAI의 DALL-E 3 모델을 사용하여 텍스트 프롬프트로부터 고품질 이미지를 생성합니다.
+생성된 이미지는 프로젝트의 image/ 폴더에 자동으로 저장되며, 메타데이터가 함께 기록됩니다.
+
+주요 기능:
+- DALL-E 3 모델을 사용한 고품질 이미지 생성
+- 자동 파일명 생성 (타임스탬프 + 해시)
+- 이미지 메타데이터 자동 저장
+- 프롬프트 개선 (revised_prompt)
+
+사용 예시:
+- generate_ai_image("아름다운 일몰 풍경")
+- generate_ai_image("귀여운 고양이", "cute_cat.png")
+- generate_ai_image("미래 도시", size="1792x1024", quality="hd")`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                prompt: {
+                    type: 'string',
+                    description: '이미지 생성을 위한 프롬프트'
+                },
+                filename: {
+                    type: 'string',
+                    description: '저장할 파일명 (선택사항, 없으면 자동 생성)'
+                },
+                size: {
+                    type: 'string',
+                    enum: ['1024x1024', '1024x1792', '1792x1024'],
+                    default: '1024x1024',
+                    description: '이미지 크기'
+                },
+                quality: {
+                    type: 'string',
+                    enum: ['standard', 'hd'],
+                    default: 'standard',
+                    description: '이미지 품질'
+                },
+                style: {
+                    type: 'string',
+                    enum: ['vivid', 'natural'],
+                    default: 'vivid',
+                    description: '이미지 스타일'
+                }
+            },
+            required: ['prompt']
+        }
+    },
+    {
+        name: 'list_ai_images',
+        description: '생성된 AI 이미지 목록을 조회합니다.',
+        inputSchema: {
+            type: 'object',
+            properties: {},
+            required: []
+        }
+    },
+    {
+        name: 'search_ai_images',
+        description: '프롬프트 키워드로 생성된 이미지를 검색합니다.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                keyword: {
+                    type: 'string',
+                    description: '검색할 키워드'
+                }
+            },
+            required: ['keyword']
+        }
     }
 ];

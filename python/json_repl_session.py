@@ -208,6 +208,80 @@ class AIHelpers:
         wisdom.add_best_practice(practice, category)
         return True
     
+    
+    # ==================== 이미지 생성 관련 메서드 ====================
+    
+    def generate_image(self, prompt: str, filename: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        """AI를 사용하여 이미지 생성
+        
+        Args:
+            prompt: 이미지 생성 프롬프트
+            filename: 저장할 파일명 (선택사항)
+            **kwargs: 추가 옵션 (model, size, quality, style)
+        
+        Returns:
+            생성 결과 딕셔너리
+        """
+        try:
+            from api.image_generator import generate_ai_image
+            result = generate_ai_image(prompt, filename, **kwargs)
+            
+            if result.get("success"):
+                print(f"✅ 이미지 생성 성공: {result['filename']}")
+                print(f"📍 저장 위치: {result['filepath']}")
+                if result.get('revised_prompt') != prompt:
+                    print(f"📝 수정된 프롬프트: {result['revised_prompt']}")
+            else:
+                print(f"❌ 이미지 생성 실패: {result.get('error')}")
+            
+            return result
+        except Exception as e:
+            error_msg = f"이미지 생성 중 오류 발생: {str(e)}"
+            print(f"❌ {error_msg}")
+            return {"success": False, "error": error_msg}
+    
+    def list_generated_images(self) -> list:
+        """생성된 이미지 목록 조회
+        
+        Returns:
+            이미지 정보 리스트
+        """
+        try:
+            from api.image_generator import list_ai_images
+            images = list_ai_images()
+            print(f"📸 총 {len(images)}개의 이미지가 생성되었습니다.")
+            for i, img in enumerate(images[-5:], 1):  # 최근 5개만 표시
+                print(f"  {i}. {img['filename']} - {img['created_at']}")
+            if len(images) > 5:
+                print(f"  ... 그리고 {len(images) - 5}개 더")
+            return images
+        except Exception as e:
+            print(f"❌ 이미지 목록 조회 실패: {e}")
+            return []
+    
+    def search_generated_images(self, keyword: str) -> list:
+        """키워드로 생성된 이미지 검색
+        
+        Args:
+            keyword: 검색할 키워드
+        
+        Returns:
+            검색된 이미지 정보 리스트
+        """
+        try:
+            from api.image_generator import search_ai_images
+            results = search_ai_images(keyword)
+            print(f"🔍 '{keyword}' 검색 결과: {len(results)}개의 이미지")
+            for i, img in enumerate(results[:5], 1):
+                print(f"  {i}. {img['filename']} - {img['prompt'][:50]}...")
+            if len(results) > 5:
+                print(f"  ... 그리고 {len(results) - 5}개 더")
+            return results
+        except Exception as e:
+            print(f"❌ 이미지 검색 실패: {e}")
+            return []
+
+
 def initialize_repl():
     """REPL 환경 초기화"""
     global repl_globals, wisdom, hooks
@@ -542,4 +616,14 @@ def main():
 # ============================================================================
 
 if __name__ == "__main__":
+
+# 이미지 생성 관련
+try:
+    from api.image_generator import ImageGenerator, generate_ai_image, list_ai_images, search_ai_images
+    print("✅ 이미지 생성 모듈 로드 성공")
+except ImportError as e:
+    print(f"⚠️ 이미지 생성 모듈 로드 실패: {e}")
+    ImageGenerator = None
+    generate_ai_image = None
+
     main()

@@ -208,7 +208,6 @@ class AIHelpers:
         wisdom.add_best_practice(practice, category)
         return True
     
-    
     # ==================== 이미지 생성 관련 메서드 ====================
     
     def generate_image(self, prompt: str, filename: Optional[str] = None, **kwargs) -> Dict[str, Any]:
@@ -229,7 +228,7 @@ class AIHelpers:
             if result.get("success"):
                 print(f"✅ 이미지 생성 성공: {result['filename']}")
                 print(f"📍 저장 위치: {result['filepath']}")
-                if result.get('revised_prompt') != prompt:
+                if result.get('revised_prompt') and result.get('revised_prompt') != prompt:
                     print(f"📝 수정된 프롬프트: {result['revised_prompt']}")
             else:
                 print(f"❌ 이미지 생성 실패: {result.get('error')}")
@@ -372,7 +371,7 @@ def initialize_repl():
             
             from project_wisdom import ProjectWisdomManager
             wisdom = ProjectWisdomManager(project_root)
-            logger.info(f"✅ Wisdom 시스템 초기화: {project_root}")
+            print(f"✅ Wisdom 시스템 초기화: {project_root}")
             
             # get_wisdom_manager와 get_wisdom_hooks 호출
             wisdom = get_wisdom_manager()
@@ -616,14 +615,13 @@ def main():
 # ============================================================================
 
 if __name__ == "__main__":
-
-# 이미지 생성 관련
-try:
-    from api.image_generator import ImageGenerator, generate_ai_image, list_ai_images, search_ai_images
-    print("✅ 이미지 생성 모듈 로드 성공")
-except ImportError as e:
-    print(f"⚠️ 이미지 생성 모듈 로드 실패: {e}")
-    ImageGenerator = None
-    generate_ai_image = None
-
+    # 이미지 생성 관련
+    try:
+        from api.image_generator import ImageGenerator, generate_ai_image, list_ai_images, search_ai_images
+        print("✅ 이미지 생성 모듈 로드 성공")
+    except ImportError as e:
+        print(f"⚠️ 이미지 생성 모듈 로드 실패: {e}")
+        ImageGenerator = None
+        generate_ai_image = None
+    
     main()

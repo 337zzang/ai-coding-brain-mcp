@@ -1,13 +1,14 @@
 """
 AI 이미지 생성 헬퍼 모듈
 DALL-E 3를 사용하여 이미지를 생성하고 저장합니다.
+OpenAI API v0.27.x 호환 버전
 """
 import os
 import json
 import requests
 from datetime import datetime
 from typing import Optional, Dict, Any
-from openai import OpenAI
+import openai  # 구버전 API 사용
 from PIL import Image
 from io import BytesIO
 import hashlib
@@ -20,7 +21,9 @@ class ImageGenerator:
         if not self.api_key:
             raise ValueError("OPENAI_API_KEY가 환경 변수에 설정되지 않았습니다.")
         
-        self.client = OpenAI(api_key=self.api_key)
+        # 구버전 API 키 설정
+        openai.api_key = self.api_key
+        
         self.project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self.image_dir = os.path.join(self.project_root, "image")
         self.metadata_file = os.path.join(self.image_dir, "image_metadata.json")
@@ -69,18 +72,28 @@ class ImageGenerator:
             생성된 이미지 정보
         """
         try:
-            # 이미지 생성 요청
-            response = self.client.images.generate(
-                model=model,
+            # 구버전 API 호출 방식
+            # DALL-E 3는 v0.27.x에서 지원하지 않을 수 있음
+            # DALL-E 2로 폴백
+            if model == "dall-e-3":
+                print("⚠️ OpenAI v0.27.x에서는 DALL-E 3를 지원하지 않습니다. DALL-E 2를 사용합니다.")
+                model = "dall-e-2"
+                # DALL-E 2 크기 제한
+                if size not in ["256x256", "512x512", "1024x1024"]:
+                    size = "1024x1024"
+            
+            # 이미지 생성 요청 (구버전 API)
+            response = openai.Image.create(
                 prompt=prompt,
-                size=size,
-                quality=quality,
-                style=style,
-                n=1
+                n=1,
+                size=size
             )
             
-            image_url = response.data[0].url
-            revised_prompt = response.data[0].revised_prompt
+            # 응답에서 URL 추출
+            if hasattr(response, 'data') and len(response['data']) > 0:
+                image_url = response['data'][0]['url']
+            else:
+                raise Exception("이미지 생성 응답에서 URL을 찾을 수 없습니다.")
             
             # 파일명 생성
             if not filename:
@@ -98,11 +111,8 @@ class ImageGenerator:
                 "filename": filename,
                 "filepath": filepath,
                 "prompt": prompt,
-                "revised_prompt": revised_prompt,
                 "model": model,
                 "size": size,
-                "quality": quality,
-                "style": style,
                 "created_at": datetime.now().isoformat(),
                 "url": image_url
             }
@@ -115,7 +125,8 @@ class ImageGenerator:
                 "filename": filename,
                 "filepath": filepath,
                 "prompt": prompt,
-                "revised_prompt": revised_prompt,
+                "model": model,
+                "size": size,
                 "url": image_url,
                 "message": f"이미지가 성공적으로 생성되었습니다: {filename}"
             }
@@ -169,7 +180,7 @@ class ImageGenerator:
         keyword_lower = keyword.lower()
         
         for image in self.metadata.get("images", []):
-            if keyword_lower in image["prompt"].lower() or                keyword_lower in image.get("revised_prompt", "").lower():
+            if keyword_lower in image["prompt"].lower():
                 results.append(image)
         
         return results

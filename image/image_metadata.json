@@ -1,0 +1,31 @@
+{
+  "images": [
+    {
+      "filename": "coding_cat_dalle2.png",
+      "filepath": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\image\\coding_cat_dalle2.png",
+      "prompt": "A cute cat programming on a laptop with Python code on the screen, wearing glasses, cartoon style",
+      "model": "dall-e-2",
+      "size": "1024x1024",
+      "created_at": "2025-06-26T20:16:49.661876",
+      "url": "https://oaidalleapiprodscus.blob.core.windows.net/private/org-h7yNzrYwtWUtLAtWF59hfGbW/user-aV32l9QoeLmaoMczeqtxtoTB/img-LXYJ9RXY3JJA7MVtMtHCMOun.png?st=2025-06-26T10%3A16%3A40Z&se=2025-06-26T12%3A16%3A40Z&sp=r&sv=2024-08-04&sr=b&rscd=inline&rsct=image/png&skoid=8b33a531-2df9-46a3-bc02-d4b1430a422c&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-06-25T13%3A22%3A11Z&ske=2025-06-26T13%3A22%3A11Z&sks=b&skv=2024-08-04&sig=UiR257wvpuPCJPDV8%2BrI7n0PjnOCjIeA3Tyex7p2phg%3D"
+    },
+    {
+      "filename": "coding_cat_test.png",
+      "filepath": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\image\\coding_cat_test.png",
+      "prompt": "A cute cartoon cat sitting at a desk programming on a laptop, Python code visible on screen, wearing round glasses",
+      "model": "dall-e-2",
+      "size": "512x512",
+      "created_at": "2025-06-26T20:17:40.705171",
+      "url": "https://oaidalleapiprodscus.blob.core.windows.net/private/org-h7yNzrYwtWUtLAtWF59hfGbW/user-aV32l9QoeLmaoMczeqtxtoTB/img-mYQuxwhbWnwgO073lsYFXi2x.png?st=2025-06-26T10%3A17%3A38Z&se=2025-06-26T12%3A17%3A38Z&sp=r&sv=2024-08-04&sr=b&rscd=inline&rsct=image/png&skoid=8b33a531-2df9-46a3-bc02-d4b1430a422c&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-06-26T07%3A07%3A09Z&ske=2025-06-27T07%3A07%3A09Z&sks=b&skv=2024-08-04&sig=PjxgV4l2RjBd1cTmAyjfDdpN6yNq%2BpVf9bKZ4M/L9TY%3D"
+    },
+    {
+      "filename": "robot_teacher.png",
+      "filepath": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\image\\robot_teacher.png",
+      "prompt": "A futuristic robot teaching a programming class, holographic code displays, cyberpunk style",
+      "model": "dall-e-2",
+      "size": "1024x1024",
+      "created_at": "2025-06-26T20:18:10.646351",
+      "url": "https://oaidalleapiprodscus.blob.core.windows.net/private/org-h7yNzrYwtWUtLAtWF59hfGbW/user-aV32l9QoeLmaoMczeqtxtoTB/img-bGu6dQWUBYtoiPiFPOMlMmyu.png?st=2025-06-26T10%3A18%3A06Z&se=2025-06-26T12%3A18%3A06Z&sp=r&sv=2024-08-04&sr=b&rscd=inline&rsct=image/png&skoid=8b33a531-2df9-46a3-bc02-d4b1430a422c&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-06-26T08%3A52%3A10Z&ske=2025-06-27T08%3A52%3A10Z&sks=b&skv=2024-08-04&sig=yYzA7tRhnr3kA/RWCVg6SZal7H48r8MWys4OI3fw9zI%3D"
+    }
+  ]
+}

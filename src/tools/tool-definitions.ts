@@ -34,7 +34,6 @@ JSON REPL 세션에서 Python 코드를 실행합니다.
 - helpers.scan_directory_dict(path) - 디렉토리 스캔 (딕셔너리 반환)
 - helpers.read_file(path) - 파일 읽기
 - helpers.create_file(path, content) - 파일 생성/수정
-- helpers.backup_file(path, reason) - 파일 백업
 - helpers.search_files_advanced(path, pattern) - 파일명 검색
   예: helpers.search_files_advanced(".", "*.py")
   반환: {'results': [파일정보 리스트]}

@@ -13,29 +13,78 @@ const logger = createLogger('git-handlers');
 export async function handleGitStatus(_args: any): Promise<{ content: Array<{ type: string; text: string }> }> {
     try {
         const { execSync } = require('child_process');
+        const path = require('path');
+        
+        // Python 스크립트 경로 설정
+        const pythonPath = path.join(process.cwd(), 'python');
+        
         const pythonCode = `
-from mcp_git_tools import git_status
-result = git_status()
-print(json.dumps(result, ensure_ascii=False))
+import sys
+import os
+import json
+
+# Python 경로 추가
+sys.path.insert(0, '${pythonPath.replace(/\\/g, '\\\\')}')
+
+# Windows Git 경로 설정
+if sys.platform == 'win32':
+    git_paths = [
+        r"C:\\Program Files\\Git\\cmd",
+        r"C:\\Program Files\\Git\\bin"
+    ]
+    for git_path in git_paths:
+        if os.path.exists(git_path) and git_path not in os.environ.get('PATH', ''):
+            os.environ['PATH'] = git_path + ';' + os.environ.get('PATH', '')
+
+from git_version_manager import GitVersionManager
+
+git_manager = GitVersionManager(os.getcwd())
+result = git_manager.git_status()
+
+# 결과를 더 읽기 쉬운 형태로 변환
+if result:
+    message = f"현재 브랜치: {result.get('branch', 'unknown')}\\n"
+    message += f"수정된 파일: {len(result.get('modified', []))}개\\n"
+    message += f"스테이징된 파일: {len(result.get('staged', []))}개\\n"
+    message += f"추적되지 않은 파일: {len(result.get('untracked', []))}개\\n"
+    message += f"깨끗한 상태: {'예' if result.get('clean') else '아니오'}"
+    
+    output = {
+        "success": True,
+        "message": message,
+        "data": result
+    }
+else:
+    output = {
+        "success": False,
+        "message": "Git 상태를 가져올 수 없습니다."
+    }
+
+print(json.dumps(output, ensure_ascii=False))
 `;
         
         const result = execSync(
-            `python -c "import json; ${pythonCode.replace(/"/g, '\\"')}"`,
+            `python -c "${pythonCode}"`,
             { 
                 encoding: 'utf8', 
                 cwd: process.cwd(),
-                shell: true  // Windows 호환성을 위해 추가
+                shell: true,
+                env: { ...process.env }
             }
         );
         
         const gitResult = JSON.parse(result.trim());
         
-        return {
-            content: [{
-                type: 'text',
-                text: gitResult.message || 'Git 상태 확인 완료'
-            }]
-        };
+        if (gitResult.success) {
+            return {
+                content: [{
+                    type: 'text',
+                    text: gitResult.message
+                }]
+            };
+        } else {
+            throw new Error(gitResult.message);
+        }
     } catch (error) {
         logger.error('Git status failed:', error);
         return {

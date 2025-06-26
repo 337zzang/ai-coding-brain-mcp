@@ -26,6 +26,19 @@ GIT_CMD = "git"
 if platform.system() == "Windows":
     # Windows에서 Git 실행 파일 찾기
     import shutil
+    
+    # PATH에 Git 경로 추가 (MCP 환경에서도 작동하도록)
+    git_paths = [
+        r"C:\Program Files\Git\cmd",
+        r"C:\Program Files\Git\bin",
+        r"C:\Program Files (x86)\Git\cmd",
+        r"C:\Program Files (x86)\Git\bin"
+    ]
+    
+    for path in git_paths:
+        if os.path.exists(path) and path not in os.environ.get('PATH', ''):
+            os.environ['PATH'] = path + ';' + os.environ.get('PATH', '')
+    
     git_path = shutil.which("git")
     if git_path:
         GIT_CMD = git_path

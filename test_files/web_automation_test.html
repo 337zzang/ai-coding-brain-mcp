@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebAutomation Test Page</title>
+</head>
+<body>
+    <h1>WebAutomation 테스트 페이지</h1>
+    
+    <div id="test-area">
+        <button id="test-button" onclick="document.getElementById('result').innerText='버튼이 클릭되었습니다!'">
+            클릭 테스트
+        </button>
+        
+        <input type="text" id="test-input" placeholder="텍스트를 입력하세요">
+        
+        <div id="result"></div>
+        
+        <a href="#clicked" class="test-link">링크 테스트</a>
+        
+        <button role="button" name="submit-btn">제출</button>
+    </div>
+    
+    <script>
+        document.getElementById('test-input').addEventListener('input', function(e) {
+            document.getElementById('result').innerText = '입력된 텍스트: ' + e.target.value;
+        });
+    </script>
+</body>
+</html>

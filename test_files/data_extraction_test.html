@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Extraction Test</title>
+    <style>
+        body { height: 2000px; padding: 20px; }
+        .content { margin: 20px 0; }
+        .item { padding: 10px; margin: 5px; background: #f0f0f0; }
+        #bottom { position: absolute; bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>데이터 추출 테스트 페이지</h1>
+    
+    <div class="content">
+        <p id="single-text">이것은 단일 텍스트 추출 테스트입니다.</p>
+        
+        <div class="items">
+            <div class="item">항목 1: 첫 번째 데이터</div>
+            <div class="item">항목 2: 두 번째 데이터</div>
+            <div class="item">항목 3: 세 번째 데이터</div>
+        </div>
+        
+        <div id="dynamic-content">
+            <p>스크롤하면 더 많은 콘텐츠가 나타납니다...</p>
+        </div>
+    </div>
+    
+    <div id="bottom">
+        <p>페이지 끝에 도달했습니다!</p>
+    </div>
+    
+    <script>
+        let scrollCount = 0;
+        window.addEventListener('scroll', function() {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 100) {
+                scrollCount++;
+                if (scrollCount === 1) {
+                    document.getElementById('dynamic-content').innerHTML += 
+                        '<p class="loaded">동적으로 로드된 콘텐츠 ' + scrollCount + '</p>';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

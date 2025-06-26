@@ -216,6 +216,265 @@ class WebAutomation:
                 "url": url
             }
 
+
+    def extract_text(self, selector: str, by: str = "css", all_matches: bool = False,
+                    timeout: int = 30000) -> Dict[str, Any]:
+        """특정 요소의 텍스트를 추출
+        
+        Args:
+            selector: 요소 선택자
+            by: 선택자 유형 (click_element와 동일)
+            all_matches: True일 경우 모든 매칭 요소의 텍스트 추출
+            timeout: 대기 시간 (밀리초)
+        
+        Returns:
+            Dict: 작업 결과
+                - text: 추출된 텍스트 (단일) 또는 texts: 텍스트 리스트 (다중)
+        """
+        try:
+            if not self.page:
+                return {
+                    "success": False,
+                    "error": "NoPageError",
+                    "message": "페이지가 열려있지 않습니다. go_to_page()를 먼저 호출하세요."
+                }
+            
+            logger.info(f"텍스트 추출 시도: {selector} (by={by}, all={all_matches})")
+            
+            # locator 생성
+            locator = self._get_locator(selector, by)
+            
+            if all_matches:
+                # 모든 매칭 요소 처리
+                try:
+                    # 첫 번째 요소가 나타날 때까지 대기
+                    locator.first.wait_for(state="visible", timeout=timeout)
+                    
+                    # 모든 요소의 텍스트 추출
+                    elements = locator.all()
+                    texts = []
+                    for element in elements:
+                        text = element.text_content()
+                        if text:
+                            texts.append(text.strip())
+                    
+                    logger.info(f"텍스트 추출 성공: {len(texts)}개 요소")
+                    
+                    return {
+                        "success": True,
+                        "message": f"{len(texts)}개 요소에서 텍스트 추출 완료",
+                        "texts": texts,
+                        "count": len(texts),
+                        "selector": selector,
+                        "by": by
+                    }
+                    
+                except TimeoutError:
+                    # 요소를 찾지 못한 경우 빈 리스트 반환
+                    return {
+                        "success": True,
+                        "message": "매칭되는 요소를 찾을 수 없습니다",
+                        "texts": [],
+                        "count": 0,
+                        "selector": selector,
+                        "by": by
+                    }
+            else:
+                # 단일 요소 처리
+                locator.wait_for(state="visible", timeout=timeout)
+                
+                # 텍스트 추출
+                text = locator.text_content()
+                
+                # inner_text도 시도 (더 정확한 가시적 텍스트)
+                if not text or not text.strip():
+                    text = locator.inner_text()
+                
+                if text:
+                    text = text.strip()
+                
+                logger.info(f"텍스트 추출 성공: {len(text) if text else 0}자")
+                
+                return {
+                    "success": True,
+                    "message": "텍스트 추출 성공",
+                    "text": text or "",
+                    "length": len(text) if text else 0,
+                    "selector": selector,
+                    "by": by
+                }
+                
+        except TimeoutError:
+            logger.error(f"텍스트 추출 타임아웃: {selector}")
+            return {
+                "success": False,
+                "error": "TimeoutError",
+                "message": f"요소를 찾을 수 없습니다: {selector}",
+                "selector": selector,
+                "by": by
+            }
+            
+        except Exception as e:
+            logger.error(f"텍스트 추출 실패: {str(e)}")
+            return {
+                "success": False,
+                "error": type(e).__name__,
+                "message": f"텍스트 추출 실패: {str(e)}",
+                "selector": selector,
+                "by": by
+            }
+    
+    def scroll_page(self, amount: int = 0, to: str = "bottom", 
+                   smooth: bool = True, wait_after: int = 500) -> Dict[str, Any]:
+        """페이지를 스크롤
+        
+        Args:
+            amount: 스크롤할 픽셀 수 (0이면 to 파라미터 사용)
+            to: 스크롤 위치
+                - "bottom": 페이지 끝 (기본값)
+                - "top": 페이지 상단
+                - "element:selector": 특정 요소로 스크롤
+            smooth: 부드러운 스크롤 여부
+            wait_after: 스크롤 후 대기 시간 (밀리초)
+        
+        Returns:
+            Dict: 작업 결과
+        """
+        try:
+            if not self.page:
+                return {
+                    "success": False,
+                    "error": "NoPageError",
+                    "message": "페이지가 열려있지 않습니다. go_to_page()를 먼저 호출하세요."
+                }
+            
+            logger.info(f"페이지 스크롤: amount={amount}, to={to}")
+            
+            # 스크롤 전 위치 저장
+            before_position = self.page.evaluate("window.pageYOffset")
+            
+            # 스크롤 동작
+            if amount > 0:
+                # 특정 픽셀만큼 스크롤
+                self.page.evaluate(f"""
+                    window.scrollBy({{
+                        top: {amount},
+                        behavior: '{"smooth" if smooth else "instant"}'
+                    }})
+                """)
+                action = f"{amount}px 스크롤"
+                
+            elif to == "bottom":
+                # 페이지 끝으로 스크롤
+                self.page.evaluate(f"""
+                    window.scrollTo({{
+                        top: document.body.scrollHeight,
+                        behavior: '{"smooth" if smooth else "instant"}'
+                    }})
+                """)
+                action = "페이지 끝으로 스크롤"
+                
+            elif to == "top":
+                # 페이지 상단으로 스크롤
+                self.page.evaluate(f"""
+                    window.scrollTo({{
+                        top: 0,
+                        behavior: '{"smooth" if smooth else "instant"}'
+                    }})
+                """)
+                action = "페이지 상단으로 스크롤"
+                
+            elif to.startswith("element:"):
+                # 특정 요소로 스크롤
+                selector = to[8:]  # "element:" 제거
+                try:
+                    locator = self.page.locator(selector)
+                    locator.scroll_into_view_if_needed()
+                    action = f"요소로 스크롤: {selector}"
+                except:
+                    return {
+                        "success": False,
+                        "error": "ElementNotFound",
+                        "message": f"스크롤 대상 요소를 찾을 수 없습니다: {selector}"
+                    }
+            else:
+                return {
+                    "success": False,
+                    "error": "InvalidParameter",
+                    "message": f"올바르지 않은 스크롤 대상: {to}"
+                }
+            
+            # 스크롤 후 대기
+            if wait_after > 0:
+                self.page.wait_for_timeout(wait_after)
+            
+            # 스크롤 후 위치
+            after_position = self.page.evaluate("window.pageYOffset")
+            scroll_distance = after_position - before_position
+            
+            # 페이지 정보
+            page_height = self.page.evaluate("document.body.scrollHeight")
+            viewport_height = self.page.evaluate("window.innerHeight")
+            
+            logger.info(f"스크롤 완료: {action} (이동거리: {abs(scroll_distance)}px)")
+            
+            return {
+                "success": True,
+                "message": f"스크롤 완료: {action}",
+                "before_position": before_position,
+                "after_position": after_position,
+                "scroll_distance": scroll_distance,
+                "page_height": page_height,
+                "viewport_height": viewport_height,
+                "at_bottom": after_position + viewport_height >= page_height - 10,
+                "at_top": after_position <= 10
+            }
+            
+        except Exception as e:
+            logger.error(f"스크롤 실패: {str(e)}")
+            return {
+                "success": False,
+                "error": type(e).__name__,
+                "message": f"스크롤 실패: {str(e)}"
+            }
+    
+    def get_page_content(self) -> Dict[str, Any]:
+        """전체 페이지 콘텐츠 가져오기 (보너스 메서드)
+        
+        Returns:
+            Dict: 페이지 HTML 및 텍스트 콘텐츠
+        """
+        try:
+            if not self.page:
+                return {
+                    "success": False,
+                    "error": "NoPageError",
+                    "message": "페이지가 열려있지 않습니다."
+                }
+            
+            # HTML 콘텐츠
+            html = self.page.content()
+            
+            # 전체 텍스트 (보이는 텍스트만)
+            text = self.page.locator("body").inner_text()
+            
+            return {
+                "success": True,
+                "message": "페이지 콘텐츠 추출 성공",
+                "html_length": len(html),
+                "text_length": len(text),
+                "text": text,
+                "title": self.page.title(),
+                "url": self.page.url
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": type(e).__name__,
+                "message": f"콘텐츠 추출 실패: {str(e)}"
+            }
+
     def get_status(self) -> Dict[str, Any]:
         """현재 상태 조회
         
@@ -232,6 +491,210 @@ class WebAutomation:
             "initialized_at": self.initialized_at.isoformat(),
             "message": "상태 조회 성공"
         }
+
+    def _get_locator(self, selector: str, by: str = "css"):
+        """선택자 타입에 따라 적절한 locator 반환 (내부 메서드)"""
+        if not self.page:
+            raise Exception("페이지가 열려있지 않습니다. go_to_page()를 먼저 호출하세요.")
+        
+        by_lower = by.lower()
+        
+        if by_lower == "css":
+            return self.page.locator(selector)
+        elif by_lower == "xpath":
+            return self.page.locator(f"xpath={selector}")
+        elif by_lower == "text":
+            return self.page.get_by_text(selector, exact=False)
+        elif by_lower == "text_exact":
+            return self.page.get_by_text(selector, exact=True)
+        elif by_lower == "role":
+            # role 선택자 예: "button:Submit"
+            if ":" in selector:
+                role, name = selector.split(":", 1)
+                return self.page.get_by_role(role, name=name)
+            else:
+                return self.page.get_by_role(selector)
+        elif by_lower == "label":
+            return self.page.get_by_label(selector)
+        elif by_lower == "placeholder":
+            return self.page.get_by_placeholder(selector)
+        elif by_lower == "alt":
+            return self.page.get_by_alt_text(selector)
+        elif by_lower == "title":
+            return self.page.get_by_title(selector)
+        else:
+            raise ValueError(f"지원하지 않는 선택자 타입: {by}")
+    
+    def click_element(self, selector: str, by: str = "css", wait_for: bool = True, 
+                     timeout: int = 30000) -> Dict[str, Any]:
+        """지정한 요소를 클릭
+        
+        Args:
+            selector: 요소 선택자
+            by: 선택자 유형
+                - "css": CSS 선택자 (기본값)
+                - "xpath": XPath 선택자
+                - "text": 텍스트 포함 (부분 일치)
+                - "text_exact": 텍스트 정확히 일치
+                - "role": ARIA role (예: "button:Submit")
+                - "label": label 텍스트
+                - "placeholder": placeholder 텍스트
+                - "alt": alt 텍스트
+                - "title": title 속성
+            wait_for: 요소가 클릭 가능할 때까지 대기 여부
+            timeout: 대기 시간 (밀리초)
+        
+        Returns:
+            Dict: 작업 결과
+        """
+        try:
+            if not self.page:
+                return {
+                    "success": False,
+                    "error": "NoPageError",
+                    "message": "페이지가 열려있지 않습니다. go_to_page()를 먼저 호출하세요."
+                }
+            
+            logger.info(f"요소 클릭 시도: {selector} (by={by})")
+            
+            # locator 생성
+            locator = self._get_locator(selector, by)
+            
+            # 요소가 나타날 때까지 대기
+            if wait_for:
+                locator.wait_for(state="visible", timeout=timeout)
+                locator.wait_for(state="enabled", timeout=timeout)
+            
+            # 클릭 전 현재 URL 저장
+            before_url = self.page.url
+            
+            # 클릭 수행
+            locator.click(timeout=timeout)
+            
+            # 클릭 후 잠시 대기 (네트워크 요청 등)
+            self.page.wait_for_timeout(100)
+            
+            # 페이지 변경 확인
+            after_url = self.page.url
+            page_changed = before_url != after_url
+            
+            logger.info(f"요소 클릭 성공: {selector}")
+            
+            return {
+                "success": True,
+                "message": f"요소 클릭 완료: {selector}",
+                "selector": selector,
+                "by": by,
+                "page_changed": page_changed,
+                "new_url": after_url if page_changed else None
+            }
+            
+        except TimeoutError:
+            logger.error(f"요소 클릭 타임아웃: {selector}")
+            return {
+                "success": False,
+                "error": "TimeoutError",
+                "message": f"요소를 찾을 수 없거나 클릭할 수 없습니다: {selector}",
+                "selector": selector,
+                "by": by
+            }
+            
+        except Exception as e:
+            logger.error(f"요소 클릭 실패: {str(e)}")
+            return {
+                "success": False,
+                "error": type(e).__name__,
+                "message": f"클릭 실패: {str(e)}",
+                "selector": selector,
+                "by": by
+            }
+    
+    def input_text(self, selector: str, text: str, by: str = "css", 
+                   clear_first: bool = True, press_enter: bool = False,
+                   timeout: int = 30000) -> Dict[str, Any]:
+        """입력 필드에 텍스트 입력
+        
+        Args:
+            selector: 입력 필드 선택자
+            text: 입력할 텍스트
+            by: 선택자 유형 (click_element와 동일)
+            clear_first: 입력 전 기존 텍스트 지우기
+            press_enter: 입력 후 Enter 키 누르기
+            timeout: 대기 시간 (밀리초)
+        
+        Returns:
+            Dict: 작업 결과
+        """
+        try:
+            if not self.page:
+                return {
+                    "success": False,
+                    "error": "NoPageError",
+                    "message": "페이지가 열려있지 않습니다. go_to_page()를 먼저 호출하세요."
+                }
+            
+            logger.info(f"텍스트 입력 시도: {selector} (by={by})")
+            
+            # locator 생성
+            locator = self._get_locator(selector, by)
+            
+            # 요소가 나타날 때까지 대기
+            locator.wait_for(state="visible", timeout=timeout)
+            locator.wait_for(state="enabled", timeout=timeout)
+            
+            # 입력 필드 포커스
+            locator.focus()
+            
+            # 기존 텍스트 지우기
+            if clear_first:
+                # Ctrl+A 후 Delete
+                locator.press("Control+a")
+                locator.press("Delete")
+            
+            # 텍스트 입력
+            locator.fill(text)
+            
+            # Enter 키 누르기
+            if press_enter:
+                locator.press("Enter")
+                # Enter 후 잠시 대기
+                self.page.wait_for_timeout(100)
+            
+            logger.info(f"텍스트 입력 성공: {selector}")
+            
+            # 마스킹이 필요한 필드 확인 (password, secret 등)
+            is_sensitive = any(word in selector.lower() for word in ['password', 'secret', 'token', 'key'])
+            
+            return {
+                "success": True,
+                "message": f"텍스트 입력 완료",
+                "selector": selector,
+                "by": by,
+                "text_length": len(text),
+                "value": "***" if is_sensitive else text[:20] + "..." if len(text) > 20 else text,
+                "press_enter": press_enter
+            }
+            
+        except TimeoutError:
+            logger.error(f"입력 필드 타임아웃: {selector}")
+            return {
+                "success": False,
+                "error": "TimeoutError",
+                "message": f"입력 필드를 찾을 수 없습니다: {selector}",
+                "selector": selector,
+                "by": by
+            }
+            
+        except Exception as e:
+            logger.error(f"텍스트 입력 실패: {str(e)}")
+            return {
+                "success": False,
+                "error": type(e).__name__,
+                "message": f"입력 실패: {str(e)}",
+                "selector": selector,
+                "by": by
+            }
+
 
 
 

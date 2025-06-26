@@ -131,12 +131,11 @@ class GitVersionManager:
                 
                 if status_code == "??":
                     status["untracked"].append(file_path)
-                elif status_code[0] in "AM":
+                elif status_code[0] in "AM":  # 첫 번째 문자가 A 또는 M: 스테이징됨
                     status["staged"].append(file_path)
-                elif status_code[1] == "M":
-                    status["modified"].append(file_path)
-                    status["staged"].append(file_path)
-                elif status_code[1] == "M":
+                    if status_code[1] == "M":  # 스테이징 후 추가 수정됨
+                        status["modified"].append(file_path)
+                elif status_code[0] == " " and status_code[1] == "M":  # 수정되었지만 스테이징 안됨
                     status["modified"].append(file_path)
         
         return status

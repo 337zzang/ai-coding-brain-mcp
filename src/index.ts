@@ -25,6 +25,7 @@ import { handleFileAnalyze } from './handlers/file-analyzer-handler';
 import { handleGitStatus, handleGitCommitSmart, handleGitBranchSmart, handleGitRollbackSmart, handleGitPush } from './handlers/git-handlers';
 import { handleGitignoreAnalyze, handleGitignoreUpdate, handleGitignoreCreate } from './handlers/gitignore-handlers';
 
+import { generateAiImage, listAiImages, searchAiImages } from './handlers/image-generator-handler';
 // 로거 초기화
 const logger = createLogger('ai-coding-brain-mcp');
 
@@ -141,7 +142,13 @@ class AICodingBrainMCP {
         } else if (name === 'gitignore_update') {
           return await handleGitignoreUpdate(args as { patterns: string[]; category?: string });
         } else if (name === 'gitignore_create') {
-          return await handleGitignoreCreate(args as { categories?: string[] });
+          return await handleGitignoreCreate(args as { categories?: string[] } else if (name === 'generate_ai_image') {
+          return await generateAiImage(args);
+        } else if (name === 'list_ai_images') {
+          return await listAiImages();
+        } else if (name === 'search_ai_images') {
+          return await searchAiImages(args);
+        });
         }
 
         // TODO: Implement remaining tools
@@ -193,7 +200,7 @@ class AICodingBrainMCP {
     }
     
     logger.info('AI Coding Brain MCP server v2.0.0 started successfully');
-    logger.info('10 tools loaded: execute_code, restart_json_repl, backup_file, restore_backup, list_backups, flow_project, plan_project, task_manage, next_task, file_analyze');
+    logger.info('13 tools loaded: execute_code, restart_json_repl, backup_file, restore_backup, list_backups, flow_project, plan_project, task_manage, next_task, file_analyze, generate_ai_image, list_ai_images, search_ai_images');
   }
 }
 

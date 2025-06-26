@@ -279,6 +279,28 @@ class AIHelpers:
         except Exception as e:
             print(f"❌ 이미지 검색 실패: {e}")
             return []
+    
+    def get_image_base64(self, filename: str) -> Optional[str]:
+        """이미지를 base64로 인코딩하여 반환
+        
+        Args:
+            filename: 이미지 파일명
+        
+        Returns:
+            base64 인코딩된 문자열 또는 None
+        """
+        try:
+            from api.image_generator import get_image_base64
+            base64_data = get_image_base64(filename)
+            if base64_data:
+                print(f"✅ 이미지 base64 인코딩 성공: {filename}")
+            else:
+                print(f"❌ 이미지를 찾을 수 없습니다: {filename}")
+            return base64_data
+        except Exception as e:
+            print(f"❌ base64 인코딩 실패: {e}")
+            return None
+
 
 
 def initialize_repl():

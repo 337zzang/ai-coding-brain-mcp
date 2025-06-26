@@ -14,13 +14,38 @@ export async function handleGitStatus(_args: any): Promise<{ content: Array<{ ty
     try {
         const { spawn } = require('child_process');
         const path = require('path');
+        const fs = require('fs');
+        
+        // 프로젝트 루트 찾기
+        let projectRoot = process.cwd();
+        
+        // ai-coding-brain-mcp 프로젝트 디렉토리 찾기
+        if (!projectRoot.includes('ai-coding-brain-mcp')) {
+            // 알려진 위치에서 찾기
+            const possiblePaths = [
+                'C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp',
+                path.join(process.env['USERPROFILE'] || '', 'Desktop', 'ai-coding-brain-mcp'),
+                path.join(process.env['USERPROFILE'] || '', 'Documents', 'ai-coding-brain-mcp')
+            ];
+            
+            for (const possiblePath of possiblePaths) {
+                if (fs.existsSync(path.join(possiblePath, '.ai-brain.config.json'))) {
+                    projectRoot = possiblePath;
+                    break;
+                }
+            }
+        }
         
         // Python 스크립트 경로 설정
-        const scriptPath = path.join(process.cwd(), 'python', 'mcp_git_wrapper.py');
+        const scriptPath = path.join(projectRoot, 'python', 'mcp_git_wrapper.py');
+        
+        if (!fs.existsSync(scriptPath)) {
+            throw new Error(`Python script not found at ${scriptPath}`);
+        }
         
         return new Promise((resolve, reject) => {
             const pythonProcess = spawn('python', [scriptPath, 'status'], {
-                cwd: process.cwd(),
+                cwd: projectRoot,  // 프로젝트 루트를 작업 디렉토리로 설정
                 env: { ...process.env },
                 windowsHide: true
             });
@@ -87,9 +112,34 @@ export async function handleGitCommitSmart(args: { message?: string; auto_add?: 
     try {
         const { spawn } = require('child_process');
         const path = require('path');
+        const fs = require('fs');
+        
+        // 프로젝트 루트 찾기
+        let projectRoot = process.cwd();
+        
+        // ai-coding-brain-mcp 프로젝트 디렉토리 찾기
+        if (!projectRoot.includes('ai-coding-brain-mcp')) {
+            // 알려진 위치에서 찾기
+            const possiblePaths = [
+                'C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp',
+                path.join(process.env['USERPROFILE'] || '', 'Desktop', 'ai-coding-brain-mcp'),
+                path.join(process.env['USERPROFILE'] || '', 'Documents', 'ai-coding-brain-mcp')
+            ];
+            
+            for (const possiblePath of possiblePaths) {
+                if (fs.existsSync(path.join(possiblePath, '.ai-brain.config.json'))) {
+                    projectRoot = possiblePath;
+                    break;
+                }
+            }
+        }
         
         // Python 스크립트 경로 설정
-        const scriptPath = path.join(process.cwd(), 'python', 'mcp_git_wrapper.py');
+        const scriptPath = path.join(projectRoot, 'python', 'mcp_git_wrapper.py');
+        
+        if (!fs.existsSync(scriptPath)) {
+            throw new Error(`Python script not found at ${scriptPath}`);
+        }
         
         // 인자 준비
         const cmdArgs = ['commit'];
@@ -102,7 +152,7 @@ export async function handleGitCommitSmart(args: { message?: string; auto_add?: 
         
         return new Promise((resolve, reject) => {
             const pythonProcess = spawn('python', [scriptPath, ...cmdArgs], {
-                cwd: process.cwd(),
+                cwd: projectRoot,  // 프로젝트 루트를 작업 디렉토리로 설정
                 env: { ...process.env },
                 windowsHide: true
             });

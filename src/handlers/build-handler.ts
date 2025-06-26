@@ -10,13 +10,15 @@ export interface BuildProjectContextArgs {
   update_readme?: boolean;
   update_context?: boolean;
   include_stats?: boolean;
+  include_file_directory?: boolean;
 }
 
 export async function handleBuildProjectContext(args: BuildProjectContextArgs): Promise<any> {
   const {
     update_readme = true,
     update_context = true,
-    include_stats = true
+    include_stats = true,
+    include_file_directory = false
   } = args;
 
   try {
@@ -31,6 +33,8 @@ export async function handleBuildProjectContext(args: BuildProjectContextArgs): 
       '--update-readme', update_readme ? 'true' : 'false',
       '--update-context', update_context ? 'true' : 'false',
       '--include-stats', include_stats ? 'true' : 'false'
+    ,
+      '--include-file-directory', include_file_directory ? 'true' : 'false'
     ];
     
     return new Promise((resolve, reject) => {

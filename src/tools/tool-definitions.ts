@@ -551,6 +551,11 @@ Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
           type: 'boolean',
           description: '프로젝트 통계 포함 여부',
           default: true
+        },
+        include_file_directory: {
+          type: 'boolean',
+          description: 'file_directory.md 생성 여부',
+          default: false
         }
       },
       required: []

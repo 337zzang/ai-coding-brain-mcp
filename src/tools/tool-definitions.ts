@@ -105,103 +105,11 @@ restart_json_repl(keep_helpers=False)  # 완전 초기화
         }
     },
 
-    {
-        name: 'backup_file',
-        description: `파일 백업 생성
+    
 
-사용: helpers.backup_file(filepath, reason)
-반환: 백업 파일 경로
+    
 
-백업 구조:
-\`\`\`
-backups/
-└── 2025-06-16/
-    └── file.py.작업명.시간.bak
-\`\`\``,
-        inputSchema: {
-            type: 'object',
-            properties: {
-                filepath: {
-                    type: 'string',
-                    description: '백업할 파일 경로'
-                },
-                reason: {
-                    type: 'string',
-                    description: '백업 이유 (파일명에 포함)',
-                    default: 'backup'
-                }
-            },
-            required: ['filepath']
-        }
-    },
-
-    {
-        name: 'restore_backup',
-        description: `백업 복원
-
-사용: helpers.restore_backup(backup_path, target_path?)
-
-복원 프로세스:
-1. 백업 파일 확인
-2. 원본 경로 자동 추출
-3. 기존 파일 백업
-4. 복원 실행`,
-        inputSchema: {
-            type: 'object',
-            properties: {
-                backup_path: {
-                    type: 'string',
-                    description: '복원할 백업 파일 경로'
-                },
-                targetPath: {
-                    type: 'string',
-                    description: '복원 대상 경로 (선택사항)'
-                }
-            },
-            required: ['backup_path']
-        }
-    },
-
-    {
-        name: 'list_backups',
-        description: `백업 목록 조회
-
-사용: list_backups(filename?)
-반환: {backups: [...], total: N}`,
-        inputSchema: {
-            type: 'object',
-            properties: {
-                filename: {
-                    type: 'string',
-                    description: '필터링할 파일명 (선택사항)'
-                }
-            },
-            required: []
-        }
-    },
-
-    // ========== 프로젝트 워크플로우 도구 ==========
-    {
-        name: 'flow_project',
-        description: `프로젝트 전환 도구
-
-프로젝트를 전환하고 컨텍스트를 로드합니다.
-내부적으로 helpers.cmd_flow()를 실행합니다.
-
-사용 예:
-- flow_project("my-project")
-- flow_project("ai-coding-brain-mcp")`,
-        inputSchema: {
-            type: 'object',
-            properties: {
-                project_name: {
-                    type: 'string',
-                    description: '전환할 프로젝트 이름'
-                }
-            },
-            required: ['project_name']
-        }
-    },
+    
 
     {
         name: 'plan_project',

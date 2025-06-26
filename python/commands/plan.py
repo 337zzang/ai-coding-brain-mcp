@@ -549,8 +549,36 @@ def cmd_plan(plan_name: Optional[str] = None, description: Optional[str] = None,
         'analysis_summary': briefing if 'briefing' in locals() else None
     }
     
+    
     # 기본 Phase 3개 생성 (프로젝트 분석 결과 반영)
-    default_phases = [
+    # Flow 시스템 개선인 경우 특별한 Phase와 작업들 사용
+    if 'flow' in plan_name.lower() or (description and 'flow' in description.lower()):
+        # Flow 시스템 개선을 위한 특별한 Phase와 작업들
+        default_phases = [
+            ('phase-1', 'Phase 1: 긴급 버그 수정', '즉시 적용 가능한 버그 수정 및 도구 정의', [
+                ('flow_project 도구 정의 추가', 'tool-definitions.ts에 누락된 flow_project 도구 정의 추가', 'HIGH'),
+                ('헬퍼 모듈 초기화 오류 수정', 'ImportError: helpers not available 오류 해결', 'HIGH'),
+                ('프로젝트 구조 캐싱 버그 수정', 'get_project_structure()가 빈 결과 반환하는 문제 해결', 'HIGH')
+            ]),
+            ('phase-2', 'Phase 2: 시스템 구조 단순화', '복잡한 호출 체인을 단순화하고 성능 개선', [
+                ('호출 체인 단순화', '5단계 호출 체인을 3단계로 축소', 'MEDIUM'),
+                ('smart_print 토큰 제한 개선', '과도한 출력을 제어하는 로직 개선', 'MEDIUM'),
+                ('변수 저장/복원 시스템 개선', 'JSON 직렬화 제한 해결 및 성능 개선', 'MEDIUM')
+            ]),
+            ('phase-3', 'Phase 3: 성능 최적화', '프로젝트 스캔 성능을 대폭 개선', [
+                ('메모리 캐시 시스템 구현', '파일 캐시와 별도로 메모리 캐시 추가', 'MEDIUM'),
+                ('증분 스캔 기능 구현', '변경된 파일만 재스캔하는 기능', 'LOW'),
+                ('병렬 처리 도입', '대규모 프로젝트 스캔시 병렬 처리', 'LOW')
+            ]),
+            ('phase-4', 'Phase 4: 테스트 및 문서화', '안정성 확보를 위한 테스트와 사용자 문서', [
+                ('단위 테스트 작성', '핵심 기능들에 대한 단위 테스트', 'MEDIUM'),
+                ('통합 테스트 작성', '전체 flow 시스템 통합 테스트', 'MEDIUM'),
+                ('사용자 가이드 작성', '개선된 flow 시스템 사용 가이드', 'LOW')
+            ])
+        ]
+    else:
+        # 일반적인 프로젝트를 위한 기본 Phase
+        default_phases = [
         ('phase-1', 'Phase 1: 분석 및 설계', '현재 상태 분석과 개선 방향 설계', [
             '현재 코드 구조 분석',
             '개선 사항 도출',
@@ -571,15 +599,30 @@ def cmd_plan(plan_name: Optional[str] = None, description: Optional[str] = None,
     for phase_id, phase_name, phase_desc, default_tasks in default_phases:
         # 기본 tasks 생성
         tasks = []
-        for i, task_name in enumerate(default_tasks, 1):
+        for i, task_info in enumerate(default_tasks, 1):
             task_id = f"{phase_id}-task-{i}"
-            tasks.append({
-                'id': task_id,
-                'title': task_name,
-                'status': 'pending',
-                'created_at': timestamp,
-                'phase_id': phase_id
-            })
+            
+            # task_info가 튜플인 경우 (Flow 시스템 개선 등)
+            if isinstance(task_info, tuple):
+                task_title, task_desc, task_priority = task_info
+                tasks.append({
+                    'id': task_id,
+                    'title': task_title,
+                    'description': task_desc,
+                    'priority': task_priority,
+                    'status': 'pending',
+                    'created_at': timestamp,
+                    'phase_id': phase_id
+                })
+            else:
+                # 일반적인 문자열 작업명
+                tasks.append({
+                    'id': task_id,
+                    'title': task_info,
+                    'status': 'pending',
+                    'created_at': timestamp,
+                    'phase_id': phase_id
+                })
         
         new_plan_dict['phases'][phase_id] = {
             'id': phase_id,
@@ -657,9 +700,24 @@ def cmd_plan(plan_name: Optional[str] = None, description: Optional[str] = None,
         
         print(f"\n✅ 새 계획 '{plan_name}' 생성 완료!")
         print(f"   설명: {new_plan_dict['description']}")
-        print(f"\n   3개의 기본 Phase가 생성되었습니다:")
-        for phase_id, phase_name, _, _ in default_phases:
-            print(f"   - {phase_name}")
+        
+        # Flow 시스템 개선인 경우 더 자세한 정보 표시
+        if 'flow' in plan_name.lower() or (description and 'flow' in description.lower()):
+            print(f"\n   {len(default_phases)}개의 Phase와 구체적인 작업들이 생성되었습니다:")
+            total_tasks = 0
+            for phase_id, phase in new_plan_dict['phases'].items():
+                task_count = len(phase['tasks'])
+                total_tasks += task_count
+                print(f"   - {phase['name']} ({task_count}개 작업)")
+                # HIGH 우선순위 작업만 표시
+                high_priority_tasks = [t for t in phase['tasks'] if t.get('priority') == 'HIGH']
+                for task in high_priority_tasks[:2]:
+                    print(f"     ⚡ [{task['id']}] {task['title']}")
+            print(f"\n   총 {total_tasks}개 작업 (HIGH: {sum(1 for p in new_plan_dict['phases'].values() for t in p['tasks'] if t.get('priority') == 'HIGH')}개)")
+        else:
+            print(f"\n   {len(default_phases)}개의 기본 Phase가 생성되었습니다:")
+            for phase_id, phase_name, _, _ in default_phases:
+                print(f"   - {phase_name}")
         
         print(f"\n💡 다음 단계:")
         print(f"   1. 'task add phase-1 \"작업명\"'으로 작업 추가")

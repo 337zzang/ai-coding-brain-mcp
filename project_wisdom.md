@@ -21,3 +21,6 @@
 
 ### file_handling
 - 파일 경로 문제시 절대 경로 사용 - os.path.join()으로 안전하게 구성
+
+### documentation
+- flow 명령어 사용시 발생하는 문제들을 정리하고 문서화하여 개선 방향 수립

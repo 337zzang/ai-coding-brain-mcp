@@ -266,7 +266,7 @@ def track_file_access(file_path, operation, details=None):
         context['file_access_history'] = context['file_access_history'][-100:]
 try:
     # 절대 import로 변경하여 순환 import 문제 해결
-    from file_system_helpers import read_file as _read_file, create_file as _create_file, backup_file as _backup_file, restore_backup as _restore_backup, replace_block as _replace_block, insert_block as _insert_block
+    from file_system_helpers import read_file as _read_file, create_file as _create_file, replace_block as _replace_block, insert_block as _insert_block
     from ast_parser_helpers import parse_with_snippets as _parse_with_snippets, get_snippet_preview as _get_snippet_preview
     from search_helpers import scan_directory as _scan_directory, search_files_advanced as _search_files_advanced, search_code_content as _search_code_content
 except ImportError as e:
@@ -279,10 +279,14 @@ except ImportError as e:
         raise ImportError('file_system_helpers not available')
 
     def _backup_file(*args, **kwargs):
-        raise ImportError('file_system_helpers not available')
+        """백업 기능은 v25.0에서 제거됨 - Git 사용"""
+        print("⚠️ backup_file은 v25.0에서 제거되었습니다. Git을 사용하세요 (git stash/commit)")
+        return None
 
     def _restore_backup(*args, **kwargs):
-        raise ImportError('file_system_helpers not available')
+        """백업 복원 기능은 v25.0에서 제거됨 - Git 사용"""
+        print("⚠️ restore_backup은 v25.0에서 제거되었습니다. Git을 사용하세요 (git stash pop/checkout)")
+        return None
 
     def _replace_block(*args, **kwargs):
         raise ImportError('file_system_helpers not available')
@@ -310,7 +314,11 @@ except ImportError as e:
 # 1. 일반적인 추적 함수들 (데코레이터 체이닝)
 read_file = track_file_operation('read')(_read_file)
 create_file = auto_update_context(track_file_operation('create')(_create_file))
-restore_backup = auto_update_context(track_file_operation('restore')(_restore_backup))
+# restore_backup은 v25.0에서 제거됨 - Git 사용
+def restore_backup(*args, **kwargs):
+    """v25.0에서 제거됨 - Git 사용"""
+    print("⚠️ restore_backup은 v25.0에서 제거되었습니다. Git을 사용하세요 (git stash pop/checkout)")
+    return None
 replace_block = auto_update_context(track_block_operation('replace')(_replace_block))
 insert_block = auto_update_context(track_block_operation('insert')(_insert_block))
 
@@ -336,8 +344,11 @@ def backup_file_wisdom_wrapper(*args, **kwargs):
     return result
 
 # 최종적으로 backup_file 함수에 모든 데코레이터를 적용
-# 순서: task 추적 -> 컨텍스트 자동 업데이트
-backup_file = auto_update_context(track_file_operation('backup')(backup_file_wisdom_wrapper))
+# v25.0: backup_file은 Git으로 대체됨
+def backup_file(*args, **kwargs):
+    """v25.0에서 제거됨 - Git 사용"""
+    print("⚠️ backup_file은 v25.0에서 제거되었습니다. Git을 사용하세요 (git stash/commit)")
+    return None
 
 def parse_with_snippets(file_path, language='auto', include_snippets=True):
     """파일을 파싱하여 구조화된 정보와 코드 스니펫 추출 - 자동 캐시 저장 포함"""

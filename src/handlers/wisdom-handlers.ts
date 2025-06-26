@@ -1,0 +1,140 @@
+/**
+ * Wisdom 시스템 핸들러
+ * wisdom_stats, track_mistake, add_best_practice 도구 처리
+ */
+
+import { spawn } from 'child_process';
+import { join } from 'path';
+
+// Result interfaces removed - not used
+
+/**
+ * Python 명령어 실행 헬퍼
+ */
+async function executePythonCommand(command: string, args: any[] = []): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const pythonPath = process.env['PYTHON_PATH'] || 
+      (process.platform === 'win32' ? 'C:\\Users\\Administrator\\miniconda3\\python.exe' : 'python3');
+    const scriptPath = join(__dirname, '..', '..', 'python', 'commands', 'wisdom.py');
+    
+    const pythonArgs = [scriptPath, command, ...args.map(arg => JSON.stringify(arg))];
+    const pythonProcess = spawn(pythonPath, pythonArgs);
+    
+    let stdout = '';
+    let stderr = '';
+    
+    pythonProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+    
+    pythonProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+    
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error(`Python process exited with code ${code}: ${stderr}`));
+      } else {
+        try {
+          // 결과를 파싱 시도
+          const lines = stdout.trim().split('\n');
+          const lastLine = lines[lines.length - 1];
+          
+          // JSON 결과가 있는지 확인
+          if (lastLine && lastLine.startsWith('{') && lastLine.endsWith('}')) {
+            resolve(JSON.parse(lastLine));
+          } else {
+            // 텍스트 결과 반환
+            resolve({ output: stdout });
+          }
+        } catch (error: any) {
+          // 파싱 실패시 원본 반환
+          resolve({ output: stdout });
+        }
+      }
+    });
+  });
+}
+
+/**
+ * wisdom_stats 핸들러
+ */
+export async function handleWisdomStats(_args: {}): Promise<any> {
+  try {
+    const result = await executePythonCommand('wisdom_stats');
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: result.output || JSON.stringify(result, null, 2)
+        }
+      ]
+    };
+  } catch (error: any) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error getting wisdom stats: ${error.message}`
+        }
+      ]
+    };
+  }
+}
+
+/**
+ * track_mistake 핸들러
+ */
+export async function handleTrackMistake(args: { mistake_type: string; context?: string }): Promise<any> {
+  try {
+    const { mistake_type, context = '' } = args;
+    const result = await executePythonCommand('track_mistake', [mistake_type, context]);
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: result.output || JSON.stringify(result, null, 2)
+        }
+      ]
+    };
+  } catch (error: any) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error tracking mistake: ${error.message}`
+        }
+      ]
+    };
+  }
+}
+
+/**
+ * add_best_practice 핸들러
+ */
+export async function handleAddBestPractice(args: { practice: string; category?: string }): Promise<any> {
+  try {
+    const { practice, category = 'general' } = args;
+    const result = await executePythonCommand('add_best_practice', [practice, category]);
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: result.output || JSON.stringify(result, null, 2)
+        }
+      ]
+    };
+  } catch (error: any) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error adding best practice: ${error.message}`
+        }
+      ]
+    };
+  }
+}

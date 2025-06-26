@@ -1,0 +1,410 @@
+/**
+ * AI Coding Brain MCP - Tool Definitions v7.0
+ * JSON REPL Session 환경 기반 도구 정의
+ * 
+ * 최우선 원칙: helpers 객체를 통한 모든 작업 수행
+ * 작성일: 2025-06-15
+ */
+
+import { ToolDefinition } from '../types/tool-types';
+
+export const toolDefinitions: ToolDefinition[] = [
+    {
+        name: 'execute_code',
+        description: `🧠 AI Coding Brain v7.0 - JSON REPL Session 환경
+
+## ⚠️ 최우선 원칙: helpers 객체 사용
+
+execute_code 실행 시 이미 설정된 환경:
+
+### 🚀 자동 로드된 객체
+- **helpers** (AIHelpers 인스턴스) - 모든 헬퍼 함수 포함
+- **context** (현재 프로젝트 컨텍스트)
+- **기본 모듈들** (os, sys, np, pd 등)
+
+### 📋 사용 가능한 헬퍼 함수들 (총 28개)
+
+**컨텍스트 관리 (9개):**
+\`\`\`python
+helpers.cmd_flow()           # 프로젝트 전환
+helpers.initialize_context() # 컨텍스트 초기화
+helpers.save_context()       # 상태 저장
+helpers.update_cache()       # 캐시 업데이트
+helpers.get_value()          # 값 조회
+helpers.find_symbol()        # 심볼 검색
+helpers.track_file_access()  # 파일 접근 추적
+helpers.track_function_edit()# 함수 수정 추적
+helpers.get_work_tracking_summary() # 작업 요약
+\`\`\`
+
+**작업 관리 (3개):**
+\`\`\`python
+helpers.cmd_plan()   # 계획 수립
+helpers.cmd_task()   # 작업 관리
+helpers.cmd_next()   # 다음 작업 진행
+\`\`\`
+
+**파일 작업 (6개):**
+\`\`\`python
+helpers.create_file()   # 파일 생성
+helpers.read_file()     # 파일 읽기
+helpers.backup_file()   # 백업 생성
+helpers.restore_backup()# 백업 복원
+helpers.replace_block() # 블록 교체
+helpers.insert_block()  # 블록 삽입
+\`\`\`
+
+**코드 분석 (2개):**
+\`\`\`python
+helpers.parse_with_snippets()  # AST 파싱
+helpers.get_snippet_preview()  # 코드 미리보기
+\`\`\`
+
+**검색 (6개):**
+\`\`\`python
+helpers.scan_directory()      # 디렉토리 스캔
+helpers.search_files()        # 파일 검색
+helpers.search_code()         # 코드 검색
+helpers.integrated_search()   # 통합 검색
+helpers.search_by_date()      # 날짜별 검색
+helpers.search_by_file()      # 파일별 검색
+\`\`\`
+
+## ❌ 하지 말아야 할 것:
+- initialize_context()를 직접 호출 (helpers.initialize_context() 사용)
+- 헬퍼 함수를 import 시도
+- sys.path 수동 조작
+- 전역 함수로 직접 호출
+
+## ✅ 올바른 사용법:
+\`\`\`python
+# 프로젝트 전환
+helpers.cmd_flow("my-project")
+
+# 파일 읽기
+content = helpers.read_file("app.py")
+
+# 백업 생성
+backup_path = helpers.backup_file("app.py", "수정_전")
+
+# 코드 블록 교체
+result = helpers.replace_block("app.py", "old_function", new_code)
+
+# 상태 저장
+helpers.save_context()
+\`\`\`
+
+## 🔧 작업 관리 워크플로우
+
+### 계획 수립 (/plan)
+1. 계획 분석 및 브리핑 제시
+2. 사용자 승인 대기
+3. helpers.cmd_plan() 실행
+4. Phase별 작업 추가
+
+### 작업 추가 (/task)
+1. 작업 내용 분석
+2. 추가 계획 브리핑
+3. 승인 후 helpers.cmd_task() 실행
+
+### 작업 진행 (/next)
+1. 현재 작업 완료 처리
+2. helpers.cmd_next() 실행
+3. 다음 작업 브리핑
+
+## 📊 단계별 실행과 보고
+
+모든 작업은 다음 형식으로 진행:
+
+### 작업 시작 전 브리핑
+\`\`\`
+🎯 작업: [작업 ID] [작업명]
+======================================
+
+📌 작업 목표:
+[구체적인 목표 설명]
+
+📁 수정 예정 파일:
+- [파일1] : [변경 내용]
+- [파일2] : [변경 내용]
+
+🔧 주요 변경사항:
+1. [변경사항 1]
+   - 위치: [파일명] > [함수/클래스명]
+   - 내용: [구체적 변경 내용]
+
+⏱️ 예상 소요 시간: [X분]
+
+이대로 진행하시겠습니까? (Y/N)
+\`\`\`
+
+### 단계별 코드 수정
+\`\`\`python
+# 1단계: 백업 생성
+print("🔐 백업 생성 중...")
+result = helpers.backup_file(file, f"작업_{task_id}_시작_전")
+
+# 2단계: 수정 실행
+print(f"🔧 수정 작업 진행 ({current_step}/{total_steps})")
+result = helpers.replace_block(file_path, block_name, new_content)
+
+# 3단계: 검증
+print("🔍 수정 결과 검증 중...")
+content = helpers.read_file(file_path)
+\`\`\`
+
+### 결과 보고
+\`\`\`
+✅ 작업 완료: [작업명]
+======================================
+
+📊 수정 요약:
+- 수정된 파일: X개
+- 변경된 함수: Y개
+- 추가된 라인: +Z
+- 삭제된 라인: -W
+
+📝 상세 변경 내역:
+[파일별 상세 내역]
+
+🧪 테스트 필요:
+[테스트 항목 목록]
+
+다음 작업으로 진행: /next
+\`\`\`
+
+## 🚨 오류 처리
+
+오류 발생 시 상세 정보 제공:
+\`\`\`
+❌ 오류 발생!
+======================================
+
+📍 오류 위치:
+- 파일: [파일 경로]
+- 함수: [함수명]
+- 라인: [라인 번호]
+
+🔍 오류 정보:
+- 타입: [에러 타입]
+- 메시지: [에러 메시지]
+
+💡 해결 방안:
+[구체적인 해결 방법들]
+
+🔧 복구 옵션:
+- 백업에서 복원: helpers.restore_backup(...)
+- 수동 수정 후 재시도
+\`\`\`
+
+## 💡 핵심 원칙
+1. 모든 작업은 투명하게 진행 - 사용자가 정확히 알 수 있도록
+2. 중요 변경 전 반드시 승인 - 자동 진행 금지
+3. 한 번에 하나씩 - 단계별 진행
+4. 상세한 보고 - 파일, 함수, 라인 번호까지
+5. 오류 시 정확한 위치와 해결 방안 제시`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                code: {
+                    type: 'string',
+                    description: 'Python 코드. helpers 객체를 통해 모든 작업 수행.'
+                },
+                language: {
+                    type: 'string',
+                    enum: ['python', 'javascript', 'typescript'],
+                    description: '언어 (기본값: python)',
+                    default: 'python'
+                }
+            },
+            required: ['code']
+        }
+    },
+    {
+        name: 'restart_json_repl',
+        description: `🔄 JSON REPL 세션 재시작
+
+## 목적
+- 변수 정리 및 메모리 최적화
+- 세션 초기화
+- helpers 객체는 유지 가능
+
+## 사용 시점
+- 메모리 과다 사용 시
+- 변수 충돌 발생 시
+- 깨끗한 환경에서 시작하고 싶을 때
+
+## 사용법
+\`\`\`python
+# helpers 유지하며 재시작 (기본값)
+restart_json_repl()
+
+# 완전 초기화
+restart_json_repl(keep_helpers=False)
+
+# 이유 명시
+restart_json_repl(reason="메모리 정리")
+\`\`\`
+
+## 주의사항
+- 모든 사용자 변수 삭제됨
+- keep_helpers=False면 helpers도 재로드 필요
+- 실행 중인 작업은 완료 후 사용`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                reason: {
+                    type: 'string',
+                    description: '재시작 이유',
+                    default: '세션 새로고침'
+                },
+                keep_helpers: {
+                    type: 'boolean',
+                    description: 'helpers 객체 유지 여부',
+                    default: true
+                }
+            },
+            required: []
+        }
+    },
+    {
+        name: 'backup_file',
+        description: `🗂️ 파일 백업 생성 (helpers.backup_file 사용)
+
+## 사용법
+\`\`\`python
+# execute_code 환경에서 사용
+backup_path = helpers.backup_file("app.py", "수정_전")
+print(f"백업 생성됨: {backup_path}")
+\`\`\`
+
+## 백업 구조
+\`\`\`
+프로젝트/
+└── backups/
+    └── 2025-06-15/  (오늘 날짜)
+        ├── app.py.수정_전.152000.bak
+        ├── app.py.버그_수정.152301.bak
+        └── app.py.리팩토링.153045.bak
+\`\`\`
+
+## 작업 흐름
+1. 수정 전 항상 백업
+2. 백업 경로 기록
+3. 문제 발생 시 복원 가능
+
+## 예시
+\`\`\`python
+# 작업별 백업
+backup_path = helpers.backup_file("models.py", f"작업_{task_id}_시작_전")
+
+# 위험한 작업 전
+backup_path = helpers.backup_file("config.json", "대규모_변경_전")
+
+# 버그 수정 전
+backup_path = helpers.backup_file("utils.py", "버그_#123_수정_전")
+\`\`\``,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                filepath: {
+                    type: 'string',
+                    description: '백업할 파일 경로'
+                },
+                reason: {
+                    type: 'string',
+                    description: '백업 이유 (파일명에 포함)',
+                    default: 'backup'
+                }
+            },
+            required: ['filepath']
+        }
+    },
+    {
+        name: 'restore_backup',
+        description: `🔄 백업 파일 복원 (helpers.restore_backup 사용)
+
+## 사용법
+\`\`\`python
+# 자동 경로 복원
+result = helpers.restore_backup("backups/2025-06-15/app.py.수정_전.152000.bak")
+
+# 특정 위치로 복원
+result = helpers.restore_backup(backup_path, "app_restored.py")
+\`\`\`
+
+## 복원 프로세스
+1. 백업 파일 확인
+2. 원본 경로 자동 추출
+3. 기존 파일 자동 백업
+4. 복원 실행
+5. 결과 보고
+
+## 오류 복구 시나리오
+\`\`\`python
+# 작업 실패 시 복구
+try:
+    result = helpers.replace_block(file, block, new_code)
+    if "ERROR" in result:
+        print("❌ 수정 실패! 백업에서 복원 중...")
+        restore_result = helpers.restore_backup(backup_path)
+        print(f"✅ 복원 완료: {restore_result}")
+except Exception as e:
+    # 긴급 복원
+    helpers.restore_backup(backup_path)
+\`\`\``,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                backup_path: {
+                    type: 'string',
+                    description: '복원할 백업 파일 경로'
+                },
+                targetPath: {
+                    type: 'string',
+                    description: '복원 대상 경로 (선택사항)'
+                }
+            },
+            required: ['backup_path']
+        }
+    },
+    {
+        name: 'list_backups',
+        description: `📋 백업 목록 조회
+
+## 사용법
+\`\`\`python
+# 모든 백업 조회
+all_backups = list_backups()
+
+# 특정 파일의 백업만 조회
+app_backups = list_backups("app.py")
+\`\`\`
+
+## 결과 형식
+\`\`\`python
+{
+    'backups': [
+        {
+            'file': 'app.py',
+            'reason': '수정_전',
+            'timestamp': '152000',
+            'date': '2025-06-15',
+            'path': 'backups/2025-06-15/app.py.수정_전.152000.bak'
+        }
+    ],
+    'total': 5
+}
+\`\`\``,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                filename: {
+                    type: 'string',
+                    description: '필터링할 파일명 (선택사항)'
+                }
+            },
+            required: []
+        }
+    }
+];

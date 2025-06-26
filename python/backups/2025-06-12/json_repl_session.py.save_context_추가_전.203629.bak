@@ -1,0 +1,1841 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys
+import os
+
+# 전역 경로 설정 (최우선 실행)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+import json
+import io
+import traceback
+import time
+import threading
+import datetime as dt
+import importlib
+import importlib.util
+from contextlib import redirect_stdout, redirect_stderr
+
+
+
+# ============================================================================
+# 🚀 개선된 Bootstrap 시스템 v2.0 - 경로 하드코딩 제거
+# ============================================================================
+
+import platform
+import subprocess
+from pathlib import Path
+from typing import Dict, Optional, Tuple, List
+
+def find_project_in_memory_bank(project_name=None) -> Optional[Tuple[Path, Path]]:
+    """메모리 뱅크에서 프로젝트를 찾는 함수
+    
+    Returns:
+        Tuple[Path, Path]: (메모리 경로, 코드 경로) 또는 None
+    """
+    # 메모리 뱅크 루트 가져오기
+    memory_bank_root = None
+    
+    # Claude Desktop 설정에서 확인
+    config_path = os.path.expanduser("~/AppData/Roaming/Claude/claude_desktop_config.json")
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            memory_bank_root = config['mcpServers']['ai-coding-brain-mcp']['env']['MEMORY_BANK_ROOT']
+        except:
+            pass
+    
+    # 환경 변수에서 확인
+    if not memory_bank_root:
+        memory_bank_root = os.environ.get('MEMORY_BANK_ROOT')
+    
+    # 기본값
+    if not memory_bank_root:
+        memory_bank_root = os.path.expanduser("~/Desktop/memory")
+    
+    if not os.path.exists(memory_bank_root):
+        return None
+    
+    # 프로젝트 이름 결정
+    if not project_name:
+        # 현재 파일 경로에서 프로젝트 이름 추측
+        current_path = Path(__file__).resolve()
+        for parent in current_path.parents:
+            if 'ai-coding-brain' in parent.name.lower():
+                project_name = parent.name
+                break
+    
+    project_name = project_name or "ai-coding-brain-mcp"
+    
+    # 메모리 프로젝트 경로
+    memory_path = Path(memory_bank_root) / project_name
+    
+    if memory_path.exists():
+        # project.json 확인
+        project_json = memory_path / "project.json"
+        code_path = None
+        
+        if project_json.exists():
+            try:
+                with open(project_json, 'r', encoding='utf-8') as f:
+                    project_config = json.load(f)
+                code_path_str = project_config.get('code_path')
+                if code_path_str:
+                    code_path = Path(code_path_str)
+            except:
+                pass
+        
+        # 코드 경로가 없으면 기존 방식으로 찾기
+        if not code_path:
+            code_path = find_project_root()
+        
+        debug_log(f"  ✅ 메모리 뱅크에서 프로젝트 발견: {project_name}")
+        debug_log(f"     메모리 경로: {memory_path}")
+        debug_log(f"     코드 경로: {code_path}")
+        
+        return memory_path, code_path
+    
+    return None
+
+def find_project_root() -> Optional[Path]:
+    """프로젝트 루트를 동적으로 찾는 함수"""
+    strategies = []
+    
+    # 전략 1: 환경 변수 확인
+    if os.environ.get('AI_BRAIN_ROOT'):
+        strategies.append(('ENV_VAR', Path(os.environ['AI_BRAIN_ROOT'])))
+    
+    # 전략 2: 현재 파일 기준 상위 디렉토리 탐색
+    current_file = Path(__file__).resolve()
+    for parent in current_file.parents:
+        # 프로젝트 마커 파일들 확인
+        markers = ['.ai-brain-project', 'project_cache.json', 'roadmap.md', '.git']
+        if any((parent / marker).exists() for marker in markers):
+            strategies.append(('MARKER_FILE', parent))
+            break
+    
+    # 전략 3: 패키지 구조 분석
+    for parent in current_file.parents:
+        # python 폴더나 src 폴더가 있는지 확인
+        if any((parent / folder).is_dir() for folder in ['python', 'src', 'lib']):
+            strategies.append(('PACKAGE_STRUCTURE', parent))
+            break
+    
+    # 전략 4: 프로젝트 이름 기반 탐색
+    for parent in current_file.parents:
+        if 'ai-coding-brain' in parent.name.lower():
+            strategies.append(('PROJECT_NAME', parent))
+            break
+    
+    # 전략 5: 현재 작업 디렉토리 기반
+    cwd = Path.cwd()
+    if any(marker in cwd.name.lower() for marker in ['ai', 'brain', 'coding']):
+        strategies.append(('WORKING_DIR', cwd))
+    
+    # 가장 신뢰할 수 있는 전략 선택
+    debug_log("  🔍 프로젝트 루트 탐색 중...")
+    for strategy_name, path in strategies:
+        if path.exists():
+            debug_log(f"    ✓ {strategy_name}: {path}")
+            return path
+    
+    return None
+
+
+def setup_python_path(project_root: Path) -> Tuple[bool, str]:
+    """Python 경로를 안전하게 설정"""
+    try:
+        paths_to_add = []
+        
+        # 프로젝트 루트
+        paths_to_add.append(project_root)
+        
+        # 가능한 소스 디렉토리들
+        for subdir in ['python', 'src', 'lib', 'modules']:
+            candidate = project_root / subdir
+            if candidate.exists():
+                paths_to_add.append(candidate)
+        
+        added_paths = []
+        for path in paths_to_add:
+            path_str = str(path.resolve())
+            if path_str not in sys.path:
+                sys.path.insert(0, path_str)
+                added_paths.append(path_str)
+        
+        if added_paths:
+            return True, f"{len(added_paths)}개 경로 추가됨"
+        else:
+            return True, "이미 모든 경로가 설정되어 있음"
+            
+    except Exception as e:
+        return False, f"경로 설정 실패: {str(e)}"
+
+
+def detect_execution_context() -> str:
+    """실행 환경을 자동으로 감지"""
+    
+    # MCP 서버 모드
+    if os.environ.get('MCP_SERVER_MODE'):
+        return 'mcp_server'
+    
+    # Jupyter/IPython
+    try:
+        get_ipython()
+        return 'notebook'
+    except NameError:
+        pass
+    
+    # 터미널에서 직접 실행
+    if hasattr(sys, 'ps1'):
+        return 'interactive'
+    
+    # 스크립트로 실행
+    if __name__ == '__main__':
+        return 'script'
+    
+    # 모듈로 임포트
+    return 'imported'
+
+
+def bootstrap_ai_brain_session(config: Optional[Dict] = None) -> Optional[Dict]:
+    """
+    개선된 AI 브레인 세션 부트스트랩
+    
+    Args:
+        config: 선택적 구성 옵션
+            - force_root: 강제로 사용할 프로젝트 루트 경로
+            - skip_vibe: Vibe 시스템 초기화 건너뛰기
+            - minimal: 최소 초기화 모드
+            - verbose: 상세 로그 출력 (기본값: True)
+    
+    Returns:
+        초기화된 project_context 또는 실패 시 None
+    """
+    config = config or {}
+    verbose = config.get('verbose', True)
+    
+    if verbose:
+        debug_log("🚀 AI Coding Brain 스마트 부트스트랩 v2.0")
+        debug_log(f"   실행 환경: {detect_execution_context()}")
+        debug_log(f"   플랫폼: {platform.system()}")
+    
+    # === Phase 1: 프로젝트 루트 탐색 ===
+    if verbose:
+        debug_log("\n[Phase 1/5] 메모리 뱅크에서 프로젝트 탐색")
+    
+    # 먼저 메모리 뱅크에서 프로젝트 찾기
+    memory_project = find_project_in_memory_bank(config.get('project_name'))
+    
+    if memory_project:
+        memory_path, code_path = memory_project
+        project_root = code_path
+        if verbose:
+            debug_log(f"  ✅ 메모리 뱅크에서 프로젝트 발견")
+            debug_log(f"     메모리: {memory_path}")
+            debug_log(f"     코드: {code_path}")
+    elif config.get('force_root'):
+        project_root = Path(config['force_root']).resolve()
+        if verbose:
+            debug_log(f"  ✅ 강제 지정된 루트: {project_root}")
+    else:
+        project_root = find_project_root()
+        
+    if not project_root or not project_root.exists():
+        debug_log("  ❌ 프로젝트를 찾을 수 없습니다!")
+        debug_log("\n💡 해결 방법:")
+        debug_log("  1. 메모리 뱅크에 프로젝트 생성")
+        debug_log("  2. 환경변수 설정: set AI_BRAIN_ROOT=C:\\your\\project\\path")
+        debug_log("  3. 프로젝트 루트에 .ai-brain-project 파일 생성")
+        
+        if config.get('minimal'):
+            # 최소 모드에서는 현재 디렉토리 사용
+            project_root = Path.cwd()
+            debug_log(f"\n  ⚠️ 최소 모드: 현재 디렉토리 사용 → {project_root}")
+        else:
+            return None
+    
+    debug_log(f"  ✅ 프로젝트 루트 확정: {project_root}")
+    
+    # === Phase 2: Python 경로 설정 ===
+    if verbose:
+        debug_log(f"\n[Phase 2/5] Python 경로 설정")
+    
+    success, message = setup_python_path(project_root)
+    if not success:
+        debug_log(f"  ❌ {message}")
+        if not config.get('minimal'):
+            return None
+    elif verbose:
+        debug_log(f"  ✅ {message}")
+    
+    # === Phase 3: Context Manager 초기화 ===
+    if verbose:
+        debug_log(f"\n[Phase 3/6] 프로젝트 컨텍스트 초기화")
+    
+    try:
+        # Context Manager 사용 가능한 경우
+        if CONTEXT_MANAGER_AVAILABLE:
+            import context_manager
+            
+            # 메모리 뱅크 정보가 있으면 프로젝트 이름 사용
+            if memory_project:
+                project_name = memory_path.name
+            else:
+                project_name = project_root.name
+                
+            project_context = context_manager.initialize_context(
+                project_path=str(project_root),
+                project_name=project_name
+            )
+            project_context = context_manager.initialize_work_tracking(project_context)
+            repl_globals['project_context'] = project_context
+            if verbose:
+                debug_log("  ✅ Context Manager를 통한 초기화 성공")
+                if memory_project:
+                    debug_log(f"     메모리 뱅크 사용: {project_name}")
+        else:
+            # 기본 구조 생성
+            project_context = {
+                'project_id': f"ai-brain-{dt.datetime.now().strftime('%Y%m%d%H%M%S')}",
+                'project_name': project_root.name,
+                'project_path': str(project_root),
+                'session_id': f"session-{time.time()}",
+                'work_tracking': {
+                    'access_count': {},
+                    'edit_history': [],
+                    'function_edits': {}
+                },
+                'vibe_system': {
+                    'next_tasks': [],
+                    'completed_tasks': [],
+                    'current_focus': '세션 시작'
+                }
+            }
+            repl_globals['project_context'] = project_context
+            if verbose:
+                debug_log("  ⚠️ 기본 컨텍스트 구조 생성")
+        
+        # 부트스트랩 메타데이터 추가
+        project_context['bootstrap_info'] = {
+            'version': '2.0',
+            'root_path': str(project_root),
+            'python_paths': sys.path[:3],
+            'timestamp': dt.datetime.now().isoformat(),
+            'execution_context': detect_execution_context(),
+            'config': config
+        }
+        
+    except Exception as e:
+        debug_log(f"  ❌ 컨텍스트 초기화 실패: {e}")
+        return None
+    
+    # === Phase 4: Vibe Memory 초기화 ===
+    if not config.get('skip_vibe'):
+        if verbose:
+            debug_log(f"\n[Phase 4/6] Vibe Memory 시스템 초기화")
+        try:
+            from vibe_memory_system import VibeMemoryManager
+            vibe_manager = VibeMemoryManager(project_context)
+            repl_globals['vibe_manager'] = vibe_manager
+            if verbose:
+                debug_log("  ✅ Vibe Memory 시스템 활성화")
+        except Exception as e:
+            if verbose:
+                debug_log(f"  ⚠️ Vibe 초기화 실패 (계속 진행): {str(e)[:50]}...")
+    
+    # === Phase 5: Session Manager 초기화 (순서 변경) ===
+    if verbose:
+        debug_log(f"\n[Phase 5/6] Session Manager 초기화")
+    
+    try:
+        # SimpleSessionManager 초기화
+        session_manager = SimpleSessionManager(project_context)
+        project_context['session_manager'] = session_manager
+        
+        # 전역 네임스페이스에도 등록
+        if 'repl_globals' in globals():
+            repl_globals['session_manager'] = session_manager
+            repl_globals['SimpleSessionManager'] = SimpleSessionManager
+        
+        # 부트스트랩 완료 세션 저장
+        bootstrap_session = {
+            'type': 'bootstrap',
+            'action': 'Bootstrap v2.0 초기화 완료',
+            'bootstrap_info': project_context.get('bootstrap_info', {}),
+            'modules_loaded': list(sys.modules.keys())[:20],
+            'status': 'success'
+        }
+        session_manager.save_session(bootstrap_session)
+        
+        if verbose:
+            debug_log(f"  ✅ Session Manager 초기화 완료")
+            debug_log(f"  - 세션 디렉토리: {session_manager.session_dir}")
+            debug_log(f"  - 총 세션 수: {session_manager.metadata.get('total_sessions', 0)}")
+            
+    except Exception as e:
+        if verbose:
+            debug_log(f"  ⚠️ Session Manager 초기화 실패: {e}")
+    
+    # === Phase 6: Helper 함수 등록 (순서 변경) ===
+    if verbose:
+        debug_log(f"\n[Phase 6/6] Helper 함수 등록")
+    try:
+        # 이제 session_manager가 확실히 존재하므로 세션 관련 헬퍼도 정상 등록됨
+        result = register_all_helpers()
+        if verbose and result.get('success'):
+            debug_log(f"  ✅ Helper 함수 {result.get('registered_count', 0)}개 등록")
+    except Exception as e:
+        if verbose:
+            debug_log(f"  ⚠️ Helper 등록 실패 (계속 진행): {str(e)[:50]}...")
+    
+    # === 최종 보고서 ===
+    if verbose:
+        debug_log("\n" + "="*60)
+        debug_log("🎉 부트스트랩 완료!")
+        debug_log(f"   프로젝트: {project_context.get('project_name', 'Unknown')}")
+        debug_log(f"   루트 경로: {project_root}")
+        debug_log(f"   세션 ID: {project_context.get('session_id', 'N/A')}")
+        debug_log(f"   초기화 모드: {'최소' if config.get('minimal') else '전체'}")
+        debug_log("="*60 + "\n")
+    
+    return project_context
+
+
+# Smart Print Utils 연동 (선택적)
+try:
+    from smart_print import smart_print, enhanced_smart_print, sp, esp, compress_content
+    SMART_PRINT_AVAILABLE = True
+    print("[INIT] Smart Print Utils 연동 성공", file=sys.stderr, flush=True)
+except ImportError:
+    SMART_PRINT_AVAILABLE = False
+    def smart_print(content, **kwargs): return str(content)  # fallback
+    def enhanced_smart_print(content, **kwargs): return str(content)  # fallback
+    def sp(content, **kwargs): return str(content)  # fallback
+    def esp(content, **kwargs): return str(content)  # fallback
+    def compress_content(content, **kwargs): return str(content)[:15000] + "..." if len(str(content)) > 15000 else str(content)  # fallback
+    print("[INIT] Smart Print Utils 없음 - fallback 사용", file=sys.stderr, flush=True)
+
+# Context Manager 연동 (선택적)
+try:
+    import context_manager
+    CONTEXT_MANAGER_AVAILABLE = True
+    print("[INIT] Context Manager 2계층 구조 연동 성공", file=sys.stderr, flush=True)
+except ImportError:
+    CONTEXT_MANAGER_AVAILABLE = False
+    print("[INIT] Context Manager 없음", file=sys.stderr, flush=True)
+
+# ============================================================================
+# SimpleSessionManager - 프로젝트별 세션 관리자
+# ============================================================================
+from datetime import datetime
+
+class SimpleSessionManager:
+    """프로젝트별 세션 관리자 - 간단하고 안정적인 구현"""
+    
+    def __init__(self, project_context):
+        self.project_context = project_context
+        self.project_name = project_context.get('project_name', 'ai-coding-brain-mcp')
+        self.project_path = project_context.get('project_path', '.')
+        
+        # 세션 저장 경로 설정
+        from pathlib import Path
+        self.session_dir = Path(self.project_path) / '.sessions'
+        self.session_dir.mkdir(exist_ok=True)
+        
+        # 세션 메타데이터 파일
+        self.meta_file = self.session_dir / 'session_meta.json'
+        self.load_metadata()
+        
+        debug_log(f"SimpleSessionManager 초기화: {self.session_dir}")
+        
+    def load_metadata(self):
+        """세션 메타데이터 로드"""
+        if self.meta_file.exists():
+            with open(self.meta_file, 'r', encoding='utf-8') as f:
+                self.metadata = json.load(f)
+        else:
+            self.metadata = {
+                'created': datetime.now().isoformat(),
+                'total_sessions': 0,
+                'last_session': None
+            }
+            
+    def save_metadata(self):
+        """세션 메타데이터 저장"""
+        with open(self.meta_file, 'w', encoding='utf-8') as f:
+            json.dump(self.metadata, f, indent=2)
+        
+    def save_session(self, session_data):
+        """세션 데이터 저장"""
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"session_{timestamp}.json"
+        filepath = self.session_dir / filename
+        
+        # 세션 ID 추가
+        if 'session_id' not in session_data:
+            session_data['session_id'] = self.project_context.get('session_id', 'unknown')
+        
+        # 타임스탬프 추가
+        if 'timestamp' not in session_data:
+            session_data['timestamp'] = datetime.now().isoformat()
+            
+        try:
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(session_data, f, indent=2, ensure_ascii=False)
+                
+            # 메타데이터 업데이트
+            self.metadata['total_sessions'] += 1
+            self.metadata['last_session'] = filename
+            self.save_metadata()
+            
+            debug_log(f"세션 저장 완료: {filename}")
+            return True
+        except Exception as e:
+            debug_log(f"세션 저장 실패: {e}")
+            return False
+    
+    def get_latest_session(self):
+        """최신 세션 로드"""
+        session_files = list(self.session_dir.glob('session_*.json'))
+        if not session_files:
+            return None
+            
+        latest = max(session_files, key=lambda p: p.stat().st_mtime)
+        with open(latest, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    
+    def get_all_sessions(self):
+        """모든 세션 목록 반환"""
+        session_files = sorted(self.session_dir.glob('session_*.json'), reverse=True)
+        return [f.name for f in session_files]
+
+# 디버그 로깅 함수
+def debug_log(message):
+    timestamp = time.strftime("%H:%M:%S")
+    print(f"[DEBUG {timestamp}] {message}", file=sys.stderr, flush=True)
+
+# REPL 세션을 위한 전역 네임스페이스 (exec() 기반)
+repl_globals = {'__name__': '__console__', '__doc__': None}
+
+# READY 시그널 전송
+debug_log("Python REPL 초기화 시작")
+print("__READY__", flush=True)
+debug_log("READY 신호 전송 완료")
+
+# ============================================================================
+# 헬퍼 함수 자동 로드 시스템 (backup_final에서 가져옴, exec() 기반으로 수정)
+# ============================================================================
+
+# ============================================================================
+# 🧠 Enhanced AI Brain Integration for JSON REPL Session v2.0  
+# claude_code_ai_brain.py와 완전 연동되는 JSON REPL 맞춤형 시스템
+# ============================================================================
+
+class JsonReplAIBrain:
+    """
+    JSON REPL 환경 전용 AI Brain 클래스
+    claude_code_ai_brain.py의 ClaudeCodeAIBrain과 호환되는 인터페이스 제공
+    """
+    
+    def __init__(self, project_path):
+        self.project_path = project_path
+        self.initialized = True
+        self.session_id = f"json_repl_{int(time.time())}"
+        self.capabilities = [
+            'project_context_management',
+            'helper_function_access', 
+            'vibe_memory_integration',
+            'context_manager_v2_support',
+            'experience_learning',
+            'solution_search'
+        ]
+        
+        # project_context 연결 (Context Manager v2 지원)
+        if 'project_context' in repl_globals:
+            self.project_context = repl_globals['project_context']
+        else:
+            self.project_context = self._create_default_context()
+            repl_globals['project_context'] = self.project_context
+        
+        debug_log(f"JsonReplAIBrain 초기화 완료: {self.session_id}")
+    
+    def _create_default_context(self):
+        """기본 프로젝트 컨텍스트 생성 - 2계층 구조"""
+        return {
+            'session_id': self.session_id,
+            'name': 'ai-coding-brain-mcp',
+            'base_path': self.project_path,
+            'analyzed_files': {},
+            'backup_history': [],
+            'experiences': [],
+            'ai_brain_type': 'JsonReplAIBrain',
+            'created_at': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'version': '2tier',
+            # 2계층 구조: Cache + Storage
+            'cache': {
+                'current_focus': 'JSON REPL AI Brain 활성',
+                'active_file': None,
+                'active_file_analysis': {},
+                'last_command_result': None,
+                'smart_index': {},
+                'analyzed_files_summary': {},
+                'vibe_session': {
+                    'status': 'inactive',
+                    'next_tasks': [],
+                    'completed_tasks': []
+                }
+            },
+            'storage': {
+                'base_path': self.project_path,
+                'backup_history_path': 'backups/history.json',
+                'full_system_log_path': 'logs/session.log'
+            }
+        }
+    
+    def get_status(self):
+        """AI Brain 상태 정보 반환"""
+        return {
+            'type': 'JsonReplAIBrain',
+            'session_id': self.session_id,
+            'initialized': self.initialized,
+            'project_path': self.project_path,
+            'capabilities': self.capabilities,
+            'context_available': 'project_context' in repl_globals,
+            'helper_functions_available': 'protection_system' in repl_globals,
+            'context_type': 'v2' if 'cache' in self.project_context else 'v1'
+        }
+    
+    def save_experience(self, data, importance=0.5, tech_stack=None):
+        """개발 경험 저장 (claude_code_ai_brain.py 호환)"""
+        try:
+            experience = {
+                'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+                'data': data,
+                'importance': importance,
+                'tech_stack': tech_stack,
+                'session_id': self.session_id,
+                'type': 'coding_experience'
+            }
+            
+            if 'experiences' not in self.project_context:
+                self.project_context['experiences'] = []
+            
+            self.project_context['experiences'].append(experience)
+            
+            # Cache 업데이트 (2계층 구조)
+            if 'cache' in self.project_context:
+                self.project_context['cache']['last_command_result'] = {
+                    'action': 'experience_saved',
+                    'timestamp': experience['timestamp']
+                }
+            
+            debug_log(f"경험 저장 완료: {experience['timestamp']}")
+            return {'success': True, 'saved_at': experience['timestamp']}
+        except Exception as e:
+            debug_log(f"경험 저장 실패: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def search_experiences(self, query, tech_stack=None):
+        """경험 검색 (claude_code_ai_brain.py 호환)"""
+        try:
+            experiences = self.project_context.get('experiences', [])
+            results = []
+            
+            query_words = query.lower().split()
+            
+            for exp in experiences:
+                if isinstance(exp.get('data'), (str, dict)):
+                    exp_str = str(exp['data']).lower()
+                    
+                    # 키워드 매칭
+                    if any(word in exp_str for word in query_words):
+                        results.append(exp)
+                    
+                    # 기술 스택 매칭 (있는 경우)
+                    if tech_stack and exp.get('tech_stack'):
+                        if any(tech.lower() in str(exp['tech_stack']).lower() for tech in tech_stack):
+                            if exp not in results:
+                                results.append(exp)
+            
+            # 중요도 순으로 정렬
+            results.sort(key=lambda x: x.get('importance', 0), reverse=True)
+            
+            debug_log(f"경험 검색 완료: {len(results)}개 결과")
+            return {'success': True, 'results': results, 'count': len(results), 'query': query}
+        except Exception as e:
+            debug_log(f"경험 검색 실패: {e}")
+            return {'success': False, 'error': str(e)}
+    
+    def auto_initialize(self, project_path=None, force_reinit=False):
+        """
+        claude_code_ai_brain.py 호환 메서드 - 향상된 자동 초기화
+        작업 추적, 캐시, Vibe Memory 완전 통합
+        """
+        try:
+            if project_path:
+                self.project_path = project_path
+                if 'storage' in self.project_context:
+                    self.project_context['storage']['base_path'] = project_path
+            
+            # 헬퍼 함수 시스템 연동
+            if 'protection_system' in repl_globals:
+                self.protection_system = repl_globals['protection_system']
+            
+            # Context Manager 함수들 연동
+            if CONTEXT_MANAGER_AVAILABLE:
+                # 작업 추적 함수들
+                self.track_file_access = repl_globals.get('track_file_access')
+                self.track_function_edit = repl_globals.get('track_function_edit')
+                self.get_work_tracking_summary = repl_globals.get('get_work_tracking_summary')
+                
+                # 캐시 함수들
+                self.update_cache = repl_globals.get('update_cache')
+                self.get_cache_statistics = repl_globals.get('get_cache_statistics')
+                
+                # Vibe Memory 함수들
+                self.sync_to_vibe_memory = repl_globals.get('sync_to_vibe_memory')
+                self.update_vibe_focus = repl_globals.get('update_vibe_focus')
+                
+                debug_log("Context Manager 함수 연동 완료")
+            
+            # Vibe Memory 시스템 연동 (있는 경우)
+            if 'vibe_manager' in repl_globals:
+                self.vibe_manager = repl_globals['vibe_manager']
+            if 'vibe_commands' in repl_globals:
+                self.vibe_commands = repl_globals['vibe_commands']
+            
+            # 초기화 완료 후 작업 추적
+            if self.track_file_access and 'project_context' in repl_globals:
+                self.track_file_access(
+                    repl_globals['project_context'],
+                    __file__,
+                    'ai_brain_init'
+                )
+            
+            # Vibe Memory에 초기화 상태 동기화
+            if self.update_vibe_focus and 'project_context' in repl_globals:
+                self.update_vibe_focus(
+                    repl_globals['project_context'],
+                    f"AI Brain 초기화 완료 - 세션: {self.session_id}"
+                )
+            
+            debug_log(f"JsonReplAIBrain auto_initialize 완료 - 통합 기능 활성화")
+            self.initialized = True
+            return True
+            
+        except Exception as e:
+            debug_log(f"auto_initialize 실패: {e}")
+            return False
+def init_helpers_sync():
+    """
+    Enhanced 헬퍼 함수 + AI Brain 통합 초기화 v3.0
+    작업 추적, 캐시 시스템, Vibe Memory 완전 자동화
+    """
+    global _helper_initialization_status
+    
+    debug_log("=== Enhanced AI Brain + 통합 시스템 초기화 v3.0 시작 ===")
+    
+    # 중복 호출 방지
+    if _helper_initialization_status.get('in_progress', False):
+        debug_log("초기화가 이미 진행 중입니다")
+        return {"success": False, "message": "initialization_in_progress"}
+    
+    if _helper_initialization_status.get('initialized', False):
+        debug_log("이미 초기화되었습니다 - Enhanced v3.0")
+        return {"success": True, "message": "already_initialized_v3"}
+    
+    _helper_initialization_status['in_progress'] = True
+    _helper_initialization_status['timestamp'] = dt.datetime.now().isoformat()
+    _helper_initialization_status['source'] = 'enhanced_init_v3'
+    
+    try:
+        # 1. 프로젝트 경로 설정
+        project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        debug_log(f"프로젝트 경로: {project_path}")
+        
+        # 2. Context Manager 초기화
+        debug_log("Context Manager 2계층 구조 초기화...")
+        if CONTEXT_MANAGER_AVAILABLE:
+            project_context = context_manager.initialize_context(
+                project_path=project_path,
+                project_name='ai-coding-brain-mcp'
+            )
+            repl_globals['project_context'] = project_context
+            debug_log(f"✅ Project ID: {project_context.get('project_id')}")
+            
+            # 작업 추적 시스템 초기화
+            project_context = context_manager.initialize_work_tracking(project_context)
+            debug_log("✅ 작업 추적 시스템 초기화 완료")
+            
+            # 작업 추적 함수들을 전역으로 등록
+            work_tracking_funcs = [
+                'track_file_access', 'track_function_edit', 'track_code_analysis',
+                'get_current_work_context', 'get_work_history', 'get_work_tracking_summary',
+                'get_most_accessed_files', 'get_most_edited_functions'
+            ]
+            for func_name in work_tracking_funcs:
+                if hasattr(context_manager, func_name):
+                    repl_globals[func_name] = getattr(context_manager, func_name)
+            debug_log(f"✅ 작업 추적 함수 {len(work_tracking_funcs)}개 등록")
+            
+            # 캐시 시스템 초기화
+            debug_log("캐시 시스템 초기화...")
+            # 핵심 파일들 미리 캐싱
+            core_files = [
+                'python/context_manager.py',
+                'python/file_system_helpers.py', 
+                'python/ast_parser_helpers.py'
+            ]
+            cached_count = 0
+            for rel_path in core_files:
+                file_path = os.path.join(project_path, rel_path)
+                if os.path.exists(file_path):
+                    try:
+                        # 파일 접근 추적
+                        context_manager.track_file_access(project_context, file_path, 'cache_init')
+                        cached_count += 1
+                    except:
+                        pass
+            debug_log(f"✅ 캐시 초기화: {cached_count}개 핵심 파일 등록")
+            
+            # Vibe Memory 통합
+            if hasattr(context_manager, 'integrate_vibe_memory'):
+                debug_log("Vibe Memory 시스템 통합...")
+                vibe_result = context_manager.integrate_vibe_memory(project_context, auto_sync=True)
+                if vibe_result:
+                    debug_log("✅ Vibe Memory 연동 성공")
+                    # 실시간 동기화 활성화
+                    context_manager.enable_realtime_sync(project_context, enabled=True, write_immediately=True)
+                    debug_log("✅ 실시간 동기화 활성화")
+                    
+                    # 초기 상태 동기화
+                    context_manager.update_vibe_focus(project_context, "JSON REPL 세션 시작")
+                else:
+                    debug_log("⚠️ Vibe Memory 연동 실패")
+        else:
+            # Context Manager가 없는 경우 기본 context 생성
+            project_context = {
+                'session_id': f'json_repl_{int(time.time())}',
+                'name': 'ai-coding-brain-mcp',
+                'base_path': project_path,
+                'analyzed_files': {},
+                'cache': {'current_focus': 'JSON REPL 초기화'},
+                'storage': {'base_path': project_path}
+            }
+            repl_globals['project_context'] = project_context
+            debug_log("⚠️ Context Manager 없음 - 기본 context 생성")
+        
+        # 3. JSON REPL AI Brain 생성
+        debug_log("JSON REPL AI Brain 생성...")
+        ai_brain = JsonReplAIBrain(project_path)
+        repl_globals['ai_brain'] = ai_brain
+        repl_globals['claude_ai_brain'] = ai_brain
+        
+        # AI Brain 자동 초기화
+        ai_brain.auto_initialize(project_path)
+        debug_log("✅ AI Brain 생성 및 초기화 완료")
+        
+        # 4. 헬퍼 함수 보호 시스템 실행
+        debug_log("헬퍼 함수 보호 시스템 실행...")
+        helper_result = register_all_helpers(force_overwrite=False)
+        
+        # 5. 추가 헬퍼 함수 등록 (통합 검색 등)
+        # 5. 추가 헬퍼 함수 등록 (통합 검색 등)
+        try:
+            # 통합 검색 함수 등록
+            if CONTEXT_MANAGER_AVAILABLE:
+                # integrated_search 모듈에서 함수 가져오기
+                try:
+                    from integrated_search import integrated_search
+                    repl_globals['integrated_search'] = integrated_search
+                    debug_log("✅ 통합 검색 함수 등록")
+                except ImportError as e:
+                    debug_log(f"통합 검색 함수 import 실패: {e}")
+                
+                # 캐시 관련 함수 등록
+                cache_funcs = [
+                    'update_cache', 'update_file_cache', 'get_cached_analysis',
+                    'validate_cache_entry', 'get_cache_statistics', 'save_project_cache'
+                ]
+                for func_name in cache_funcs:
+                    if hasattr(context_manager, func_name):
+                        repl_globals[func_name] = getattr(context_manager, func_name)
+                debug_log(f"✅ 캐시 함수 {len(cache_funcs)}개 추가 등록")
+        except Exception as e:
+            debug_log(f"추가 함수 등록 중 오류: {e}")
+        
+        # 6. 시스템 상태 보고
+        debug_log("=== 🎯 시스템 초기화 완료 보고 ===")
+        debug_log(f"Project ID: {project_context.get('project_id', 'N/A')}")
+        debug_log(f"Session ID: {ai_brain.session_id}")
+        debug_log(f"작업 추적: {'활성화' if 'track_file_access' in repl_globals else '비활성화'}")
+        debug_log(f"캐시 시스템: {'활성화' if 'cache' in project_context else '비활성화'}")
+        debug_log(f"Vibe Memory: {'연동됨' if project_context.get('cache', {}).get('vibe_integrated') else '미연동'}")
+        debug_log(f"헬퍼 함수: {helper_result.get('registered_count', 0)}개 보호됨")
+        
+        # 7. 완료 상태 업데이트
+        _helper_initialization_status['initialized'] = True
+        _helper_initialization_status['in_progress'] = False
+        
+        success_result = {
+            "success": True,
+            "version": "enhanced_v3.0",
+            "ai_brain_session_id": ai_brain.session_id,
+            "project_id": project_context.get('project_id'),
+            "work_tracking": 'track_file_access' in repl_globals,
+            "cache_system": 'cache' in project_context,
+            "vibe_memory": project_context.get('cache', {}).get('vibe_integrated', False),
+            "helper_functions_protected": helper_result.get('registered_count', 0),
+            "timestamp": _helper_initialization_status['timestamp']
+        }
+        
+        debug_log("=== Enhanced 통합 시스템 초기화 v3.0 완료 ===")
+        return success_result
+        
+    except Exception as e:
+        debug_log(f"Enhanced 초기화 실패: {e}")
+        import traceback
+        debug_log(traceback.format_exc())
+        _helper_initialization_status['in_progress'] = False
+        return {"success": False, "error": str(e)}
+
+def read_eot_framed_input():
+    """EOT(\\x04) 문자로 프레이밍된 입력 읽기"""
+    debug_log("EOT 프레이밍 입력 읽기 시작")
+    
+    buffer = ""
+    while True:
+        try:
+            char = sys.stdin.read(1)
+            
+            if not char:  # EOF
+                debug_log("EOF 감지 - 입력 스트림 종료")
+                return None
+                
+            if char == '\x04':  # EOT 문자
+                debug_log(f"EOT 감지 - 버퍼 길이: {len(buffer)}")
+                debug_log(f"수신된 데이터: {repr(buffer[:100])}...")
+                return buffer
+                
+            buffer += char
+            
+            if len(buffer) > 10000:
+                debug_log(f"WARNING: 버퍼 크기 {len(buffer)} - EOT 누락 가능성")
+                
+        except Exception as e:
+            debug_log(f"입력 읽기 에러: {e}")
+            return None
+
+def send_eot_framed_response(response_data):
+    """EOT(\\x04) 문자로 프레이밍된 응답 전송"""
+    try:
+        # 원본: json_response = json.dumps(response_data, ensure_ascii=False)
+        # 대용량 JSON 응답 smart_print 처리
+        if SMART_PRINT_AVAILABLE and len(str(response_data)) > 20000:
+            # 대용량 응답일 때 smart_print로 압축
+            debug_log(f"대용량 응답 감지 - smart_print 압축 적용: {len(str(response_data))} 문자")
+            compressed_response = compress_content(str(response_data), level=1)
+            if isinstance(compressed_response, str) and len(compressed_response) < len(str(response_data)):
+                # 압축이 효과적인 경우 압축된 버전 사용
+                response_data_to_serialize = {"compressed": True, "content": compressed_response, "original_size": len(str(response_data))}
+                debug_log(f"smart_print 압축 성공: {len(str(response_data))} → {len(compressed_response)} 문자")
+            else:
+                # 압축이 효과적이지 않은 경우 원본 사용
+                response_data_to_serialize = response_data
+                debug_log("smart_print 압축 효과 없음 - 원본 사용")
+        else:
+            # 일반 크기 응답은 그대로 처리
+            response_data_to_serialize = response_data
+        
+        json_response = json.dumps(response_data_to_serialize, ensure_ascii=False)
+        debug_log(f"응답 전송 준비 - 길이: {len(json_response)}")
+        debug_log(f"응답 내용: {repr(json_response[:200])}...")
+        
+        sys.stdout.write(json_response)
+        sys.stdout.write('\x04')
+        sys.stdout.flush()
+        
+        debug_log("EOT 프레이밍 응답 전송 완료")
+        return True
+        
+    except Exception as e:
+        debug_log(f"응답 전송 에러: {e}")
+        return False
+
+def execute_code_block(code):
+    """exec()을 사용한 다중 문장 코드 블록 실행"""
+    debug_log("코드 블록 실행 시작")
+    debug_log(f"코드 길이: {len(code)} 문자")
+    
+    stdout_capture = io.StringIO()
+    stderr_capture = io.StringIO()
+    
+    execution_start = time.time()
+    
+    try:
+        with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
+            debug_log("코드 컴파일 시작")
+            compiled_code = compile(code, '<string>', 'exec')
+            debug_log("코드 컴파일 성공")
+            
+            debug_log("exec() 실행 시작")
+            exec(compiled_code, repl_globals)
+            debug_log("exec() 실행 완료")
+        
+        execution_time = time.time() - execution_start
+        debug_log(f"실행 시간: {execution_time:.3f}초")
+        
+        stdout_content = stdout_capture.getvalue()
+        stderr_content = stderr_capture.getvalue()
+        
+        # 세션 자동 저장 (Session Manager 통합)
+        if 'session_manager' in repl_globals:
+            try:
+                session_data = {
+                    'type': 'code_execution',
+                    'code_snippet': code[:500] + '...' if len(code) > 500 else code,
+                    'success': True,
+                    'execution_time': execution_time,
+                    'variable_count': len(repl_globals),
+                    'stdout_length': len(stdout_content),
+                    'stderr_length': len(stderr_content),
+                    'has_output': bool(stdout_content.strip())
+                }
+                repl_globals['session_manager'].save_session(session_data)
+            except Exception as e:
+                debug_log(f"세션 자동 저장 실패 (무시): {e}")
+# Smart Print 최적화: 대용량 stdout/stderr 압축
+        if SMART_PRINT_AVAILABLE:
+            if len(stdout_content) > 100000:  # Increased from 15000 to prevent truncation
+                debug_log(f"대용량 stdout 감지 - smart_print 압축: {len(stdout_content)} 문자")
+                compressed_stdout = compress_content(stdout_content, level=1)
+                if isinstance(compressed_stdout, str) and len(compressed_stdout) < len(stdout_content):
+                    stdout_content = f"[COMPRESSED] {compressed_stdout}\n\n[ORIGINAL_SIZE: {len(stdout_content)} chars]"
+                    debug_log(f"stdout 압축 완료: {len(stdout_content)} 문자로 축소")
+        debug_log(f"stdout 길이: {len(stdout_content)}")
+        debug_log(f"stderr 길이: {len(stderr_content)}")
+        debug_log(f"전역 변수 개수: {len(repl_globals)}")
+        
+        return {
+            'success': True,
+            'stdout': stdout_content,
+            'stderr': stderr_content,
+            'execution_time': execution_time,
+            'variable_count': len(repl_globals) - 2,  # __name__, __doc__ 제외
+            'result': 'executed'
+        }
+        
+    except SyntaxError as syntax_error:
+        debug_log(f"구문 에러: {syntax_error}")
+        return {
+            'success': False,
+            'error': str(syntax_error),
+            'error_type': 'SyntaxError',
+            'stdout': stdout_capture.getvalue(),
+            'stderr': stderr_capture.getvalue(),
+            'lineno': syntax_error.lineno,
+            'offset': syntax_error.offset
+        }
+
+
+    except Exception as e:
+        debug_log(f"실행 에러: {type(e).__name__}: {e}")
+        import traceback
+        tb_str = traceback.format_exc()
+        
+        # 중요: stdout/stderr 내용을 보존하여 반환
+        return {
+            'success': False,
+            'error': str(e),
+            'error_type': type(e).__name__,
+            'stdout': stdout_capture.getvalue(),  # 에러 전까지의 출력 보존
+            'stderr': stderr_capture.getvalue() + f"\n{tb_str}",  # 에러 정보 추가
+            'traceback': tb_str,
+            'execution_time': time.time() - execution_start,
+            'result': 'error'
+        }
+
+
+# ============================================================================
+# 🚀 자동 추적 시스템 활성화 헬퍼
+# ============================================================================
+
+def activate_auto_tracking():
+    """
+    자동 추적 시스템을 활성화하고 상태를 보고합니다.
+    protection_system이 있을 때만 작동합니다.
+    """
+    try:
+        if 'protection_system' not in repl_globals:
+            debug_log("보호 시스템이 없어 자동 추적을 활성화할 수 없습니다.")
+            return False
+            
+        protection_system = repl_globals['protection_system']
+        
+        # 자동 추적 활성화
+        protection_system.enable_auto_tracking(True)
+        
+        # 상태 보고
+        status = protection_system.get_protection_status()
+        call_stats = status.get('call_statistics', {})
+        
+        debug_log("=== 🎯 자동 추적 시스템 활성화 ===")
+        debug_log(f"보호된 함수: {status['total_protected']}개")
+        debug_log(f"카테고리: {', '.join(status['categories'].keys())}")
+        debug_log(f"자동 추적: {'활성화' if status['auto_tracking_enabled'] else '비활성화'}")
+        debug_log(f"총 호출 횟수: {call_stats.get('total_calls', 0)}")
+        
+        # project_context 확인
+        if 'project_context' in repl_globals:
+            ctx = repl_globals['project_context']
+            debug_log(f"Project Context 연결: {ctx.get('project_id', 'N/A')}")
+            
+            # 작업 추적 함수들 확인
+            tracking_funcs = ['track_file_access', 'track_function_edit', 'track_code_analysis']
+            available_tracking = [f for f in tracking_funcs if f in repl_globals]
+            debug_log(f"사용 가능한 추적 함수: {', '.join(available_tracking)}")
+        
+        debug_log("=== 자동 추적 시스템 준비 완료 ===")
+        return True
+        
+    except Exception as e:
+        debug_log(f"자동 추적 활성화 실패: {e}")
+        return False
+
+def get_tracking_report():
+    """
+    현재까지의 추적 정보를 종합하여 보고합니다.
+    """
+    try:
+        report = {
+            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'session_info': {},
+            'protection_status': {},
+            'work_tracking': {},
+            'call_statistics': {}
+        }
+        
+        # 세션 정보
+        if 'project_context' in repl_globals:
+            ctx = repl_globals['project_context']
+            report['session_info'] = {
+                'project_id': ctx.get('project_id', 'N/A'),
+                'session_id': ctx.get('session_id', 'N/A'),
+                'project_name': ctx.get('name', 'N/A')
+            }
+        
+        # 보호 시스템 상태
+        if 'protection_system' in repl_globals:
+            status = repl_globals['protection_system'].get_protection_status()
+            report['protection_status'] = {
+                'protected_functions': status['total_protected'],
+                'auto_tracking': status['auto_tracking_enabled'],
+                'categories': status['categories']
+            }
+            report['call_statistics'] = status['call_statistics']
+        
+        # 작업 추적 정보
+        if 'get_work_tracking_summary' in repl_globals:
+            work_summary = repl_globals['get_work_tracking_summary'](repl_globals.get('project_context'))
+            if work_summary:
+                report['work_tracking'] = work_summary
+        
+        return report
+        
+    except Exception as e:
+        debug_log(f"추적 보고서 생성 실패: {e}")
+        return None
+
+# 전역 네임스페이스에 등록
+repl_globals['activate_auto_tracking'] = activate_auto_tracking
+repl_globals['get_tracking_report'] = get_tracking_report
+def main_loop():
+
+    # 자동 추적 시스템 활성화
+    try:
+        debug_log("자동 추적 시스템 활성화 시도...")
+        if activate_auto_tracking():
+            debug_log("✅ 자동 추적 시스템 활성화 성공")
+
+            # 초기 추적 보고서 생성
+            initial_report = get_tracking_report()
+            if initial_report:
+                debug_log(f"초기 추적 보고서 생성 완료")
+        else:
+            debug_log("⚠️ 자동 추적 시스템 활성화 실패")
+    except Exception as e:
+        debug_log(f"자동 추적 활성화 중 오류: {e}")
+    """exec() + EOT 프레이밍 + 헬퍼 자동 로드 메인 루프"""
+    debug_log("메인 루프 시작 - exec() + 통합 시스템 v3.0")
+    
+    # 시스템 상태 확인 및 표시
+    debug_log("=== 🚀 JSON REPL 시스템 상태 ===")
+    
+    # 1. 프로젝트 컨텍스트 확인
+    if 'project_context' in repl_globals:
+        ctx = repl_globals['project_context']
+        debug_log(f"✅ Project Context: {ctx.get('project_id', 'N/A')}")
+        debug_log(f"✅ Session ID: {ctx.get('session_id', 'N/A')}")
+        
+        # 작업 추적 상태
+        if 'work_tracking' in ctx.get('cache', {}):
+            tracking = ctx['cache']['work_tracking']
+            debug_log(f"✅ 작업 추적: 활성화 (세션 시작: {tracking.get('session_start', 'N/A')})")
+        else:
+            debug_log("⚠️ 작업 추적: 비활성화")
+        
+        # 캐시 상태
+        if 'cache' in ctx:
+            cache_stats = ctx.get('stats', {})
+            debug_log(f"✅ 캐시 시스템: 활성화 (히트율: {cache_stats.get('cache_hits', 0)}/{cache_stats.get('cache_misses', 0)})")
+        
+        # Vibe Memory 상태  
+        if ctx.get('cache', {}).get('vibe_integrated'):
+            debug_log(f"✅ Vibe Memory: 연동됨 (경로: {ctx.get('cache', {}).get('vibe_memory_path', 'N/A')})")
+        else:
+            debug_log("⚠️ Vibe Memory: 미연동")
+    else:
+        debug_log("❌ Project Context가 없습니다")
+    
+    # 2. 헬퍼 함수 상태
+    if 'protection_system' in repl_globals:
+        status = repl_globals['protection_system'].get_protection_status()
+        debug_log(f"✅ 헬퍼 함수: {status['total_protected']}개 보호됨")
+    else:
+        debug_log("⚠️ 헬퍼 함수 보호 시스템 없음")
+    
+    # 3. AI Brain 상태
+    if 'ai_brain' in repl_globals:
+        brain_status = repl_globals['ai_brain'].get_status()
+        debug_log(f"✅ AI Brain: {brain_status['type']} (세션: {brain_status['session_id']})")
+    else:
+        debug_log("⚠️ AI Brain이 초기화되지 않음")
+    
+    debug_log("=== 시스템 상태 확인 완료 ===\n")
+    debug_log("메인 루프 시작 - exec() + 헬퍼 자동 로드")
+    
+    # v40.0: 세션 시작시 즉시 29개 헬퍼 함수 자동 로드
+    # ✅ 중복 제거: Helper 함수 등록은 lazy_import_ai_brain_system()에서 처리
+    # 백그라운드 초기화로 일원화하여 중복 호출 방지
+    
+    
+    request_count = 0
+    
+    while True:
+        try:
+            debug_log(f"요청 대기 중... (요청 #{request_count + 1})")
+            
+            raw_input = read_eot_framed_input()
+            
+            if raw_input is None:
+                debug_log("입력이 None - 루프 종료")
+                break
+                
+            request_count += 1
+            debug_log(f"요청 #{request_count} 수신 완료")
+            
+            if not raw_input.strip():
+                debug_log("빈 요청 - 무시")
+                continue
+                
+            try:
+                debug_log("JSON 파싱 시작")
+                request = json.loads(raw_input)
+                command_id = request.get('id', f'req_{request_count}')
+                code = request.get('code', '')
+                
+                debug_log(f"요청 ID: {command_id}")
+                debug_log(f"코드 길이: {len(code)}")
+                debug_log(f"코드 내용: {repr(code[:100])}...")
+                
+                if not code.strip():
+                    debug_log("빈 코드 - 기본 응답")
+                    response = {
+                        'id': command_id,
+                        'success': True,
+                        'result': None,
+                        'stdout': '',
+                        'stderr': '',
+                        'variable_count': len(repl_globals) - 2,
+                        'debug': 'empty_code',
+                        'helpers_loaded': 'ai_file_helpers' in repl_globals
+                    }
+                    send_eot_framed_response(response)
+                    continue
+                
+                # exec() 기반 코드 실행
+                execution_result = execute_code_block(code)
+                
+                # 응답 구성
+                response = {
+                    'id': command_id,
+                    **execution_result,
+                    'debug': f'executed_req_{request_count}',
+                    'execution_method': 'exec',
+                    'helpers_loaded': 'ai_file_helpers' in repl_globals,
+                    'project_context_available': 'project_context' in repl_globals
+                }
+                
+            except json.JSONDecodeError as json_error:
+                debug_log(f"JSON 파싱 에러: {json_error}")
+                debug_log(f"파싱 실패 데이터: {repr(raw_input[:200])}...")
+                response = {
+                    'id': f'parse_error_{request_count}',
+                    'success': False,
+                    'error': f"JSON parsing error: {json_error}",
+                    'error_type': 'JSONDecodeError',
+                    'raw_input_preview': raw_input[:200],
+                    'debug': f'json_error_req_{request_count}'
+                }
+            
+            debug_log("응답 전송 시작")
+            if send_eot_framed_response(response):
+                debug_log(f"요청 #{request_count} 처리 완료")
+            else:
+                debug_log(f"요청 #{request_count} 응답 전송 실패")
+            
+        except EOFError:
+            debug_log("EOFError - 정상 종료")
+            break
+        except KeyboardInterrupt:
+            debug_log("KeyboardInterrupt 감지")
+            break
+        except Exception as e:
+            debug_log(f"예상치 못한 오류: {e}")
+            debug_log(f"에러 타입: {type(e).__name__}")
+            debug_log(f"트레이스백: {traceback.format_exc()}")
+            
+            error_response = {
+                'id': command_id,  # 수정: 원래 요청 ID 사용
+                'success': False,
+                'error': str(e),
+                'error_type': type(e).__name__,
+                'traceback': traceback.format_exc(),
+                'debug': f'critical_error_req_{request_count}'
+            }
+            
+            try:
+                send_eot_framed_response(error_response)
+            except:
+                debug_log("에러 응답 전송도 실패")
+    
+    debug_log(f"JSON REPL 종료 - 총 {request_count}개 요청 처리")
+
+# ============================================================================
+# 🎯 Public API 시스템 v3.0 - 선별적 임포트 관리
+# ============================================================================
+
+
+
+class UltimateHelperProtection:
+    """
+    궁극의 헬퍼 함수 보호 시스템 v8.0 - 자동 추적 통합
+    모든 헬퍼 함수 호출을 자동으로 추적하며 절대 덮어쓰기 방지
+    """
+    
+    def __init__(self, repl_globals_ref):
+        self.repl_globals = repl_globals_ref
+        self._protected_functions = {}
+        self._protected_names = set()
+        self._is_locked = False
+        self._direct_wrappers = {}
+        self._categories = {}
+        self._auto_tracking_enabled = True
+        self._call_count = {}  # 함수별 호출 횟수 추적
+        
+        # Context Manager 함수들 연결
+        self._track_file_access = None
+        self._track_function_edit = None
+        self._track_code_analysis = None
+        
+        # Context Manager 함수 탐색
+        if 'track_file_access' in self.repl_globals:
+            self._track_file_access = self.repl_globals['track_file_access']
+        if 'track_function_edit' in self.repl_globals:
+            self._track_function_edit = self.repl_globals['track_function_edit']
+        if 'track_code_analysis' in self.repl_globals:
+            self._track_code_analysis = self.repl_globals['track_code_analysis']
+            
+        debug_log("UltimateHelperProtection v8.0 초기화 - 자동 추적 통합")
+    
+    def register_helper(self, name, func, category="GENERAL"):
+        """헬퍼 함수 안전 등록 with 자동 추적"""
+        if self._is_locked:
+            raise RuntimeError(f"🚫 보호 시스템 잠김: '{name}' 등록 불가")
+        
+        # 보호된 네임스페이스에 저장
+        self._protected_functions[name] = {
+            'function': func,
+            'category': category,
+            'protected': True,
+            'registered_at': time.strftime('%Y-%m-%d %H:%M:%S')
+        }
+        self._protected_names.add(name)
+        self._categories[category] = self._categories.get(category, []) + [name]
+        self._call_count[name] = 0
+        
+        # 읽기 전용 속성으로 설정
+        setattr(self, name, func)
+        
+        # 자동 추적이 포함된 wrapper 생성
+        def create_tracking_wrapper(original_func, func_name, func_category):
+            def wrapper(*args, **kwargs):
+                # 보호 확인
+                if func_name not in self._protected_functions:
+                    raise RuntimeError(f"🚫 헬퍼 함수 '{func_name}'이 손상됨!")
+                
+                # 호출 횟수 증가
+                self._call_count[func_name] += 1
+                
+                # 자동 추적 - 파일 관련 함수
+                if self._auto_tracking_enabled and self._track_file_access and 'project_context' in self.repl_globals:
+                    project_context = self.repl_globals['project_context']
+                    
+                    # 파일 경로 추출 시도
+                    file_path = None
+                    if func_category == "FILE" and args:
+                        # 첫 번째 인자가 파일 경로일 가능성이 높음
+                        potential_path = str(args[0])
+                        if os.path.exists(potential_path) or '\\' in potential_path or '/' in potential_path:
+                            file_path = potential_path
+                    
+                    # 파일 접근 추적
+                    if file_path:
+                        try:
+                            action = func_name.replace('_', ' ')
+                            self._track_file_access(project_context, file_path, action)
+                            debug_log(f"자동 추적: {func_name} → {file_path}")
+                        except Exception as track_error:
+                            debug_log(f"자동 추적 실패: {track_error}")
+                
+                # 원본 함수 실행
+                try:
+                    result = original_func(*args, **kwargs)
+                    
+                    # 결과 기반 추가 추적 (AST 분석 등)
+                    if self._auto_tracking_enabled and func_category == "AST" and self._track_code_analysis:
+                        if isinstance(result, dict) and result.get('parsing_success'):
+                            try:
+                                if 'project_context' in self.repl_globals and file_path:
+                                    self._track_code_analysis(self.repl_globals['project_context'], file_path, result)
+                                    debug_log(f"자동 코드 분석 추적: {file_path}")
+                            except:
+                                pass
+                    
+                    return result
+                    
+                except Exception as e:
+                    debug_log(f"헬퍼 함수 {func_name} 실행 중 오류: {e}")
+                    raise
+                    
+            wrapper.__name__ = func_name
+            wrapper.__doc__ = f"자동 추적 보호된 헬퍼 함수: {func_name}"
+            wrapper._is_protected_helper = True
+            wrapper._original_func = original_func
+            return wrapper
+        
+        self._direct_wrappers[name] = create_tracking_wrapper(func, name, category)
+        debug_log(f"헬퍼 함수 '{name}' ({category}) 자동 추적 보호 등록 완료")
+        return True
+    
+    def enable_auto_tracking(self, enabled=True):
+        """자동 추적 활성화/비활성화"""
+        self._auto_tracking_enabled = enabled
+        debug_log(f"자동 추적: {'활성화' if enabled else '비활성화'}")
+        return self._auto_tracking_enabled
+    
+    def get_call_statistics(self):
+        """함수 호출 통계 반환"""
+        return {
+            'total_calls': sum(self._call_count.values()),
+            'function_calls': dict(self._call_count),
+            'most_used': max(self._call_count.items(), key=lambda x: x[1]) if self._call_count else None,
+            'categories': {cat: sum(self._call_count.get(func, 0) for func in funcs) 
+                          for cat, funcs in self._categories.items()}
+        }
+    
+    def lock_system(self, enable_direct_access=True):
+        """보호 시스템 영구 잠금"""
+        self._is_locked = True
+        
+        if enable_direct_access:
+            for name, wrapper in self._direct_wrappers.items():
+                if name in self.repl_globals:
+                    debug_log(f"'{name}'이 이미 존재 - 자동 추적 보호 버전으로 대체")
+                
+                self.repl_globals[name] = wrapper
+        
+        debug_log(f"{len(self._protected_functions)}개 헬퍼 함수 자동 추적 영구 보호 완료!")
+        return True
+    
+    def __setattr__(self, name, value):
+        """속성 수정 차단"""
+        if hasattr(self, '_is_locked') and self._is_locked and name in self._protected_names:
+            raise RuntimeError(f"보호된 헬퍼 함수 '{name}' 수정 절대 불가!")
+        super().__setattr__(name, value)
+    
+    def __delattr__(self, name):
+        """속성 삭제 차단"""
+        if hasattr(self, '_is_locked') and self._is_locked and name in self._protected_names:
+            raise RuntimeError(f"보호된 헬퍼 함수 '{name}' 삭제 절대 불가!")
+        super().__delattr__(name)
+    
+    def get_protection_status(self):
+        """보호 상태 확인"""
+        return {
+            'version': 'v8.0-auto-tracking',
+            'total_protected': len(self._protected_functions),
+            'protected_names': list(self._protected_names),
+            'is_locked': self._is_locked,
+            'categories': dict(self._categories),
+            'auto_tracking_enabled': self._auto_tracking_enabled,
+            'call_statistics': self.get_call_statistics()
+        }
+
+
+
+# ============================================================================
+# 🚩 헬퍼 함수 초기화 상태 관리 (중복 방지)
+# ============================================================================
+
+_helper_initialization_status = {
+    'initialized': False,
+    'in_progress': False,
+    'timestamp': None,
+    'source': None  # 'main_loop' or 'lazy_import'
+}
+
+
+def register_all_helpers(force_overwrite=False):
+    """
+    🛡️ 헬퍼 함수 절대 보호 시스템 v9.0 - 중앙화된 래퍼 시스템
+    모든 헬퍼 함수는 auto_tracking_wrapper를 통해 등록됩니다.
+    
+    Args:
+        force_overwrite (bool): 기존 보호 시스템이 있을 경우 강제로 새로 생성
+    """
+    try:
+        debug_log("=== 🛡️ 헬퍼 함수 중앙 추적 보호 시스템 v9.0 시작 ===")
+        
+        # 기존 보호 시스템이 있는지 확인
+        if 'protection_system' in repl_globals and not force_overwrite:
+            debug_log("보호 시스템이 이미 존재합니다. force_overwrite=True로 새로 생성 가능")
+            existing_status = repl_globals['protection_system'].get_protection_status()
+            debug_log(f"기존 보호 상태: {existing_status['total_protected']}개 함수 보호됨")
+            debug_log(f"자동 추적: {'활성화' if existing_status.get('auto_tracking_enabled') else '비활성화'}")
+            return {
+                "success": True,
+                "message": "기존 보호 시스템 사용",
+                "protected_count": existing_status['total_protected'],
+                "categories": existing_status['categories'],
+                "auto_tracking": existing_status.get('auto_tracking_enabled', False)
+            }
+        
+        # 새로운 보호 시스템 생성
+        protection_system = UltimateHelperProtection(repl_globals)
+        
+        registered_functions = []
+        failed_functions = []
+        
+        # 현재 디렉토리를 sys.path에 추가
+        import sys
+        import os
+        current_dir = os.path.dirname(__file__)
+        if current_dir not in sys.path:
+            sys.path.insert(0, current_dir)
+        
+        # 1. 중앙화된 래퍼 모듈을 임포트합니다.
+        try:
+            import auto_tracking_wrapper
+            debug_log("✅ auto_tracking_wrapper v2.0 임포트 성공")
+            
+            # 2. __all__ 목록을 기반으로 모든 래핑된 함수를 동적으로 등록합니다.
+            if hasattr(auto_tracking_wrapper, '__all__'):
+                debug_log(f"✅ {len(auto_tracking_wrapper.__all__)}개 함수 발견")
+                
+                for func_name in auto_tracking_wrapper.__all__:
+                    if hasattr(auto_tracking_wrapper, func_name):
+                        func = getattr(auto_tracking_wrapper, func_name)
+                        
+                        # 카테고리 자동 분류
+                        category = "GENERAL"
+                        if any(kw in func_name for kw in ['create', 'read', 'backup', 'restore', 'find', 'replace', 'insert']):
+                            category = "FILE"
+                        elif any(kw in func_name for kw in ['parse', 'snippet', 'analyze']):
+                            category = "AST"
+                        
+                        # Protection System에 등록
+                        protection_system.register_helper(func_name, func, category)
+                        registered_functions.append(func_name)
+                        debug_log(f"✅ {func_name} ({category}) 등록 완료")
+                    else:
+                        failed_functions.append(f"{func_name} (auto_tracking_wrapper)")
+                        debug_log(f"❌ {func_name} 등록 실패")
+            else:
+                debug_log("⚠️ auto_tracking_wrapper에 __all__이 정의되지 않았습니다.")
+                
+        except ImportError as e:
+            debug_log(f"❌ auto_tracking_wrapper import 실패: {e}")
+            failed_functions.append("auto_tracking_wrapper 모듈 전체")
+        
+        # 3. 추가 헬퍼 함수들 (Context Manager 등)
+        if CONTEXT_MANAGER_AVAILABLE:
+            try:
+                import context_manager
+                
+                # 작업 추적 함수들
+                tracking_functions = {
+                    'track_file_access': 'TRACKING',
+                    'track_function_edit': 'TRACKING',
+                    'track_code_analysis': 'TRACKING',
+                    'get_current_work_context': 'TRACKING',
+                    'get_work_history': 'TRACKING',
+                    'get_work_tracking_summary': 'TRACKING',
+                    'get_most_accessed_files': 'TRACKING',
+                    'get_most_edited_functions': 'TRACKING'
+                }
+                
+                for func_name, category in tracking_functions.items():
+                    if hasattr(context_manager, func_name):
+                        func = getattr(context_manager, func_name)
+                        protection_system.register_helper(func_name, func, category)
+                        registered_functions.append(func_name)
+                    else:
+                        failed_functions.append(f"{func_name} (context_manager)")
+                        
+                # 캐시 함수들
+                cache_functions = {
+                    'update_cache': 'CACHE',
+                    'update_file_cache': 'CACHE',
+                    'get_cached_analysis': 'CACHE',
+                    'validate_cache_entry': 'CACHE',
+                    'get_cache_statistics': 'CACHE',
+                    'save_project_cache': 'CACHE'
+                }
+                
+                for func_name, category in cache_functions.items():
+                    if hasattr(context_manager, func_name):
+                        func = getattr(context_manager, func_name)
+                        protection_system.register_helper(func_name, func, category)
+                        registered_functions.append(func_name)
+                    else:
+                        failed_functions.append(f"{func_name} (context_manager)")
+                
+                debug_log(f"Context Manager 함수 등록 완료")
+                
+            except ImportError as e:
+                debug_log(f"context_manager import 실패: {e}")
+        
+        # 4. 검색 함수들
+        try:
+            import search_helpers
+            
+            search_functions = {
+                'search_files_advanced': 'SEARCH',
+                'search_code_content': 'SEARCH'
+            }
+            
+            for func_name, category in search_functions.items():
+                if hasattr(search_helpers, func_name):
+                    func = getattr(search_helpers, func_name)
+                    protection_system.register_helper(func_name, func, category)
+                    registered_functions.append(func_name)
+                else:
+                    failed_functions.append(f"{func_name} (search_helpers)")
+                    
+        except ImportError as e:
+            debug_log(f"search_helpers import 실패: {e}")
+        
+        # 5. integrated_search 모듈
+        try:
+            from integrated_search import integrated_search
+            protection_system.register_helper('integrated_search', integrated_search, "SEARCH")
+            registered_functions.append('integrated_search')
+            debug_log("✅ integrated_search 등록")
+        except ImportError:
+            failed_functions.append("integrated_search (integrated_search module)")
+        
+        # 6. Claude Memory 함수들
+        try:
+            def save_coding_experience(data, project_context=None, tech_stack=None):
+                """개발 경험 저장 함수"""
+                try:
+                    import json
+                    import datetime as dt
+                    
+                    if project_context is None and 'project_context' in repl_globals:
+                        project_context = repl_globals['project_context']
+                    
+                    experience_data = {
+                        'timestamp': dt.datetime.now().isoformat(),
+                        'data': data,
+                        'project_context': project_context,
+                        'tech_stack': tech_stack,
+                        'importance': data.get('importance', 0.5) if isinstance(data, dict) else 0.5,
+                        'type': 'coding_experience',
+                        'session_id': project_context.get('session_id') if project_context else None
+                    }
+                    
+                    if project_context:
+                        if 'coding_experiences' not in project_context:
+                            project_context['coding_experiences'] = []
+                        project_context['coding_experiences'].append(experience_data)
+                    
+                    debug_log(f"경험 저장 완료")
+                    return {"success": True, "saved_at": experience_data['timestamp']}
+                    
+                except Exception as e:
+                    debug_log(f"경험 저장 실패: {e}")
+                    return {"success": False, "error": str(e)}
+            
+            def search_coding_solutions(query, project_context=None, tech_stack=None):
+                """해결책 검색 함수"""
+                try:
+                    results = []
+                    
+                    if project_context is None and 'project_context' in repl_globals:
+                        project_context = repl_globals['project_context']
+                    
+                    if project_context and 'coding_experiences' in project_context:
+                        experiences = project_context['coding_experiences']
+                        for exp in experiences:
+                            if isinstance(exp.get('data'), dict):
+                                exp_str = str(exp['data']).lower()
+                                if any(keyword.lower() in exp_str for keyword in query.split()):
+                                    results.append(exp)
+                    
+                    return {"success": True, "results": results, "query": query, "count": len(results)}
+                    
+                except Exception as e:
+                    debug_log(f"해결책 검색 실패: {e}")
+                    return {"success": False, "error": str(e)}
+            
+            claude_functions = {
+                'save_coding_experience': save_coding_experience,
+                'search_coding_solutions': search_coding_solutions
+            }
+            
+            for func_name, func_impl in claude_functions.items():
+                protection_system.register_helper(func_name, func_impl, "CLAUDE_MEMORY")
+                registered_functions.append(func_name)
+                
+            debug_log("Claude Memory 함수 등록 완료")
+                
+        except Exception as claude_error:
+            debug_log(f"Claude Memory 함수 등록 실패: {claude_error}")
+        
+        # 7. Session Manager 관련 함수
+        try:
+            if 'SimpleSessionManager' in globals():
+                protection_system.register_helper('SimpleSessionManager', 
+                                                globals()['SimpleSessionManager'], 
+                                                "SESSION")
+                registered_functions.append('SimpleSessionManager')
+                
+            if 'session_manager' in repl_globals:
+                sm = repl_globals['session_manager']
+                session_utils = {
+                    'save_session': sm.save_session,
+                    'get_latest_session': sm.get_latest_session,
+                    'list_sessions': sm.get_all_sessions
+                }
+                
+                for func_name, func in session_utils.items():
+                    protection_system.register_helper(func_name, func, "SESSION")
+                    registered_functions.append(func_name)
+                    
+                debug_log("Session Manager 헬퍼 함수 등록 완료")
+                
+        except Exception as e:
+            debug_log(f"Session Manager 헬퍼 등록 실패: {e}")
+        
+        # 8. 자동 추적 활성화
+        protection_system.enable_auto_tracking(True)
+        debug_log("자동 추적 기능 활성화")
+        
+        # 9. 보호 시스템 잠금 및 직접 접근 활성화
+        protection_system.lock_system(enable_direct_access=True)
+        
+        # 10. 보호 시스템을 글로벌에 등록
+        repl_globals['protection_system'] = protection_system
+        
+        # 11. 최종 결과 보고
+        protection_status = protection_system.get_protection_status()
+        total_expected = 40  # 예상 함수 수
+        success_rate = (len(registered_functions) / total_expected) * 100 if total_expected > 0 else 0
+        
+        debug_log(f"=== 헬퍼 함수 중앙 추적 보호 시스템 v9.0 완료 ===")
+        debug_log(f"보호됨: {len(registered_functions)}/{total_expected}개 ({success_rate:.1f}%)")
+        debug_log(f"실패: {len(failed_functions)}개")
+        debug_log(f"영구 잠금: 활성화")
+        debug_log(f"자동 추적: 활성화")
+        debug_log(f"카테고리: {list(protection_status['categories'].keys())}")
+        
+        return {
+            "success": True,
+            "version": "9.0-centralized-wrapper",
+            "protection_system": "UltimateHelperProtection",
+            "registered_count": len(registered_functions),
+            "failed_count": len(failed_functions),
+            "success_rate": success_rate,
+            "registered_functions": registered_functions,
+            "failed_functions": failed_functions,
+            "categories": protection_status['categories'],
+            "is_locked": protection_status['is_locked'],
+            "auto_tracking_enabled": protection_status['auto_tracking_enabled'],
+            "total_expected": total_expected
+        }
+        
+    except Exception as e:
+        debug_log(f"❌ 헬퍼 함수 중앙 추적 보호 시스템 v9.0 초기화 실패: {e}")
+        import traceback
+        debug_log(f"상세 에러: {traceback.format_exc()}")
+        return {
+            "success": False,
+            "error": str(e),
+            "version": "9.0-centralized-wrapper",
+            "traceback": traceback.format_exc()
+        }
+
+# register_all_helpers를 repl_globals에 등록
+repl_globals['register_all_helpers'] = register_all_helpers
+
+
+# ============================================================================
+# 초기화 및 메인 실행
+# ============================================================================
+
+if __name__ == "__main__":
+    debug_log("=== 통합 JSON REPL v3.0 Final 시작 ===")
+    debug_log(f"Python 버전: {sys.version}")
+    debug_log(f"작업 디렉토리: {os.getcwd()}")
+    debug_log(f"인코딩: stdin={sys.stdin.encoding}, stdout={sys.stdout.encoding}")
+    debug_log(f"초기 전역 변수: {list(repl_globals.keys())}")
+    
+    # 새로운 부트스트랩 함수를 호출합니다.
+    # 성공하면 완벽하게 설정된 컨텍스트가, 실패하면 None이 반환됩니다.
+    bootstrap_context = bootstrap_ai_brain_session({'verbose': True})
+    
+    # init_helpers_sync() 호출을 완전히 제거하여 중복을 없앱니다.
+    
+    if bootstrap_context:
+        # bootstrap이 성공했을 때만 메인 루프를 실행합니다.
+        debug_log("✅ Bootstrap 완료 - 메인 루프 시작")
+        try:
+            main_loop()
+        except Exception as e:
+            debug_log(f"메인 루프 크리티컬 에러: {e}")
+            debug_log(f"트레이스백: {traceback.format_exc()}")
+    else:
+        # bootstrap 내부에서 이미 상세한 오류 로그를 출력했으므로 간단히 종료합니다.
+        debug_log("❌ CRITICAL: AI 브레인 부트스트랩에 실패하여 세션을 시작할 수 없습니다.")
+    
+    debug_log("=== JSON REPL 세션 종료 ===")

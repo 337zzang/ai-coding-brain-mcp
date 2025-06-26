@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Context Manager - AI Coding Brain MCP
+분리된 Context 관리 모듈
+
+작성일: 2025-06-20
+"""
+
+import os
+import json
+import datetime as dt
+from pathlib import Path
+from typing import Dict, Any, Optional, List, Union
+from collections import defaultdict
+import copy
+
+
+
+# ===========================================
+# 글로벌 컨텍스트 관리자
+# ===========================================
+_context_manager = UnifiedContextManager()
+
+# ===========================================
+# 싱글톤 접근 함수
+# ===========================================
+def get_context_manager() -> UnifiedContextManager:
+    """Get singleton instance of Context Manager"""
+    return _context_manager

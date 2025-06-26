@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "ai-coding-brain-mcp": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\dist\\index.js"
+      ],
+      "cwd": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp",
+      "env": {
+        "GITHUB_USERNAME": "337zzang",
+        "GITHUB_EMAIL": "337zzang@gmail.com",
+        "GITHUB_TOKEN": "새로_생성한_토큰_여기에_입력",
+        "AUTO_GIT_COMMIT": "true",
+        "GIT_COMMIT_INTERVAL": "5",
+        "DEBUG_GIT": "false",
+        "MEMORY_BANK_ROOT": "C:\\Users\\Administrator\\Desktop\\memory",
+        "PYTHON_PATH": "C:\\Users\\Administrator\\miniconda3\\python.exe",
+        "PATH": "C:\\Users\\Administrator\\miniconda3;C:\\Users\\Administrator\\miniconda3\\Scripts;%PATH%",
+        "PROJECT_ROOT": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp",
+        "PYTHON_SCRIPT_PATH": "python\\json_repl_session.py"
+      }
+    }
+  }
+}

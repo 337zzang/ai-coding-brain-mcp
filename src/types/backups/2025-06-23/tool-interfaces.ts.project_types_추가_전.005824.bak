@@ -1,0 +1,58 @@
+/**
+ * Tool interfaces and types
+ */
+
+export interface ToolResult {
+  content: Array<{
+    type: string;
+    text: string;
+  }>;
+}
+
+export interface FlowProjectArgs {
+  project_name: string;
+}
+
+export interface PlanProjectArgs {
+  plan_name?: string;
+  description?: string;
+}
+
+export interface TaskManageArgs {
+  action: string;
+  args?: string[];
+}
+
+export interface BackupFileArgs {
+  filepath: string;
+  reason?: string;
+}
+
+export interface RestoreBackupArgs {
+  backup_path: string;
+  targetPath?: string;
+}
+
+export interface ListBackupsArgs {
+  filename?: string;
+}
+
+export interface ExecuteCodeArgs {
+  code: string;
+  language?: string;
+}
+
+export interface RestartJsonReplArgs {
+  reason?: string;
+  keep_helpers?: boolean;
+}
+
+export interface TrackMistakeArgs {
+  mistake_type: string;
+  context?: string;
+}
+
+export interface AddBestPracticeArgs {
+  practice: string;
+  category?: string;
+}

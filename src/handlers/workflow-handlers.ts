@@ -1,0 +1,121 @@
+import { ExecuteCodeHandler } from './execute-code-handler.js';
+
+// ========== 세션 공유 MCP 도구 핸들러 ==========
+
+interface ToolResponse {
+    content: Array<{
+        type: string;
+        text: string;
+    }>;
+}
+
+// 글로벌 변수 저장소 키
+const GLOBAL_VARS_KEY = '__mcp_shared_vars__';
+
+/**
+ * 변수 저장 코드 생성
+ */
+function generateSaveVars(): string {
+    return `
+# 사용자 정의 변수 저장
+_user_vars = {}
+for k, v in list(globals().items()):
+    if not k.startswith('_') and k not in ['helpers', 'context', 'os', 'sys', 'json', 'datetime']:
+        try:
+            # JSON 직렬화 가능한 것만 저장
+            import json
+            json.dumps(v)
+            _user_vars[k] = v
+        except:
+            pass
+            
+if _user_vars:
+    helpers.update_cache('${GLOBAL_VARS_KEY}', _user_vars)
+    print(f"💾 {len(_user_vars)}개 변수 저장됨")
+`;
+}
+
+/**
+ * 변수 복원 코드 생성
+ */
+function generateLoadVars(): string {
+    return `
+# 이전 변수 복원
+_saved_vars = helpers.get_value('${GLOBAL_VARS_KEY}', {})
+if _saved_vars:
+    for k, v in _saved_vars.items():
+        globals()[k] = v
+    print(f"♻️ {len(_saved_vars)}개 변수 복원됨")
+`;
+}
+
+/**
+ * 개선된 프로젝트 전환 핸들러 (변수 유지)
+ */
+export async function handleFlowProject(params: { project_name: string }): Promise<ToolResponse> {
+    const code = `
+${generateLoadVars()}
+
+# 프로젝트 전환 (enhanced_flow.flow_project 사용)
+from commands.enhanced_flow import flow_project
+result = flow_project("${params.project_name}")
+
+# context 변수 업데이트 (출력 없이)
+if result.get('success') and result.get('context'):
+    context = result['context']
+
+${generateSaveVars()}
+`;
+    return ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
+}
+
+/**
+ * 개선된 계획 수립 핸들러 (변수 유지)
+ */
+export async function handlePlanProject(params: { plan_name?: string, description?: string }): Promise<ToolResponse> {
+    const code = `
+${generateLoadVars()}
+
+# 계획 수립
+result = helpers.cmd_plan(${params.plan_name ? `"${params.plan_name}"` : 'None'}, ${params.description ? `"${params.description}"` : 'None'})
+print(result)
+
+${generateSaveVars()}
+`;
+    return ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
+}
+
+/**
+ * 개선된 작업 관리 핸들러 (변수 유지)
+ */
+export async function handleTaskManage(params: { action: string, args?: string[] }): Promise<ToolResponse> {
+    const argsStr = params.args ? params.args.map(arg => `"${arg}"`).join(', ') : '';
+    const code = `
+${generateLoadVars()}
+
+# 작업 관리
+helpers.cmd_task("${params.action}"${argsStr ? ', ' + argsStr : ''})
+
+${generateSaveVars()}
+`;
+    return ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
+}
+
+/**
+ * 개선된 다음 작업 핸들러 (변수 유지)
+ */
+export async function handleNextTask(_params: {}): Promise<ToolResponse> {
+    const code = `
+${generateLoadVars()}
+
+# 다음 작업 진행
+helpers.cmd_next()
+
+${generateSaveVars()}
+`;
+    return ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
+}
+
+/**
+ * 새로운 도구: 변수 확인
+ */

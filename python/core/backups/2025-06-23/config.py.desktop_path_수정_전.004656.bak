@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Configuration Management - AI Coding Brain MCP
+Claude Desktop 설정 관리
+
+작성일: 2025-06-20
+"""
+
+import os
+import json
+from pathlib import Path
+
+# ===========================================
+# Claude Desktop 설정 관리
+# ===========================================
+
+def get_paths_from_config() -> dict:
+    """Claude Desktop 설정에서 경로 가져오기"""
+    config_path = os.path.expanduser("~/AppData/Roaming/Claude/claude_desktop_config.json")
+    paths = {
+        'project_path': Path.home() / "Desktop",
+        'memory_root': Path.home() / "Desktop" / "memory"
+    }
+    
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            
+            mcp_servers = config.get('mcpServers', {})
+            for server_name, server_config in mcp_servers.items():
+                if 'ai-coding-brain' in server_name.lower():
+                    env = server_config.get('env', {})
+                    if 'PROJECT_ROOT' in env:
+                        paths['project_path'] = Path(env['PROJECT_ROOT'])
+                    if 'MEMORY_BANK_ROOT' in env:
+                        paths['memory_root'] = Path(env['MEMORY_BANK_ROOT'])
+                    break
+        except Exception as e:
+            print(f"⚠️ 설정 로드 실패: {e}")
+    
+    return paths
+
+
+
+

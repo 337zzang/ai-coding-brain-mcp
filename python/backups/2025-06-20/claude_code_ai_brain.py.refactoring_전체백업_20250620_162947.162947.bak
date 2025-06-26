@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Claude Code AI Brain - Compatibility Wrapper
+기존 코드와의 호환성을 위한 래퍼
+
+이 파일은 리팩토링된 모듈들을 기존 방식으로 사용할 수 있게 합니다.
+"""
+
+# 리팩토링된 모듈들 import
+from claude_code_ai_brain_v2 import *
+
+# 하위 호환성을 위한 추가 import
+from core.context_manager import UnifiedContextManager
+from core.config import get_paths_from_config
+
+print("📢 Notice: claude_code_ai_brain.py가 리팩토링되었습니다.")
+print("   새로운 구조는 claude_code_ai_brain_v2.py를 참조하세요.")

@@ -1,0 +1,884 @@
+# -*- coding: utf-8 -*-
+"""
+AST Parser Helper - Refactored Version
+Python: ast.parse() 기반 파싱
+JavaScript/TypeScript: Tree-sitter 지연 로딩 파싱  
+"""
+
+import ast
+import os
+import time
+import threading
+from pathlib import Path
+from typing import Dict, List, Any, Optional, Union, Tuple, cast
+import textwrap
+import re
+
+# ============================================================================
+# 전역 설정 및 캐시
+# ============================================================================
+
+# Tree-sitter 지연 로딩
+TREE_SITTER_AVAILABLE = False
+_tree_sitter_modules = {}
+_advanced_parser = None
+_parser_lock = threading.Lock()
+
+# 로깅 설정
+VERBOSE = False
+
+def set_verbose(flag: bool) -> None:
+    """전역 verbose 모드 설정"""
+    global VERBOSE
+    VERBOSE = flag
+
+def get_verbose() -> bool:
+    """현재 verbose 모드 상태 반환"""
+    return VERBOSE
+
+def _log(msg: str, level: str = "INFO") -> None:
+    """조건부 로깅"""
+    if VERBOSE:
+        print(f"[{level}] {msg}")
+
+# ============================================================================
+# 통합 캐시 시스템
+# ============================================================================
+
+class CacheManager:
+    """모든 캐시를 중앙에서 관리"""
+    _instance = None
+    _lock = threading.Lock()
+    
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def __init__(self):
+        if not hasattr(self, 'initialized'):
+            self.ast_cache: Dict[str, Any] = {}
+            self.file_mtime_cache: Dict[str, float] = {}
+            self.language_cache: Dict[str, Any] = {}
+            self.parser_cache: Dict[str, Any] = {}
+            self.initialized = True
+    
+    def get_cached_ast(self, file_path: str) -> Optional[Any]:
+        """캐시된 AST 반환"""
+        if file_path not in self.ast_cache:
+            return None
+            
+        # 파일 수정 시간 확인
+        try:
+            current_mtime = os.path.getmtime(file_path)
+            cached_mtime = self.file_mtime_cache.get(file_path, 0)
+            
+            if current_mtime > cached_mtime:
+                # 캐시 무효화
+                del self.ast_cache[file_path]
+                return None
+                
+            return self.ast_cache[file_path]
+        except:
+            return None
+    
+    def set_cached_ast(self, file_path: str, ast_data: Any):
+        """AST 캐시 저장"""
+        self.ast_cache[file_path] = ast_data
+        self.file_mtime_cache[file_path] = os.path.getmtime(file_path)
+    
+    def clear_all(self):
+        """모든 캐시 초기화"""
+        self.ast_cache.clear()
+        self.file_mtime_cache.clear()
+        self.language_cache.clear()
+        self.parser_cache.clear()
+
+# ============================================================================
+# Tree-sitter 지연 로딩
+# ============================================================================
+
+def _lazy_import_tree_sitter() -> bool:
+    """Tree-sitter 모듈 지연 임포트"""
+    global TREE_SITTER_AVAILABLE, _tree_sitter_modules
+    
+    if _tree_sitter_modules:
+        return True
+        
+    try:
+        import tree_sitter
+        import tree_sitter_python
+        import tree_sitter_javascript
+        
+        _tree_sitter_modules['tree_sitter'] = tree_sitter
+        _tree_sitter_modules['python'] = tree_sitter_python
+        _tree_sitter_modules['javascript'] = tree_sitter_javascript
+        
+        TREE_SITTER_AVAILABLE = True
+        _log("Tree-sitter 모듈 로드 성공")
+        return True
+    except ImportError as e:
+        _log(f"Tree-sitter 로드 실패: {e}", "WARNING")
+        return False
+
+class TreeSitterManager:
+    """Tree-sitter 파서 관리"""
+    _instance = None
+    _lock = threading.Lock()
+    
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def __init__(self):
+        if not hasattr(self, 'initialized'):
+            self._parsers = {}
+            self.initialized = True
+    
+    def get_parser(self, language: str):
+        """언어별 파서 반환"""
+        if not _lazy_import_tree_sitter():
+            return None
+            
+        if language not in self._parsers:
+            self._parsers[language] = self._create_parser(language)
+            
+        return self._parsers[language]
+    
+    def _create_parser(self, language: str):
+        """파서 생성"""
+        tree_sitter = _tree_sitter_modules.get('tree_sitter')
+        if not tree_sitter:
+            return None
+            
+        parser = tree_sitter.Parser()
+        
+        lang_map = {
+            'python': 'python',
+            'javascript': 'javascript',
+            'typescript': 'javascript'
+        }
+        
+        lang_key = lang_map.get(language)
+        if not lang_key:
+            return None
+            
+        lang_module = _tree_sitter_modules.get(lang_key)
+        if lang_module:
+            parser.set_language(lang_module.Language())
+            return parser
+            
+        return None
+
+# ============================================================================
+# AST Parser 메인 클래스
+# ============================================================================
+
+class FunctionReplacer(ast.NodeTransformer):
+    """
+    AST 트리에서 특정 이름을 가진 함수/메서드를 찾아
+    새로운 코드 블록으로 교체하는 NodeTransformer입니다.
+    """
+    def __init__(self, target_name: str, new_code: str):
+        self.target_name = target_name
+        # 새로운 코드를 파싱하여 교체할 노드를 준비합니다.
+        # 여러 문장이 포함될 수 있으므로 body에서 노드를 가져옵니다.
+        self.new_nodes = ast.parse(new_code).body
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> Union[ast.FunctionDef, List[ast.AST]]:
+        """일반 함수(def) 노드를 방문합니다."""
+        # 자식 노드들도 계속 방문
+        self.generic_visit(node)
+        
+        if node.name == self.target_name:
+            # 함수의 이름이 일치하면 준비된 새 노드들로 교체합니다.
+            return self.new_nodes
+        return node  # 일치하지 않으면 원래 노드를 그대로 반환합니다.
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> Union[ast.AsyncFunctionDef, List[ast.AST]]:
+        """비동기 함수(async def) 노드를 방문합니다."""
+        # 자식 노드들도 계속 방문
+        self.generic_visit(node)
+        
+        if node.name == self.target_name:
+            # 함수의 이름이 일치하면 준비된 새 노드들로 교체합니다.
+            return self.new_nodes
+        return node  # 일치하지 않으면 원래 노드를 그대로 반환합니다.
+
+
+class EnhancedFunctionReplacer(ast.NodeTransformer):
+    """
+    클래스명.메서드명 형식을 지원하는 향상된 NodeTransformer
+    """
+    def __init__(self, target_name: str, new_code: str):
+        self.target_name = target_name
+        
+        # ClassName.method_name 형식 파싱
+        if '.' in target_name:
+            parts = target_name.split('.')
+            self.target_class = parts[0]
+            self.target_method = parts[1]
+            self.is_class_method = True
+        else:
+            self.target_class = None
+            self.target_method = target_name
+            self.is_class_method = False
+            
+        # 새로운 코드 준비
+        self.new_nodes = ast.parse(new_code).body
+        
+        # 현재 클래스 컨텍스트 추적
+        self.current_class = None
+        self.found_and_replaced = False
+
+    def visit_ClassDef(self, node: ast.ClassDef):
+        """클래스 정의 방문"""
+        # 현재 클래스 이름 저장
+        old_class = self.current_class
+        self.current_class = node.name
+        
+        # 클래스 내부 방문
+        self.generic_visit(node)
+        
+        # 클래스 컨텍스트 복원
+        self.current_class = old_class
+        
+        # 클래스 자체를 교체하는 경우
+        if not self.is_class_method and node.name == self.target_name:
+            self.found_and_replaced = True
+            return self.new_nodes
+            
+        return node
+
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        """일반 함수(def) 노드 방문"""
+        self.generic_visit(node)
+        
+        # 클래스 메서드를 찾는 경우
+        if self.is_class_method:
+            if (self.current_class == self.target_class and 
+                node.name == self.target_method):
+                self.found_and_replaced = True
+                return self.new_nodes
+        else:
+            # 일반 함수를 찾는 경우
+            if node.name == self.target_method and self.current_class is None:
+                self.found_and_replaced = True
+                return self.new_nodes
+                
+        return node
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
+        """비동기 함수(async def) 노드 방문"""
+        self.generic_visit(node)
+        
+        # 클래스 메서드를 찾는 경우
+        if self.is_class_method:
+            if (self.current_class == self.target_class and 
+                node.name == self.target_method):
+                self.found_and_replaced = True
+                return self.new_nodes
+        else:
+            # 일반 함수를 찾는 경우
+            if node.name == self.target_method and self.current_class is None:
+                self.found_and_replaced = True
+                return self.new_nodes
+                
+        return node
+
+
+class ScopedFunctionReplacer(ast.NodeTransformer):
+    """
+    AST 트리에서 특정 스코프 내의 함수/메서드를 찾아 교체하고,
+    찾은 위치의 줄 번호를 기록합니다.
+    """
+    def __init__(self, target_name: str, new_code: str):
+        # ClassName.method_name 형식 파싱
+        parts = target_name.split('.')
+        self.target_method = parts[-1]
+        self.target_class_path = parts[:-1]
+        
+        self.new_nodes = ast.parse(new_code).body
+        self.current_class_path = []
+        
+        # 찾은 노드의 정보를 저장할 변수
+        self.found_node_info = None
+        self._match_found = False  # 첫 번째 일치 항목만 처리
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> ast.ClassDef:
+        """클래스 정의 노드를 방문하여 현재 경로를 기록합니다."""
+        self.current_class_path.append(node.name)
+        # 클래스의 자식 노드들을 방문
+        self.generic_visit(node)
+        # 클래스 스코프를 빠져나오면 경로에서 제거
+        self.current_class_path.pop()
+        return node
+
+    def _is_target_match(self, node_name: str) -> bool:
+        """현재 노드가 교체 대상인지 확인합니다."""
+        # 메서드 이름이 일치하고, 클래스 경로도 일치하는지 확인
+        return (node_name == self.target_method and 
+                self.current_class_path == self.target_class_path)
+
+    def _process_node(self, node: Union[ast.FunctionDef, ast.AsyncFunctionDef]):
+        """노드 처리 로직을 통합합니다."""
+        # 자식 노드 방문
+        self.generic_visit(node)
+        
+        # 아직 찾지 못했고, 현재 노드가 타겟과 일치한다면
+        if not self._match_found and self._is_target_match(node.name):
+            self._match_found = True
+            # 찾은 노드의 정보를 저장 (줄 번호, 종료 줄 번호 등)
+            self.found_node_info = {
+                "name": node.name,
+                "lineno": node.lineno,
+                "end_lineno": getattr(node, 'end_lineno', node.lineno),  # 하위 호환성
+                "class_path": list(self.current_class_path)
+            }
+            return self.new_nodes
+        return node
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> Union[ast.FunctionDef, List[ast.AST]]:
+        """일반 함수(def) 노드를 방문합니다."""
+        return self._process_node(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> Union[ast.AsyncFunctionDef, List[ast.AST]]:
+        """비동기 함수(async def) 노드를 방문합니다."""
+        return self._process_node(node)
+
+
+class ASTCodeEditor:
+    """
+    AST를 기반으로 코드의 상태를 관리하며 여러 수정 작업을 수행하는 에디터 클래스.
+    """
+    def __init__(self, file_path: str):
+        """
+        에디터를 초기화하고 대상 파일을 로드하여 AST를 생성합니다.
+        """
+        self.file_path = file_path
+        self.tree = None
+        self.modified = False
+        self.modification_history = []  # 수정 이력 추적
+        
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                self.source = f.read()
+            self.tree = ast.parse(self.source)
+            self.original_tree = ast.parse(self.source)  # 원본 보관
+            print(f"INFO: '{file_path}' 파일을 성공적으로 로드했습니다.")
+        except Exception as e:
+            print(f"ERROR: 파일 로드 또는 파싱 중 오류 발생: {e}")
+            raise
+
+    def replace_block(self, block_name: str, new_code: str) -> Optional[Dict[str, Any]]:
+        """
+        현재 AST 상태에서 블록을 찾아 교체합니다.
+        
+        Returns:
+            Optional[dict]: 찾은 블록의 위치 정보. 실패 시 None.
+        """
+        if not self.tree:
+            print("ERROR: AST가 로드되지 않아 작업을 진행할 수 없습니다.")
+            return None
+
+        # ScopedFunctionReplacer 사용
+        transformer = ScopedFunctionReplacer(block_name, new_code)
+        
+        # 현재 tree를 기준으로 변환 수행
+        new_tree = transformer.visit(self.tree)
+
+        if not transformer.found_node_info:
+            print(f"WARN: 현재 코드 상태에서 블록 '{block_name}'을(를) 찾을 수 없습니다.")
+            return None
+        
+        # 수정 이력 기록
+        self.modification_history.append({
+            'block_name': block_name,
+            'found_info': transformer.found_node_info,
+            'timestamp': __import__('datetime').datetime.now().isoformat()
+        })
+        
+        self.tree = new_tree
+        self.modified = True
+        ast.fix_missing_locations(self.tree)
+        
+        found_info = transformer.found_node_info
+        print(f"INFO: 블록 '{block_name}'을(를) 라인 {found_info['lineno']}에서 찾아 교체했습니다.")
+        return found_info
+
+    def get_modified_code(self) -> Optional[str]:
+        """현재 AST 상태를 소스 코드로 변환하여 반환합니다."""
+        if not self.tree:
+            return None
+        return ast.unparse(self.tree)
+
+    def preview_changes(self) -> None:
+        """수정 이력을 표시합니다."""
+        if not self.modification_history:
+            print("INFO: 수정 이력이 없습니다.")
+            return
+            
+        print("
+📋 수정 이력:")
+        print("="*60)
+        for i, mod in enumerate(self.modification_history, 1):
+            info = mod['found_info']
+            print(f"{i}. {mod['block_name']}")
+            print(f"   위치: 라인 {info['lineno']}-{info['end_lineno']}")
+            print(f"   시간: {mod['timestamp']}")
+
+    def save(self, output_path: str = None, create_backup: bool = True) -> bool:
+        """
+        수정된 내용을 파일에 저장합니다.
+
+        Args:
+            output_path (str, optional): 저장할 파일 경로. 미지정 시 원본 파일에 덮어씁니다.
+            create_backup (bool): 백업 생성 여부.
+        """
+        if not self.modified:
+            print("INFO: 변경 사항이 없어 파일을 저장하지 않습니다.")
+            return True
+
+        if not self.tree:
+            print("ERROR: 저장할 AST가 없습니다.")
+            return False
+
+        save_path = output_path if output_path else self.file_path
+        
+        # 백업 생성
+        if create_backup and not output_path:
+            import shutil
+            from datetime import datetime
+            backup_path = f"{self.file_path}.{datetime.now().strftime('%Y%m%d_%H%M%S')}.bak"
+            try:
+                shutil.copy2(self.file_path, backup_path)
+                print(f"INFO: 백업 생성: {backup_path}")
+            except Exception as e:
+                print(f"WARN: 백업 생성 실패: {e}")
+        
+        try:
+            modified_code = self.get_modified_code()
+            with open(save_path, "w", encoding="utf-8") as f:
+                f.write(modified_code)
+            print(f"INFO: 수정된 내용이 '{save_path}'에 성공적으로 저장되었습니다.")
+            print(f"     총 {len(self.modification_history)}개의 블록이 수정되었습니다.")
+            self.modified = False  # 저장 후 상태 초기화
+            return True
+        except Exception as e:
+            print(f"ERROR: 파일 저장 중 오류 발생: {e}")
+            return False
+
+    def reset(self) -> None:
+        """모든 수정 사항을 취소하고 원본 상태로 되돌립니다."""
+        if self.original_tree:
+            self.tree = ast.parse(self.source)  # 원본 소스에서 다시 파싱
+            self.modified = False
+            self.modification_history.clear()
+            print("INFO: 모든 수정 사항이 취소되고 원본 상태로 복원되었습니다.")
+
+
+
+class ASTParser:
+    """통합 AST 파서"""
+    
+    def __init__(self):
+        self.cache_manager = CacheManager()
+        self.ts_manager = TreeSitterManager()
+        
+    def _detect_language(self, file_path: str, language: str = 'auto') -> str:
+        """파일 언어 감지"""
+        if language != 'auto':
+            return language
+            
+        ext = Path(file_path).suffix.lower()
+        ext_map = {
+            '.py': 'python',
+            '.js': 'javascript',
+            '.jsx': 'javascript',
+            '.ts': 'typescript',
+            '.tsx': 'typescript'
+        }
+        
+        return ext_map.get(ext, 'unknown')
+    
+    def _extract_docstring(self, node: ast.AST) -> Optional[str]:
+        """Python docstring 추출"""
+        # body 속성이 있는 노드 타입들만 처리
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Module)):
+            return None
+            
+        if not hasattr(node, 'body') or not node.body:
+            return None
+            
+        first = node.body[0]
+        if isinstance(first, ast.Expr) and isinstance(first.value, (ast.Str, ast.Constant)):
+            # Python 3.8+에서는 ast.Constant 사용
+            if isinstance(first.value, ast.Str):
+                return textwrap.dedent(first.value.s).strip()
+            elif isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+                return textwrap.dedent(first.value.value).strip()
+                
+        return None
+            
+        first = node.body[0]
+        if isinstance(first, ast.Expr) and isinstance(first.value, ast.Str):
+            return textwrap.dedent(first.value.s).strip()
+            
+        return None
+    
+    def _extract_function_info(self, node: ast.FunctionDef, source_lines: List[str]) -> Dict:
+        """함수 정보 추출"""
+        info = {
+            'type': 'function',
+            'name': node.name,
+            'line_start': node.lineno,
+            'line_end': node.end_lineno or node.lineno,
+            'args': [arg.arg for arg in node.args.args],
+            'docstring': self._extract_docstring(node),
+            'decorators': [d.id if isinstance(d, ast.Name) else str(d) for d in node.decorator_list if d],
+            'is_async': isinstance(node, ast.AsyncFunctionDef)
+        }
+        
+        # 코드 스니펫 추출
+        if source_lines and node.lineno and node.end_lineno:
+            start = max(0, node.lineno - 1)
+            end = min(len(source_lines), node.end_lineno)
+            info['snippet'] = '\n'.join(source_lines[start:end])
+            
+        return info
+    
+    def _extract_class_info(self, node: ast.ClassDef, source_lines: List[str]) -> Dict:
+        """클래스 정보 추출"""
+        info = {
+            'type': 'class',
+            'name': node.name,
+            'line_start': node.lineno,
+            'line_end': node.end_lineno or node.lineno,
+            'bases': [base.id if isinstance(base, ast.Name) else str(base) for base in node.bases],
+            'docstring': self._extract_docstring(node),
+            'methods': []
+        }
+        
+        # 메서드 추출
+        for item in node.body:
+            if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                method_info = self._extract_function_info(item, source_lines)
+                method_info['type'] = 'method'
+                info['methods'].append(method_info)
+        
+        # 코드 스니펫 추출
+        if source_lines and node.lineno and node.end_lineno:
+            start = max(0, node.lineno - 1)
+            end = min(len(source_lines), node.end_lineno)
+            info['snippet'] = '\n'.join(source_lines[start:end])
+            
+        return info
+    
+    def parse_python(self, file_path: str, include_snippets: bool = True) -> Dict[str, Any]:
+        """Python 파일 파싱"""
+        try:
+            # 캐시 확인
+            cached = self.cache_manager.get_cached_ast(file_path)
+            if cached and not include_snippets:
+                return cached
+                
+            # 파일 읽기
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+            # AST 파싱
+            tree = ast.parse(content, filename=file_path)
+            source_lines = content.split('\n') if include_snippets else []
+            
+            # 결과 수집
+            result = {
+                'parsing_success': True,
+                'language': 'python',
+                'functions': [],
+                'classes': [],
+                'imports': []
+            }
+            
+            # AST 순회
+            for node in ast.walk(tree):  
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    result['functions'].append(self._extract_function_info(node, source_lines))
+                elif isinstance(node, ast.ClassDef):
+                    result['classes'].append(self._extract_class_info(node, source_lines))
+                elif isinstance(node, (ast.Import, ast.ImportFrom)):
+                    if isinstance(node, ast.Import):
+                        for alias in node.names:
+                            result['imports'].append(alias.name)
+                    else:
+                        result['imports'].append(node.module or '')
+            
+            # 캐시 저장
+            if not include_snippets:
+                self.cache_manager.set_cached_ast(file_path, result)
+                
+            return result
+            
+        except Exception as e:
+            _log(f"Python 파싱 오류: {e}", "ERROR")
+            return {
+                'parsing_success': False,
+                'language': 'python',
+                'error': str(e)
+            }
+    
+    def parse_javascript(self, file_path: str, language: str = 'javascript', 
+                        include_snippets: bool = True) -> Dict[str, Any]:
+        """JavaScript/TypeScript 파일 파싱"""
+        parser = self.ts_manager.get_parser(language)
+        if not parser:
+            return {
+                'parsing_success': False,
+                'language': language,
+                'error': 'Tree-sitter not available'
+            }
+            
+        try:
+            with open(file_path, 'rb') as f:
+                content = f.read()
+                
+            tree = parser.parse(content)
+            
+            # 간단한 결과 반환 (실제 구현은 더 복잡함)
+            result = {
+                'parsing_success': True,
+                'language': language,
+                'functions': [],
+                'classes': [],
+                'imports': []
+            }
+            
+            # Tree-sitter 노드 순회 로직 (간략화)
+            # 실제로는 traverse_node 같은 복잡한 함수가 필요하지만
+            # 여기서는 간단히 처리
+            
+            return result
+            
+        except Exception as e:
+            _log(f"JavaScript 파싱 오류: {e}", "ERROR")
+            return {
+                'parsing_success': False,
+                'language': language,
+                'error': str(e)
+            }
+    
+    def parse_with_snippets(self, file_path: str, language: str = 'auto', 
+                          include_snippets: bool = True) -> Dict[str, Any]:
+        """파일 파싱 메인 메서드"""
+        # 언어 감지
+        detected_lang = self._detect_language(file_path, language)
+        
+        if detected_lang == 'python':
+            return self.parse_python(file_path, include_snippets)
+        elif detected_lang in ['javascript', 'typescript']:
+            return self.parse_javascript(file_path, detected_lang, include_snippets)
+        else:
+            return {
+                'parsing_success': False,
+                'language': detected_lang,
+                'error': f'Unsupported language: {detected_lang}'
+            }
+    
+    def get_snippet_preview(self, file_path: str, element_name: str, 
+                          element_type: str = 'function', max_lines: int = 10) -> str:
+        """코드 스니펫 미리보기"""
+        result = self.parse_with_snippets(file_path, include_snippets=True)
+        
+        if not result.get('parsing_success'):
+            return f"Error: {result.get('error', 'Unknown error')}"
+            
+        # 요소 찾기
+        element_key = f'{element_type}s'
+        if element_type == 'class':
+            element_key = 'classes'
+        elif element_type == 'function':
+            element_key = 'functions'
+            
+        elements = result.get(element_key, [])
+        for elem in elements:
+            if elem.get('name') == element_name:
+                snippet = elem.get('snippet', '')
+                if not snippet:
+                    # snippet이 없으면 기본 정보 반환
+                    return f"{element_type} '{element_name}' found at line {elem.get('line_start', '?')}"
+                    
+                lines = snippet.split('\n')
+                if len(lines) > max_lines:
+                    return '\n'.join(lines[:max_lines]) + '\n...'
+                return snippet
+                
+
+    def replace_block(self, file_path: str, block_name: str, new_code: str, output_path: str = None) -> str:
+        """
+        파일 내에서 이름이 일치하는 함수나 메서드를 찾아 새 코드로 교체합니다.
+        
+        지원 형식:
+        - 'function_name' : 최상위 함수 또는 첫 번째 매칭되는 메서드
+        - 'ClassName' : 클래스 전체
+        - 'ClassName.method_name' : 특정 클래스의 메서드 (정확한 지정)
+
+        Args:
+            file_path (str): 수정할 파일의 경로.
+            block_name (str): 교체할 블록의 이름.
+            new_code (str): 교체할 새로운 코드 블록.
+            output_path (str, optional): 결과를 저장할 파일 경로.
+
+        Returns:
+            str: 성공 시 "SUCCESS: ...", 실패 시 "ERROR: ..." 메시지
+        """
+        try:
+            # 1. 파일을 읽고 AST를 생성합니다.
+            with open(file_path, 'r', encoding='utf-8') as f:
+                source = f.read()
+            tree = ast.parse(source, filename=file_path)
+
+            # 2. 적절한 Replacer 선택
+            if '.' in block_name:
+                # ClassName.method_name 형식인 경우
+                transformer = EnhancedFunctionReplacer(block_name, new_code)
+            else:
+                # 단순 이름인 경우
+                transformer = FunctionReplacer(block_name, new_code)
+            
+            # 3. AST 변환
+            new_tree = transformer.visit(tree)
+
+            # 4. 교체 성공 여부 확인
+            if hasattr(transformer, 'found_and_replaced') and not transformer.found_and_replaced:
+                return f"ERROR: 블록 '{block_name}'을 찾을 수 없습니다"
+
+            # 5. 변경된 AST 후처리
+            ast.fix_missing_locations(new_tree)
+
+            # 6. 수정된 AST를 소스 코드로 변환
+            modified_code = ast.unparse(new_tree)
+            
+            # 7. 결과 저장
+            save_path = output_path or file_path
+            with open(save_path, "w", encoding="utf-8") as f:
+                f.write(modified_code)
+            
+            return f"SUCCESS: 블록 '{block_name}' 교체 완료 (파일: {save_path})"
+
+        except FileNotFoundError:
+            return f"ERROR: 파일을 찾을 수 없습니다: {file_path}"
+        except Exception as e:
+            return f"ERROR: 코드 수정 중 오류 발생: {e}"
+
+# ============================================================================
+# 전역 파서 인스턴스
+# ============================================================================
+
+def _get_parser() -> ASTParser:
+    """싱글톤 파서 인스턴스 반환"""
+    global _advanced_parser, _parser_lock
+    
+    if _advanced_parser is None:
+        with _parser_lock:
+            if _advanced_parser is None:
+                _advanced_parser = ASTParser()
+                
+    return _advanced_parser
+
+# ============================================================================
+# 공개 API
+# ============================================================================
+
+def parse_with_snippets(file_path: str, language: str = 'auto', 
+                       include_snippets: bool = True) -> Dict[str, Any]:
+    """파일 파싱 (공개 API)"""
+    parser = _get_parser()
+    return parser.parse_with_snippets(file_path, language, include_snippets)
+
+def get_snippet_preview(file_path: str, element_name: str, 
+                       element_type: str = 'function', max_lines: int = 10,
+                       start_line: int = -1, end_line: int = -1) -> str:
+    """코드 스니펫 미리보기 (공개 API)"""
+    parser = _get_parser()
+    return parser.get_snippet_preview(file_path, element_name, element_type, max_lines)
+
+# ============================================================================
+# 백그라운드 초기화 (선택적)
+# ============================================================================
+
+def init_background():
+    """백그라운드에서 Tree-sitter 초기화"""
+    def _init():
+        _lazy_import_tree_sitter()
+        _log("백그라운드 초기화 완료")
+        
+    thread = threading.Thread(target=_init, daemon=True)
+    thread.start()
+
+# 자동 백그라운드 초기화
+init_background()
+
+def replace_block(file_path: str, block_name: str, new_code: str, output_path: str = None) -> str:
+    """
+    파일 내에서 이름이 일치하는 함수나 메서드를 찾아 새 코드로 교체합니다.
+    (클래스 내부 메서드도 지원)
+    """
+    parser = ASTParser()
+    return parser.replace_block(file_path, block_name, new_code, output_path)
+
+def replace_block_with_info(file_path: str, block_name: str, new_code: str, output_path: str = None) -> Tuple[Optional[str], Optional[Dict[str, Any]]]:
+    """
+    파일 내에서 블록을 찾아 교체하고, 수정된 코드와 블록의 위치 정보를 반환합니다.
+    
+    Returns:
+        Tuple[Optional[str], Optional[dict]]: (수정 결과 메시지, 찾은 블록 정보)
+    """
+    parser = ASTParser()
+    result = parser.replace_block(file_path, block_name, new_code, output_path)
+    
+    # 결과가 튜플이면 그대로 반환
+    if isinstance(result, tuple):
+        return result
+    # 문자열이면 정보 없이 반환
+    else:
+        return result, None
+
+
+def batch_replace_blocks(file_path: str, replacements: List[Tuple[str, str]], output_path: str = None) -> bool:
+    """
+    여러 블록을 연속적으로 안전하게 교체합니다.
+    
+    Args:
+        file_path (str): 수정할 파일 경로
+        replacements (List[Tuple[str, str]]): [(block_name, new_code), ...] 형태의 교체 목록
+        output_path (str, optional): 최종 결과를 저장할 경로
+        
+    Returns:
+        bool: 모든 교체가 성공하면 True
+    """
+    try:
+        editor = ASTCodeEditor(file_path)
+        
+        success_count = 0
+        for block_name, new_code in replacements:
+            found_info = editor.replace_block(block_name, new_code)
+            if found_info:
+                success_count += 1
+            else:
+                print(f"WARN: '{block_name}' 블록 교체 실패")
+        
+        if success_count > 0:
+            editor.preview_changes()
+            editor.save(output_path)
+            return True
+        else:
+            print("ERROR: 교체된 블록이 없습니다.")
+            return False
+            
+    except Exception as e:
+        print(f"ERROR: 배치 교체 중 오류 발생: {e}")
+        return False

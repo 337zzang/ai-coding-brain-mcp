@@ -1,0 +1,408 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Context Manager - AI Coding Brain MCP
+분리된 Context 관리 모듈
+
+작성일: 2025-06-20
+"""
+
+import os
+import json
+import datetime as dt
+from pathlib import Path
+from typing import Dict, Any, Optional, List, Union
+from collections import defaultdict
+import copy
+
+class UnifiedContextManager:
+    """통합 컨텍스트 관리자 - 싱글톤 패턴"""
+    
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def __init__(self):
+        if not hasattr(self, 'initialized'):
+            self.context = None
+            self.project_path = None
+            self.project_name = None
+            self.memory_root = None
+            self.base_path = None
+            self.memory_path = None
+            self.cache_dir = None
+            self.initialized = True
+    
+    def initialize(self, project_path: str, project_name: str = None, memory_root: str = None,
+                   existing_context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """프로젝트 컨텍스트 초기화"""
+        self.project_path = project_path
+        
+        # project_name이 None이면 경로에서 자동 추출
+        if project_name is None:
+            project_name = os.path.basename(os.path.abspath(project_path))
+            print(f"✅ 프로젝트 이름 자동 추출: {project_name}")
+        
+        self.project_name = project_name
+        self.base_path = project_path
+        
+        # 메모리 루트 설정
+        if memory_root:
+            self.memory_root = memory_root
+        else:
+            self.memory_root = str(Path.home() / "Desktop" / "memory")
+        
+        # 메모리 경로 설정
+        self.memory_path = os.path.join(self.memory_root, self.project_name)
+        self.cache_dir = os.path.join(self.memory_path, '.cache')
+        os.makedirs(self.cache_dir, exist_ok=True)
+        
+        # 기존 context가 있으면 사용
+        if existing_context:
+            self.context = existing_context
+            self._normalize_context_structure()
+            print(f"✅ 기존 컨텍스트 사용: {project_name}")
+        else:
+            # 캐시된 컨텍스트 로드 시도
+            cached_context = self._try_load_cached_context()
+            if cached_context:
+                self.context = cached_context
+                print(f"✅ 캐시된 컨텍스트 로드: {project_name}")
+            else:
+                self.context = self._create_new_context()
+                print(f"✅ 새 컨텍스트 생성: {project_name}")
+        
+        # 구조 정규화
+        self._normalize_context_structure()
+        return self.context
+    
+    def _get_cache_file_paths(self) -> Dict[str, str]:
+        """각 캐시 파일 경로 반환"""
+        cache_dir = os.path.join(self.memory_root, self.project_name, '.cache')
+        os.makedirs(cache_dir, exist_ok=True)
+        
+        return {
+            'core': os.path.join(cache_dir, 'cache_core.json'),
+            'analyzed_files': os.path.join(cache_dir, 'cache_analyzed_files.json'),
+            'work_tracking': os.path.join(cache_dir, 'cache_work_tracking.json'),
+            'tasks': os.path.join(cache_dir, 'cache_tasks.json'),
+            'plan': os.path.join(cache_dir, 'cache_plan.json')
+        }
+    
+    def _create_new_context(self) -> Dict[str, Any]:
+        """새로운 컨텍스트 생성 (개선된 구조)"""
+        return {
+            # 기본 정보 (cache_core.json)
+            'project_name': self.project_name,
+            'project_id': self.project_name,
+            'project_path': self.project_path,
+            'memory_root': self.memory_root,
+            'created_at': dt.datetime.now().isoformat(),
+            'updated_at': dt.datetime.now().isoformat(),
+            'version': '7.0',
+            'current_focus': '',
+            'current_task': None,
+            
+            # 분석 파일 정보 (cache_analyzed_files.json)
+            'analyzed_files': {},
+            
+            # 작업 추적 (cache_work_tracking.json)
+            'work_tracking': {
+                'file_access': {},
+                'file_edits': {},
+                'function_edits': {},
+                'session_start': dt.datetime.now().isoformat(),
+                'total_operations': 0,
+                'task_tracking': {},
+                'current_task_work': {
+                    'task_id': None,
+                    'start_time': None,
+                    'files_accessed': [],
+                    'functions_edited': [],
+                    'operations': []
+                }
+            },
+            
+            # 작업 관리 (cache_tasks.json)
+            'tasks': {'next': [], 'done': []},
+            
+            # 계획 관리 (cache_plan.json)
+            'plan': None,
+            'plan_history': [],
+            
+            # 기타 데이터
+            'coding_experiences': [],
+            'progress': {
+                'completed_tasks': 0,
+                'total_tasks': 0,
+                'percentage': 0.0
+            },
+            'phase_reports': {},
+            'error_log': [],
+            'file_access_history': [],
+            'metadata': {
+                'version': '7.0',
+                'last_saved': dt.datetime.now().isoformat()
+            }
+        }
+    
+    def _try_load_cached_context(self) -> Optional[Dict[str, Any]]:
+        """캐시된 컨텍스트 로드 (여러 파일에서)"""
+        if not self.memory_root or not self.project_name:
+            return None
+        
+        cache_paths = self._get_cache_file_paths()
+        
+        # 핵심 파일이 있는지 확인
+        if not os.path.exists(cache_paths['core']):
+            return None
+        
+        try:
+            # 1. 핵심 정보 로드
+            with open(cache_paths['core'], 'r', encoding='utf-8') as f:
+                context = json.load(f)
+            
+            # 2. 각 부분별 파일 로드
+            # analyzed_files
+            if os.path.exists(cache_paths['analyzed_files']):
+                with open(cache_paths['analyzed_files'], 'r', encoding='utf-8') as f:
+                    context['analyzed_files'] = json.load(f)
+            else:
+                context['analyzed_files'] = {}
+            
+            # work_tracking
+            if os.path.exists(cache_paths['work_tracking']):
+                with open(cache_paths['work_tracking'], 'r', encoding='utf-8') as f:
+                    context['work_tracking'] = json.load(f)
+            else:
+                context['work_tracking'] = self._create_new_context()['work_tracking']
+            
+            # tasks
+            if os.path.exists(cache_paths['tasks']):
+                with open(cache_paths['tasks'], 'r', encoding='utf-8') as f:
+                    context['tasks'] = json.load(f)
+            else:
+                context['tasks'] = {'next': [], 'done': []}
+            
+            # plan
+            if os.path.exists(cache_paths['plan']):
+                with open(cache_paths['plan'], 'r', encoding='utf-8') as f:
+                    plan_data = json.load(f)
+                    context['plan'] = plan_data.get('plan')
+                    context['plan_history'] = plan_data.get('plan_history', [])
+            else:
+                context['plan'] = None
+                context['plan_history'] = []
+            
+            # 경로 업데이트
+            context['project_path'] = self.project_path
+            context['memory_root'] = self.memory_root
+            
+            return context
+            
+        except Exception as e:
+            print(f"⚠️ 캐시 로드 실패: {e}")
+            return None
+    
+    def _normalize_context_structure(self):
+        """컨텍스트 구조 정규화"""
+        if not self.context:
+            return
+        
+        # 필수 키 확인
+        self.context.setdefault('analyzed_files', {})
+        self.context.setdefault('tasks', {'next': [], 'done': []})
+        self.context.setdefault('coding_experiences', [])
+        self.context.setdefault('phase_reports', {})
+        self.context.setdefault('error_log', [])
+        self.context.setdefault('plan', None)
+        self.context.setdefault('plan_history', [])
+        self.context.setdefault('file_access_history', [])
+        self.context.setdefault('progress', {
+            'completed_tasks': 0,
+            'total_tasks': 0,
+            'percentage': 0.0
+        })
+        
+        # work_tracking 구조
+        work_tracking = self.context.setdefault('work_tracking', {})
+        work_tracking.setdefault('file_access', {})
+        work_tracking.setdefault('file_edits', {})
+        work_tracking.setdefault('function_edits', {})
+        work_tracking.setdefault('session_start', dt.datetime.now().isoformat())
+        work_tracking.setdefault('total_operations', 0)
+        work_tracking.setdefault('task_tracking', {})
+        work_tracking.setdefault('current_task_work', {
+            'task_id': None,
+            'start_time': None,
+            'files_accessed': [],
+            'functions_edited': [],
+            'operations': []
+        })
+        
+        # 경로 정보 업데이트
+        self.context['project_path'] = self.project_path
+        self.context['memory_root'] = self.memory_root
+
+    def save(self) -> bool:
+        """컨텍스트 저장 (여러 파일로 분리)"""
+        # 버전 패턴 프로젝트는 저장하지 않음
+        import re
+        if self.project_name:
+            version_patterns = [
+                r'^[a-zA-Z]+-\d+\.\d+\.\d+$',
+                r'^app-\d+\.\d+\.\d+$',
+                r'^project-\d+\.\d+\.\d+$',
+                r'^v\d+\.\d+\.\d+$'
+            ]
+            for pattern in version_patterns:
+                if re.match(pattern, self.project_name):
+                    print(f"⚠️ 버전 패턴 프로젝트 '{self.project_name}'는 저장하지 않습니다.")
+                    return False
+        
+        if not self.context:
+            print("⚠️ 저장할 컨텍스트가 없습니다")
+            return False
+        
+        try:
+            # 업데이트 시간 갱신
+            self.context['updated_at'] = dt.datetime.now().isoformat()
+            self.context.setdefault('metadata', {})['last_saved'] = dt.datetime.now().isoformat()
+            
+            # 진행률 업데이트
+            self._update_progress()
+            
+            cache_paths = self._get_cache_file_paths()
+            
+            # 1. 핵심 정보 저장 (cache_core.json)
+            core_data = {
+                'project_name': self.context.get('project_name'),
+                'project_id': self.context.get('project_id'),
+                'project_path': self.context.get('project_path'),
+                'memory_root': self.context.get('memory_root'),
+                'created_at': self.context.get('created_at'),
+                'updated_at': self.context.get('updated_at'),
+                'version': self.context.get('version', '7.0'),
+                'current_focus': self.context.get('current_focus', ''),
+                'current_task': self.context.get('current_task'),
+                'coding_experiences': self.context.get('coding_experiences', []),
+                'progress': self.context.get('progress', {}),
+                'phase_reports': self.context.get('phase_reports', {}),
+                'error_log': self.context.get('error_log', []),
+                'file_access_history': self.context.get('file_access_history', []),
+                'metadata': self.context.get('metadata', {})
+            }
+            
+            with open(cache_paths['core'], 'w', encoding='utf-8') as f:
+                json.dump(core_data, f, indent=2, ensure_ascii=False)
+            
+            # 2. 분석 파일 저장 (cache_analyzed_files.json)
+            with open(cache_paths['analyzed_files'], 'w', encoding='utf-8') as f:
+                json.dump(self.context.get('analyzed_files', {}), f, indent=2, ensure_ascii=False)
+            
+            # 3. 작업 추적 저장 (cache_work_tracking.json)
+            with open(cache_paths['work_tracking'], 'w', encoding='utf-8') as f:
+                json.dump(self.context.get('work_tracking', {}), f, indent=2, ensure_ascii=False)
+            
+            # 4. 작업 저장 (cache_tasks.json)
+            with open(cache_paths['tasks'], 'w', encoding='utf-8') as f:
+                json.dump(self.context.get('tasks', {}), f, indent=2, ensure_ascii=False)
+            
+            # 5. 계획 저장 (cache_plan.json)
+            plan_data = {
+                'plan': self.context.get('plan'),
+                'plan_history': self.context.get('plan_history', [])
+            }
+            with open(cache_paths['plan'], 'w', encoding='utf-8') as f:
+                json.dump(plan_data, f, indent=2, ensure_ascii=False)
+            
+            print(f"✅ 캐시 저장 완료:")
+            for name, path in cache_paths.items():
+                if os.path.exists(path):
+                    size = os.path.getsize(path)
+                    print(f"   • {name}: {size:,} bytes")
+            
+            # 프로젝트 문서 업데이트 시도
+            try:
+                self._update_project_docs()
+            except Exception as e:
+                print(f"⚠️ 프로젝트 문서 업데이트 실패: {e}")
+            
+            return True
+            
+        except Exception as e:
+            print(f"❌ 캐시 저장 실패: {e}")
+            return False
+
+    def _update_progress(self):
+        """진행률 업데이트"""
+        if not self.context:
+            return
+        
+        # 현재 계획에서 작업 수 계산
+        plan = self.context.get('plan')
+        if plan:
+            total_tasks = 0
+            completed_tasks = 0
+            
+            for phase_id, phase in plan.get('phases', {}).items():
+                for task in phase.get('tasks', []):
+                    total_tasks += 1
+                    if task.get('status') == 'completed':
+                        completed_tasks += 1
+            
+            progress = self.context.setdefault('progress', {})
+            progress['total_tasks'] = total_tasks
+            progress['completed_tasks'] = completed_tasks
+            progress['percentage'] = (completed_tasks / max(1, total_tasks)) * 100
+    
+    def _update_project_docs(self):
+        """프로젝트 문서 업데이트"""
+        if not self.context or not self.project_path:
+            return
+        
+        if not self.memory_root or not self.project_name:
+            print("⚠️ memory_root 또는 project_name이 설정되지 않았습니다.")
+            return
+            
+        docs = {
+            'project_vision.md': self._generate_project_vision(),
+            'coding_flow.md': self._generate_coding_flow(),
+            'file_directory.md': self._generate_file_directory(),
+            'progress.md': self._generate_progress()
+        }
+        
+        for filename, content in docs.items():
+            doc_path = os.path.join(str(self.memory_root), str(self.project_name), filename)
+            try:
+                os.makedirs(os.path.dirname(doc_path), exist_ok=True)
+                with open(doc_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+            except Exception as e:
+                print(f"⚠️ {filename} 업데이트 실패: {e}")
+    
+    def _generate_project_vision(self) -> str:
+        """project_vision.md 생성"""
+        if not self.context:
+            return "# AI Coding Brain MCP - 프로젝트 비전\n\n프로젝트가 초기화되지 않았습니다.\n"
+        
+        analyzed = len(self.context.get('analyzed_files', {}))
+        progress = self.context.get('progress', {})
+        
+        content = f"""# AI Coding Brain MCP - 프로젝트 비전
+
+
+# ===========================================
+# 글로벌 컨텍스트 관리자
+# ===========================================
+_context_manager = UnifiedContextManager()
+
+# ===========================================
+# 싱글톤 접근 함수
+# ===========================================
+def get_context_manager() -> UnifiedContextManager:
+    """Get singleton instance of Context Manager"""
+    return _context_manager

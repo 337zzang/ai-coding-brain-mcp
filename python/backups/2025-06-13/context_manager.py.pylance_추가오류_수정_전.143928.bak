@@ -1,0 +1,619 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+🧠 스마트 컨텍스트 관리자 v3.0 - 통합 메모리 관리
+==========================================
+
+project_context의 생성, 관리, 접근을 전담하는 모듈.
+vibe_memory_system과 완전 통합된 구조.
+
+v3.0 변경사항:
+- VibeMemoryManager와 완전 통합
+- 싱글톤 패턴으로 단일 인스턴스 보장
+- 클래스 구조 단순화 및 통합
+"""
+
+# ===========================================
+# Public API - Only these 8 functions are exposed
+# ===========================================
+__all__ = [
+    'initialize_context',      # 프로젝트 컨텍스트 초기화
+    'save_context',           # 컨텍스트 저장
+    'update_cache',           # 캐시 업데이트
+    'get_value',              # 캐시 값 조회
+    'find_symbol',            # 심볼 찾기
+    'track_file_access',      # 파일 접근 추적
+    'track_function_edit',    # 함수 수정 추적
+    'get_work_tracking_summary' # 작업 추적 요약
+]
+
+import os
+import json
+import datetime as dt
+from typing import Dict, Any, Optional, List, Tuple
+from pathlib import Path
+import copy
+import logging
+from collections import defaultdict
+
+# Vibe Memory System 동적 import
+try:
+    from vibe_memory_system import VibeMemoryManager
+    VIBE_MEMORY_AVAILABLE = True
+except ImportError:
+    VIBE_MEMORY_AVAILABLE = False
+    print("⚠️ vibe_memory_system을 import할 수 없습니다. 기본 저장 기능만 사용됩니다.")
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+class UnifiedContextManager:
+    """
+    통합 컨텍스트 관리자 - 모든 컨텍스트 관리 기능을 하나의 클래스로 통합
+    
+    Features:
+    - 싱글톤 패턴으로 단일 인스턴스 보장
+    - 캐시 관리, 작업 추적, 심볼 인덱싱 통합
+    - VibeMemoryManager와 자동 연동
+    """
+    
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def __init__(self):
+        if not hasattr(self, 'initialized'):
+            self.context = None
+            self.project_path = None
+            self.project_name = None
+            self.vibe_manager = None
+            self.initialized = True
+            
+    def initialize(self, project_path: str, project_name: str) -> Dict[str, Any]:
+        """
+        프로젝트 컨텍스트 초기화
+        
+        Args:
+            project_path: 프로젝트 경로
+            project_name: 프로젝트 이름
+            
+        Returns:
+            초기화된 컨텍스트
+        """
+        self.project_path = project_path
+        self.project_name = project_name
+        
+        # 캐시된 컨텍스트 로드 시도
+        cached_context = self._try_load_cached_context()
+        if cached_context:
+            self.context = cached_context
+            logger.info(f"✅ 캐시된 컨텍스트 로드 성공: {project_name}")
+        else:
+            # 새 컨텍스트 생성
+            self.context = self._create_new_context()
+            logger.info(f"✅ 새 컨텍스트 생성: {project_name}")
+        
+        # 구조 정규화 및 검증
+        self._normalize_context_structure()
+        self._ensure_cache_structure()
+        
+        # VibeMemoryManager 초기화 (가능한 경우)
+        if VIBE_MEMORY_AVAILABLE:
+            try:
+                self.vibe_manager = VibeMemoryManager(self.context, project_name)
+                logger.info("✅ VibeMemoryManager 연동 완료")
+            except Exception as e:
+                logger.warning(f"⚠️ VibeMemoryManager 초기화 실패: {e}")
+                self.vibe_manager = None
+        
+        return self.context
+    
+    def _create_new_context(self) -> Dict[str, Any]:
+        """새로운 컨텍스트 생성"""
+        return {
+            'project_name': self.project_name,
+            'project_id': self.project_name,
+            'project_path': self.project_path,
+            'created_at': dt.datetime.now().isoformat(),
+            'updated_at': dt.datetime.now().isoformat(),
+            'version': '3.0',
+            
+            # 캐시 구조
+            'cache': {
+                'analyzed_files': {},
+                'symbol_index': {},
+                'work_tracking': {
+                    'file_access': defaultdict(int),
+                    'file_edits': defaultdict(int),
+                    'function_edits': defaultdict(lambda: {'count': 0, 'operations': []}),
+                    'session_start': dt.datetime.now().isoformat(),
+                    'total_operations': 0
+                }
+            },
+            
+            # 작업 관리
+            'tasks': {
+                'next': [],
+                'done': []
+            },
+            'current_focus': '',
+            
+            # AI 학습 데이터
+            'coding_experiences': [],
+            'ai_suggestions': []
+        }
+    
+    def _try_load_cached_context(self) -> Optional[Dict[str, Any]]:
+        """캐시된 컨텍스트 로드 시도"""
+        if not self.project_path:
+            return None
+            
+        cache_dir = os.path.join(self.project_path, '.cache')
+        cache_file = os.path.join(cache_dir, f'cache_{self.project_name}.json')
+        
+        if os.path.exists(cache_file):
+            try:
+                with open(cache_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception as e:
+                logger.warning(f"캐시 로드 실패: {e}")
+        
+        return None
+    
+    def _normalize_context_structure(self):
+        """컨텍스트 구조 정규화"""
+        # 필수 키 확인 및 생성
+        required_keys = {
+            'cache': {},
+            'tasks': {'next': [], 'done': []},
+            'coding_experiences': [],
+            'ai_suggestions': []
+        }
+        
+        for key, default_value in required_keys.items():
+            if self.context and key not in self.context:
+                self.context[key] = copy.deepcopy(default_value)
+    
+    def _ensure_cache_structure(self):
+        """캐시 구조 확인 및 초기화"""
+        if not self.context:
+            return
+            
+        cache = self.context.setdefault('cache', {})
+        
+        # 캐시 하위 구조 초기화
+        cache.setdefault('analyzed_files', {})
+        cache.setdefault('symbol_index', {})
+        
+        # work_tracking 구조 초기화
+        work_tracking = cache.setdefault('work_tracking', {})
+        work_tracking.setdefault('file_access', {})
+        work_tracking.setdefault('file_edits', {})
+        work_tracking.setdefault('function_edits', {})
+        work_tracking.setdefault('session_start', dt.datetime.now().isoformat())
+        work_tracking.setdefault('total_operations', 0)
+    
+    def save(self) -> bool:
+        """
+        컨텍스트 저장 - 캐시와 Vibe 시스템 모두 사용
+        
+        Returns:
+            성공 여부
+        """
+        if not self.context:
+            logger.warning("⚠️ 저장할 컨텍스트가 없습니다")
+            return False
+        
+        try:
+            # 업데이트 시간 갱신
+            self.context['updated_at'] = dt.datetime.now().isoformat()
+            
+            # 1. 로컬 캐시 저장
+            cache_saved = self._save_local_cache()
+            
+            # 2. VibeMemoryManager를 통한 저장 (가능한 경우)
+            vibe_saved = False
+            if self.vibe_manager:
+                try:
+                    vibe_saved = self.vibe_manager.save_context()
+                except Exception as e:
+                    logger.error(f"VibeMemoryManager 저장 실패: {e}")
+            
+            # 둘 중 하나라도 성공하면 성공으로 처리
+            success = cache_saved or vibe_saved
+            
+            if success:
+                logger.info("✅ 컨텍스트 저장 완료")
+            else:
+                logger.error("❌ 컨텍스트 저장 실패")
+                
+            return success
+            
+        except Exception as e:
+            logger.error(f"컨텍스트 저장 중 오류: {e}")
+            return False
+    
+    def _save_local_cache(self) -> bool:
+        """로컬 캐시 파일에 저장"""
+        try:
+            cache_dir = os.path.join(self.project_path, '.cache')
+            os.makedirs(cache_dir, exist_ok=True)
+            
+            cache_file = os.path.join(cache_dir, f'cache_{self.project_name}.json')
+            
+            # JSON 직렬화 가능한 형태로 변환
+            serializable_context = self._prepare_serializable_context()
+            
+            with open(cache_file, 'w', encoding='utf-8') as f:
+                json.dump(serializable_context, f, indent=2, ensure_ascii=False)
+            
+            logger.info(f"✅ 캐시 저장: {cache_file}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"캐시 저장 실패: {e}")
+            return False
+    
+    def _prepare_serializable_context(self) -> Dict[str, Any]:
+        """JSON 직렬화 가능한 형태로 컨텍스트 변환"""
+        def convert_to_serializable(obj):
+            if isinstance(obj, defaultdict):
+                return dict(obj)
+            elif isinstance(obj, set):
+                return list(obj)
+            elif isinstance(obj, (dt.datetime, dt.date)):
+                return obj.isoformat()
+            elif hasattr(obj, '__dict__'):
+                return convert_to_serializable(obj.__dict__)
+            elif isinstance(obj, dict):
+                return {k: convert_to_serializable(v) for k, v in obj.items()}
+            elif isinstance(obj, (list, tuple)):
+                return [convert_to_serializable(item) for item in obj]
+            else:
+                return obj
+        
+        return convert_to_serializable(self.context)
+    
+    # ===========================================
+    # 캐시 관리 메서드
+    # ===========================================
+    
+    def update_cache(self, key: str, value: Any) -> None:
+        """캐시 업데이트"""
+        if not self.context:
+            logger.warning("컨텍스트가 초기화되지 않았습니다")
+            return
+        
+        cache = self.context.setdefault('cache', {})
+        
+        # 중첩된 키 처리 (예: "analyzed_files.main.py")
+        keys = key.split('.')
+        current = cache
+        
+        for k in keys[:-1]:
+            current = current.setdefault(k, {})
+        
+        current[keys[-1]] = value
+        logger.debug(f"캐시 업데이트: {key}")
+    
+    def get_value(self, key: str, default: Any = None) -> Any:
+        """캐시 값 조회"""
+        if not self.context:
+            return default
+        
+        cache = self.context.get('cache', {})
+        
+        # 중첩된 키 처리
+        keys = key.split('.')
+        current = cache
+        
+        for k in keys:
+            if isinstance(current, dict) and k in current:
+                current = current[k]
+            else:
+                return default
+        
+        return current
+    
+    # ===========================================
+    # 심볼 관리 메서드
+    # ===========================================
+    
+    def find_symbol(self, symbol_name: str) -> Optional[Dict[str, Any]]:
+        """심볼 검색"""
+        if not self.context:
+            return None
+        
+        symbol_index = self.context.get('cache', {}).get('symbol_index', {})
+        return symbol_index.get(symbol_name)
+    
+    def build_symbol_index(self, analyzed_files: Dict[str, Any]):
+        """심볼 인덱스 구축"""
+        symbol_index = {}
+        
+        for file_path, file_info in analyzed_files.items():
+            # 함수 인덱싱
+            for func in file_info.get('functions', []):
+                symbol_index[func] = {
+                    'type': 'function',
+                    'file': file_path,
+                    'info': file_info.get('function_details', {}).get(func, {})
+                }
+            
+            # 클래스 인덱싱
+            for cls in file_info.get('classes', []):
+                symbol_index[cls] = {
+                    'type': 'class',
+                    'file': file_path,
+                    'info': file_info.get('class_details', {}).get(cls, {})
+                }
+        
+        self.update_cache('symbol_index', symbol_index)
+        logger.info(f"✅ 심볼 인덱스 구축: {len(symbol_index)}개")
+    
+    # ===========================================
+    # 작업 추적 메서드
+    # ===========================================
+    
+    def track_file_access(self, file_path: str, operation: str = 'read'):
+        """파일 접근 추적"""
+        if not self.context:
+            return
+        
+        work_tracking = self.context.get('cache', {}).get('work_tracking', {})
+        file_access = work_tracking.setdefault('file_access', {})
+        
+        # 상대 경로로 정규화
+        if self.project_path and file_path.startswith(self.project_path):
+            file_path = os.path.relpath(file_path, self.project_path)
+        
+        file_access[file_path] = file_access.get(file_path, 0) + 1
+        work_tracking['total_operations'] = work_tracking.get('total_operations', 0) + 1
+        
+        logger.debug(f"파일 접근 추적: {file_path} ({operation})")
+    
+    def track_function_edit(self, file_path: str, function_name: str, 
+                          class_name: Optional[str] = None, operation: str = 'edit'):
+        """함수 수정 추적"""
+        if not self.context:
+            return
+        
+        work_tracking = self.context.get('cache', {}).get('work_tracking', {})
+        function_edits = work_tracking.setdefault('function_edits', {})
+        
+        # 함수 키 생성
+        if class_name:
+            func_key = f"{class_name}.{function_name}"
+        else:
+            func_key = function_name
+        
+        # 상대 경로로 정규화
+        if self.project_path and file_path.startswith(self.project_path):
+            file_path = os.path.relpath(file_path, self.project_path)
+        
+        # 편집 정보 업데이트
+        if func_key not in function_edits:
+            function_edits[func_key] = {'count': 0, 'operations': []}
+        
+        function_edits[func_key]['count'] += 1
+        function_edits[func_key]['operations'].append({
+            'timestamp': dt.datetime.now().isoformat(),
+            'operation': operation,
+            'file': file_path
+        })
+        
+        # 파일 편집도 추적
+        file_edits = work_tracking.setdefault('file_edits', {})
+        file_edits[file_path] = file_edits.get(file_path, 0) + 1
+        
+        work_tracking['total_operations'] = work_tracking.get('total_operations', 0) + 1
+        
+        logger.debug(f"함수 편집 추적: {func_key} in {file_path}")
+    
+    def get_work_tracking_summary(self) -> str:
+        """작업 추적 요약 생성"""
+        if not self.context:
+            return "컨텍스트가 초기화되지 않았습니다."
+        
+        work_tracking = self.context.get('cache', {}).get('work_tracking', {})
+        
+        # 세션 시간 계산
+        session_start = work_tracking.get('session_start')
+        if session_start:
+            start_time = dt.datetime.fromisoformat(session_start)
+            duration = dt.datetime.now() - start_time
+            duration_str = str(duration).split('.')[0]
+        else:
+            duration_str = "Unknown"
+        
+        # 통계 수집
+        file_access = work_tracking.get('file_access', {})
+        file_edits = work_tracking.get('file_edits', {})
+        function_edits = work_tracking.get('function_edits', {})
+        total_ops = work_tracking.get('total_operations', 0)
+        
+        # 요약 생성
+        summary = f"""
+📊 작업 추적 요약
+================
+• 세션 시간: {duration_str}
+• 전체 작업: {total_ops}회
+• 접근한 파일: {len(file_access)}개
+• 수정한 파일: {len(file_edits)}개
+• 수정한 함수: {len(function_edits)}개
+
+🔥 가장 많이 접근한 파일:
+"""
+        
+        # Top 5 파일
+        sorted_files = sorted(file_access.items(), key=lambda x: x[1], reverse=True)[:5]
+        for file_path, count in sorted_files:
+            summary += f"  • {file_path}: {count}회\n"
+        
+        # Top 5 함수
+        if function_edits:
+            summary += "\n✏️ 가장 많이 수정한 함수:\n"
+            sorted_funcs = sorted(function_edits.items(), 
+                                key=lambda x: x[1]['count'], reverse=True)[:5]
+            for func_name, info in sorted_funcs:
+                summary += f"  • {func_name}: {info['count']}회\n"
+        
+        return summary
+    
+    # ===========================================
+    # AI 제안 메서드
+    # ===========================================
+    
+    def propose_next_steps(self, limit: int = 5) -> List[Dict[str, Any]]:
+        """AI 기반 다음 단계 제안"""
+        if not self.context:
+            return []
+        
+        suggestions = []
+        work_tracking = self.context.get('cache', {}).get('work_tracking', {})
+        
+        # 1. 자주 수정하는 파일 기반 제안
+        file_edits = work_tracking.get('file_edits', {})
+        if file_edits:
+            most_edited = max(file_edits.items(), key=lambda x: x[1])
+            suggestions.append({
+                'type': 'refactor',
+                'priority': 'high',
+                'text': f"{most_edited[0]}을(를) {most_edited[1]}회 수정했습니다. 리팩토링이 필요할 수 있습니다.",
+                'file': most_edited[0]
+            })
+        
+        # 2. 함수 수정 패턴 분석
+        function_edits = work_tracking.get('function_edits', {})
+        if function_edits:
+            hot_functions = [f for f, info in function_edits.items() if info['count'] >= 3]
+            if hot_functions:
+                suggestions.append({
+                    'type': 'optimize',
+                    'priority': 'medium',
+                    'text': f"다음 함수들이 자주 수정됩니다: {', '.join(hot_functions[:3])}",
+                    'functions': hot_functions
+                })
+        
+        # 3. 작업 기반 제안
+        next_tasks = self.context.get('tasks', {}).get('next', [])
+        if next_tasks:
+            suggestions.append({
+                'type': 'task',
+                'priority': 'high',
+                'text': f"다음 작업: {next_tasks[0]}",
+                'task': next_tasks[0]
+            })
+        
+        # 4. 분석되지 않은 파일 제안
+        analyzed = self.context.get('cache', {}).get('analyzed_files', {})
+        if len(analyzed) < 10:  # 분석된 파일이 적으면
+            suggestions.append({
+                'type': 'analyze',
+                'priority': 'medium',
+                'text': "프로젝트 파일 분석이 필요합니다. 전체 구조를 파악해보세요.",
+                'action': 'analyze_all_files'
+            })
+        
+        # 5. 세션 시간 기반 제안
+        if work_tracking.get('session_start'):
+            start_time = dt.datetime.fromisoformat(work_tracking['session_start'])
+            if (dt.datetime.now() - start_time).total_seconds() > 7200:  # 2시간 이상
+                suggestions.append({
+                    'type': 'break',
+                    'priority': 'low',
+                    'text': "2시간 이상 작업하셨습니다. 잠시 휴식을 취하는 것이 어떨까요?",
+                    'action': 'take_break'
+                })
+        
+        # 우선순위로 정렬하고 제한
+        priority_order = {'high': 0, 'medium': 1, 'low': 2}
+        suggestions.sort(key=lambda x: priority_order.get(x['priority'], 3))
+        
+        return suggestions[:limit]
+
+
+# ===========================================
+# 싱글톤 인스턴스
+# ===========================================
+_context_manager = UnifiedContextManager()
+
+
+# ===========================================
+# Public API 구현
+# ===========================================
+
+def initialize_context(project_path: str, project_name: str) -> Dict[str, Any]:
+    """프로젝트 컨텍스트 초기화"""
+    return _context_manager.initialize(project_path, project_name)
+
+
+def save_context() -> bool:
+    """컨텍스트 저장"""
+    return _context_manager.save()
+
+
+def update_cache(context: Dict[str, Any], key: str, value: Any):
+    """캐시 업데이트"""
+    _context_manager.update_cache(key, value)
+
+
+def get_value(context: Dict[str, Any], key: str, default: Any = None) -> Any:
+    """캐시 값 조회"""
+    return _context_manager.get_value(key, default)
+
+
+def find_symbol(context: Dict[str, Any], symbol_name: str) -> Optional[Dict[str, Any]]:
+    """심볼 찾기"""
+    return _context_manager.find_symbol(symbol_name)
+
+
+def track_file_access(context: Dict[str, Any], file_path: str, operation: str = 'read'):
+    """파일 접근 추적"""
+    _context_manager.track_file_access(file_path, operation)
+
+
+def track_function_edit(context: Dict[str, Any], file_path: str, function_name: str,
+                       class_name: Optional[str] = None, operation: str = 'edit'):
+    """함수 수정 추적"""
+    _context_manager.track_function_edit(file_path, function_name, class_name, operation)
+
+
+def get_work_tracking_summary(context: Dict[str, Any]) -> str:
+    """작업 추적 요약"""
+    return _context_manager.get_work_tracking_summary()
+
+
+# ===========================================
+# 추가 유틸리티 함수들 (하위 호환성)
+# ===========================================
+
+def build_index(context: Dict[str, Any], analyzed_files: Dict[str, Any]):
+    """심볼 인덱스 구축 (하위 호환성)"""
+    _context_manager.build_symbol_index(analyzed_files)
+
+
+def propose_next_steps(context: Dict[str, Any], limit: int = 5) -> List[Dict[str, Any]]:
+    """AI 기반 다음 단계 제안 (하위 호환성)"""
+    return _context_manager.propose_next_steps(limit)
+
+
+def save_project_cache(project_context: Dict[str, Any]) -> bool:
+    """프로젝트 캐시 저장 (하위 호환성)"""
+    return save_context()
+
+
+# ===========================================
+# 모듈 초기화 시 실행
+# ===========================================
+if __name__ == "__main__":
+    # 테스트 코드
+    test_context = initialize_context(".", "test_project")
+    print("✅ Context Manager v3.0 초기화 완료")
+    print(f"프로젝트: {test_context.get('project_name')}")
+    print(f"버전: {test_context.get('version')}")

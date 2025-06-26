@@ -1,0 +1,230 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Project Wisdom Manager - AI Coding Brain MCP
+프로젝트 작업 중 축적되는 지혜와 교훈을 관리하는 모듈
+
+작성일: 2025-06-22
+"""
+
+import os
+import json
+import re
+from datetime import datetime
+from typing import Dict, List, Any, Optional
+from pathlib import Path
+
+class ProjectWisdomManager:
+    """프로젝트 지혜 관리 클래스"""
+    
+    def __init__(self, project_root: str = "."):
+        self.project_root = Path(project_root)
+        self.wisdom_file = self.project_root / "project_wisdom.md"
+        self.vision_file = self.project_root / "project_vision.md"
+        self.wisdom_data = {
+            'error_patterns': {},
+            'common_mistakes': {},
+            'best_practices': [],
+            'last_updated': datetime.now().isoformat()
+        }
+        self.load_wisdom()
+    
+    def load_wisdom(self):
+        """기존 wisdom 데이터 로드"""
+        if self.wisdom_file.exists():
+            # MD 파일 파싱하여 데이터 추출
+            content = self.wisdom_file.read_text(encoding='utf-8')
+            self._parse_wisdom_md(content)
+    
+    def _parse_wisdom_md(self, content: str):
+        """MD 파일에서 wisdom 데이터 추출"""
+        lines = content.split('\n')
+        current_section = None
+        
+        for i, line in enumerate(lines):
+            # 섹션 감지
+            if '## 🐛 자주 발생하는 오류 패턴' in line:
+                current_section = 'errors'
+            elif '## ❌ 자주 하는 실수들' in line:
+                current_section = 'mistakes'
+            elif '## ✅ 베스트 프랙티스' in line:
+                current_section = 'practices'
+            
+            # 데이터 추출
+            if current_section == 'errors' and '###' in line:
+                error_name = line.replace('###', '').strip()
+                # 다음 줄들에서 정보 추출
+                for j in range(i+1, min(i+5, len(lines))):
+                    if '발생 횟수' in lines[j]:
+                        count = int(re.search(r'(\d+)회', lines[j]).group(1))
+                        self.wisdom_data['error_patterns'][error_name] = {'count': count}
+                        break
+    
+    def track_error(self, error_type: str, error_msg: str):
+        """오류 발생 추적"""
+        if error_type not in self.wisdom_data['error_patterns']:
+            self.wisdom_data['error_patterns'][error_type] = {
+                'count': 0,
+                'first_seen': datetime.now().isoformat(),
+                'messages': []
+            }
+        
+        pattern = self.wisdom_data['error_patterns'][error_type]
+        pattern['count'] += 1
+        pattern['last_seen'] = datetime.now().isoformat()
+        
+        # 메시지 저장 (최대 5개)
+        if error_msg not in pattern['messages']:
+            pattern['messages'].append(error_msg)
+            pattern['messages'] = pattern['messages'][-5:]
+        
+        self.save_wisdom()
+        
+        # 경고 메시지
+        if pattern['count'] > 2:
+            print(f"⚠️ '{error_type}' 오류가 {pattern['count']}번째 발생했습니다!")
+            print(f"💡 팁: {self._get_error_tip(error_type)}")
+    
+    def track_mistake(self, mistake_type: str, context: str = ""):
+        """실수 추적"""
+        if mistake_type not in self.wisdom_data['common_mistakes']:
+            self.wisdom_data['common_mistakes'][mistake_type] = {
+                'count': 0,
+                'first_seen': datetime.now().isoformat(),
+                'contexts': []
+            }
+        
+        mistake = self.wisdom_data['common_mistakes'][mistake_type]
+        mistake['count'] += 1
+        mistake['last_seen'] = datetime.now().isoformat()
+        
+        if context and context not in mistake['contexts']:
+            mistake['contexts'].append(context)
+            mistake['contexts'] = mistake['contexts'][-3:]
+        
+        self.save_wisdom()
+        
+        # 실시간 경고
+        self._show_mistake_warning(mistake_type, mistake['count'])
+    
+    def _show_mistake_warning(self, mistake_type: str, count: int):
+        """실수에 대한 경고 메시지 표시"""
+        warnings = {
+            'console_usage': f"또 console을 사용하셨네요! ({count}번째) TypeScript에서는 logger를 사용하세요.",
+            'no_backup': f"백업 없이 파일을 수정하려고 하시나요? ({count}번째) 항상 백업 먼저!",
+            'direct_flow': f"flow_project를 직접 호출하셨네요! ({count}번째) execute_code를 사용하세요."
+        }
+        
+        if mistake_type in warnings:
+            print(f"\n⚠️ {warnings[mistake_type]}")
+            print(f"💡 올바른 방법: {self._get_correct_way(mistake_type)}")
+    
+    def _get_correct_way(self, mistake_type: str) -> str:
+        """올바른 방법 제시"""
+        correct_ways = {
+            'console_usage': "import { logger } from '../utils/logger'; logger.info('메시지');",
+            'no_backup': "backup = helpers.backup_file('file.py', '수정_전')",
+            'direct_flow': "execute_code: helpers.cmd_flow_with_context('project-name')"
+        }
+        return correct_ways.get(mistake_type, "문서를 참고하세요")
+    
+    def _get_error_tip(self, error_type: str) -> str:
+        """오류에 대한 팁 제공"""
+        tips = {
+            'TypeError': "타입을 확인하세요. TypeScript를 사용하면 이런 오류를 예방할 수 있습니다.",
+            'FileNotFoundError': "파일 경로를 확인하세요. os.path.join()을 사용하면 안전합니다.",
+            'KeyError': "딕셔너리 키가 존재하는지 확인하세요. dict.get('key', default)를 사용하세요."
+        }
+        return tips.get(error_type, "에러 메시지를 자세히 읽어보세요")
+    
+    def add_best_practice(self, practice: str, category: str = "general"):
+        """베스트 프랙티스 추가"""
+        practice_entry = {
+            'text': practice,
+            'category': category,
+            'added_at': datetime.now().isoformat()
+        }
+        
+        # 중복 체크
+        if not any(p['text'] == practice for p in self.wisdom_data['best_practices']):
+            self.wisdom_data['best_practices'].append(practice_entry)
+            self.save_wisdom()
+            print(f"✅ 새로운 베스트 프랙티스가 추가되었습니다: {practice}")
+    
+    def save_wisdom(self):
+        """wisdom 데이터를 MD 파일로 저장"""
+        content = self._generate_wisdom_md()
+        self.wisdom_file.write_text(content, encoding='utf-8')
+        
+    def _generate_wisdom_md(self) -> str:
+        """wisdom 데이터를 MD 형식으로 변환"""
+        lines = [
+            "# 🧠 Project Wisdom - ai-coding-brain-mcp",
+            "",
+            "> 이 문서는 프로젝트 작업 중 축적된 지혜와 교훈을 담고 있습니다.",
+            "",
+            "## 📌 프로젝트 비전",
+            f"- 프로젝트명: {self.project_root.name}",
+            f"- 경로: {self.project_root.absolute()}",
+            "- 주요 목적: AI 기반 코딩 도우미 MCP 서버",
+            "",
+            "## 🐛 자주 발생하는 오류 패턴",
+            ""
+        ]
+        
+        # 오류 패턴
+        for error_type, data in sorted(self.wisdom_data['error_patterns'].items(), 
+                                     key=lambda x: x[1]['count'], reverse=True):
+            lines.extend([
+                f"### {error_type}",
+                f"- **발생 횟수**: {data['count']}회",
+                f"- **최초 발생**: {data.get('first_seen', 'N/A')}",
+                f"- **최근 발생**: {data.get('last_seen', 'N/A')}",
+                f"- **해결 팁**: {self._get_error_tip(error_type)}",
+                ""
+            ])
+        
+        # 실수 패턴
+        lines.extend(["", "## ❌ 자주 하는 실수들", ""])
+        for i, (mistake_type, data) in enumerate(sorted(self.wisdom_data['common_mistakes'].items(),
+                                                       key=lambda x: x[1]['count'], reverse=True), 1):
+            lines.extend([
+                f"{i}. **{mistake_type}**",
+                f"   - 발생 횟수: {data['count']}회",
+                f"   - 최초 발생: {data.get('first_seen', 'N/A')}",
+                f"   - 올바른 방법: `{self._get_correct_way(mistake_type)}`",
+                ""
+            ])
+        
+        # 베스트 프랙티스
+        lines.extend(["", "## ✅ 베스트 프랙티스", ""])
+        categories = {}
+        for practice in self.wisdom_data['best_practices']:
+            cat = practice.get('category', 'general')
+            if cat not in categories:
+                categories[cat] = []
+            categories[cat].append(practice['text'])
+        
+        for category, practices in categories.items():
+            lines.append(f"### {category.title()}")
+            for practice in practices:
+                lines.append(f"- {practice}")
+            lines.append("")
+        
+        lines.extend([
+            "",
+            "---",
+            f"*마지막 업데이트: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*"
+        ])
+        
+        return '\n'.join(lines)
+
+# 싱글톤 인스턴스
+_wisdom_manager = None
+
+def get_wisdom_manager(project_root: str = ".") -> ProjectWisdomManager:
+    """Wisdom Manager 싱글톤 인스턴스 반환"""
+    global _wisdom_manager
+    if _wisdom_manager is None:
+        _wisdom_manager = ProjectWisdomManager(project_root)
+    return _wisdom_manager

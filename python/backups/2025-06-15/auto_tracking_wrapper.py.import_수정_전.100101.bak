@@ -1,0 +1,320 @@
+"""
+자동 추적 래퍼 - v6.1
+- execute_code 환경 개선
+- task별 작업 추적 기능 추가
+- 캐시 구조 개선
+"""
+import sys
+import os
+import json
+import functools
+from datetime import datetime
+from typing import Any, Dict, Optional, Callable
+
+# claude_code_ai_brain에서 필요한 함수들 import
+try:
+    from claude_code_ai_brain import (
+        get_current_context, 
+        UnifiedContextManager,
+        update_md_files
+    )
+except ImportError:
+    # Import 실패 시 더미 함수
+    def get_current_context():
+        return None
+    UnifiedContextManager = None
+    def update_md_files(context):
+        pass
+
+def _get_project_context():
+    """프로젝트 컨텍스트를 안전하게 가져옵니다 - execute_code 환경 최적화"""
+    try:
+        # 1. JSON REPL 세션의 전역 context 확인 (최우선)
+        import __main__
+        if hasattr(__main__, 'context') and isinstance(__main__.context, dict):
+            return __main__.context
+            
+        # 2. globals()에서 직접 찾기
+        if 'context' in globals() and isinstance(globals()['context'], dict):
+            return globals()['context']
+            
+        # 3. 실행 프레임에서 찾기 (JSON REPL 환경)
+        frame = sys._getframe()
+        for _ in range(10):  # 최대 10 프레임까지
+            if not frame:
+                break
+            # JSON REPL 세션의 globals 확인
+            if 'context' in frame.f_globals:
+                ctx = frame.f_globals['context']
+                if isinstance(ctx, dict):
+                    return ctx
+            # locals도 확인
+            if 'context' in frame.f_locals:
+                ctx = frame.f_locals['context']
+                if isinstance(ctx, dict):
+                    return ctx
+            frame = frame.f_back
+            
+        # 4. UnifiedContextManager 사용 (폴백)
+        if UnifiedContextManager:
+            manager = UnifiedContextManager()
+            return manager.context
+            
+        # 5. claude_code_ai_brain의 get_current_context 사용
+        ctx = get_current_context()
+        if ctx:
+            return ctx
+            
+        # 6. 기본 context 생성
+        return {
+            'project_name': 'unknown',
+            'cache_version': '6.1',
+            'task_tracking': {},
+            'current_task': None
+        }
+        
+    except Exception as e:
+        print(f"⚠️ Context 획득 실패: {e}")
+        return {'project_name': 'unknown', 'task_tracking': {}}
+
+def track_task_operation(task_id: str, operation: str, details: Dict[str, Any] = None):
+    """Task 관련 작업을 추적합니다"""
+    context = _get_project_context()
+    if not context:
+        return
+        
+    # task_tracking 초기화
+    if 'task_tracking' not in context:
+        context['task_tracking'] = {}
+        
+    # 현재 task의 추적 정보 초기화
+    if task_id not in context['task_tracking']:
+        context['task_tracking'][task_id] = {
+            'operations': [],
+            'files_modified': set(),
+            'functions_edited': set(),
+            'start_time': datetime.now().isoformat(),
+            'status': 'in_progress'
+        }
+    
+    # 작업 기록 추가
+    operation_record = {
+        'timestamp': datetime.now().isoformat(),
+        'operation': operation,
+        'details': details or {}
+    }
+    
+    context['task_tracking'][task_id]['operations'].append(operation_record)
+    
+    # 캐시 저장 트리거
+    if hasattr(context, 'save_cache'):
+        context.save_cache()
+
+def track_file_operation(operation_type: str):
+    """파일 작업 추적 데코레이터 - Task 연동 개선"""
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            context = _get_project_context()
+            current_task = context.get('current_task') if context else None
+            
+            # 파일 경로 추출
+            file_path = args[0] if args else kwargs.get('path', kwargs.get('filepath', ''))
+            
+            # 작업 실행
+            result = func(*args, **kwargs)
+            
+            # 작업 추적
+            if context and current_task:
+                track_task_operation(
+                    current_task,
+                    f"file_{operation_type}",
+                    {
+                        'file': file_path,
+                        'operation': operation_type,
+                        'success': bool(result)
+                    }
+                )
+                
+                # 파일 수정 기록
+                if operation_type in ['write', 'modify', 'replace']:
+                    if 'task_tracking' in context and current_task in context['task_tracking']:
+                        context['task_tracking'][current_task]['files_modified'].add(file_path)
+            
+            # 일반 추적도 유지
+            if context:
+                if 'file_access_history' not in context:
+                    context['file_access_history'] = []
+                    
+                context['file_access_history'].append({
+                    'file': file_path,
+                    'operation': operation_type,
+                    'timestamp': datetime.now().isoformat(),
+                    'task_id': current_task
+                })
+                
+                # 최근 100개만 유지
+                if len(context['file_access_history']) > 100:
+                    context['file_access_history'] = context['file_access_history'][-100:]
+            
+            return result
+        return wrapper
+    return decorator
+
+def track_block_operation(operation_type: str):
+    """코드 블록 작업 추적 데코레이터 - Task 연동 개선"""
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            context = _get_project_context()
+            current_task = context.get('current_task') if context else None
+            
+            # 파일 경로와 블록 이름 추출
+            file_path = args[0] if args else kwargs.get('file_path', '')
+            block_name = args[1] if len(args) > 1 else kwargs.get('block_name', '')
+            
+            # 작업 실행
+            result = func(*args, **kwargs)
+            
+            # Task별 추적
+            if context and current_task and result:
+                track_task_operation(
+                    current_task,
+                    f"block_{operation_type}",
+                    {
+                        'file': file_path,
+                        'block': block_name,
+                        'operation': operation_type
+                    }
+                )
+                
+                # 함수 수정 기록
+                if 'task_tracking' in context and current_task in context['task_tracking']:
+                    context['task_tracking'][current_task]['functions_edited'].add(f"{file_path}::{block_name}")
+            
+            # 일반 추적도 유지
+            if context and result:
+                if 'function_edit_history' not in context:
+                    context['function_edit_history'] = []
+                    
+                context['function_edit_history'].append({
+                    'file': file_path,
+                    'function': block_name,
+                    'operation': operation_type,
+                    'timestamp': datetime.now().isoformat(),
+                    'task_id': current_task
+                })
+                
+                # 최근 50개만 유지
+                if len(context['function_edit_history']) > 50:
+                    context['function_edit_history'] = context['function_edit_history'][-50:]
+                    
+            return result
+        return wrapper
+    return decorator
+
+def auto_update_context(func: Callable) -> Callable:
+    """Context 자동 업데이트 데코레이터"""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        context = _get_project_context()
+        
+        # context를 kwargs에 추가 (없는 경우에만)
+        if context and 'context' not in kwargs:
+            kwargs['context'] = context
+            
+        result = func(*args, **kwargs)
+        
+        # MD 파일 업데이트 (성공 시에만)
+        if result and context:
+            try:
+                update_md_files(context)
+            except:
+                pass  # MD 업데이트 실패는 무시
+                
+        return result
+    return wrapper
+
+# Task 완료/시작 추적 함수
+def track_task_start(task_id: str, task_info: Dict[str, Any]):
+    """Task 시작을 추적합니다"""
+    context = _get_project_context()
+    if not context:
+        return
+        
+    context['current_task'] = task_id
+    track_task_operation(task_id, 'start', task_info)
+    
+def track_task_complete(task_id: str):
+    """Task 완료를 추적합니다"""
+    context = _get_project_context()
+    if not context:
+        return
+        
+    if 'task_tracking' in context and task_id in context['task_tracking']:
+        context['task_tracking'][task_id]['status'] = 'completed'
+        context['task_tracking'][task_id]['end_time'] = datetime.now().isoformat()
+        
+        # 작업 요약 생성
+        task_data = context['task_tracking'][task_id]
+        summary = {
+            'files_modified': list(task_data.get('files_modified', set())),
+            'functions_edited': list(task_data.get('functions_edited', set())),
+            'operation_count': len(task_data.get('operations', [])),
+            'duration': 'calculated_later'  # 실제로는 시간 계산
+        }
+        
+        track_task_operation(task_id, 'complete', summary)
+    
+    # current_task 초기화
+    if context.get('current_task') == task_id:
+        context['current_task'] = None
+
+# 기존 함수들 래핑
+try:
+    from file_system_helpers import (
+        read_file as _read_file,
+        create_file as _create_file,
+        backup_file as _backup_file,
+        replace_block as _replace_block,
+        insert_block as _insert_block,
+        find_blocks as _find_blocks
+    )
+    
+    # 래핑된 버전들
+    read_file = track_file_operation('read')(_read_file)
+    create_file = track_file_operation('create')(_create_file)
+    backup_file = track_file_operation('backup')(_backup_file)
+    replace_block = track_block_operation('replace')(_replace_block)
+    insert_block = track_block_operation('insert')(_insert_block)
+    
+    # find_blocks는 특별 처리
+    @auto_update_context
+    def find_blocks(*args, **kwargs):
+        result = _find_blocks(*args, **kwargs)
+        context = _get_project_context()
+        if context and result:
+            file_path = args[0] if args else kwargs.get('file_path', '')
+            if 'analyzed_files' not in context:
+                context['analyzed_files'] = {}
+            context['analyzed_files'][file_path] = {
+                'blocks': result,
+                'analyzed_at': datetime.now().isoformat()
+            }
+        return result
+        
+except ImportError:
+    print("⚠️ file_system_helpers import 실패 - 기본 함수 사용")
+
+# 검색 함수들도 context 자동 전달
+try:
+    from integrated_search import integrated_search as _integrated_search
+    
+    @auto_update_context
+    def integrated_search(*args, **kwargs):
+        return _integrated_search(*args, **kwargs)
+        
+except ImportError:
+    pass
+
+print("✅ auto_tracking_wrapper.py v6.1 로드 완료 - Task 추적 기능 추가")

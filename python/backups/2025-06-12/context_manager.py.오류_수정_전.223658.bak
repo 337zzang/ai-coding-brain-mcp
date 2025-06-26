@@ -1,0 +1,2160 @@
+"""
+🧠 스마트 컨텍스트 관리자 - 메모리 뱅크 기반 구조
+==========================================
+
+project_context의 생성, 관리, 접근을 전담하는 모듈.
+메모리 뱅크 기반 구조: 코드와 데이터 분리
+"""
+
+import uuid
+import datetime as dt
+import os
+import json
+
+def get_memory_bank_root():
+    """메모리 뱅크 루트 경로 가져오기"""
+    # 1. 환경 변수에서 확인
+    if 'MEMORY_BANK_ROOT' in os.environ:
+        return os.environ['MEMORY_BANK_ROOT']
+    
+    # 2. Claude Desktop 설정에서 확인
+    config_path = os.path.expanduser("~/AppData/Roaming/Claude/claude_desktop_config.json")
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            
+            # ai-coding-brain-mcp 서버 설정에서 MEMORY_BANK_ROOT 추출
+            memory_root = config['mcpServers']['ai-coding-brain-mcp']['env']['MEMORY_BANK_ROOT']
+            return memory_root
+        except:
+            pass
+    
+    # 3. 기본값
+    return os.path.expanduser("~/Desktop/memory")
+
+def initialize_context(project_path, project_name):
+    """프로젝트 컨텍스트 초기화 (완전 개선 버전)
+    
+    1. 메모리 뱅크에서 프로젝트 설정 로드
+    2. 캐시 파일에서 이전 세션 데이터 복원
+    3. 모든 데이터를 통합하여 완전한 context 반환
+    """
+    import os
+    import json
+    from datetime import datetime
+    
+    # 기본 프로젝트 컨텍스트 구조
+    project_context = {
+        'project_id': project_name,
+        'project_name': project_name,
+        'project_path': project_path,
+        'memory_path': os.path.join(get_memory_bank_root(), project_name),
+        'version': 'memory_bank_based',
+        'created_at': datetime.now().isoformat(),
+        'session_id': None,
+        
+        # 핵심 데이터 구조 (빈 값으로 초기화)
+        'analyzed_files': {},
+        'symbol_index': {},
+        'work_tracking': {},
+        'tasks': {'next': [], 'done': []},
+        'current_focus': None,
+        'modification_log': [],
+        'project_insights': {},
+        
+        # 캐시 관련
+        'cache': {
+            'active_file': None,
+            'current_focus': None,
+            'last_result': None,
+            'error_count': 0
+        },
+        
+        # 통계
+        'stats': {
+            'total_operations': 0,
+            'cache_hits': 0,
+            'cache_misses': 0,
+            'files_analyzed': 0
+        }
+    }
+    
+    # 1. 메모리 뱅크에서 프로젝트 설정 로드
+    try:
+        memory_bank_root = get_memory_bank_root()
+        project_memory_path = os.path.join(memory_bank_root, project_name)
+        
+        if os.path.exists(project_memory_path):
+            # 🔧 메모리뱅크 구조 검증 및 수정
+            issues_fixed = validate_memory_bank_structure(project_memory_path)
+            if issues_fixed:
+                print(f"✅ 메모리뱅크 구조 수정: {', '.join(issues_fixed)}")
+            
+            # project.json 로드
+            project_json_path = os.path.join(project_memory_path, 'project.json')
+            if os.path.exists(project_json_path):
+                with open(project_json_path, 'r', encoding='utf-8') as f:
+                    project_data = json.load(f)
+                    project_context.update(project_data)
+            
+            # coding_flow.md 파싱
+            coding_flow_path = os.path.join(project_memory_path, 'coding_flow.md')
+            if os.path.exists(coding_flow_path):
+                with open(coding_flow_path, 'r', encoding='utf-8') as f:
+                    flow_content = f.read()
+                    # 간단한 파싱 (필요시 더 정교하게)
+                    if "## Current Focus" in flow_content:
+                        start = flow_content.find("## Current Focus") + len("## Current Focus")
+                        end = flow_content.find("\n##", start)
+                        if end == -1:
+                            end = flow_content.find("\n\n", start)
+                        if end != -1:
+                            focus = flow_content[start:end].strip()
+                            if focus:
+                                project_context['current_focus'] = focus
+            
+            print(f"✅ 메모리 뱅크에서 프로젝트 설정 로드: {project_name}")
+    except Exception as e:
+        print(f"⚠️  메모리 뱅크 로드 중 오류: {str(e)}")
+    
+    # 2. 캐시 파일에서 데이터 로드
+    cache_file = os.path.join(project_path, f'cache_{project_name}.json')
+    
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                cache_data = json.load(f)
+            
+            print(f"✅ 캐시 로드 성공: {os.path.basename(cache_file)}")
+            
+            # 캐시 데이터 병합 (직접적이고 명확하게)
+            # analyzed_files
+            if 'analyzed_files' in cache_data and cache_data['analyzed_files']:
+                project_context['analyzed_files'] = cache_data['analyzed_files']
+                print(f"   • analyzed_files: {len(cache_data['analyzed_files'])}개")
+            
+            # symbol_index
+            if 'symbol_index' in cache_data and cache_data['symbol_index']:
+                project_context['symbol_index'] = cache_data['symbol_index']
+                print(f"   • symbol_index: {len(cache_data['symbol_index'])}개")
+            
+            # work_tracking
+            if 'work_tracking' in cache_data and cache_data['work_tracking']:
+                project_context['work_tracking'] = cache_data['work_tracking']
+                print(f"   • work_tracking: {len(cache_data['work_tracking'])}개")
+            
+            # tasks
+            if 'tasks' in cache_data and cache_data['tasks']:
+                project_context['tasks'] = cache_data['tasks']
+            
+            # current_focus (캐시가 더 최신이면 사용)
+            if 'current_focus' in cache_data and cache_data['current_focus']:
+                project_context['current_focus'] = cache_data['current_focus']
+            
+            # modification_log
+            if 'modification_log' in cache_data:
+                project_context['modification_log'] = cache_data['modification_log']
+            
+            # project_insights
+            if 'project_insights' in cache_data:
+                project_context['project_insights'] = cache_data['project_insights']
+            
+            # 중첩된 cache 구조 처리 (구버전 캐시 호환성)
+            if 'cache' in cache_data and isinstance(cache_data['cache'], dict):
+                cache_inner = cache_data['cache']
+                
+                # cache 내부의 analyzed_files가 더 많으면 사용
+                if 'analyzed_files' in cache_inner and len(cache_inner.get('analyzed_files', {})) > len(project_context.get('analyzed_files', {})):
+                    project_context['analyzed_files'] = cache_inner['analyzed_files']
+                    print(f"   • analyzed_files (from cache.analyzed_files): {len(cache_inner['analyzed_files'])}개")
+                
+                # cache 내부의 symbol_index가 더 많으면 사용
+                if 'symbol_index' in cache_inner and len(cache_inner.get('symbol_index', {})) > len(project_context.get('symbol_index', {})):
+                    project_context['symbol_index'] = cache_inner['symbol_index']
+                    print(f"   • symbol_index (from cache.symbol_index): {len(cache_inner['symbol_index'])}개")
+                
+                # cache 내부의 work_tracking 병합
+                if 'work_tracking' in cache_inner and cache_inner['work_tracking']:
+                    if isinstance(cache_inner['work_tracking'], dict):
+                        # 기존 work_tracking과 병합
+                        for key, value in cache_inner['work_tracking'].items():
+                            if key not in project_context['work_tracking']:
+                                project_context['work_tracking'][key] = value
+            
+            print("✅ 캐시 데이터가 project_context에 병합되었습니다.")
+            
+            # 🔧 중요: 주요 필드를 최상위 레벨로도 복사 (직접 접근 가능하도록)
+            for key in ['analyzed_files', 'symbol_index', 'work_tracking', 
+                        'current_focus', 'tasks', 'active_file']:
+                if key in cache_data and key not in project_context:
+                    project_context[key] = cache_data[key]
+                    print(f"   ✅ {key} → 최상위 레벨로 복사됨")
+            
+        except Exception as e:
+            print(f"❌ 캐시 로드 실패: {str(e)}")
+    else:
+        print(f"ℹ️  캐시 파일 없음: {cache_file}")
+    
+    # 3. 작업 추적 초기화 (없으면)
+    if not project_context.get('work_tracking'):
+        project_context['work_tracking'] = {}
+    
+    # 4. 세션 ID 생성
+    import uuid
+    project_context['session_id'] = str(uuid.uuid4())
+    
+    # 5. 글로벌 project_context 업데이트 (다른 모듈에서 접근 가능하도록)
+    globals()['project_context'] = project_context
+    
+    # 6. 최종 확인 출력
+    print(f"\n📊 초기화 완료:")
+    print(f"   • 프로젝트: {project_context['project_name']}")
+    print(f"   • 분석된 파일: {len(project_context.get('analyzed_files', {}))}개")
+    print(f"   • 심볼 인덱스: {len(project_context.get('symbol_index', {}))}개")
+    print(f"   • 작업 추적: {len(project_context.get('work_tracking', {}))}개")
+    print(f"   • 현재 포커스: {project_context.get('current_focus', 'None')}")
+    
+
+    # 동기화 설정 초기화
+    project_context['sync_status'] = {
+        'realtime_enabled': True,
+        'auto_sync': True,
+        'last_sync': datetime.now().isoformat()
+    }
+
+    # 메모리 뱅크 설정 (.cache 디렉토리 사용)
+    cache_dir = os.path.join(project_path, '.cache')
+    os.makedirs(cache_dir, exist_ok=True)
+
+    project_context['memory_bank'] = {
+        'project_path': cache_dir,
+        'cache_file': os.path.join(cache_dir, f'cache_{project_name}.json')
+    }
+
+    return project_context
+def trigger_vibe_sync(context, trigger_reason: str):
+    """Vibe Memory 동기화를 위한 단일 통합 트리거 함수"""
+    # 1. 실시간 동기화가 활성화되어 있는지 확인
+    if not context.get('sync_status', {}).get('realtime_enabled', False):
+        return False
+
+    # 2. Vibe Memory 시스템이 사용 가능한지 확인
+    if not VIBE_MEMORY_AVAILABLE:
+        return False
+
+    try:
+        # 3. 캐시의 현재 상태를 .md 파일에 즉시 동기화
+        print(f"🔄 Vibe Sync Triggered by: {trigger_reason}")
+        sync_to_vibe_memory(context, trigger=trigger_reason)
+        return True
+    except Exception as e:
+        print(f"❌ Vibe Sync Trigger 실패: {e}")
+        return False
+
+
+
+def propose_next_steps(context: dict, limit: int = 3) -> list:
+    """
+    현재 작업 컨텍스트를 분석하여 다음에 할 일을 제안합니다.
+    
+    Args:
+        context: project_context
+        limit: 최대 제안 개수
+        
+    Returns:
+        list: 제안 목록 [{type, text, priority, rationale}, ...]
+    """
+    if 'cache' not in context or 'work_tracking' not in context.get('cache', {}):
+        return []
+
+    suggestions = []
+    summary = get_work_tracking_summary(context)
+
+    # 1. 가장 많이 접근한 파일 기반 Focus 제안
+    most_accessed = summary.get('most_accessed_files', [])
+    # access_data 처리
+    file_path, access_data = most_accessed[0]
+    access_count = access_data.get('access_count', 0) if isinstance(access_data, dict) else access_data
+    if most_accessed and len(most_accessed) > 0 and access_count > 5:  # 5회 이상 접근 시
+        file_path = most_accessed[0][0]
+        suggestions.append({
+            'type': 'focus',
+            'text': f"'{os.path.basename(file_path)}' 관련 기능에 집중하기",
+            'priority': 0.9,
+            'rationale': f"최근 해당 파일을 {most_accessed[0][1]}회 접근했습니다."
+        })
+
+    # 2. 가장 많이 수정한 함수 기반 Task 제안
+    most_edited = summary.get('most_edited_functions', [])
+    if most_edited and len(most_edited) > 0 and most_edited[0][1] > 3:  # 3회 이상 수정 시
+        func_key = most_edited[0][0]
+        func_name = func_key.split('::')[-1] if '::' in func_key else func_key
+        suggestions.append({
+            'type': 'task',
+            'text': f"'{func_name}' 함수 안정화 또는 리팩토링",
+            'priority': 0.8,
+            'rationale': f"최근 해당 함수를 {most_edited[0][1]}회 수정했습니다."
+        })
+
+    # 3. 최근 작업 히스토리 기반 제안
+    history = summary.get('recent_history', [])
+    for op in history[:10]:  # 최근 10개만 확인
+        if op.get('operation') == 'create_file':
+            file_path = op.get('file', '')
+            if file_path:
+                suggestions.append({
+                    'type': 'task',
+                    'text': f"'{os.path.basename(file_path)}' 기본 기능 구현하기",
+                    'priority': 0.7,
+                    'rationale': "최근 새롭게 생성된 파일입니다."
+                })
+                break  # 가장 최근 생성된 파일 하나만 제안
+                
+    # 4. TODO/FIXME 기반 제안
+    if 'analyzed_files' in context.get('cache', {}):
+        for file_path, analysis in context['cache']['analyzed_files'].items():
+            if 'todos' in analysis:
+                for todo in analysis['todos'][:2]:  # 파일당 최대 2개
+                    suggestions.append({
+                        'type': 'task',
+                        'text': f"TODO 해결: {todo.get('text', 'Unknown')}",
+                        'priority': 0.6,
+                        'rationale': f"{os.path.basename(file_path)}에 있는 미완성 작업"
+                    })
+
+    # 5. 오류가 발생한 파일에 대한 제안
+    if 'error_history' in context.get('cache', {}):
+        recent_errors = context['cache']['error_history'][-3:]  # 최근 3개
+        for error in recent_errors:
+            if 'file' in error:
+                suggestions.append({
+                    'type': 'task',
+                    'text': f"'{os.path.basename(error['file'])}' 오류 수정",
+                    'priority': 0.85,
+                    'rationale': f"최근 발생한 오류: {error.get('type', 'Unknown')}"
+                })
+
+    # 우선순위로 정렬하여 상위 N개 반환
+    suggestions.sort(key=lambda x: x['priority'], reverse=True)
+    return suggestions[:limit]
+
+
+
+def sync_state_to_plan(context: dict):
+    """
+    캐시에 기록된 현재 작업 상태(State)를 Vibe Memory의 계획(Plan)에 동기화합니다.
+    (예: 현재 작업 파일 목록, 자동 감지된 포커스 등)
+    
+    Args:
+        context: project_context
+        
+    Returns:
+        bool: 성공 여부
+    """
+    if 'cache' not in context:
+        return False
+    
+    try:
+        summary = get_work_tracking_summary(context)
+        
+        # 1. 현재 작업 파일 목록을 Vibe Memory에 업데이트
+        most_accessed = summary.get('most_accessed_files', [])
+        if most_accessed and 'live_context' in context:
+            # 상위 5개 파일을 작업 파일로 설정
+            working_files = [f[0] for f in most_accessed[:5]]
+            
+            # live_context 업데이트
+            if 'coding_flow' not in context['live_context']:
+                context['live_context']['coding_flow'] = {}
+            
+            context['live_context']['coding_flow']['working_files'] = working_files
+            print(f"📁 작업 파일 자동 업데이트: {len(working_files)}개")
+        
+        # 2. 현재 포커스 자동 감지 및 업데이트
+        if most_accessed and len(most_accessed) > 0:
+            top_file = most_accessed[0][0]
+            access_count = most_accessed[0][1]
+            
+            # 접근 횟수가 10회 이상이면 자동으로 포커스 변경 제안
+            if access_count >= 10:
+                suggested_focus = f"Working on {os.path.basename(top_file)}"
+                if 'current_focus' in context.get('cache', {}):
+                    current_focus = context['cache'].get('current_focus', '')
+                    if current_focus != suggested_focus:
+                        print(f"💡 포커스 변경 제안: '{suggested_focus}' (파일을 {access_count}회 접근)")
+        
+        # 3. 작업 패턴 분석 결과 동기화
+        work_pattern = {
+            'total_files_accessed': len(summary.get('accessed_files', [])),
+            'total_functions_edited': len(summary.get('edited_functions', [])),
+            'active_period': summary.get('active_time_range', 'Unknown'),
+            'primary_operation': summary.get('primary_operation', 'coding')
+        }
+        
+        if 'stats' not in context:
+            context['stats'] = {}
+        context['stats']['work_pattern'] = work_pattern
+        
+        # 4. AI 제안을 live_context에 포함
+        suggestions = propose_next_steps(context, limit=5)
+        if suggestions and 'live_context' in context:
+            context['live_context']['ai_suggestions'] = suggestions
+            print(f"🤖 AI 제안 {len(suggestions)}개가 컨텍스트에 추가됨")
+        
+        # 5. 동기화 트리거 호출
+        trigger_vibe_sync(context, trigger_reason='sync_state_to_plan')
+        print("✅ 자동 상태→계획 동기화 완료")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ sync_state_to_plan 오류: {str(e)}")
+        return False
+
+
+def update_cache(context, key, value):
+    """
+    캐시를 업데이트합니다.
+    
+    Args:
+        context (dict): project_context
+        key (str): 업데이트할 키
+        value: 업데이트할 값
+    
+    Returns:
+        bool: 성공 여부
+    """
+    if not context or not isinstance(context, dict):
+        print("⚠️ 유효하지 않은 project_context입니다.")
+        return False
+        
+    # 'cache' 키가 없으면 생성
+    if "cache" not in context:
+        context['cache'] = {
+        'files': {},
+        'analyzed_files': {},
+        'symbol_index': {},
+        'file_summaries': {},
+        'vibe_synced': {},
+        'last_sync': None
+    }
+        print("⚠️ project_context에 'cache' 키가 없어서 자동 생성했습니다.")
+    
+    context['cache'][key] = value
+    
+    # 'stats' 키도 확인
+    if 'stats' not in context:
+        context['stats'] = {
+            'total_operations': 0,
+            'cache_hits': 0,
+            'cache_misses': 0,
+            'files_analyzed': 0,
+            'cache_evictions': 0
+        }
+    
+    context['stats']['total_operations'] += 1
+    
+    # 특정 키에 대한 추가 처리
+    if key == 'active_file':
+        print(f"✅ 활성 파일 변경: {value}")
+    
+    # --- ✨ 동기화 로직 통합 ✨ ---
+    # Vibe Memory와 동기화가 필요한 중요한 키 목록
+    important_keys_for_sync = [
+        'current_focus', 'active_file', 
+        'analyzed_files', 'symbol_index'
+    ]
+
+    if key in important_keys_for_sync:
+        # 단일 트리거 함수 호출
+        trigger_vibe_sync(context, trigger_reason=f"cache_update_on_{key}")
+        
+        # Phase 2: 상태->계획 자동 동기화
+        if key in ['active_file', 'current_focus']:
+            try:
+                sync_state_to_plan(context)
+            except Exception as e:
+                print(f"⚠️ 상태-계획 동기화 실패: {e}")
+    
+    return True
+
+def build_index(context, analyzed_files=None):
+    """
+    심볼 인덱스를 구축합니다.
+    
+    Args:
+        context (dict): project_context
+        analyzed_files (dict, optional): 분석된 파일 데이터
+    
+    Returns:
+        bool: 성공 여부
+    """
+    print("✅ 심볼 인덱스 구축 시작...")
+    symbol_index = {}
+    
+    # 분석할 파일 데이터 결정
+    files_to_index = analyzed_files or context.get("cache", {}).get("analyzed_files", {})
+    
+    if not files_to_index:
+        print("⚠️ 인덱싱할 파일이 없습니다.")
+        return False
+    
+    for file_path, analysis_data in files_to_index.items():
+        if not isinstance(analysis_data, dict):
+            continue
+        
+        # 함수 인덱싱
+        for func in analysis_data.get("functions", []):
+            if func.get("name"):
+                symbol_index[func["name"]] = file_path
+        
+        # 클래스 및 메서드 인덱싱
+        for class_info in analysis_data.get("classes", []):
+            class_name = class_info.get("name")
+            if class_name:
+                symbol_index[class_name] = file_path
+                
+                # 클래스 메서드 인덱싱
+                for method in class_info.get("methods", []):
+                    method_name = method.get("name")
+                    if method_name:
+                        symbol_index[f"{class_name}.{method_name}"] = file_path
+    
+    context["cache"]["symbol_index"] = symbol_index
+    print(f"✅ 심볼 인덱스 구축 완료. {len(symbol_index)}개 항목 인덱싱됨.")
+    return True
+
+def get_value(context, key, default=None):
+    """
+    캐시에서 값을 가져옵니다.
+    
+    Args:
+        context (dict): project_context
+        key (str): 가져올 키
+        default: 기본값
+    
+    Returns:
+        Any: 찾은 값 또는 기본값
+    """
+    if not context or not isinstance(context, dict):
+        return default
+        
+    # 'cache' 키가 없으면 생성
+    if "cache" not in context:
+        context['cache'] = {
+        'files': {},
+        'analyzed_files': {},
+        'symbol_index': {},
+        'file_summaries': {},
+        'vibe_synced': {},
+        'last_sync': None
+    }
+        print("⚠️ project_context에 'cache' 키가 없어서 자동 생성했습니다.")
+    
+    value = context["cache"].get(key, default)
+    
+    # 'stats' 키도 확인
+    if 'stats' not in context:
+        context['stats'] = {
+            'total_operations': 0,
+            'cache_hits': 0,
+            'cache_misses': 0,
+            'files_analyzed': 0,
+            'cache_evictions': 0
+        }
+    
+    if value != default:
+        context['stats']['cache_hits'] += 1
+    else:
+        context['stats']['cache_misses'] += 1
+    
+    return value
+
+def find_symbol(context, symbol_name):
+    """
+    심볼의 파일 위치를 찾습니다.
+    
+    Args:
+        context (dict): project_context
+        symbol_name (str): 찾을 심볼 이름
+    
+    Returns:
+        str: 파일 경로 또는 None
+    """
+    symbol_index = get_value(context, "symbol_index", {})
+    return symbol_index.get(symbol_name)
+
+def add_operation(context, operation):
+    """
+    작업 기록을 추가합니다.
+    
+    Args:
+        context (dict): project_context
+        operation (dict): 작업 정보
+    """
+    if not context or "cache" not in context:
+        return
+    
+    recent_ops = context["cache"].get("recent_operations", [])
+    
+    # 작업 정보에 타임스탬프 추가
+    operation["timestamp"] = dt.datetime.now().isoformat()
+    
+    # 최근 100개만 유지
+    recent_ops.append(operation)
+    if len(recent_ops) > 100:
+        recent_ops = recent_ops[-100:]
+    
+    context["cache"]["recent_operations"] = recent_ops
+    context['stats']['total_operations'] += 1
+
+def update_file_summary(context, file_path, analysis_result):
+    """
+    파일 분석 요약을 업데이트합니다.
+    
+    Args:
+        context (dict): project_context
+        file_path (str): 파일 경로
+        analysis_result (dict): 분석 결과
+    """
+    if not context or "cache" not in context:
+        return False
+    
+    summary = {
+        "timestamp": dt.datetime.now().isoformat(),
+        "functions": len(analysis_result.get("functions", [])),
+        "classes": len(analysis_result.get("classes", [])),
+        "lines": analysis_result.get("total_lines", 0),
+        "has_errors": analysis_result.get("has_errors", False)
+    }
+    
+    context["cache"]["file_summaries"][file_path] = summary
+    context["cache"]["analyzed_files"][file_path] = analysis_result
+    context['stats']['files_analyzed'] += 1
+    
+    print(f"✅ 파일 분석 요약 업데이트: {file_path}")
+    return True
+
+def get_statistics(context):
+    """
+    통계 정보를 반환합니다.
+    
+    Args:
+        context (dict): project_context
+    
+    Returns:
+        dict: 통계 정보
+    """
+    if not context:
+        return {}
+    
+    stats = context.get("stats", {})
+    cache = context.get("cache", {})
+    
+    # 추가 통계 계산
+    total_symbols = len(cache.get("symbol_index", {}))
+    total_files = len(cache.get("analyzed_files", {}))
+    
+    return {
+        "cache_hits": stats.get("cache_hits", 0),
+        "cache_misses": stats.get("cache_misses", 0),
+        "hit_rate": stats.get("cache_hits", 0) / max(stats.get("cache_hits", 0) + stats.get("cache_misses", 0), 1),
+        "total_operations": stats.get("total_operations", 0),
+        "total_analyzed_files": total_files,
+        "total_indexed_symbols": total_symbols,
+        "session_id": context.get("session_id"),
+        "version": context.get("version")
+    }
+
+if __name__ == "__main__":
+    # 테스트 실행
+    new_context = initialize_context()
+    print("\n--- 생성된 2계층 컨텍스트 구조 ---")
+    import json
+    print(json.dumps(new_context, indent=2, ensure_ascii=False))
+    
+    # 통계 출력
+    stats = get_statistics(new_context)
+    print("\n--- 캐시 통계 ---")
+    print(json.dumps(stats, indent=2, ensure_ascii=False))
+
+
+# ============================================================================
+# Vibe Memory System 통합 함수들
+# ============================================================================
+
+# Vibe Memory System 동적 import
+try:
+    import vibe_memory_system
+    VIBE_MEMORY_AVAILABLE = True
+except ImportError:
+    VIBE_MEMORY_AVAILABLE = False
+    print("⚠️ Vibe Memory System을 찾을 수 없습니다.")
+
+def integrate_vibe_memory(context, auto_sync=True):
+    """
+    Vibe Memory System을 Context Manager에 통합
+    
+    Args:
+        context (dict): project_context
+        auto_sync (bool): 자동 동기화 활성화 여부
+    
+    Returns:
+        bool: 성공 여부
+    """
+    if not VIBE_MEMORY_AVAILABLE:
+        print("⚠️ Vibe Memory System이 사용 불가능합니다.")
+        return False
+    
+    try:
+        # 1. memory_bank 정보 추가
+        memory_path = vibe_memory_system._sync_project_context_with_memory_bank(context)
+        print(f"✅ Memory Bank 연동: {memory_path}")
+        
+        # 2. live_context 로드
+        vibe_memory_system._load_live_context_from_memory(context)
+        print(f"✅ Live Context 로드 완료")
+        
+        # 3. 자동 동기화 설정
+        if auto_sync:
+            context['sync_status'] = {
+                'auto_sync': True,
+                'last_sync': dt.datetime.now().isoformat(),
+                'pending_changes': []
+            }
+        
+        # 4. 캐시에 vibe 상태 추가
+        context['cache']['vibe_integrated'] = True
+        context['cache']['vibe_memory_path'] = memory_path
+        
+        print(f"✅ Vibe Memory 통합 완료 (auto_sync={auto_sync})")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Vibe Memory 통합 실패: {e}")
+        return False
+
+def sync_vibe_memory(context, direction='both'):
+    """
+    Vibe Memory 동기화 실행
+    
+    Args:
+        context (dict): project_context
+        direction (str): 'to', 'from', 'both'
+    
+    Returns:
+        dict: 동기화 결과
+    """
+    if not VIBE_MEMORY_AVAILABLE:
+        return {'success': False, 'message': 'Vibe Memory not available'}
+    
+    if 'memory_bank' not in context:
+        return {'success': False, 'message': 'Vibe not integrated'}
+    
+    try:
+        results = []
+        
+        if direction in ['to', 'both']:
+            vibe_memory_system._sync_live_context_to_memory(context)
+            results.append('to_memory')
+            print("✅ 캐시 → 파일 동기화 완료")
+        
+        if direction in ['from', 'both']:
+            vibe_memory_system._load_live_context_from_memory(context)
+            results.append('from_memory')
+            print("✅ 파일 → 캐시 동기화 완료")
+        
+        return {'success': True, 'synced': results, 'timestamp': dt.datetime.now().isoformat()}
+        
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+def update_vibe_focus(context, new_focus):
+    """
+    Vibe Memory의 현재 포커스 업데이트
+    
+    Args:
+        context (dict): project_context
+        new_focus (str): 새로운 포커스
+    
+    Returns:
+        bool: 성공 여부
+    """
+    if not VIBE_MEMORY_AVAILABLE:
+        return False
+    
+    try:
+        if 'live_context' in context and 'coding_flow' in context['live_context']:
+            context['live_context']['coding_flow']['current_focus'] = new_focus
+            context['live_context']['coding_flow']['last_updated'] = dt.datetime.now().isoformat()
+            
+            # 자동 동기화
+            if context.get('sync_status', {}).get('auto_sync'):
+                vibe_memory_system._auto_sync_hook(context, trigger='focus_update')
+            
+            return True
+        return False
+        
+    except Exception as e:
+        print(f"❌ Vibe focus 업데이트 실패: {e}")
+        return False
+
+
+# ============================================================================
+# Vibe Memory 실시간 동기화 함수들 (Context Manager 개선)
+# ============================================================================
+
+def sync_to_vibe_memory(context, trigger='manual'):
+    """
+    Context Manager → Vibe Memory 즉시 동기화
+    캐시 변경사항을 로컬 .md 파일에 실시간 반영
+    """
+    if not VIBE_MEMORY_AVAILABLE:
+        return False
+    
+    try:
+        # 1. 현재 작업 상태 동기화
+        if 'cache' in context:
+            cache = context['cache']
+            
+            # 작업 중인 파일 목록 동기화
+            if 'analyzed_files' in cache:
+                working_files = list(cache['analyzed_files'].keys())[-5:]
+                update_vibe_working_files(context, working_files)
+            
+            # 현재 포커스 동기화
+            if 'current_focus' in cache:
+                update_vibe_focus(context, cache['current_focus'])
+            
+            # 심볼 인덱스 정보 동기화
+            if 'symbol_index' in cache and len(cache['symbol_index']) > 0:
+                update_vibe_code_insights(context, cache['symbol_index'])
+        
+        # 2. 로컬 파일에 즉시 쓰기
+        vibe_memory_system._sync_live_context_to_memory(context)
+        
+        # 3. 동기화 타임스탬프 업데이트
+        if 'sync_status' not in context:
+            context['sync_status'] = {}
+        context['sync_status']['last_realtime_sync'] = dt.datetime.now().isoformat()
+        context['sync_status']['sync_trigger'] = trigger
+        
+        print(f"✅ Vibe Memory 실시간 동기화 완료 (trigger: {trigger})")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Vibe Memory 동기화 실패: {e}")
+        return False
+
+def update_vibe_working_files(context, file_list):
+    """작업 파일 목록을 Vibe에 업데이트"""
+    if 'live_context' not in context:
+        context['live_context'] = {}
+    
+    if 'coding_flow' not in context['live_context']:
+        context['live_context']['coding_flow'] = {}
+    
+    # 파일명만 추출하여 저장
+    file_names = [os.path.basename(f) for f in file_list if f]
+    context['live_context']['coding_flow']['working_files'] = file_names
+    context['live_context']['coding_flow']['files_count'] = len(file_names)
+    context['live_context']['coding_flow']['last_updated'] = dt.datetime.now().isoformat()
+
+def update_vibe_code_insights(context, symbol_index):
+    """코드 분석 인사이트를 Vibe에 업데이트"""
+    if 'live_context' not in context:
+        context['live_context'] = {}
+    
+    if 'code_analysis' not in context['live_context']:
+        context['live_context']['code_analysis'] = {}
+    
+    # 심볼 통계 생성
+    stats = {
+        'total_symbols': len(symbol_index),
+        'files_indexed': len(set(symbol_index.values())),
+        'last_analysis': dt.datetime.now().isoformat()
+    }
+    
+    context['live_context']['code_analysis']['stats'] = stats
+    context['live_context']['code_analysis']['recent_symbols'] = list(symbol_index.keys())[-10:]
+
+def enable_realtime_sync(context, enabled=True, write_immediately=True):
+    """
+    실시간 동기화 활성화/비활성화
+    
+    Args:
+        context: project_context
+        enabled: 활성화 여부
+        write_immediately: 변경 시 즉시 파일 쓰기 여부
+    """
+    if 'sync_status' not in context:
+        context['sync_status'] = {}
+    
+    context['sync_status']['realtime_enabled'] = enabled
+    context['sync_status']['write_immediately'] = write_immediately
+    
+    if enabled:
+        print(f"✅ 실시간 동기화 활성화 (즉시 쓰기: {write_immediately})")
+        # 활성화 시 즉시 한번 동기화
+        sync_to_vibe_memory(context, trigger='realtime_enabled')
+    else:
+        print("⏸️ 실시간 동기화 비활성화")
+    
+    return True
+
+# update_cache 함수 개선: 즉시 동기화 추가
+def update_cache_enhanced(context, key, value):
+    """
+    (Deprecated) update_cache로 기능이 통합되었습니다.
+    """
+    return update_cache(context, key, value)
+# ============================================================================
+# Project ID 기반 캐시 관리 함수들
+# ============================================================================
+
+def _try_load_cached_context(project_path, project_name):
+    """캐시된 컨텍스트 로드 시도 (개선된 버전 - .cache/ 디렉토리 사용)"""
+    # .cache 디렉토리 경로
+    cache_dir = os.path.join(project_path, '.cache')
+    cache_filename = f'cache_{project_name}.json'
+    
+    # 우선순위: .cache/ > 프로젝트 루트 (레거시)
+    cache_file = os.path.join(cache_dir, cache_filename)
+    legacy_cache_file = os.path.join(project_path, cache_filename)
+    
+    # 레거시 캐시 파일 마이그레이션
+    if not os.path.exists(cache_file) and os.path.exists(legacy_cache_file):
+        print(f"🔄 레거시 캐시 파일 발견, .cache/로 마이그레이션")
+        os.makedirs(cache_dir, exist_ok=True)
+        import shutil
+        shutil.copy2(legacy_cache_file, cache_file)
+    
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                cache_data = json.load(f)
+            
+            print(f"✅ 캐시 로드 성공: .cache/{cache_filename}")
+            
+            # 캐시 데이터 구조 확인 및 평탄화
+            result = {}
+            
+            # 중첩된 구조 처리
+            if 'cache' in cache_data:
+                # cache 내부의 데이터를 최상위로 이동
+                cache_inner = cache_data.get('cache', {})
+                result['symbol_index'] = cache_inner.get('symbol_index', {})
+                result['analyzed_files'] = cache_inner.get('analyzed_files', {})
+                result['work_tracking'] = cache_inner.get('work_tracking', {})
+            
+            # 최상위 레벨 데이터 병합
+            for key in ['symbol_index', 'analyzed_files', 'work_tracking', 'tasks', 
+                       'current_focus', 'modification_log', 'project_insights']:
+                if key in cache_data and key not in result:
+                    result[key] = cache_data[key]
+            
+            # 기타 메타데이터
+            result['project_id'] = cache_data.get('project_id', project_name)
+            result['project_path'] = cache_data.get('project_path', project_path)
+            
+            # .cache 디렉토리 경로 저장
+            result['cache_dir'] = cache_dir
+            
+            # 통계 출력
+            print(f"   • symbol_index: {len(result.get('symbol_index', {}))}개")
+            print(f"   • analyzed_files: {len(result.get('analyzed_files', {}))}개")
+            print(f"   • work_tracking: {len(result.get('work_tracking', {}))}개")
+            
+            return result
+            
+        except Exception as e:
+            print(f"❌ 캐시 로드 실패: {str(e)}")
+            return None
+    else:
+        print(f"ℹ️ 캐시 파일 없음: .cache/{cache_filename}")
+        # .cache 디렉토리 생성
+        os.makedirs(cache_dir, exist_ok=True)
+        return None
+def save_project_cache(project_context):
+    """프로젝트 캐시 저장 (개선된 버전 - .cache/ 디렉토리 사용)"""
+    
+    # Vibe 자동 동기화
+    try:
+        if 'vibe_sync' in globals():
+            globals()['vibe_sync']('cache_saved')
+    except Exception as e:
+        pass
+    from datetime import datetime
+    if not project_context:
+        print("❌ 저장할 context가 없습니다")
+        return
+    
+    project_id = project_context.get('project_id', 'unknown')
+    project_path = project_context.get('project_path', os.getcwd())
+    
+    # .cache 디렉토리 확인/생성
+    cache_dir = os.path.join(project_path, '.cache')
+    os.makedirs(cache_dir, exist_ok=True)
+    
+    cache_filename = f'cache_{project_id}.json'
+    cache_file = os.path.join(cache_dir, cache_filename)
+    
+    # 저장할 데이터 구성 (평탄한 구조)
+    cache_data = {
+        'project_id': project_id,
+        'project_name': project_context.get('project_name', project_id),
+        'project_path': project_path,
+        'analyzed_files': project_context.get('analyzed_files', {,
+        'sync_status': context.get('sync_status', {}),
+        'memory_bank': context.get('memory_bank', {})
+    }),
+        'symbol_index': project_context.get('symbol_index', {}),
+        'work_tracking': project_context.get('work_tracking', {}),
+        'tasks': project_context.get('tasks', {'next': [], 'done': []}),
+        'current_focus': project_context.get('current_focus'),
+        'modification_log': project_context.get('modification_log', []),
+        'project_insights': project_context.get('project_insights', {}),
+        'last_updated': datetime.now().isoformat()
+    }
+    
+    # 기존 캐시와 병합 (필요시)
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                existing = json.load(f)
+            # 중요한 데이터는 보존
+            if 'cache' in existing and 'symbol_index' in existing['cache']:
+                if not cache_data['symbol_index']:
+                    cache_data['symbol_index'] = existing['cache']['symbol_index']
+        except:
+            pass
+    
+    # 저장
+    try:
+        with open(cache_file, 'w', encoding='utf-8') as f:
+            json.dump(cache_data, f, indent=2, ensure_ascii=False)
+        
+        print(f"✅ 프로젝트 캐시 저장: .cache/{cache_filename}")
+        
+        # Vibe 자동 동기화
+        try:
+            if 'vibe_sync' in globals():
+                globals()['vibe_sync']('cache_saved')
+        except Exception:
+            pass
+        print(f"   - analyzed_files: {len(cache_data['analyzed_files'])} 파일")
+        print(f"   - symbol_index: {len(cache_data['symbol_index'])} 항목")
+
+        # 바이브 메모리 동기화 추가 (2025-06-12)
+        try:
+            vibe_path = os.path.join(project_path, '.vibe', 'cache.json')
+            if os.path.exists(vibe_path):
+                with open(vibe_path, 'r', encoding='utf-8') as f:
+                    vibe_cache = json.load(f)
+                
+                # 주요 정보 복사
+                vibe_cache['tasks'] = save_data.get('tasks', {'next': [], 'done': []})
+                vibe_cache['current_focus'] = save_data.get('current_focus')
+                vibe_cache['work_tracking'] = save_data.get('work_tracking', {})
+                vibe_cache['current_session'] = timestamp
+                
+                with open(vibe_path, 'w', encoding='utf-8') as f:
+                    json.dump(vibe_cache, f, indent=2, ensure_ascii=False)
+                
+                print("   ✅ 바이브 메모리 동기화 완료")
+        except Exception as e:
+            print(f"   ⚠️ 바이브 동기화 실패 (무시하고 계속): {e}")
+
+        return True
+    except Exception as e:
+        print(f"❌ 캐시 저장 실패: {str(e)}")
+        return False
+def load_project_cache(context):
+    """
+    저장된 캐시에서 work_tracking 포함한 모든 데이터 복원
+    
+    Args:
+        context (dict): project_context
+        
+    Returns:
+        bool: 복원 성공 여부
+    """
+    try:
+        # .ai-brain-project 파일 우선 확인
+        brain_file = os.path.join(context['memory_path'], '.ai-brain-project')
+        if os.path.exists(brain_file):
+            with open(brain_file, 'r', encoding='utf-8') as f:
+                saved_data = json.load(f)
+                
+            # work_tracking 복원
+            if 'work_tracking' in saved_data:
+                if 'cache' not in context:
+                    context['cache'] = {}
+                context['cache']['work_tracking'] = saved_data['work_tracking']
+                print(f"✅ work_tracking 데이터 복원: {len(saved_data['work_tracking'])} 항목")
+                
+            # stats 복원
+            if 'stats' in saved_data:
+                context['stats'].update(saved_data['stats'])
+                
+            return True
+            
+        # 캐시 디렉토리에서도 시도
+        cache_file = context['storage'].get('cache_file')
+        if cache_file:
+            cache_path = os.path.join(context['storage']['base_path'], '.cache', cache_file)
+            if os.path.exists(cache_path):
+                with open(cache_path, 'r', encoding='utf-8') as f:
+                    cache_data = json.load(f)
+                    
+                if cache_data.get('project_id') == context.get('project_id'):
+                    # work_tracking 복원
+                    if 'work_tracking' in cache_data:
+                        context['cache']['work_tracking'] = cache_data['work_tracking']
+                    return True
+                    
+    except Exception as e:
+        print(f"⚠️ 캐시 로드 중 오류: {e}")
+        
+    return False
+
+def validate_project_id(context, expected_path):
+    """
+    현재 프로젝트 ID가 예상 경로와 일치하는지 검증
+    
+    Args:
+        context (dict): project_context
+        expected_path (str): 예상 프로젝트 경로
+    
+    Returns:
+        bool: 일치 여부
+    """
+    import hashlib
+    
+    current_id = context.get('project_id')
+    if not current_id:
+        return False
+    
+    # 예상 ID 계산
+    normalized_path = os.path.abspath(expected_path).lower()
+    expected_id = hashlib.sha256(normalized_path.encode('utf-8')).hexdigest()[:12]
+    
+    if current_id != expected_id:
+        print(f"⚠️ 프로젝트 ID 불일치!")
+        print(f"  - 현재 ID: {current_id}")
+        print(f"  - 예상 ID: {expected_id}")
+        return False
+    
+    return True
+
+# ============================================================================
+# mtime 기반 캐시 무효화 함수들
+# ============================================================================
+
+def validate_cache_entry(context, file_path):
+    """
+    캐시 엔트리가 유효한지 mtime으로 검증
+    
+    Args:
+        context (dict): project_context
+        file_path (str): 검증할 파일 경로
+    
+    Returns:
+        bool: 캐시가 유효한지 여부
+    """
+    cache = context.get('cache', {})
+    analyzed_files = cache.get('analyzed_files', {})
+    
+    if file_path not in analyzed_files:
+        return False
+    
+    # mtime 검사가 비활성화된 경우
+    if not cache.get('cache_config', {}).get('mtime_check', True):
+        return True
+    
+    cached_entry = analyzed_files[file_path]
+    cached_mtime = cached_entry.get('mtime', 0)
+    
+    try:
+        current_mtime = os.path.getmtime(file_path)
+        if current_mtime > cached_mtime:
+            print(f"⚠️ 파일 변경 감지: {os.path.basename(file_path)}")
+            print(f"  - 캐시 시간: {dt.datetime.fromtimestamp(cached_mtime).strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"  - 현재 시간: {dt.datetime.fromtimestamp(current_mtime).strftime('%Y-%m-%d %H:%M:%S')}")
+            return False
+    except Exception as e:
+        print(f"⚠️ mtime 확인 실패: {e}")
+        return False
+    
+    return True
+
+def update_file_cache(context, file_path, analysis_data):
+    """
+    파일 캐시 업데이트 (mtime, access_time 포함)
+    
+    Args:
+        context (dict): project_context
+        file_path (str): 파일 경로
+        analysis_data (dict): 분석 데이터
+    """
+    if not context or 'cache' not in context:
+        return
+    
+    analyzed_files = context['cache'].get('analyzed_files', {})
+    
+    # mtime과 access_time 추가
+    try:
+        mtime = os.path.getmtime(file_path)
+        access_time = dt.datetime.now().timestamp()
+        
+        # 캐시 엔트리 생성
+        cache_entry = {
+            'data': analysis_data,
+            'mtime': mtime,
+            'access_time': access_time,
+            'file_size': os.path.getsize(file_path),
+            'cached_at': dt.datetime.now().isoformat()
+        }
+        
+        analyzed_files[file_path] = cache_entry
+        context['stats']['files_analyzed'] += 1
+        
+        print(f"✅ 캐시 업데이트: {os.path.basename(file_path)}")
+        print(f"  - mtime: {dt.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"  - 크기: {cache_entry['file_size']} bytes")
+        
+        # LRU 캐시 크기 관리
+        manage_cache_size(context)
+
+        # symbol_index 업데이트
+        if 'symbol_index' not in context['cache']:
+            context['cache']['symbol_index'] = {}
+        
+        symbol_index = context['cache']['symbol_index']
+        
+        # 함수 정보를 symbol_index에 추가
+        for func in result.get('functions', []):
+            func_key = f"{os.path.basename(file_path)}:{func}"
+            symbol_index[func_key] = {
+                'file': file_path,
+                'type': 'function',
+                'name': func,
+                'language': language
+            }
+        
+        # 클래스 정보를 symbol_index에 추가
+        for cls in result.get('classes', []):
+            class_key = f"{os.path.basename(file_path)}:{cls}"
+            symbol_index[class_key] = {
+                'file': file_path,
+                'type': 'class',
+                'name': cls,
+                'language': language
+            }
+        
+        print(f"   ✅ symbol_index 업데이트: {len(result.get('functions', []))} 함수, {len(result.get('classes', []))} 클래스")
+        
+        # Vibe 자동 동기화
+        try:
+            if 'vibe_sync' in globals():
+                globals()['vibe_sync'](f'file_analyzed:{os.path.basename(file_path)}')
+        except Exception as e:
+            print(f"   ⚠️ Vibe 동기화 건너뜀: {e}")
+        
+    except Exception as e:
+        print(f"❌ 캐시 업데이트 실패: {e}")
+
+def get_cached_analysis(context, file_path):
+    """
+    캐시된 분석 데이터 가져오기 (mtime 검증 포함)
+    
+    Args:
+        context (dict): project_context
+        file_path (str): 파일 경로
+    
+    Returns:
+        dict or None: 캐시된 데이터 또는 None
+    """
+    if not validate_cache_entry(context, file_path):
+        # 캐시가 무효한 경우 제거
+        if file_path in context['cache'].get('analyzed_files', {}):
+            del context['cache']['analyzed_files'][file_path]
+            print(f"🗑️ 무효한 캐시 제거: {os.path.basename(file_path)}")
+        context['stats']['cache_misses'] += 1
+        return None
+    
+    # 캐시 히트
+    cache_entry = context['cache']['analyzed_files'][file_path]
+    
+    # access_time 업데이트
+    cache_entry['access_time'] = dt.datetime.now().timestamp()
+    context['stats']['cache_hits'] += 1
+    
+    print(f"✅ 캐시 히트: {os.path.basename(file_path)}")
+    return cache_entry.get('data')
+
+def invalidate_file_cache(context, file_path):
+    """
+    특정 파일의 캐시 무효화
+    
+    Args:
+        context (dict): project_context
+        file_path (str): 무효화할 파일 경로
+    """
+    analyzed_files = context['cache'].get('analyzed_files', {})
+    
+    if file_path in analyzed_files:
+        del analyzed_files[file_path]
+        print(f"🗑️ 캐시 무효화: {os.path.basename(file_path)}")
+        
+        # 관련 심볼 인덱스도 정리
+        symbol_index = context['cache'].get('symbol_index', {})
+        symbols_to_remove = [sym for sym, path in symbol_index.items() if path == file_path]
+        
+        for symbol in symbols_to_remove:
+            del symbol_index[symbol]
+        
+        if symbols_to_remove:
+            print(f"  - {len(symbols_to_remove)}개 심볼 제거")
+
+# ============================================================================
+# LRU 캐시 관리 함수들
+# ============================================================================
+
+def manage_cache_size(context):
+    """
+    LRU(Least Recently Used) 정책으로 캐시 크기 관리
+    
+    Args:
+        context (dict): project_context
+    """
+    cache = context.get('cache', {})
+    analyzed_files = cache.get('analyzed_files', {})
+    cache_config = cache.get('cache_config', {})
+    max_size = cache_config.get('max_size', 20)
+    
+    current_size = len(analyzed_files)
+    
+    if current_size <= max_size:
+        return
+    
+    # access_time 기준으로 정렬 (오래된 것부터)
+    sorted_files = sorted(
+        analyzed_files.items(),
+        key=lambda x: x[1].get('access_time', 0)
+    )
+    
+    # 제거할 항목 수 계산
+    to_remove = current_size - max_size
+    
+    print(f"⚠️ 캐시 크기 초과: {current_size}/{max_size}")
+    print(f"  - {to_remove}개 항목 제거 필요")
+    
+    # 가장 오래된 항목들 제거
+    for file_path, cache_entry in sorted_files[:to_remove]:
+        del analyzed_files[file_path]
+        context['stats']['cache_evictions'] += 1
+        
+        # 파일명만 출력
+        file_name = os.path.basename(file_path)
+        cached_time = cache_entry.get('cached_at', 'unknown')
+        print(f"  🗑️ LRU 제거: {file_name} (캐시: {cached_time})")
+        
+        # 관련 심볼 인덱스도 정리
+        symbol_index = cache.get('symbol_index', {})
+        symbols_to_remove = [sym for sym, path in symbol_index.items() if path == file_path]
+        for symbol in symbols_to_remove:
+            del symbol_index[symbol]
+    
+    print(f"✅ 캐시 크기 조정 완료: {len(analyzed_files)}/{max_size}")
+
+def get_cache_statistics(context):
+    """
+    캐시 통계 정보 반환
+    
+    Args:
+        context (dict): project_context
+        
+    Returns:
+        dict: 캐시 통계 정보
+    """
+    stats = context.get('stats', {})
+    cache = context.get('cache', {})
+    
+    total_hits = stats.get('cache_hits', 0)
+    total_misses = stats.get('cache_misses', 0)
+    total_requests = total_hits + total_misses
+    
+    # hit_rate는 0~1 사이의 비율 (표시할 때 %로 변환)
+    if total_requests > 0:
+        hit_rate = total_hits / total_requests
+    else:
+        hit_rate = 0
+    
+    # 캐시된 파일 수
+    cached_files = len(cache.get('analyzed_files', {}))
+    
+    # 캐시 크기 계산
+    import sys
+    cache_size_bytes = sys.getsizeof(str(cache))
+    cache_size_mb = cache_size_bytes / (1024 * 1024)
+    
+    return {
+        'total_hits': total_hits,
+        'total_misses': total_misses,
+        'total_requests': total_requests,
+        'hit_rate': hit_rate,  # 0~1 사이 값
+        'cached_files': cached_files,
+        'cache_size_mb': cache_size_mb
+    }
+def clear_cache(context, keep_index=False):
+    """
+    캐시 초기화
+    
+    Args:
+        context (dict): project_context
+        keep_index (bool): 심볼 인덱스 유지 여부
+    """
+    cache = context.get('cache', {})
+    
+    # 분석된 파일 캐시 삭제
+    cache['analyzed_files'] = {}
+    
+    # 파일 요약 삭제
+    cache['file_summaries'] = {}
+    
+    # 심볼 인덱스 처리
+    if not keep_index:
+        cache['symbol_index'] = {}
+    
+    # 통계 업데이트
+    context['stats']['cache_evictions'] += len(cache.get('analyzed_files', {}))
+    
+    print("✅ 캐시 초기화 완료")
+    if keep_index:
+        print("  - 심볼 인덱스는 유지됨")
+
+def optimize_cache(context):
+    """
+    캐시 최적화 (오래되고 큰 파일 우선 제거)
+    
+    Args:
+        context (dict): project_context
+    """
+    cache = context.get('cache', {})
+    analyzed_files = cache.get('analyzed_files', {})
+    cache_config = cache.get('cache_config', {})
+    max_size = cache_config.get('max_size', 20)
+    
+    if len(analyzed_files) <= max_size * 0.8:  # 80% 미만이면 최적화 불필요
+        return
+    
+    # 점수 계산: (현재시간 - access_time) * file_size
+    current_time = dt.datetime.now().timestamp()
+    
+    scored_files = []
+    for file_path, cache_entry in analyzed_files.items():
+        access_time = cache_entry.get('access_time', 0)
+        file_size = cache_entry.get('file_size', 0)
+        age = current_time - access_time
+        score = age * (file_size / 1024)  # KB 단위로 정규화
+        
+        scored_files.append((file_path, score, cache_entry))
+    
+    # 점수가 높은 순으로 정렬 (제거 우선순위)
+    scored_files.sort(key=lambda x: x[1], reverse=True)
+    
+    # 상위 20% 제거
+    remove_count = int(len(scored_files) * 0.2)
+    
+    print(f"🔧 캐시 최적화 시작: {len(analyzed_files)}개 항목")
+    
+    for file_path, score, _ in scored_files[:remove_count]:
+        del analyzed_files[file_path]
+        context['stats']['cache_evictions'] += 1
+        print(f"  🗑️ 최적화 제거: {os.path.basename(file_path)} (점수: {score:.2f})")
+    
+    print(f"✅ 캐시 최적화 완료: {len(analyzed_files)}개 항목 남음")
+
+
+
+# ============================================
+# 🎯 작업 컨텍스트 자동 추적 시스템
+# ============================================
+
+def initialize_work_tracking(context):
+    """
+    작업 추적 시스템 초기화
+    """
+    # 'cache' 키가 없으면 생성
+    if 'cache' not in context:
+        context['cache'] = {
+        'files': {},
+        'analyzed_files': {},
+        'symbol_index': {},
+        'file_summaries': {},
+        'vibe_synced': {},
+        'last_sync': None
+    }
+        print("⚠️ project_context에 'cache' 키가 없어서 자동 생성했습니다.")
+    
+    if 'work_tracking' not in context['cache']:
+        context['cache']['work_tracking'] = {
+            'current_file': None,
+            'current_function': None,
+            'current_class': None,
+            'last_accessed': None,
+            'work_history': [],  # 최근 작업 기록
+            'file_access_count': {},  # 파일별 접근 횟수
+            'function_edit_count': {},  # 함수별 수정 횟수
+            'session_start': dt.datetime.now().isoformat()
+        }
+    return context
+
+
+def track_file_access(context, file_path, operation='read'):
+    """
+    파일 접근 추적
+    
+    Args:
+        context: project_context
+        file_path: 접근한 파일 경로
+        operation: 'read', 'write', 'edit', 'analyze' 등
+    """
+    initialize_work_tracking(context)
+    tracking = context['cache']['work_tracking']
+    
+    # 현재 파일 업데이트
+    tracking['current_file'] = file_path
+    tracking['last_accessed'] = dt.datetime.now().isoformat()
+    
+    # 파일 접근 횟수 증가
+    if file_path not in tracking['file_access_count']:
+        tracking['file_access_count'][file_path] = 0
+    tracking['file_access_count'][file_path] += 1
+    
+    # 작업 히스토리에 추가
+    history_entry = {
+        'timestamp': dt.datetime.now().isoformat(),
+        'file': file_path,
+        'operation': operation,
+        'function': tracking.get('current_function'),
+        'class': tracking.get('current_class')
+    }
+    
+    tracking['work_history'].append(history_entry)
+    
+    # 히스토리 크기 제한 (최근 100개만 유지)
+    if len(tracking['work_history']) > 100:
+        tracking['work_history'] = tracking['work_history'][-100:]
+    
+    # 브릿지 함수 자동 호출 - 파일 접근 횟수가 3의 배수가 될 때마다 업데이트
+    # 순환 참조 방지를 위한 플래그 확인
+    if (file_path in tracking['file_access_count'] and 
+        tracking['file_access_count'][file_path] % 3 == 0 and
+        not context.get('_syncing_to_vibe', False)):
+        context['_syncing_to_vibe'] = True
+        try:
+            sync_work_tracking_to_vibe(context)
+        finally:
+            context['_syncing_to_vibe'] = False
+    
+    return context
+
+
+def track_function_edit(context, file_path, function_name, class_name=None, operation='edit'):
+    """
+    함수/메서드 수정 추적
+    
+    Args:
+        context: project_context
+        file_path: 파일 경로
+        function_name: 함수/메서드 이름
+        class_name: 클래스 이름 (메서드인 경우)
+        operation: 'edit', 'create', 'delete', 'analyze' 등
+    """
+    initialize_work_tracking(context)
+    tracking = context['cache']['work_tracking']
+    
+    # 현재 작업 중인 함수/클래스 업데이트
+    tracking['current_function'] = function_name
+    tracking['current_class'] = class_name
+    
+    # 함수 수정 횟수 추적
+    function_key = f"{file_path}::{class_name or ''}.{function_name}"
+    if function_key not in tracking['function_edit_count']:
+        tracking['function_edit_count'][function_key] = 0
+    tracking['function_edit_count'][function_key] += 1
+    
+    # 파일 접근도 함께 추적
+    track_file_access(context, file_path, operation)
+    
+    # 브릿지 함수 자동 호출 - 함수/메서드 수정은 중요한 작업이므로 즉시 동기화
+    # 순환 참조 방지를 위한 플래그 확인
+    if not context.get('_syncing_to_vibe', False):
+        context['_syncing_to_vibe'] = True
+        try:
+            sync_work_tracking_to_vibe(context)
+        finally:
+            context['_syncing_to_vibe'] = False
+    
+    return context
+
+
+def track_code_analysis(context, file_path, analysis_result):
+    """
+    코드 분석 결과를 작업 추적에 반영
+    
+    Args:
+        context: project_context
+        file_path: 분석한 파일
+        analysis_result: AST 분석 결과
+    """
+    initialize_work_tracking(context)
+    
+    # 분석한 파일 추적
+    track_file_access(context, file_path, 'analyze')
+    
+    # 분석 결과에서 함수/클래스 정보 추출
+    if analysis_result and 'functions' in analysis_result:
+        # 가장 최근에 분석한 함수들 기록
+        tracking = context['cache']['work_tracking']
+        tracking['last_analyzed_functions'] = [
+            f['name'] for f in analysis_result['functions']
+        ][:10]  # 최대 10개만
+    
+    return context
+
+
+def get_current_work_context(context):
+    """
+    현재 작업 컨텍스트 조회
+    
+    Returns:
+        dict: 현재 작업 중인 파일, 함수, 클래스 정보
+    """
+    # context가 None이거나 dict가 아닌 경우 처리
+    if not context or not isinstance(context, dict):
+        print("⚠️ 유효하지 않은 project_context입니다.")
+        return {
+            'current_file': None,
+            'current_function': None,
+            'current_class': None,
+            'last_accessed': None,
+            'session_duration': "Unknown"
+        }
+    
+    initialize_work_tracking(context)
+    tracking = context['cache']['work_tracking']
+    
+    return {
+        'current_file': tracking.get('current_file'),
+        'current_function': tracking.get('current_function'),
+        'current_class': tracking.get('current_class'),
+        'last_accessed': tracking.get('last_accessed'),
+        'session_duration': _calculate_session_duration(tracking)
+    }
+
+
+def get_work_history(context, limit=10):
+    """
+    최근 작업 히스토리 조회
+    
+    Args:
+        context: project_context
+        limit: 반환할 최대 항목 수
+        
+    Returns:
+        list: 최근 작업 기록
+    """
+    initialize_work_tracking(context)
+    tracking = context['cache']['work_tracking']
+    
+    history = tracking.get('work_history', [])
+    return history[-limit:] if history else []
+
+
+def get_most_accessed_files(context, limit=5):
+    """
+    가장 많이 접근한 파일 목록 조회
+    
+    Args:
+        context: project_context
+        limit: 반환할 최대 파일 수
+        
+    Returns:
+        list: [{'file': file_path, 'access_count': count}, ...] 형태의 리스트
+    """
+    initialize_work_tracking(context)
+    tracking = context['cache']['work_tracking']
+    
+    file_counts = tracking.get('file_access_count', {})
+    sorted_files = sorted(file_counts.items(), key=lambda x: x[1], reverse=True)
+    
+    # 딕셔너리 형태로 변환
+    result = []
+    for file_path, count in sorted_files[:limit]:
+        result.append({
+            'file': file_path,
+            'access_count': count
+        })
+    
+    return result
+
+
+def get_most_edited_functions(context, limit=5):
+    """
+    가장 많이 수정한 함수 목록 조회
+    
+    Args:
+        context: project_context
+        limit: 반환할 최대 함수 수
+        
+    Returns:
+        list: [{'function': function_key, 'edit_count': count}, ...] 형태의 리스트
+    """
+    initialize_work_tracking(context)
+    tracking = context['cache']['work_tracking']
+    
+    function_counts = tracking.get('function_edit_count', {})
+    sorted_functions = sorted(function_counts.items(), key=lambda x: x[1], reverse=True)
+    
+    # 딕셔너리 형태로 변환
+    result = []
+    for function_key, count in sorted_functions[:limit]:
+        result.append({
+            'function': function_key,
+            'edit_count': count
+        })
+    
+    return result
+
+
+def clear_work_tracking(context, keep_counts=True):
+    """
+    작업 추적 정보 초기화
+    
+    Args:
+        context: project_context
+        keep_counts: True면 접근/수정 횟수는 유지
+    """
+    initialize_work_tracking(context)
+    tracking = context['cache']['work_tracking']
+    
+    tracking['current_file'] = None
+    tracking['current_function'] = None
+    tracking['current_class'] = None
+    tracking['work_history'] = []
+    
+    if not keep_counts:
+        tracking['file_access_count'] = {}
+        tracking['function_edit_count'] = {}
+    
+    return context
+
+
+def _calculate_session_duration(tracking):
+    """세션 지속 시간 계산 (내부 함수)"""
+    if 'session_start' in tracking:
+        try:
+            start = dt.datetime.fromisoformat(tracking['session_start'])
+            duration = dt.datetime.now() - start
+            return str(duration).split('.')[0]  # 마이크로초 제거
+        except:
+            pass
+    return "Unknown"
+
+
+# 작업 추적 상태 요약 함수
+def get_work_tracking_summary(context):
+    """
+    작업 추적 전체 요약 정보
+    
+    Returns:
+        dict: 작업 추적 요약 정보
+    """
+    initialize_work_tracking(context)
+    tracking = context['cache']['work_tracking']
+    
+    return {
+        'current_context': get_current_work_context(context),
+        'most_accessed_files': get_most_accessed_files(context),
+        'most_edited_functions': get_most_edited_functions(context, limit=10),
+        'recent_history': get_work_history(context, limit=5),
+        'total_files_accessed': len(tracking.get('file_access_count', {})),
+        'total_functions_edited': len(tracking.get('function_edit_count', {})),
+        'total_operations': len(tracking.get('work_history', []))
+    }
+
+
+def sync_work_tracking_to_vibe(context: dict):
+    """
+    작업 추적 시스템의 데이터를 Vibe Memory가 표시할 수 있도록 live_context로 동기화합니다.
+    """
+    if 'cache' not in context:
+        return False
+
+    summary = get_work_tracking_summary(context)
+    
+    # live_context 초기화
+    if 'live_context' not in context:
+        context['live_context'] = {}
+    if 'coding_flow' not in context['live_context']:
+        context['live_context']['coding_flow'] = {}
+    
+    live_context = context['live_context']
+
+    # 1. 'Working Files' 데이터 가공
+    most_accessed = summary.get('most_accessed_files', [])
+    live_context['coding_flow']['working_files'] = [
+        {'name': os.path.basename(item['file']), 'count': item['access_count']}
+        for item in most_accessed
+        if isinstance(item, dict)
+    ]
+
+    # 2. 'Session Activity Log' 데이터 가공
+    history = summary.get('recent_history', [])
+    live_context['coding_flow']['activity_log'] = []
+    
+    for log in history[:10]:
+        if isinstance(log, dict) and 'timestamp' in log:
+            try:
+                time_str = log.get('timestamp', '')
+                if time_str:
+                    dt_obj = dt.datetime.fromisoformat(time_str.replace('Z', '+00:00'))
+                    time_formatted = dt_obj.strftime('%H:%M:%S')
+                else:
+                    time_formatted = 'N/A'
+                    
+                live_context['coding_flow']['activity_log'].append({
+                    'time': time_formatted,
+                    'op': log.get('operation', log.get('action', 'N/A')),
+                    'target': os.path.basename(log.get('file', log.get('details', 'N/A')))
+                })
+            except Exception:
+                continue
+
+    # 3. vibe_system에도 데이터 복사
+    if 'vibe_system' in context:
+        vibe_sys = context['vibe_system']
+        vibe_sys['working_files'] = live_context['coding_flow']['working_files']
+        vibe_sys['activity_log'] = live_context['coding_flow']['activity_log']
+    
+    return True
+
+
+def analyze_and_cache_file(file_path, language='auto'):
+    """
+    원자적으로 파일을 분석하고 캐싱하는 통합 함수
+    Race condition을 방지하기 위해 모든 작업을 한 함수에서 처리
+    
+    Args:
+        file_path (str): 분석할 파일 경로
+        language (str): 프로그래밍 언어
+        
+    Returns:
+        dict: 분석 결과
+    """
+    # 1. 먼저 캐시 확인
+    cached_result = get_cached_analysis(file_path)
+    if cached_result is not None:
+        # 캐시 히트 - 바로 반환
+        return cached_result
+    
+    # 2. 캐시 미스 - 통계는 get_cached_analysis에서 이미 업데이트됨
+    # 이제 실제 분석 수행
+    from ast_parser_helpers import parse_with_snippets as original_parse
+    
+    # 3. 파일 상태를 먼저 캡처 (분석 전에!)
+    try:
+        stat = os.stat(file_path)
+        mtime = stat.st_mtime
+        size = stat.st_size
+    except OSError as e:
+        print(f"❌ 파일 상태 확인 실패: {file_path} - {e}")
+        return None
+    
+    # 4. 파일 분석 수행
+    try:
+        # 원본 함수 직접 호출 (무한 재귀 방지)
+        result = original_parse(file_path, language)
+    except Exception as e:
+        print(f"❌ 파일 분석 실패: {file_path} - {e}")
+        return None
+    
+    # 5. 캐시 엔트리 생성 (모든 정보를 한 번에)
+    cache_entry = {
+        'analysis_result': result,
+        'mtime': mtime,
+        'size': size,
+        'language': language,
+        'analyzed_at': dt.datetime.now().isoformat(),
+        'parsing_success': result.get('parsing_success', False)
+    }
+    
+    # 6. project_context 확인 및 캐시 저장
+    if 'project_context' in globals():
+        context = globals()['project_context']
+        
+        # 캐시 구조 확인
+        if 'cache' not in context:
+            context['cache'] = {
+                'files': {},
+                'analyzed_files': {},
+                'symbol_index': {},
+                'file_summaries': {},
+                'vibe_synced': {},
+                'last_sync': None
+            }
+        
+        if 'analyzed_files' not in context['cache']:
+            context['cache']['analyzed_files'] = {}
+        
+        # 원자적 업데이트
+        context['cache']['analyzed_files'][file_path] = cache_entry
+        
+        # 7. 이벤트 추적 (상태 변경 없이 로깅만)
+        track_file_access(context, file_path, 'parse_with_snippets')
+        track_code_analysis(context, file_path, result)
+        
+        # 8. 파일 요약 업데이트 (호환성)
+        if 'file_summaries' not in context['cache']:
+            context['cache']['file_summaries'] = {}
+            
+        context['cache']['file_summaries'][file_path] = {
+            'mtime': mtime,
+            'size': size,
+            'last_analyzed': cache_entry['analyzed_at'],
+            'symbols': len(result.get('items', [])),
+            'parsing_success': cache_entry['parsing_success']
+        }
+        
+        # 9. 캐시 크기 관리
+        manage_cache_size(context)
+    
+    return result
+def get_cached_analysis(file_path):
+    """
+    캐시된 분석 결과를 반환 (유효성 검증 포함)
+    
+    Args:
+        file_path (str): 파일 경로
+        
+    Returns:
+        dict or None: 유효한 캐시가 있으면 분석 결과, 없으면 None
+    """
+    if 'project_context' not in globals():
+        return None
+        
+    context = globals()['project_context']
+    
+    # 캐시 확인
+    cache = context.get('cache', {}).get('analyzed_files', {}).get(file_path)
+    if not cache:
+        context['stats']['cache_misses'] = context['stats'].get('cache_misses', 0) + 1
+        return None
+    
+    # 현재 파일 상태 확인
+    try:
+        current_stat = os.stat(file_path)
+    except OSError:
+        # 파일이 없으면 캐시 무효
+        if file_path in context['cache']['analyzed_files']:
+            del context['cache']['analyzed_files'][file_path]
+        return None
+    
+    # mtime 검증
+    if cache.get('mtime') != current_stat.st_mtime:
+        # 파일이 수정됨 - 캐시 무효
+        del context['cache']['analyzed_files'][file_path]
+        context['stats']['cache_misses'] = context['stats'].get('cache_misses', 0) + 1
+        return None
+    
+    # size 검증
+    if cache.get('size') != current_stat.st_size:
+        # 파일 크기 변경 - 캐시 무효
+        del context['cache']['analyzed_files'][file_path]
+        context['stats']['cache_misses'] = context['stats'].get('cache_misses', 0) + 1
+        return None
+    
+    # 캐시 히트
+    context['stats']['cache_hits'] = context['stats'].get('cache_hits', 0) + 1
+    
+    # 접근 시간 업데이트
+    cache['last_accessed'] = dt.datetime.now().isoformat()
+    
+    return cache.get('analysis_result')
+
+
+def reset_cache_statistics(context):
+    """
+    캐시 통계 초기화
+    테스트나 새 세션 시작 시 사용
+    
+    Args:
+        context (dict): project_context
+    """
+    if 'stats' not in context:
+        context['stats'] = {}
+    
+    context['stats'].update({
+        'cache_hits': 0,
+        'cache_misses': 0,
+        'total_operations': 0,
+        'cache_evictions': 0,
+        'files_analyzed': 0
+    })
+    
+    return context['stats']
+
+
+def get_cache_health_status(context):
+    """
+    캐시 상태 건강도 확인
+    
+    Args:
+        context (dict): project_context
+        
+    Returns:
+        dict: 캐시 건강 상태 정보
+    """
+    cache = context.get('cache', {})
+    stats = context.get('stats', {})
+    
+    # 캐시 상태 분석
+    analyzed_files = cache.get('analyzed_files', {})
+    total_cached = len(analyzed_files)
+    
+    # 통계 정보
+    total_hits = stats.get('cache_hits', 0)
+    total_misses = stats.get('cache_misses', 0)
+    total_requests = total_hits + total_misses
+    
+    # 건강 상태 판단
+    health_status = {
+        'is_empty': total_cached == 0,
+        'is_cold': total_cached > 0 and total_requests == 0,  # 캐시는 있지만 사용 안됨
+        'is_warming': total_cached > 0 and total_requests < 10,  # 워밍업 중
+        'is_hot': total_cached > 0 and total_requests >= 10,  # 활발히 사용 중
+        'total_cached_files': total_cached,
+        'total_requests': total_requests,
+        'status_message': ''
+    }
+    
+    # 상태 메시지 설정
+    if health_status['is_empty']:
+        health_status['status_message'] = "캐시가 비어있음 (정상 - 새 세션)"
+    elif health_status['is_cold']:
+        health_status['status_message'] = "캐시 콜드 상태 (아직 사용되지 않음)"
+    elif health_status['is_warming']:
+        health_status['status_message'] = "캐시 워밍업 중"
+    else:
+        health_status['status_message'] = "캐시 활성 상태"
+    
+    return health_status
+
+def get_full_session_status(project_context):
+    """
+    작업 컨텍스트와 Vibe Memory를 통합한 전체 상태 반환
+    
+    Args:
+        project_context (dict): 프로젝트 컨텍스트
+        
+    Returns:
+        dict: 통합된 세션 상태 정보
+    """
+    # 기본 작업 컨텍스트
+    work_context = get_current_work_context(project_context)
+    
+    # work_tracking 데이터
+    work_tracking = project_context.get('cache', {}).get('work_tracking', {})
+    
+    # Vibe 시스템 데이터
+    vibe_data = project_context.get('vibe_system', {})
+    
+    # 파일 접근 로그 분석
+    recent_files = []
+    if 'storage' in project_context:
+        file_log = project_context['storage'].get('file_access_log', [])
+        seen = set()
+        for entry in reversed(file_log[-100:]):
+            file_path = entry.get('file_path', '')
+            if file_path and file_path not in seen:
+                recent_files.append(file_path)
+                seen.add(file_path)
+                if len(recent_files) >= 10:
+                    break
+    
+    # 통합 상태 생성
+    return {
+        # 작업 파일 정보
+        'current_file': work_context.get('current_file'),
+        'current_function': work_context.get('current_function'),
+        'current_class': work_context.get('current_class'),
+        
+        # Vibe Memory (work_tracking 우선)
+        'current_focus': work_tracking.get('current_focus') or vibe_data.get('current_focus'),
+        'next_tasks': work_tracking.get('next_tasks', []) or vibe_data.get('next_tasks', []),
+        'completed_tasks': work_tracking.get('completed_tasks', []),
+        
+        # 파일 추적
+        'recent_files': recent_files,
+        'modified_functions': work_context.get('modified_functions', []),
+        
+        # 세션 정보
+        'session_duration': work_context.get('session_duration'),
+        'last_accessed': work_context.get('last_accessed'),
+        
+        # 통계
+        'total_files_accessed': len(project_context.get('storage', {}).get('file_access_log', [])),
+        'total_functions_edited': len(project_context.get('storage', {}).get('function_edit_log', []))
+    }
+
+
+def normalize_context_structure(context):
+    """Context 구조를 정규화하여 일관된 접근 보장"""
+    
+    # cache_data가 중첩되어 있으면 평탄화
+    if 'cache_data' in context and isinstance(context['cache_data'], dict):
+        cache_data = context['cache_data']
+        
+        # 주요 필드들을 최상위로 복사 (덮어쓰지 않음)
+        for key in ['analyzed_files', 'symbol_index', 'work_tracking', 
+                    'current_focus', 'tasks', 'active_file']:
+            if key in cache_data and key not in context:
+                context[key] = cache_data[key]
+    
+    # 필수 필드 초기화
+    context.setdefault('analyzed_files', {})
+    context.setdefault('symbol_index', {})
+    context.setdefault('work_tracking', {})
+    context.setdefault('tasks', {'next': [], 'done': []})
+    
+    return context
+
+
+def validate_memory_bank_structure(memory_dir):
+    """메모리뱅크 디렉토리 구조 검증 및 수정"""
+    
+    issues_fixed = []
+    
+    # .cache 디렉토리 확인/생성
+    cache_dir = os.path.join(memory_dir, '.cache')
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir, exist_ok=True)
+        issues_fixed.append('Created .cache directory')
+    
+    # 레거시 캐시 파일 마이그레이션
+    project_name = os.path.basename(memory_dir)
+    cache_filename = f'cache_{project_name}.json'
+    
+    old_cache = os.path.join(memory_dir, cache_filename)
+    new_cache = os.path.join(cache_dir, cache_filename)
+    
+    if os.path.exists(old_cache) and not os.path.exists(new_cache):
+        import shutil
+        shutil.move(old_cache, new_cache)
+        issues_fixed.append(f'Migrated {cache_filename} to .cache/')
+    
+    return issues_fixed

@@ -1,0 +1,689 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+🧠 AI Coding Brain 시스템 v3.0 - 통합 지능형 개발 환경
+=====================================================
+
+Claude Desktop execute_code 환경을 위한 완전 통합 AI 브레인 시스템
+
+v3.0 주요 특징:
+- UnifiedContextManager와 VibeMemoryManager 완전 통합
+- 싱글톤 패턴으로 안정적인 인스턴스 관리
+- 자동 세션 복원 및 지속성
+- 지능형 코드 분석 및 추적
+- 통합 메모리 뱅크 시스템
+
+작성자: Claude + 사용자 협업
+생성일: 2025-06-04
+수정일: 2025-06-13 (v3.0 - 완전 통합 구조)
+"""
+
+import os
+import json
+import logging
+import datetime as dt
+from pathlib import Path
+from typing import Union, Optional, Tuple, Dict, Any, List, Callable
+import sys
+import traceback
+from collections import defaultdict
+
+# ============================================
+# 로깅 설정
+# ============================================
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(levelname)s %(asctime)s] %(message)s',
+    datefmt='%H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
+# ============================================
+# 모듈 임포트 및 초기화
+# ============================================
+
+# 2. Context Manager v3.0
+try:
+    from context_manager import (
+        initialize_context,
+        save_context,
+        update_cache,
+        get_value,
+        find_symbol,
+        track_file_access,
+        track_function_edit,
+        get_work_tracking_summary,
+        build_index,
+        propose_next_steps
+    )
+    CONTEXT_MANAGER_AVAILABLE = True
+    logger.info("✅ Context Manager v3.0 로드 완료")
+except ImportError as e:
+    CONTEXT_MANAGER_AVAILABLE = False
+    logger.error(f"❌ Context Manager 로드 실패: {e}")
+
+
+
+
+# ============================================
+# 글로벌 상태 관리
+# ============================================
+class GlobalState:
+    """글로벌 상태 관리 (프로젝트 전환 지원)"""
+    def __init__(self):
+        # 기본 상태
+        self.initialized = False
+        self.session_start = dt.datetime.now()
+        
+        # 프로젝트 관련 (나중에 설정)
+        self.current_project = None
+        self.project_root = None
+        self.project_location = None  # 'project_root' or 'memory_root'
+        self.memory_root = None
+        self.context = None
+        
+        # 캐시
+        self.available_projects = {}
+        self.claude_config = None
+
+
+# 글로벌 상태 인스턴스
+_global_state = GlobalState()
+
+# def find_project_root() -> Optional[Path]:
+#     """프로젝트 루트를 찾는 통합 로직 - 더 이상 사용하지 않음"""
+#     # 이 함수는 get_paths_from_config()로 대체되었습니다.
+#     pass
+
+
+def find_memory_bank(project_name: str = None) -> Optional[Tuple[Path, Path]]:
+    """메모리 뱅크에서 프로젝트 찾기"""
+    memory_bank_root = None
+
+    # Claude Desktop 설정 확인
+    config_path = os.path.expanduser("~/AppData/Roaming/Claude/claude_desktop_config.json")
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            
+            # mcpServers 섹션에서 메모리 뱅크 경로 찾기
+            mcp_servers = config.get('mcpServers', {})
+            for server_name, server_config in mcp_servers.items():
+                if 'memory' in server_name.lower():
+                    env = server_config.get('env', {})
+                    if 'MEMORY_BANK_PATH' in env:
+                        memory_bank_root = Path(env['MEMORY_BANK_PATH'])
+                        logger.info(f"✅ Claude Desktop 설정에서 메모리 루트 로드: {memory_bank_root}")
+                        break
+        except Exception as e:
+            logger.error(f"Claude Desktop 설정 로드 실패: {e}")
+
+    # 대체 경로들
+    if not memory_bank_root or not memory_bank_root.exists():
+        fallback_paths = [
+            Path.home() / "Desktop" / "memory",
+            Path("C:/Users/Administrator/Desktop/memory"),
+            Path.home() / "memory",
+            Path.home() / "Documents" / "memory"
+        ]
+        
+        for path in fallback_paths:
+            if path.exists():
+                memory_bank_root = path
+                logger.info(f"대체 메모리 뱅크 경로 사용: {memory_bank_root}")
+                break
+
+    if memory_bank_root and project_name:
+        project_path = memory_bank_root / project_name
+        if project_path.exists():
+            return memory_bank_root, project_path
+
+    return memory_bank_root, None if memory_bank_root else (None, None)
+
+def load_claude_desktop_config() -> dict:
+    """Claude Desktop 설정 로드"""
+    config_path = os.path.expanduser("~/AppData/Roaming/Claude/claude_desktop_config.json")
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Claude Desktop 설정 로드 실패: {e}")
+    return {}
+
+def get_paths_from_config() -> dict:
+    """Claude Desktop 설정에서 PROJECT_ROOT와 MEMORY_BANK_ROOT 직접 가져오기"""
+    config_path = os.path.expanduser("~/AppData/Roaming/Claude/claude_desktop_config.json")
+    paths = {
+        'project_root': Path.home() / "Desktop",  # 기본값
+        'memory_root': Path.home() / "Desktop" / "memory"  # 기본값
+    }
+    
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            
+            # ai-coding-brain MCP 서버 설정에서 경로 가져오기
+            mcp_servers = config.get('mcpServers', {})
+            for server_name, server_config in mcp_servers.items():
+                if 'ai-coding-brain' in server_name.lower():
+                    env = server_config.get('env', {})
+                    
+                    if 'PROJECT_ROOT' in env:
+                        paths['project_root'] = Path(env['PROJECT_ROOT'])
+                    if 'MEMORY_BANK_ROOT' in env:
+                        paths['memory_root'] = Path(env['MEMORY_BANK_ROOT'])
+                    break
+        except Exception as e:
+            logger.error(f"Claude Desktop 설정 로드 실패: {e}")
+    
+    return paths
+
+def list_available_projects() -> dict:
+    """사용 가능한 프로젝트 목록 (단순화된 버전)"""
+    paths = get_paths_from_config()
+    projects = {}
+    
+    # PROJECT_ROOT의 프로젝트들
+    if paths['project_root'].exists():
+        for item in paths['project_root'].iterdir():
+            if item.is_dir() and not item.name.startswith('.'):
+                projects[item.name] = {
+                    'path': item,
+                    'location': 'project_root'
+                }
+    
+    # MEMORY_ROOT의 프로젝트들 (우선순위가 높음)
+    if paths['memory_root'].exists():
+        for item in paths['memory_root'].iterdir():
+            if item.is_dir() and not item.name.startswith('.'):
+                projects[item.name] = {
+                    'path': item,
+                    'location': 'memory_root'
+                }
+    
+    return projects
+
+def switch_project(project_name: str) -> bool:
+    """프로젝트 전환 (단순화된 버전)"""
+    global _global_state
+    
+    # 이전 프로젝트 저장
+    if _global_state.context and CONTEXT_MANAGER_AVAILABLE:
+        logger.info(f"이전 프로젝트 '{_global_state.current_project}' 저장 중...")
+        save_context()
+    
+    # 프로젝트 경로 찾기
+    paths = get_paths_from_config()
+    project_path = None
+    location = None
+    
+    # 메모리 루트 우선 확인
+    memory_path = paths['memory_root'] / project_name
+    if memory_path.exists():
+        project_path = memory_path
+        location = 'memory_root'
+    else:
+        # 프로젝트 루트 확인
+        project_root_path = paths['project_root'] / project_name
+        if project_root_path.exists():
+            project_path = project_root_path
+            location = 'project_root'
+    
+    if not project_path:
+        logger.error(f"프로젝트 '{project_name}'를 찾을 수 없습니다")
+        return False
+    
+    # 상태 업데이트
+    _global_state.current_project = project_name
+    _global_state.project_root = str(project_path)
+    _global_state.project_location = location
+    _global_state.memory_root = str(paths['memory_root'])
+    
+    # 작업 디렉토리 변경
+    os.chdir(project_path)
+    
+    # Context 초기화
+    if CONTEXT_MANAGER_AVAILABLE:
+        _global_state.context = initialize_context(str(project_path), project_name)
+        logger.info(f"✅ 프로젝트 '{project_name}'로 전환 완료 ({location})")
+    else:
+        logger.warning("Context Manager를 사용할 수 없습니다")
+        _global_state.context = None
+    
+    return True
+
+
+
+
+def initialize_ai_brain(project_path: str = None, project_name: str = None) -> Dict[str, Any]:
+    """
+    AI Brain 시스템 초기화 (최소 버전)
+    
+    Args:
+        project_path: 프로젝트 경로 (선택적)
+        project_name: 프로젝트 이름 (선택적)
+    
+    Returns:
+        초기화된 컨텍스트 또는 None
+    """
+    global _global_state
+    
+    logger.info("🚀 AI Brain 부트스트랩 시작")
+    
+    # 프로젝트가 지정된 경우
+    if project_name:
+        if switch_project(project_name):
+            return _global_state.context
+        else:
+            logger.warning("프로젝트 전환 실패, 기본 상태로 시작")
+    
+    # 프로젝트 미지정 시 - 부트스트랩만
+    logger.info("✅ AI Brain 부트스트랩 완료 (프로젝트 미선택)")
+    logger.info("💡 사용법: /flow [프로젝트명]")
+    
+    # 사용 가능한 프로젝트 표시
+    projects = list_available_projects()
+    if projects:
+        logger.info(f"📋 사용 가능한 프로젝트: {len(projects)}개")
+        for name in list(projects.keys())[:5]:
+            logger.info(f"   • {name}")
+    
+    _global_state.initialized = True
+    return None
+
+def _create_minimal_context() -> Dict[str, Any]:
+    """최소한의 컨텍스트 생성 (폴백용)"""
+    context: Dict[str, Any] = {
+        'project_name': _global_state.project_name,
+        'project_path': _global_state.project_path,
+        'created_at': dt.datetime.now().isoformat(),
+        'version': 'minimal',
+        'cache': {
+            'analyzed_files': {},
+            'symbol_index': {},
+            'work_tracking': {}
+        },
+        'tasks': {'next': [], 'done': []},
+        'current_focus': '',
+        'coding_experiences': []
+    }
+    return context
+
+# ============================================
+# 지능형 분석 함수
+# ============================================
+
+
+
+def save_ai_brain_state() -> bool:
+    """AI Brain 상태 저장"""
+    if not _global_state.context:
+        logger.warning("저장할 컨텍스트가 없습니다")
+        return False
+    
+    try:
+        result = save_context()
+        if result:
+            logger.info("💾 AI Brain 상태 저장 완료")
+        return result
+    except Exception as e:
+        logger.error(f"❌ 저장 중 오류: {e}")
+        return False
+
+# ============================================
+# 지능형 제안 시스템
+# ============================================
+
+def get_ai_suggestions(limit: int = 5) -> List[Dict[str, Any]]:
+    """AI 기반 다음 단계 제안"""
+    if not _global_state.context:
+        return []
+    
+    suggestions = propose_next_steps(_global_state.context, limit)
+    
+    # 추가 제안 로직
+    work_tracking = get_value(_global_state.context, 'work_tracking', {})
+    
+    # 세션 시간 기반 제안
+    session_duration = (dt.datetime.now() - _global_state.session_start).total_seconds()
+    if session_duration > 7200:  # 2시간 이상
+        suggestions.insert(0, {
+            'type': 'health',
+            'priority': 'high',
+            'text': '2시간 이상 작업하셨습니다. 잠시 휴식을 취하세요! ☕',
+            'action': 'take_break'
+        })
+    
+    return suggestions
+
+# ============================================
+# 명령어 시스템
+# ============================================
+
+def process_command(command: str, *args) -> Any:
+    """
+    명령어 처리 시스템
+    
+    Args:
+        command: 명령어 문자열
+        *args: 명령어 인자들
+    
+    Returns:
+        명령어 실행 결과
+    """
+    commands = {
+        '/flow': cmd_flow,
+        '/task': cmd_task,
+        '/done': cmd_done,
+        '/focus': cmd_focus,
+        '/suggest': cmd_suggest,
+        '/save': cmd_save,
+        '/status': cmd_status,
+        '/help': cmd_help
+    }
+    
+    if command in commands:
+        return commands[command](*args)
+    else:
+        return f"❌ 알 수 없는 명령어: {command}\n💡 /help로 사용 가능한 명령어를 확인하세요"
+
+def cmd_flow(args: List[str]) -> None:
+    """프로젝트 상태 표시 및 전환
+    
+    사용법:
+        /flow              - 현재 상태 및 프로젝트 목록
+        /flow project_name - 특정 프로젝트로 전환
+    """
+    
+    # 프로젝트 전환 요청
+    if args and len(args) > 0:
+        project_name = args[0]
+        
+        print(f"\n🔄 프로젝트 '{project_name}'로 전환 중...")
+        
+        if switch_project(project_name):
+            print(f"✅ 프로젝트 '{project_name}'로 전환 완료!")
+            
+            # 간단한 상태 표시
+            if _global_state.context:
+                analyzed = len(get_value(_global_state.context, 'analyzed_files', {}))
+                tasks_next = len(get_value(_global_state.context, 'tasks.next', []))
+                tasks_done = len(get_value(_global_state.context, 'tasks.done', []))
+                
+                print(f"\n📊 프로젝트 상태:")
+                print(f"   • 위치: {_global_state.project_location}")
+                print(f"   • 분석된 파일: {analyzed}개")
+                print(f"   • 작업: {tasks_done}개 완료, {tasks_next}개 대기")
+        else:
+            print(f"❌ 프로젝트 전환 실패")
+            
+            # 사용 가능한 프로젝트 목록 표시
+            projects = list_available_projects()
+            if projects:
+                print("\n📋 사용 가능한 프로젝트:")
+                print("-" * 60)
+                
+                # 위치별로 그룹화
+                project_root_projects = []
+                memory_root_projects = []
+                
+                for name, info in projects.items():
+                    if info['location'] == 'project_root':
+                        project_root_projects.append((name, info))
+                    else:
+                        memory_root_projects.append((name, info))
+                
+                if project_root_projects:
+                    print("\n📁 PROJECT_ROOT:")
+                    for name, info in sorted(project_root_projects):
+                        cache = "✓" if info['has_cache'] else "✗"
+                        print(f"   • {name} (캐시: {cache})")
+                
+                if memory_root_projects:
+                    print("\n💾 MEMORY_ROOT:")
+                    for name, info in sorted(memory_root_projects):
+                        print(f"   • {name} (캐시: ✓)")
+        return
+    
+    # 현재 상태 표시
+    if not _global_state.context:
+        print("\n⚠️ 프로젝트가 선택되지 않았습니다")
+        print("\n사용법: /flow [프로젝트명]")
+        
+        # 사용 가능한 프로젝트 목록
+        projects = list_available_projects()
+        if projects:
+            print("\n📋 사용 가능한 프로젝트:")
+            print("-" * 60)
+            
+            # 위치별로 그룹화
+            project_root_projects = []
+            memory_root_projects = []
+            
+            for name, info in projects.items():
+                if info['location'] == 'project_root':
+                    project_root_projects.append((name, info))
+                else:
+                    memory_root_projects.append((name, info))
+            
+            if project_root_projects:
+                print("\n📁 PROJECT_ROOT (C:\\Users\\82106\\Desktop):")
+                for name, info in sorted(project_root_projects):
+                    cache = "✓" if info['has_cache'] else "✗"
+                    print(f"   • {name} (캐시: {cache})")
+            
+            if memory_root_projects:
+                print("\n💾 MEMORY_ROOT (C:\\Users\\82106\\Desktop\\memory):")
+                for name, info in sorted(memory_root_projects):
+                    print(f"   • {name} (캐시: ✓)")
+        else:
+            print("\n❌ 사용 가능한 프로젝트를 찾을 수 없습니다")
+        return
+    
+    # 현재 프로젝트 상태 표시 (기존 로직)
+    print(f"\n🔥 현재 프로젝트: {_global_state.current_project}")
+    print("=" * 70)
+    
+    # Context Manager 사용 가능 확인
+    if not CONTEXT_MANAGER_AVAILABLE:
+        print("❌ Context Manager를 사용할 수 없습니다")
+        return
+    
+    # 프로젝트 정보
+    print(f"\n📌 프로젝트 정보:")
+    print(f"   • 이름: {_global_state.current_project}")
+    print(f"   • 경로: {_global_state.project_root}")
+    print(f"   • 위치: {_global_state.project_location}")
+    
+    # 분석 정보
+    analyzed_files = get_value(_global_state.context, 'analyzed_files', {})
+    symbol_index = get_value(_global_state.context, 'symbol_index', {})
+    
+    print(f"\n📊 분석 상태:")
+    print(f"   • 분석된 파일: {len(analyzed_files)}개")
+    print(f"   • 심볼 인덱스: {len(symbol_index)}개")
+    
+    # 작업 추적
+    work_tracking = get_value(_global_state.context, 'work_tracking', {})
+    if work_tracking:
+        file_edits = work_tracking.get('file_edits', {})
+        if file_edits:
+            print(f"\n✏️ 최근 편집:")
+            sorted_edits = sorted(file_edits.items(), key=lambda x: x[1], reverse=True)
+            for file_path, count in sorted_edits[:5]:
+                print(f"   • {os.path.basename(file_path)}: {count}회")
+    
+    # 작업 목록
+    tasks = get_value(_global_state.context, 'tasks', {})
+    next_tasks = tasks.get('next', [])
+    done_tasks = tasks.get('done', [])
+    
+    if next_tasks or done_tasks:
+        print(f"\n📋 작업 현황:")
+        print(f"   • 완료: {len(done_tasks)}개")
+        print(f"   • 대기: {len(next_tasks)}개")
+        
+        if next_tasks:
+            print("\n다음 작업:")
+            for i, task in enumerate(next_tasks[:3], 1):
+                print(f"   {i}. {task}")
+    
+    # AI 제안
+
+
+
+
+def cmd_task(*args):
+    """새 작업 추가"""
+    if not args:
+        return "❌ 작업 내용을 입력하세요"
+    
+    task = ' '.join(args)
+    if _global_state.context:
+        tasks = _global_state.context.setdefault('tasks', {})
+        tasks.setdefault('next', []).append(task)
+        save_ai_brain_state()
+        return f"✅ 작업 추가됨: {task}"
+    
+    return "❌ 컨텍스트가 초기화되지 않았습니다"
+
+def cmd_done(*args):
+    """작업 완료 처리"""
+    if not _global_state.context:
+        return "❌ 컨텍스트가 초기화되지 않았습니다"
+    
+    tasks = _global_state.context.get('tasks', {})
+    next_tasks = tasks.get('next', [])
+    
+    if not next_tasks:
+        return "ℹ️ 진행 중인 작업이 없습니다"
+    
+    if args and args[0].isdigit():
+        idx = int(args[0]) - 1
+        if 0 <= idx < len(next_tasks):
+            task = next_tasks.pop(idx)
+            tasks.setdefault('done', []).append(task)
+            save_ai_brain_state()
+            return f"✅ 완료: {task}"
+    
+    # 첫 번째 작업 완료
+    task = next_tasks.pop(0)
+    tasks.setdefault('done', []).append(task)
+    save_ai_brain_state()
+    return f"✅ 완료: {task}"
+
+def cmd_focus(*args):
+    """현재 포커스 설정"""
+    if not args:
+        if _global_state.context:
+            return f"🎯 현재 포커스: {_global_state.context.get('current_focus', 'Not set')}"
+        else:
+            return "🎯 현재 포커스: Not set (컨텍스트 없음)"
+    
+    focus = ' '.join(args)
+    if _global_state.context:
+        _global_state.context['current_focus'] = focus
+        save_ai_brain_state()
+        return f"🎯 포커스 설정: {focus}"
+    
+    return "❌ 컨텍스트가 초기화되지 않았습니다"
+
+def cmd_suggest(*args):
+    """AI 제안 표시"""
+    limit = int(args[0]) if args and args[0].isdigit() else 5
+    suggestions = get_ai_suggestions(limit)
+    
+    if not suggestions:
+        return "💡 현재 제안이 없습니다"
+    
+    output = ["💡 AI 제안:"]
+    for i, suggestion in enumerate(suggestions, 1):
+        output.append(f"   {i}. [{suggestion['type']}] {suggestion['text']}")
+    
+    return '\n'.join(output)
+
+def cmd_save(*args):
+    """상태 저장"""
+    if save_ai_brain_state():
+        return "💾 저장 완료!"
+    else:
+        return "❌ 저장 실패"
+
+def cmd_status(*args):
+    """시스템 상태 표시"""
+    output = ["🔧 AI Brain System Status"]
+    output.append("=" * 40)
+    output.append(f"• Context Manager: {'✅' if CONTEXT_MANAGER_AVAILABLE else '❌'}")
+    output.append(f"• Project: {_global_state.project_name or 'Not initialized'}")
+    
+    session_time = dt.datetime.now() - _global_state.session_start
+    output.append(f"• Session Time: {str(session_time).split('.')[0]}")
+    
+    return '\n'.join(output)
+
+def cmd_help(*args):
+    """도움말 표시"""
+    help_text = """
+🤖 AI Coding Brain 명령어 도움말
+=====================================
+
+기본 명령어:
+  /flow       - 프로젝트 상태 및 작업 흐름 표시
+  /analyze    - 프로젝트 파일 분석
+  /task       - 새 작업 추가
+  /done       - 작업 완료 처리
+  /focus      - 현재 포커스 설정
+  /suggest    - AI 제안 표시
+  /save       - 상태 저장
+  /status     - 시스템 상태 표시
+  /help       - 이 도움말 표시
+
+사용 예시:
+  /task API 엔드포인트 구현
+  /done 1
+  /focus 리팩토링 작업
+  /analyze .py .js
+  
+💡 자연어로도 명령 가능합니다!
+"""
+    return help_text
+
+# ============================================
+# 자동 초기화 (execute_code 환경용)
+# ============================================
+
+def auto_initialize():
+    """execute_code 실행 시 자동 초기화"""
+    if _global_state.context is None:
+        project_path = os.getcwd()
+        project_name = os.path.basename(project_path)
+        
+        # .cache 디렉토리에서 프로젝트 이름 추론
+        cache_dir = os.path.join(project_path, '.cache')
+        if os.path.exists(cache_dir):
+            for file in os.listdir(cache_dir):
+                if file.startswith('cache_') and file.endswith('.json'):
+                    project_name = file[6:-5]  # cache_NAME.json에서 NAME 추출
+                    break
+        
+        initialize_ai_brain(project_path, project_name)
+
+# 자동 초기화 실행
+# auto_initialize()
+  # 자동 초기화 비활성화
+
+# ============================================
+
+
+# ============================================
+# 초기화 완료 메시지
+# ============================================
+
+if _global_state.context:
+    logger.info("🧠 AI Coding Brain v3.0 준비 완료!")
+    logger.info("💡 /help 또는 help()로 사용법을 확인하세요")
+else:
+    logger.warning("⚠️ AI Coding Brain 부분 초기화 - 일부 기능 제한")

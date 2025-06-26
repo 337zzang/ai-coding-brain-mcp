@@ -1,0 +1,158 @@
+{
+  "name": "Flow 시스템 전면 개선 계획",
+  "created": "2025-06-26 16:11",
+  "description": "/flow 명령어 처리 시스템의 문제점을 해결하고 전반적인 성능과 안정성을 개선",
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "긴급 버그 수정 및 도구 정의",
+      "description": "즉시 적용 가능한 수정사항들을 처리",
+      "tasks": [
+        {
+          "id": "1-1",
+          "name": "flow_project 도구 정의 추가",
+          "description": "tool-definitions.ts에 누락된 flow_project 도구 정의 추가",
+          "priority": "HIGH",
+          "estimated_time": "30분",
+          "files": [
+            "src/tools/tool-definitions.ts"
+          ]
+        },
+        {
+          "id": "1-2",
+          "name": "헬퍼 모듈 초기화 오류 수정",
+          "description": "ImportError: helpers not available 오류 해결",
+          "priority": "HIGH",
+          "estimated_time": "1시간",
+          "files": [
+            "python/auto_tracking_wrapper.py",
+            "python/ai_helpers.py"
+          ]
+        },
+        {
+          "id": "1-3",
+          "name": "프로젝트 구조 캐싱 버그 수정",
+          "description": "get_project_structure()가 빈 결과 반환하는 문제 해결",
+          "priority": "HIGH",
+          "estimated_time": "1시간",
+          "files": [
+            "python/commands/enhanced_flow.py"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "시스템 구조 단순화",
+      "description": "복잡한 호출 체인을 단순화하고 성능 개선",
+      "tasks": [
+        {
+          "id": "2-1",
+          "name": "호출 체인 단순화",
+          "description": "5단계 호출 체인을 3단계로 축소",
+          "priority": "MEDIUM",
+          "estimated_time": "2시간",
+          "files": [
+            "src/handlers/workflow-handlers.ts",
+            "python/commands/enhanced_flow.py"
+          ]
+        },
+        {
+          "id": "2-2",
+          "name": "smart_print 토큰 제한 개선",
+          "description": "과도한 출력을 제어하는 로직 개선",
+          "priority": "MEDIUM",
+          "estimated_time": "1시간",
+          "files": [
+            "python/smart_print.py"
+          ]
+        },
+        {
+          "id": "2-3",
+          "name": "변수 저장/복원 시스템 개선",
+          "description": "JSON 직렬화 제한 해결 및 성능 개선",
+          "priority": "MEDIUM",
+          "estimated_time": "2시간",
+          "files": [
+            "src/handlers/workflow-handlers.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "성능 최적화 및 캐싱 개선",
+      "description": "프로젝트 스캔 성능을 대폭 개선",
+      "tasks": [
+        {
+          "id": "3-1",
+          "name": "메모리 캐시 시스템 구현",
+          "description": "파일 캐시와 별도로 메모리 캐시 추가",
+          "priority": "MEDIUM",
+          "estimated_time": "2시간",
+          "files": [
+            "python/commands/enhanced_flow.py"
+          ]
+        },
+        {
+          "id": "3-2",
+          "name": "증분 스캔 기능 구현",
+          "description": "변경된 파일만 재스캔하는 기능",
+          "priority": "LOW",
+          "estimated_time": "3시간",
+          "files": [
+            "python/analyzers/project_analyzer.py"
+          ]
+        },
+        {
+          "id": "3-3",
+          "name": "병렬 처리 도입",
+          "description": "대규모 프로젝트 스캔시 병렬 처리",
+          "priority": "LOW",
+          "estimated_time": "3시간",
+          "files": [
+            "python/commands/enhanced_flow.py"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "테스트 작성 및 문서화",
+      "description": "안정성 확보를 위한 테스트와 사용자 문서",
+      "tasks": [
+        {
+          "id": "4-1",
+          "name": "단위 테스트 작성",
+          "description": "핵심 기능들에 대한 단위 테스트",
+          "priority": "MEDIUM",
+          "estimated_time": "3시간",
+          "files": [
+            "test/flow-test.py",
+            "test/helpers-test.py"
+          ]
+        },
+        {
+          "id": "4-2",
+          "name": "통합 테스트 작성",
+          "description": "전체 flow 시스템 통합 테스트",
+          "priority": "MEDIUM",
+          "estimated_time": "2시간",
+          "files": [
+            "test/integration-test.py"
+          ]
+        },
+        {
+          "id": "4-3",
+          "name": "사용자 가이드 작성",
+          "description": "개선된 flow 시스템 사용 가이드",
+          "priority": "LOW",
+          "estimated_time": "2시간",
+          "files": [
+            "docs/flow-guide.md"
+          ]
+        }
+      ]
+    }
+  ]
+}

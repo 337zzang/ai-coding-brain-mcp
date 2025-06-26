@@ -469,7 +469,8 @@ Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
                 }
             },
             required: []
-        },
+        }
+    },
     {
         name: 'flow_project',
         description: `프로젝트 전환 및 컨텍스트 로드

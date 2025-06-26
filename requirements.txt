@@ -18,3 +18,4 @@ python-dotenv>=1.0.0
 
 # AST 파싱 (옵션)
 # astor>=0.8.1
+playwright>=1.40.0  # Web automation and scraping

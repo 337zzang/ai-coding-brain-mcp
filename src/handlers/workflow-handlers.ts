@@ -55,12 +55,13 @@ export async function handleFlowProject(params: { project_name: string }): Promi
 ${generateLoadVars()}
 
 # 프로젝트 전환 (cmd_flow_with_context 사용)
-result = helpers.cmd_flow_with_context("${params.project_name}")
+project_name = "${params.project_name}"
+result = helpers.cmd_flow_with_context(project_name)
 
 # 결과 처리
 if result.get('success'):
     context = result.get('context')
-    print("✅ 프로젝트 '${params.project_name}'로 전환되었습니다.")
+    print(f"✅ 프로젝트 '{project_name}'로 전환되었습니다.")
 else:
     print(f"❌ 프로젝트 전환 실패: {result.get('error', '알 수 없는 오류')}")
 

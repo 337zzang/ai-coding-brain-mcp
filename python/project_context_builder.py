@@ -238,6 +238,16 @@ class ProjectContextBuilder:
             desc = dir_descriptions.get(dir, "프로젝트 관련 파일")
             context += f"| `{dir}/` | {desc} |\n"
             
+        
+        # 디렉토리 트리 추가
+        context += f"""
+### 디렉토리 트리 뷰
+
+\`\`\`
+{self._generate_tree_structure(max_depth=2)}
+\`\`\`
+"""
+        
         context += f"""
 ## 📦 의존성
 
@@ -337,8 +347,72 @@ class ProjectContextBuilder:
         except Exception as e:
             print(f"❌ {filename} 저장 실패: {e}")
             return False
+
+    def generate_file_directory(self) -> str:
+        """file_directory.md 생성"""
+        content = f"""# 📁 Project Structure - {self.project_name}
+
+*Generated: {self.timestamp}*
+
+## 📊 Overview
+
+"""
+        stats = self.analyze_project_structure()
+        content += f"- Total Files: {stats['total_files']}\n"
+        content += f"- Total Directories: {stats['directories']}\n\n"
+        
+        content += "### File Types Distribution:\n"
+        sorted_types = sorted(stats['file_types'].items(), key=lambda x: x[1], reverse=True)
+        for ext, count in sorted_types[:20]:
+            content += f"- `{ext or '[no extension]'}`: {count} files\n"
             
-    def build_all(self, update_readme: bool = True, update_context: bool = True) -> Dict[str, bool]:
+        content += "\n## 📂 Directory Structure\n\n```\n"
+        content += self._generate_tree_structure()
+        content += "\n```\n"
+        
+        return content
+        
+    def _generate_tree_structure(self, max_depth: int = 3) -> str:
+        """디렉토리 트리 구조 생성"""
+        tree = []
+        ignore_dirs = {'.git', 'node_modules', '__pycache__', 'dist', 'build', '.venv', 'venv'}
+        
+        def walk_dir(path: Path, prefix: str = "", depth: int = 0):
+            if depth > max_depth:
+                return
+                
+            try:
+                items = sorted(path.iterdir(), key=lambda x: (not x.is_dir(), x.name.lower()))
+            except (PermissionError, OSError):
+                return
+                
+            dirs = [item for item in items if item.is_dir() and item.name not in ignore_dirs]
+            files = [item for item in items if item.is_file()]
+            
+            # 디렉토리 표시
+            for i, dir_item in enumerate(dirs[:10]):  # 최대 10개 디렉토리
+                is_last_dir = (i == len(dirs) - 1) and len(files) == 0
+                tree.append(f"{prefix}{'└── ' if is_last_dir else '├── '}{dir_item.name}/")
+                
+                if depth < max_depth:
+                    extension = "    " if is_last_dir else "│   "
+                    walk_dir(dir_item, prefix + extension, depth + 1)
+                    
+            # 파일 표시 (주요 파일만)
+            important_files = [f for f in files if f.suffix in ['.py', '.ts', '.js', '.json', '.md']][:5]
+            for i, file_item in enumerate(important_files):
+                is_last = i == len(important_files) - 1
+                tree.append(f"{prefix}{'└── ' if is_last else '├── '}{file_item.name}")
+                
+            if len(files) > len(important_files):
+                tree.append(f"{prefix}└── ... ({len(files) - len(important_files)} more files)")
+                
+        tree.append(f"{self.project_name}/")
+        walk_dir(self.project_root, "", 0)
+        
+        return "\n".join(tree)
+            
+    def build_all(self, update_readme: bool = True, update_context: bool = True, include_file_directory: bool = False) -> Dict[str, bool]:
         """모든 문서 빌드"""
         results = {}
         
@@ -350,13 +424,19 @@ class ProjectContextBuilder:
             context_content = self.build_project_context()
             results['PROJECT_CONTEXT.md'] = self.save_document('PROJECT_CONTEXT.md', context_content)
             
+                
+        if include_file_directory:
+            file_dir_content = self.generate_file_directory()
+            results['file_directory.md'] = self.save_document('file_directory.md', file_dir_content)
+        
+        
         return results
 
 # 메인 함수
-def build_project_context(update_readme: bool = True, update_context: bool = True, include_stats: bool = True):
+def build_project_context(update_readme: bool = True, update_context: bool = True, include_stats: bool = True, include_file_directory: bool = False):
     """프로젝트 컨텍스트 문서 빌드"""
     builder = ProjectContextBuilder()
-    results = builder.build_all(update_readme, update_context)
+    results = builder.build_all(update_readme, update_context, include_file_directory)
     
     if include_stats:
         stats = builder.analyze_project_structure()

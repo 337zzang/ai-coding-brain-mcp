@@ -57,7 +57,7 @@ class AIHelpers:
     
     def __init__(self):
         self._load_helpers()
-        
+        self._enabled_apis = {}  # API 활성화 상태 관리
     def _load_helpers(self):
         """헬퍼 함수들을 로드"""
         # cmd_flow 초기화
@@ -221,6 +221,12 @@ class AIHelpers:
         Returns:
             생성 결과 딕셔너리
         """
+        if not self._check_api_enabled('image'):
+            return {
+                "success": False,
+                "error": "Image API가 비활성화되어 있습니다. helpers.toggle_api('image', True)로 활성화하세요."
+            }
+            
         try:
             from api.image_generator import generate_ai_image
             result = generate_ai_image(prompt, filename, **kwargs)
@@ -238,7 +244,6 @@ class AIHelpers:
             error_msg = f"이미지 생성 중 오류 발생: {str(e)}"
             print(f"❌ {error_msg}")
             return {"success": False, "error": error_msg}
-    
     def list_generated_images(self) -> list:
         """생성된 이미지 목록 조회
         
@@ -300,6 +305,85 @@ class AIHelpers:
         except Exception as e:
             print(f"❌ base64 인코딩 실패: {e}")
             return None
+
+    def toggle_api(self, api_name: str, enabled: bool = True) -> Dict[str, Any]:
+        """API 활성화/비활성화 토글
+        
+        Args:
+            api_name: API 이름 (예: 'image', 'translator', 'voice' 등)
+            enabled: 활성화 여부
+        
+        Returns:
+            상태 정보 딕셔너리
+        """
+        self._enabled_apis[api_name] = enabled
+        
+        if enabled:
+            # API 모듈 동적 로드 시도
+            try:
+                module = __import__(f'api.{api_name}_generator', fromlist=[''])
+                print(f"✅ {api_name} API 활성화됨")
+                return {
+                    "success": True,
+                    "api": api_name,
+                    "status": "enabled",
+                    "module": str(module)
+                }
+            except ImportError:
+                # api_name_generator가 없으면 다른 패턴 시도
+                try:
+                    module = __import__(f'api.{api_name}', fromlist=[''])
+                    print(f"✅ {api_name} API 활성화됨")
+                    return {
+                        "success": True,
+                        "api": api_name,
+                        "status": "enabled",
+                        "module": str(module)
+                    }
+                except ImportError as e:
+                    print(f"⚠️ {api_name} API 모듈을 찾을 수 없음: {e}")
+                    self._enabled_apis[api_name] = False
+                    return {
+                        "success": False,
+                        "api": api_name,
+                        "error": str(e)
+                    }
+        else:
+            print(f"🔴 {api_name} API 비활성화됨")
+            return {
+                "success": True,
+                "api": api_name,
+                "status": "disabled"
+            }
+    
+    def list_apis(self) -> Dict[str, bool]:
+        """활성화된 API 목록 반환"""
+        # 사용 가능한 API 확인
+        api_path = os.path.join(os.path.dirname(__file__), 'api')
+        available_apis = []
+        
+        if os.path.exists(api_path):
+            for file in os.listdir(api_path):
+                if file.endswith('.py') and not file.startswith('__'):
+                    api_name = file.replace('.py', '').replace('_generator', '')
+                    available_apis.append(api_name)
+        
+        # 활성화 상태와 함께 반환
+        api_status = {}
+        for api in available_apis:
+            api_status[api] = self._enabled_apis.get(api, False)
+        
+        print(f"📊 API 상태:")
+        for api, enabled in api_status.items():
+            status = "✅ 활성" if enabled else "⭕ 비활성"
+            print(f"  - {api}: {status}")
+        
+        return api_status
+    
+    def _check_api_enabled(self, api_name: str) -> bool:
+        """API 활성화 상태 확인"""
+        return self._enabled_apis.get(api_name, True)  # 기본값은 True (이전 버전 호환)
+
 
 
 

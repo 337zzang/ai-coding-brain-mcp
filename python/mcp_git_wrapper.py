@@ -29,7 +29,7 @@ from git_version_manager import GitVersionManager
 
 def main():
     if len(sys.argv) < 2:
-        print(json.dumps({"success": False, "message": "명령어가 필요합니다."}))
+        print(json.dumps({"success": False, "message": "Command required."}))
         return
 
     command = sys.argv[1]
@@ -52,11 +52,11 @@ def main():
         if command == "status":
             result = git_manager.git_status()
             if result:
-                message = f"현재 브랜치: {result.get('branch', 'unknown')}\n"
-                message += f"수정된 파일: {len(result.get('modified', []))}개\n"
-                message += f"스테이징된 파일: {len(result.get('staged', []))}개\n"
-                message += f"추적되지 않은 파일: {len(result.get('untracked', []))}개\n"
-                message += f"깨끗한 상태: {'예' if result.get('clean') else '아니오'}"
+                message = f"Current branch: {result.get('branch', 'unknown')}\n"
+                message += f"Modified files: {len(result.get('modified', []))} files\n"
+                message += f"Staged files: {len(result.get('staged', []))} files\n"
+                message += f"Untracked files: {len(result.get('untracked', []))} files\n"
+                message += f"Clean status: {'Yes' if result.get('clean') else 'No'}"
                 
                 output = {
                     "success": True,
@@ -66,7 +66,7 @@ def main():
             else:
                 output = {
                     "success": False,
-                    "message": "Git 상태를 가져올 수 없습니다."
+                    "message": "Git status could not be retrieved."
                 }
                 
         elif command == "commit":

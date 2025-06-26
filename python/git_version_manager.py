@@ -153,7 +153,7 @@ class GitVersionManager:
         # 상태 확인
         status = self.git_status()
         if status["clean"] and not status["staged"]:
-            result["message"] = "커밋할 변경 사항이 없습니다."
+            result["message"] = "No changes to commit."
             return result
         
         # 자동 스테이징
@@ -173,14 +173,14 @@ class GitVersionManager:
             hash_success, commit_hash, _ = self._run_git_command(["rev-parse", "HEAD"])
             result["success"] = True
             result["commit_hash"] = commit_hash.strip()[:8] if hash_success else None
-            result["message"] = f"커밋 성공: {message}"
+            result["message"] = f"Commit successful: {message}"
             result["files_committed"] = status["staged"] + status["modified"] + status["untracked"]
             
             # Wisdom에 기록
             if self.wisdom:
                 self.wisdom.track_commit(result["commit_hash"], message)
         else:
-            result["message"] = f"커밋 실패: {stderr}"
+            result["message"] = f"Commit failed: {stderr}"
         
         return result
     
@@ -364,14 +364,14 @@ class GitVersionManager:
                 if success:
                     result["success"] = True
                     result["pushed_branch"] = branch
-                    result["message"] = f"'{branch}' 브랜치를 '{remote}'로 푸시 완료 (업스트림 설정)"
+                    result["message"] = f"Pushed '{branch}' to '{remote}' successfully (upstream set)"
                 else:
-                    result["message"] = f"푸시 실패: {stderr}"
+                    result["message"] = f"Push failed: {stderr}"
             elif "Authentication failed" in stderr or "could not read Username" in stderr:
-                result["message"] = "인증 실패: GitHub Personal Access Token이 필요합니다."
-                result["help"] = "GITHUB_SETUP.md 파일을 참고하여 PAT를 설정하세요."
+                result["message"] = "Authentication failed: GitHub Personal Access Token required."
+                result["help"] = "Please refer to GITHUB_SETUP.md for PAT setup."
             else:
-                result["message"] = f"푸시 실패: {stderr}"
+                result["message"] = f"Push failed: {stderr}"
         
         return result
     
@@ -394,9 +394,9 @@ class GitVersionManager:
         
         if success:
             result["success"] = True
-            result["message"] = f"원격 저장소 '{name}' 설정 완료: {url}"
+            result["message"] = f"Remote repository '{name}' configured: {url}"
         else:
-            result["message"] = f"원격 저장소 설정 실패: {stderr}"
+            result["message"] = f"Failed to configure remote repository: {stderr}"
         
         return result
 

@@ -13,13 +13,10 @@
 ### hardcoded_path (4회)
 - 올바른 방법: 문서를 참고하세요
 
-### direct_flow (1회)
+### direct_flow (3회)
 - 올바른 방법: execute_code: helpers.cmd_flow_with_context('project-name')
 
 ## ✅ 베스트 프랙티스
 
-### documentation
-- PROJECT_CONTEXT.md에 디렉토리 트리 구조 추가로 프로젝트 구조 파악 용이
-
 ### workflow
-- /flow 명령 시 README.md와 PROJECT_CONTEXT.md 자동 읽기로 컨텍스트 즉시 파악
+- /flow 명령 시 문서 자동 읽기로 프로젝트 컨텍스트 즉시 파악 - 구현 완료

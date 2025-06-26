@@ -58,3 +58,10 @@ setup_gemini.bat
 
 # LICENSE file (should not be in project)
 LICENSE
+
+# 임시 파일 및 폴더
+*.tmp
+*.temp
+*.cache
+temp/
+tmp/

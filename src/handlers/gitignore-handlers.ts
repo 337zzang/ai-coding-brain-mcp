@@ -40,9 +40,8 @@ print(json.dumps(result, ensure_ascii=False))
         const output = execSync(
             `python -c "${pythonCode.replace(/"/g, '\\"')}"`,
             { 
-                encoding: 'utf8', 
-                cwd: projectRoot,
-                shell: true
+                encoding: 'utf8' as const,
+                cwd: projectRoot
             }
         );
         
@@ -107,9 +106,8 @@ print(json.dumps(result, ensure_ascii=False))
         const output = execSync(
             `python -c "${pythonCode.replace(/"/g, '\\"')}"`,
             { 
-                encoding: 'utf8', 
-                cwd: projectRoot,
-                shell: true
+                encoding: 'utf8' as const,
+                cwd: projectRoot
             }
         );
         
@@ -169,9 +167,8 @@ print(json.dumps(result, ensure_ascii=False))
         const output = execSync(
             `python -c "${pythonCode.replace(/"/g, '\\"')}"`,
             { 
-                encoding: 'utf8', 
-                cwd: projectRoot,
-                shell: true
+                encoding: 'utf8' as const,
+                cwd: projectRoot
             }
         );
         

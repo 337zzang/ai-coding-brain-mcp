@@ -142,13 +142,13 @@ class AICodingBrainMCP {
         } else if (name === 'gitignore_update') {
           return await handleGitignoreUpdate(args as { patterns: string[]; category?: string });
         } else if (name === 'gitignore_create') {
-          return await handleGitignoreCreate(args as { categories?: string[] } else if (name === 'generate_ai_image') {
+          return await handleGitignoreCreate(args as { categories?: string[] });
+        } else if (name === 'generate_ai_image') {
           return await generateAiImage(args);
         } else if (name === 'list_ai_images') {
           return await listAiImages();
         } else if (name === 'search_ai_images') {
           return await searchAiImages(args);
-        });
         }
 
         // TODO: Implement remaining tools

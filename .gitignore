@@ -27,3 +27,34 @@ memory/
 
 # Test files
 test_*.txt
+
+# Claude App files (DO NOT COMMIT)
+*.exe
+*.dll
+*.pak
+*.bin
+*.dat
+*.ico
+Squirrel-UpdateSelf.log
+squirrel.exe
+chrome_*
+d3dcompiler_*
+ffmpeg.dll
+icudtl.dat
+libEGL.dll
+libGLESv2.dll
+locales/
+resources/
+v8_context_snapshot.bin
+vk_swiftshader*
+vulkan-1.dll
+snapshot_blob.bin
+
+# Batch scripts (temporary)
+gemini_*.bat
+gemini_*.ps1
+run_gemini.bat
+setup_gemini.bat
+
+# LICENSE file (should not be in project)
+LICENSE

@@ -1,17 +1,18 @@
 """
 AI 이미지 생성 헬퍼 모듈
 DALL-E 3를 사용하여 이미지를 생성하고 저장합니다.
-OpenAI API v0.27.x 호환 버전
+OpenAI API v1.x 호환 버전
 """
 import os
 import json
 import requests
 from datetime import datetime
 from typing import Optional, Dict, Any
-import openai  # 구버전 API 사용
+from openai import OpenAI
 from PIL import Image
 from io import BytesIO
 import hashlib
+import base64
 
 class ImageGenerator:
     """AI 이미지 생성 및 관리 클래스"""
@@ -21,8 +22,8 @@ class ImageGenerator:
         if not self.api_key:
             raise ValueError("OPENAI_API_KEY가 환경 변수에 설정되지 않았습니다.")
         
-        # 구버전 API 키 설정
-        openai.api_key = self.api_key
+        # 새 버전 API 클라이언트 생성
+        self.client = OpenAI(api_key=self.api_key)
         
         self.project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self.image_dir = os.path.join(self.project_root, "image")
@@ -56,7 +57,8 @@ class ImageGenerator:
                       model: str = "dall-e-3", 
                       size: str = "1024x1024",
                       quality: str = "standard",
-                      style: str = "vivid") -> Dict[str, Any]:
+                      style: str = "vivid",
+                      return_base64: bool = False) -> Dict[str, Any]:
         """
         DALL-E 3를 사용하여 이미지 생성
         
@@ -67,52 +69,53 @@ class ImageGenerator:
             size: 이미지 크기 (1024x1024, 1024x1792, 1792x1024)
             quality: 품질 (standard 또는 hd)
             style: 스타일 (vivid 또는 natural)
+            return_base64: base64 인코딩된 이미지 반환 여부
         
         Returns:
             생성된 이미지 정보
         """
         try:
-            # 구버전 API 호출 방식
-            # DALL-E 3는 v0.27.x에서 지원하지 않을 수 있음
-            # DALL-E 2로 폴백
-            if model == "dall-e-3":
-                print("⚠️ OpenAI v0.27.x에서는 DALL-E 3를 지원하지 않습니다. DALL-E 2를 사용합니다.")
-                model = "dall-e-2"
-                # DALL-E 2 크기 제한
-                if size not in ["256x256", "512x512", "1024x1024"]:
-                    size = "1024x1024"
-            
-            # 이미지 생성 요청 (구버전 API)
-            response = openai.Image.create(
+            # 이미지 생성 요청 (새 API)
+            response = self.client.images.generate(
+                model=model,
                 prompt=prompt,
-                n=1,
-                size=size
+                size=size,
+                quality=quality,
+                style=style,
+                n=1
             )
             
-            # 응답에서 URL 추출
-            if hasattr(response, 'data') and len(response['data']) > 0:
-                image_url = response['data'][0]['url']
-            else:
-                raise Exception("이미지 생성 응답에서 URL을 찾을 수 없습니다.")
+            # 응답에서 URL과 수정된 프롬프트 추출
+            image_url = response.data[0].url
+            revised_prompt = response.data[0].revised_prompt if hasattr(response.data[0], 'revised_prompt') else prompt
             
             # 파일명 생성
             if not filename:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 prompt_hash = hashlib.md5(prompt.encode()).hexdigest()[:8]
-                filename = f"dalle_{timestamp}_{prompt_hash}.png"
+                filename = f"dalle3_{timestamp}_{prompt_hash}.png"
             elif not filename.endswith(('.png', '.jpg', '.jpeg')):
                 filename += '.png'
             
             # 이미지 다운로드 및 저장
             filepath = self.save_image_from_url(image_url, filename)
             
+            # base64 인코딩 (선택적)
+            base64_data = None
+            if return_base64:
+                with open(filepath, 'rb') as f:
+                    base64_data = base64.b64encode(f.read()).decode('utf-8')
+            
             # 메타데이터 저장
             image_info = {
                 "filename": filename,
                 "filepath": filepath,
                 "prompt": prompt,
+                "revised_prompt": revised_prompt,
                 "model": model,
                 "size": size,
+                "quality": quality,
+                "style": style,
                 "created_at": datetime.now().isoformat(),
                 "url": image_url
             }
@@ -120,16 +123,24 @@ class ImageGenerator:
             self.metadata["images"].append(image_info)
             self._save_metadata()
             
-            return {
+            result = {
                 "success": True,
                 "filename": filename,
                 "filepath": filepath,
                 "prompt": prompt,
+                "revised_prompt": revised_prompt,
                 "model": model,
                 "size": size,
+                "quality": quality,
+                "style": style,
                 "url": image_url,
                 "message": f"이미지가 성공적으로 생성되었습니다: {filename}"
             }
+            
+            if base64_data:
+                result["base64"] = base64_data
+                
+            return result
             
         except Exception as e:
             return {
@@ -163,6 +174,14 @@ class ImageGenerator:
         
         return filepath
     
+    def get_image_base64(self, filename: str) -> Optional[str]:
+        """이미지를 base64로 인코딩하여 반환"""
+        filepath = os.path.join(self.image_dir, filename)
+        if os.path.exists(filepath):
+            with open(filepath, 'rb') as f:
+                return base64.b64encode(f.read()).decode('utf-8')
+        return None
+    
     def list_images(self) -> list:
         """생성된 이미지 목록 반환"""
         return self.metadata.get("images", [])
@@ -180,7 +199,7 @@ class ImageGenerator:
         keyword_lower = keyword.lower()
         
         for image in self.metadata.get("images", []):
-            if keyword_lower in image["prompt"].lower():
+            if keyword_lower in image["prompt"].lower() or                keyword_lower in image.get("revised_prompt", "").lower():
                 results.append(image)
         
         return results
@@ -200,3 +219,8 @@ def search_ai_images(keyword: str) -> list:
     """키워드로 이미지 검색"""
     generator = ImageGenerator()
     return generator.search_images_by_prompt(keyword)
+
+def get_image_base64(filename: str) -> Optional[str]:
+    """이미지를 base64로 반환"""
+    generator = ImageGenerator()
+    return generator.get_image_base64(filename)

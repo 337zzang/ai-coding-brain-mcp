@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Test Page</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .login-form {
+            background: #f5f5f5;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .error-message {
+            color: #dc3545;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8d7da;
+            border-radius: 4px;
+            display: none;
+        }
+        .success-message {
+            color: #155724;
+            margin-top: 10px;
+            padding: 10px;
+            background: #d4edda;
+            border-radius: 4px;
+        }
+        #dashboard {
+            display: none;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="login-page">
+        <div class="login-form">
+            <h2>로그인 테스트</h2>
+            <form id="loginForm" onsubmit="return handleLogin(event)">
+                <div class="form-group">
+                    <label for="username">사용자명</label>
+                    <input type="text" id="username" name="username" placeholder="아이디를 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" required>
+                </div>
+                <button type="submit">로그인</button>
+            </form>
+            <div id="error-message" class="error-message"></div>
+        </div>
+        <p style="text-align: center; margin-top: 20px; color: #666;">
+            테스트 계정: admin / password123
+        </p>
+    </div>
+    
+    <div id="dashboard">
+        <h1>🎉 로그인 성공!</h1>
+        <div class="success-message">
+            환영합니다! 대시보드에 접속했습니다.
+        </div>
+        <p id="user-info"></p>
+        <button onclick="logout()">로그아웃</button>
+    </div>
+    
+    <script>
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error-message');
+            
+            // 간단한 검증 (테스트용)
+            if (username === 'admin' && password === 'password123') {
+                // 로그인 성공
+                document.getElementById('login-page').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('user-info').textContent = '로그인 사용자: ' + username;
+                
+                // URL 변경 (실제로는 서버에서 리다이렉트)
+                window.history.pushState({}, '', '#dashboard');
+                document.title = 'Dashboard - Login Success';
+                
+                // 쿠키 설정 (테스트용)
+                document.cookie = "sessionid=test123; path=/";
+                
+            } else {
+                // 로그인 실패
+                errorDiv.textContent = '아이디 또는 비밀번호가 올바르지 않습니다.';
+                errorDiv.style.display = 'block';
+                
+                // 3초 후 에러 메시지 숨기기
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 3000);
+            }
+            
+            return false;
+        }
+        
+        function logout() {
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('login-page').style.display = 'block';
+            document.getElementById('loginForm').reset();
+            window.history.pushState({}, '', window.location.pathname);
+            document.title = 'Login Test Page';
+            document.cookie = "sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        }
+        
+        // 페이지 로드 시 해시 확인
+        if (window.location.hash === '#dashboard') {
+            // 쿠키 확인
+            if (document.cookie.includes('sessionid=')) {
+                document.getElementById('login-page').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

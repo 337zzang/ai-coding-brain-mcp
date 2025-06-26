@@ -20,8 +20,8 @@ class APIManager:
             # 향후 추가 가능한 API들
             # 'translation': 'python.api.translator.Translator',
             # 'voice': 'python.api.voice_synthesizer.VoiceSynthesizer',
+            'browser': 'python.api.web_automation.WebAutomation',
         }
-        
     def toggle_api(self, api_name: str, enabled: bool = True) -> Dict[str, Any]:
         """API를 활성화/비활성화"""
         if api_name not in self.available_apis:
@@ -126,7 +126,16 @@ class APIManager:
                 helpers.generate_image = api_instance.generate_image
                 helpers.list_images = api_instance.list_images
                 helpers.search_images = api_instance.search_images
-                
+            elif api_name == 'browser':
+                # 브라우저 자동화 API 메서드들을 helpers에 추가
+                helpers.browser_go_to_page = api_instance.go_to_page
+                helpers.browser_extract_text = api_instance.extract_text
+                helpers.browser_click_element = api_instance.click_element
+                helpers.browser_input_text = api_instance.input_text
+                helpers.browser_handle_login = api_instance.handle_login
+                helpers.browser_scroll_page = api_instance.scroll_page
+                helpers.browser_get_page_content = api_instance.get_page_content
+                helpers.browser_close = api_instance.close
     def _remove_helpers(self, api_name: str):
         """helpers 객체에서 API 메서드 제거"""
         import __main__
@@ -138,6 +147,20 @@ class APIManager:
                 for method in ['generate_image', 'list_images', 'search_images']:
                     if hasattr(helpers, method):
                         delattr(helpers, method)
-
+            elif api_name == 'browser':
+                # 브라우저 API 메서드들 제거
+                browser_methods = [
+                    'browser_go_to_page',
+                    'browser_extract_text',
+                    'browser_click_element',
+                    'browser_input_text',
+                    'browser_handle_login',
+                    'browser_scroll_page',
+                    'browser_get_page_content',
+                    'browser_close'
+                ]
+                for method in browser_methods:
+                    if hasattr(helpers, method):
+                        delattr(helpers, method)
 # 전역 인스턴스 생성
 api_manager = APIManager()

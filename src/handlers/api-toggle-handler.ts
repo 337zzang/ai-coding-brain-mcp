@@ -1,6 +1,8 @@
-import { ToolHandler } from '../types';
+import { ToolHandler } from '../types/mcp-types';
 import { PythonShellManager } from '../utils/python-shell-manager';
-import { logger } from '../utils/logger';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('api-toggle-handler');
 
 const pythonManager = PythonShellManager.getInstance();
 

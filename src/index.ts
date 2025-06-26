@@ -142,29 +142,29 @@ class AICodingBrainMCP {
         } else if (name === 'gitignore_update') {
           return await handleGitignoreUpdate(args as { patterns: string[]; category?: string });
         } else if (name === 'gitignore_create') {
-          return await handleGitignoreCreate(args as { categories?: string[] });
-      } else if (name === 'toggle_api') {
-        return await apiToggleHandler.execute(args);
+        } else if (name === 'toggle_api') {
+          return await apiToggleHandler.execute(args);
         } else if (name === 'list_apis') {
-        return await listApisHandler.execute(args);
-        // TODO: Implement remaining tools
-        throw new McpError(
-          ErrorCode.MethodNotFound,
-          `Tool '${name}' not implemented yet.`
-        );
-      } catch (error) {
+          return await listApisHandler.execute(args);
+        } else {
+          // TODO: Implement remaining tools
+          throw new McpError(
+            ErrorCode.MethodNotFound,
+            `Tool \'${name}\' not implemented yet.`
+          );
+        }
         logger.error(`Tool execution error [${name}]:`, error);
-        
+      } catch (error) {
         if (error instanceof McpError) {
-          throw error;
+        throw error;
         }
         
         throw new McpError(
-          ErrorCode.InternalError,
-          `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
+        ErrorCode.InternalError,
+        `Tool execution failed: ${error instanceof Error ? error.message : String(error)}`
         );
-      }
-    });
+        }
+        });
   }
 
   /**

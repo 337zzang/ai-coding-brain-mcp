@@ -25,7 +25,7 @@ import { handleFileAnalyze } from './handlers/file-analyzer-handler';
 import { handleGitStatus, handleGitCommitSmart, handleGitBranchSmart, handleGitRollbackSmart, handleGitPush } from './handlers/git-handlers';
 import { handleGitignoreAnalyze, handleGitignoreUpdate, handleGitignoreCreate } from './handlers/gitignore-handlers';
 
-import { generateAiImage, listAiImages, searchAiImages } from './handlers/image-generator-handler';
+import { apiToggleHandler, listApisHandler } from './handlers/api-toggle-handler';
 // 로거 초기화
 const logger = createLogger('ai-coding-brain-mcp');
 
@@ -143,14 +143,10 @@ class AICodingBrainMCP {
           return await handleGitignoreUpdate(args as { patterns: string[]; category?: string });
         } else if (name === 'gitignore_create') {
           return await handleGitignoreCreate(args as { categories?: string[] });
-        } else if (name === 'generate_ai_image') {
-          return await generateAiImage(args);
-        } else if (name === 'list_ai_images') {
-          return await listAiImages();
-        } else if (name === 'search_ai_images') {
-          return await searchAiImages(args);
-        }
-
+      } else if (name === 'toggle_api') {
+        return await apiToggleHandler.execute(args);
+        } else if (name === 'list_apis') {
+        return await listApisHandler.execute(args);
         // TODO: Implement remaining tools
         throw new McpError(
           ErrorCode.MethodNotFound,
@@ -200,7 +196,7 @@ class AICodingBrainMCP {
     }
     
     logger.info('AI Coding Brain MCP server v2.0.0 started successfully');
-    logger.info('13 tools loaded: execute_code, restart_json_repl, backup_file, restore_backup, list_backups, flow_project, plan_project, task_manage, next_task, file_analyze, generate_ai_image, list_ai_images, search_ai_images');
+    logger.info('12 tools loaded: execute_code, restart_json_repl, backup_file, restore_backup, list_backups, flow_project, plan_project, task_manage, next_task, file_analyze, toggle_api, list_apis');
   }
 }
 

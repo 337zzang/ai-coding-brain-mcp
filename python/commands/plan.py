@@ -75,7 +75,7 @@ def set_plan(context, plan_data: Dict):
             plan_obj = Plan(
                 name=plan_data['name'],
                 description=plan_data['description'],
-                phases=phases,
+                phases=phases,,
                 current_phase=plan_data.get('current_phase'),
                 current_task=plan_data.get('current_task')
             )
@@ -575,10 +575,10 @@ def cmd_plan(plan_name: Optional[str] = None, description: Optional[str] = None,
             task_id = f"{phase_id}-task-{i}"
             tasks.append({
                 'id': task_id,
-                'task': task_name,
+                'title': task_name,
                 'status': 'pending',
                 'created_at': timestamp,
-                'phase': phase_id
+                'phase_id': phase_id
             })
         
         new_plan_dict['phases'][phase_id] = {
@@ -658,7 +658,7 @@ def cmd_plan(plan_name: Optional[str] = None, description: Optional[str] = None,
         print(f"\n✅ 새 계획 '{plan_name}' 생성 완료!")
         print(f"   설명: {new_plan_dict['description']}")
         print(f"\n   3개의 기본 Phase가 생성되었습니다:")
-        for phase_id, phase_name, _ in default_phases:
+        for phase_id, phase_name, _, _ in default_phases:
             print(f"   - {phase_name}")
         
         print(f"\n💡 다음 단계:")

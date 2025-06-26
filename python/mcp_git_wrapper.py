@@ -111,6 +111,10 @@ def main():
             "message": f"오류 발생: {str(e)}"
         }
     
+    # UTF-8 출력 설정
+    if sys.platform == 'win32':
+        sys.stdout.reconfigure(encoding='utf-8')
+    
     print(json.dumps(output, ensure_ascii=False))
 
 if __name__ == "__main__":

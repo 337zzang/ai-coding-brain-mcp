@@ -62,7 +62,27 @@ def get_plan(context) -> Optional[Union[Dict, Any]]:
 
 
 def set_plan(context, plan_data: Dict):
-    """context에 plan을 안전하게 설정"""
+    """context에 plan을 안전하게 설정
+    
+    Returns:
+        tuple: (성공여부, 에러메시지)
+    """
+    # helpers 전역 변수 사용
+    helpers = globals().get('helpers', None)
+    
+    # helpers 검증
+    if not helpers:
+        try:
+            # helpers가 없으면 get_context_manager에서 가져오기 시도
+            from core.context_manager import get_context_manager
+            cm = get_context_manager()
+            if hasattr(cm, 'helpers'):
+                helpers = cm.helpers
+            else:
+                return False, "helpers not available in context_manager"
+        except Exception as e:
+            return False, f"Failed to get helpers: {str(e)}"
+    
     if hasattr(context, 'plan'):
         # Plan 객체로 변환 시도
         try:
@@ -80,19 +100,60 @@ def set_plan(context, plan_data: Dict):
                 current_task=plan_data.get('current_task')
             )
             context.plan = plan_obj
-            return True
-        except:
-            # 실패시 metadata에 저장
+            
+            # 캐시도 업데이트
+            if helpers:
+                helpers.update_cache('plan', plan_obj)
+            
+            # context_manager 저장 시도
+            try:
+                from core.context_manager import get_context_manager
+                get_context_manager().save()
+                return True, None
+            except Exception as e:
+                # 저장 실패해도 설정은 성공
+                print(f"⚠️ Context 저장 실패: {e}")
+                return True, f"Plan set but save failed: {str(e)}"
+        except Exception as e:
+            # Plan 객체 변환 실패시 metadata에 저장
+            import traceback
+            error_detail = f"Plan object conversion failed: {str(e)}"
             if not hasattr(context, 'metadata'):
-                return False
+                return False, "Context has no metadata attribute"
             if not context.metadata:
                 context.metadata = {}
             context.metadata['plan'] = plan_data
-            return True
+            
+            # 캐시도 업데이트
+            if helpers:
+                helpers.update_cache('plan', plan_data)
+            
+            # context_manager 저장
+            try:
+                from core.context_manager import get_context_manager
+                get_context_manager().save()
+                return True, None
+            except Exception as save_e:
+                return True, f"Plan set in metadata but save failed: {str(save_e)}"
     elif isinstance(context, dict):
         context['plan'] = plan_data
-        return True
-    return False
+        
+        # 캐시도 업데이트
+        if helpers:
+            try:
+                helpers.update_cache('plan', plan_data)
+            except Exception as cache_e:
+                print(f"⚠️ Cache update failed: {cache_e}")
+        
+        # context_manager 저장
+        try:
+            from core.context_manager import get_context_manager
+            get_context_manager().save()
+            return True, None
+        except Exception as save_e:
+            return True, f"Plan set in dict but save failed: {str(save_e)}"
+    else:
+        return False, f"Unknown context type: {type(context)}"
 
 
 def plan_to_dict(plan) -> Dict:
@@ -658,7 +719,8 @@ def cmd_plan(plan_name: Optional[str] = None, description: Optional[str] = None,
                 task_counter += 1
     
     # context에 plan 설정
-    if set_plan(context, new_plan_dict):
+    success, error_msg = set_plan(context, new_plan_dict)
+    if success:
         # 기존 작업 큐 정리 (새 계획 생성 시)
         if hasattr(context, 'tasks'):
             # 완료된 작업은 보존, next 큐만 초기화
@@ -723,8 +785,12 @@ def cmd_plan(plan_name: Optional[str] = None, description: Optional[str] = None,
         print(f"   1. 'task add phase-1 \"작업명\"'으로 작업 추가")
         print(f"   2. 'next'로 작업 시작")
         print(f"   3. 'task done'으로 작업 완료")
+        
+        # 에러 메시지가 있으면 경고로 표시
+        if error_msg:
+            print(f"\n⚠️ 경고: {error_msg}")
     else:
-        print("❌ 계획 저장 중 오류가 발생했습니다.")
+        print(f"❌ 계획 저장 중 오류가 발생했습니다: {error_msg if error_msg else 'Unknown error'}")
 
 
 if __name__ == "__main__":

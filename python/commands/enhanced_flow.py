@@ -1038,6 +1038,65 @@ def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str,
         except:
             pass  # Wisdom 로드 실패 시 계속 진행
         
+        # 6.5. 프로젝트 문서 자동 읽기 (README.md, PROJECT_CONTEXT.md)
+        try:
+            docs_read = []
+            
+            # README.md 읽기
+            readme_path = os.path.join(project_path, 'README.md')
+            if os.path.exists(readme_path):
+                readme_size = os.path.getsize(readme_path)
+                readme_content = helpers_obj.read_file(readme_path)
+                smart_print(f"\n📄 README.md 읽기 완료 ({readme_size:,} bytes)")
+                
+                # 미리보기 (처음 5줄)
+                preview_lines = readme_content.split('\n')[:5]
+                smart_print("📋 README.md 미리보기:")
+                for line in preview_lines:
+                    smart_print(f"   {line}")
+                if len(readme_content.split('\n')) > 5:
+                    smart_print("   ...")
+                docs_read.append('README.md')
+            
+            # PROJECT_CONTEXT.md 읽기
+            context_path = os.path.join(project_path, 'PROJECT_CONTEXT.md')
+            if os.path.exists(context_path):
+                context_size = os.path.getsize(context_path)
+                context_content = helpers_obj.read_file(context_path)
+                smart_print(f"\n📄 PROJECT_CONTEXT.md 읽기 완료 ({context_size:,} bytes)")
+                
+                # 트리 구조 섹션 찾아서 미리보기
+                lines_doc = context_content.split('\n')
+                tree_section_found = False
+                tree_preview = []
+                
+                for i, line in enumerate(lines_doc):
+                    if "## 📂 디렉토리 트리 구조" in line or "## Project Structure" in line:
+                        tree_section_found = True
+                        tree_preview.append(line)
+                    elif tree_section_found:
+                        tree_preview.append(line)
+                        if len(tree_preview) >= 15:  # 트리 구조 15줄만 미리보기
+                            tree_preview.append("   ...")
+                            break
+                        if line.startswith("## "):  # 다음 섹션 시작
+                            break
+                
+                if tree_preview:
+                    smart_print("📋 디렉토리 트리 구조 미리보기:")
+                    for line in tree_preview[:15]:
+                        smart_print(f"   {line}")
+                        
+                docs_read.append('PROJECT_CONTEXT.md')
+            
+            if docs_read:
+                smart_print(f"\n✅ 프로젝트 문서 {len(docs_read)}개 자동 로드 완료")
+            
+        except Exception as e:
+            debug_log(f"⚠️ 문서 읽기 중 오류: {e}")
+            # 오류가 발생해도 계속 진행
+
+
         # 7. 브리핑 생성 및 표시
         briefing = generate_complete_briefing(context, analysis_result)
         

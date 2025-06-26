@@ -132,6 +132,90 @@ class WebAutomation:
         """컨텍스트 매니저 종료"""
         self.close()
     
+
+    def go_to_page(self, url: str, wait_until: str = "networkidle") -> Dict[str, Any]:
+        """지정된 URL로 페이지 이동
+        
+        Args:
+            url: 이동할 URL
+            wait_until: 페이지 로드 대기 조건
+                - "networkidle": 네트워크 활동이 없을 때까지 대기 (기본값)
+                - "domcontentloaded": DOM 로드 완료 시
+                - "load": load 이벤트 발생 시
+                - "commit": 네비게이션 커밋 시
+        
+        Returns:
+            Dict: 작업 결과
+                - success: 성공 여부
+                - url: 최종 URL (리다이렉트 고려)
+                - title: 페이지 제목
+                - message: 결과 메시지
+                - load_time: 로드 시간 (초)
+        """
+        start_time = datetime.now()
+        
+        try:
+            # 새 페이지 생성 또는 기존 페이지 사용
+            if not self.page:
+                self.page = self.context.new_page()
+                logger.info("새 페이지 생성")
+            
+            # URL 유효성 기본 검사
+            if not url.startswith(('http://', 'https://')):
+                # 프로토콜이 없으면 https 추가
+                url = f"https://{url}"
+                logger.info(f"프로토콜 추가: {url}")
+            
+            # 페이지 이동
+            logger.info(f"페이지 이동 시작: {url}")
+            response = self.page.goto(
+                url, 
+                wait_until=wait_until,
+                timeout=30000  # 30초 타임아웃
+            )
+            
+            # 응답 상태 확인
+            if response and response.status >= 400:
+                logger.warning(f"HTTP 에러: {response.status}")
+            
+            # 페이지 로드 완료 대기
+            self.page.wait_for_load_state(wait_until)
+            
+            # 최종 URL 및 제목 가져오기
+            final_url = self.page.url
+            title = self.page.title()
+            
+            load_time = (datetime.now() - start_time).total_seconds()
+            
+            logger.info(f"페이지 이동 성공: {final_url} (로드 시간: {load_time:.2f}초)")
+            
+            return {
+                "success": True,
+                "url": final_url,
+                "title": title,
+                "message": f"페이지 이동 성공: {title}",
+                "load_time": load_time,
+                "status_code": response.status if response else None
+            }
+            
+        except TimeoutError as e:
+            logger.error(f"페이지 로드 타임아웃: {url}")
+            return {
+                "success": False,
+                "error": "TimeoutError",
+                "message": f"페이지 로드 타임아웃: {url}",
+                "url": url
+            }
+            
+        except Exception as e:
+            logger.error(f"페이지 이동 실패: {str(e)}")
+            return {
+                "success": False,
+                "error": type(e).__name__,
+                "message": f"페이지 이동 실패: {str(e)}",
+                "url": url
+            }
+
     def get_status(self) -> Dict[str, Any]:
         """현재 상태 조회
         
@@ -150,6 +234,7 @@ class WebAutomation:
         }
 
 
+
 # 테스트 코드 (모듈 직접 실행 시)
 if __name__ == "__main__":
     # 로깅 설정
@@ -161,10 +246,21 @@ if __name__ == "__main__":
     try:
         # 컨텍스트 매니저로 사용
         with WebAutomation(headless=True) as browser:
+            # 상태 확인
             status = browser.get_status()
             print(f"✅ 브라우저 상태: {status}")
+            
+            # 페이지 이동 테스트
+            result = browser.go_to_page("https://www.example.com")
+            if result["success"]:
+                print(f"✅ 페이지 이동 성공: {result['title']}")
+                print(f"   URL: {result['url']}")
+                print(f"   로드 시간: {result['load_time']:.2f}초")
+            else:
+                print(f"❌ 페이지 이동 실패: {result['message']}")
             
         print("✅ 브라우저 정상 종료")
         
     except Exception as e:
         print(f"❌ 테스트 실패: {e}")
+

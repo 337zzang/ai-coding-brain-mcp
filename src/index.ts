@@ -23,6 +23,7 @@ import { handleWisdomStats, handleTrackMistake, handleAddBestPractice } from './
 import { BackupHandler } from './handlers/backup-handler';
 import { handleFileAnalyze } from './handlers/file-analyzer-handler';
 import { handleGitStatus, handleGitCommitSmart, handleGitBranchSmart, handleGitRollbackSmart, handleGitPush } from './handlers/git-handlers';
+import { handleGitignoreAnalyze, handleGitignoreUpdate, handleGitignoreCreate } from './handlers/gitignore-handlers';
 
 // 로거 초기화
 const logger = createLogger('ai-coding-brain-mcp');
@@ -135,6 +136,12 @@ class AICodingBrainMCP {
           return await handleGitRollbackSmart(args as { target?: string; safe_mode?: boolean });
         } else if (name === 'git_push') {
           return await handleGitPush(args as { remote?: string; branch?: string });
+        } else if (name === 'gitignore_analyze') {
+          return await handleGitignoreAnalyze();
+        } else if (name === 'gitignore_update') {
+          return await handleGitignoreUpdate(args as { patterns: string[]; category?: string });
+        } else if (name === 'gitignore_create') {
+          return await handleGitignoreCreate(args as { categories?: string[] });
         }
 
         // TODO: Implement remaining tools

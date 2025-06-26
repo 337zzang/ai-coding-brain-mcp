@@ -419,4 +419,56 @@ ProjectAnalyzer를 사용하여 특정 파일의 상세 정보를 분석합니�
             required: []
         }
     },
+    {
+        name: 'gitignore_analyze',
+        description: `프로젝트 분석 및 .gitignore 제안
+
+프로젝트를 분석하여 .gitignore에 추가해야 할 파일/폴더를 제안합니다.
+Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
+        inputSchema: {
+            type: 'object',
+            properties: {},
+            required: []
+        }
+    },
+    {
+        name: 'gitignore_update',
+        description: `.gitignore 파일 업데이트
+
+기존 .gitignore 파일에 새로운 패턴을 추가합니다.
+중복되는 패턴은 자동으로 제외됩니다.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                patterns: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    description: '추가할 패턴 리스트 (예: ["*.log", "*.tmp", "cache/"])'
+                },
+                category: {
+                    type: 'string',
+                    description: '카테고리 이름 (주석으로 추가됨)'
+                }
+            },
+            required: ['patterns']
+        }
+    },
+    {
+        name: 'gitignore_create',
+        description: `새로운 .gitignore 파일 생성
+
+프로젝트에 맞는 .gitignore 파일을 자동으로 생성합니다.
+카테고리를 지정하거나, 지정하지 않으면 모든 일반적인 패턴을 포함합니다.`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                categories: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    description: '포함할 카테고리 (Python, Node.js, IDE, OS, 환경 설정, 로그 및 임시 파일, 백업 파일)'
+                }
+            },
+            required: []
+        }
+    },
 ];

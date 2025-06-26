@@ -306,10 +306,29 @@ def initialize_repl():
             print("✅ Wisdom 시스템 초기화 완료")
             print(f"  - 추적된 실수: {len(wisdom.wisdom_data.get('common_mistakes', {}))}개")
             print(f"  - 오류 패턴: {len(wisdom.wisdom_data.get('error_patterns', {}))}개")
+            
+            # 전역 변수로 설정
+            repl_globals['wisdom'] = wisdom
+            repl_globals['hooks'] = hooks
         except Exception as e:
             print(f"⚠️ Wisdom 초기화 실패: {e}")
             wisdom = None
             hooks = None
+    
+    # 7. Git Version Manager 초기화
+    try:
+        from git_version_manager import GitVersionManager
+        git_manager = GitVersionManager()
+        repl_globals['git_manager'] = git_manager
+        print("✅ Git Version Manager 초기화 완료")
+        
+        # Git 상태 확인
+        status = git_manager.git_status()
+        print(f"  - 브랜치: {status.get('branch', 'unknown')}")
+        print(f"  - 수정된 파일: {len(status.get('modified', []))}개")
+    except Exception as e:
+        print(f"⚠️ Git Manager 초기화 실패: {e}")
+        git_manager = None
     
     print("✅ REPL 초기화 완료!")
     print("💡 사용법: helpers.create_file('test.py') 또는 h.read_file('test.py')")

@@ -492,6 +492,220 @@ class WebAutomation:
             "message": "상태 조회 성공"
         }
 
+    def handle_login(self, login_url: str, username: str, password: str,
+                    username_selector: str = "input[name='username']",
+                    password_selector: str = "input[name='password']", 
+                    submit_selector: str = "button[type='submit']",
+                    success_indicator: Optional[str] = None,
+                    wait_after_login: int = 2000) -> Dict[str, Any]:
+        """범용적인 로그인 프로세스 자동화
+        
+        Args:
+            login_url: 로그인 페이지 URL
+            username: 사용자명/이메일
+            password: 비밀번호
+            username_selector: 아이디 입력 필드 선택자
+            password_selector: 비밀번호 입력 필드 선택자
+            submit_selector: 로그인 버튼 선택자
+            success_indicator: 로그인 성공 판단 기준 (선택자 또는 URL 패턴)
+            wait_after_login: 로그인 후 대기 시간 (밀리초)
+        
+        Returns:
+            Dict: 로그인 결과
+                - success: 로그인 성공 여부
+                - message: 결과 메시지
+                - final_url: 로그인 후 최종 URL
+                - login_time: 로그인 소요 시간
+        """
+        start_time = datetime.now()
+        
+        try:
+            logger.info(f"로그인 프로세스 시작: {login_url}")
+            
+            # 1. 로그인 페이지로 이동
+            goto_result = self.go_to_page(login_url)
+            if not goto_result["success"]:
+                return {
+                    "success": False,
+                    "error": "NavigationError",
+                    "message": f"로그인 페이지 접속 실패: {goto_result['message']}",
+                    "login_url": login_url
+                }
+            
+            # 로그인 전 URL 저장
+            before_login_url = self.page.url
+            
+            # 2. 아이디 입력
+            logger.info("아이디 입력 중...")
+            username_result = self.input_text(
+                username_selector, 
+                username,
+                clear_first=True
+            )
+            if not username_result["success"]:
+                return {
+                    "success": False,
+                    "error": "UsernameInputError", 
+                    "message": f"아이디 입력 실패: {username_result['message']}",
+                    "selector": username_selector
+                }
+            
+            # 3. 비밀번호 입력
+            logger.info("비밀번호 입력 중...")
+            password_result = self.input_text(
+                password_selector,
+                password,
+                clear_first=True
+            )
+            if not password_result["success"]:
+                return {
+                    "success": False,
+                    "error": "PasswordInputError",
+                    "message": f"비밀번호 입력 실패: {password_result['message']}",
+                    "selector": password_selector
+                }
+            
+            # 4. 로그인 버튼 클릭
+            logger.info("로그인 버튼 클릭...")
+            
+            # 네트워크 요청 대기를 위한 준비
+            with self.page.expect_navigation(wait_until="networkidle", timeout=30000):
+                click_result = self.click_element(submit_selector)
+                if not click_result["success"]:
+                    return {
+                        "success": False,
+                        "error": "SubmitClickError",
+                        "message": f"로그인 버튼 클릭 실패: {click_result['message']}",
+                        "selector": submit_selector
+                    }
+            
+            # 5. 로그인 후 대기
+            if wait_after_login > 0:
+                self.page.wait_for_timeout(wait_after_login)
+            
+            # 6. 로그인 성공 여부 확인
+            after_login_url = self.page.url
+            login_success = False
+            success_method = ""
+            
+            # URL 변경 확인
+            if after_login_url != before_login_url and after_login_url != login_url:
+                login_success = True
+                success_method = "URL 변경 감지"
+            
+            # success_indicator가 제공된 경우 추가 확인
+            if success_indicator:
+                if success_indicator.startswith("http"):
+                    # URL 패턴으로 확인
+                    if success_indicator in after_login_url:
+                        login_success = True
+                        success_method = "URL 패턴 일치"
+                else:
+                    # 요소 존재로 확인
+                    try:
+                        self.page.wait_for_selector(success_indicator, timeout=5000)
+                        login_success = True
+                        success_method = "성공 요소 발견"
+                    except:
+                        # 로그인 실패 요소 확인 (옵션)
+                        error_selectors = [
+                            ".error-message",
+                            ".alert-danger", 
+                            "[class*='error']",
+                            "[class*='fail']"
+                        ]
+                        for error_sel in error_selectors:
+                            try:
+                                error_element = self.page.locator(error_sel).first
+                                if error_element.is_visible():
+                                    error_text = error_element.text_content()
+                                    return {
+                                        "success": False,
+                                        "error": "LoginFailed",
+                                        "message": f"로그인 실패: {error_text}",
+                                        "final_url": after_login_url,
+                                        "error_selector": error_sel
+                                    }
+                            except:
+                                continue
+            
+            login_time = (datetime.now() - start_time).total_seconds()
+            
+            if login_success:
+                logger.info(f"로그인 성공! ({success_method})")
+                
+                # 쿠키 정보 (선택적)
+                cookies = self.context.cookies()
+                
+                return {
+                    "success": True,
+                    "message": f"로그인 성공 ({success_method})",
+                    "before_url": before_login_url,
+                    "final_url": after_login_url,
+                    "login_time": login_time,
+                    "cookie_count": len(cookies),
+                    "username": username[:3] + "***"  # 일부만 표시
+                }
+            else:
+                logger.warning("로그인 성공 여부를 확인할 수 없습니다")
+                return {
+                    "success": False,
+                    "error": "LoginVerificationFailed",
+                    "message": "로그인 성공 여부를 확인할 수 없습니다",
+                    "before_url": before_login_url,
+                    "final_url": after_login_url,
+                    "login_time": login_time
+                }
+                
+        except Exception as e:
+            logger.error(f"로그인 프로세스 오류: {str(e)}")
+            return {
+                "success": False,
+                "error": type(e).__name__,
+                "message": f"로그인 프로세스 오류: {str(e)}",
+                "login_url": login_url
+            }
+    
+    def is_logged_in(self, check_selector: Optional[str] = None, 
+                    check_url_pattern: Optional[str] = None) -> bool:
+        """현재 로그인 상태 확인 (보너스 메서드)
+        
+        Args:
+            check_selector: 로그인 상태 확인용 요소 선택자
+            check_url_pattern: 로그인 상태 확인용 URL 패턴
+        
+        Returns:
+            bool: 로그인 여부
+        """
+        try:
+            if not self.page:
+                return False
+            
+            # URL 패턴 확인
+            if check_url_pattern and check_url_pattern in self.page.url:
+                return True
+            
+            # 요소 존재 확인
+            if check_selector:
+                try:
+                    element = self.page.locator(check_selector).first
+                    return element.is_visible()
+                except:
+                    return False
+            
+            # 쿠키 확인 (일반적인 세션 쿠키명들)
+            cookies = self.context.cookies()
+            session_cookie_names = ['session', 'sessionid', 'auth', 'token', 'jwt']
+            for cookie in cookies:
+                if any(name in cookie['name'].lower() for name in session_cookie_names):
+                    return True
+            
+            return False
+            
+        except:
+            return False
+
+
     def _get_locator(self, selector: str, by: str = "css"):
         """선택자 타입에 따라 적절한 locator 반환 (내부 메서드)"""
         if not self.page:

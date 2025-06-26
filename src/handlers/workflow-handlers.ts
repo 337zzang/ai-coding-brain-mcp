@@ -56,13 +56,15 @@ export async function handleFlowProject(params: { project_name: string }): Promi
     const code = `
 ${generateLoadVars()}
 
-# 프로젝트 전환 (enhanced_flow.flow_project 사용)
-from commands.enhanced_flow import flow_project
-result = flow_project("${params.project_name}")
+# 프로젝트 전환 (cmd_flow_with_context 사용)
+result = helpers.cmd_flow_with_context("${params.project_name}")
 
-# context 변수 업데이트 (출력 없이)
-if result.get('success') and result.get('context'):
-    context = result['context']
+# 결과 처리
+if result.get('success'):
+    context = result.get('context')
+    print(f"✅ 프로젝트 '{params.project_name}'로 전환되었습니다.")
+else:
+    print(f"❌ 프로젝트 전환 실패: {result.get('error', '알 수 없는 오류')}")
 
 ${generateSaveVars()}
 `;
@@ -119,3 +121,47 @@ ${generateSaveVars()}
 /**
  * 새로운 도구: 변수 확인
  */
+        case 'flow_project':
+            try {
+                const projectName = params.arguments?.project_name;
+                if (!projectName) {
+                    return {
+                        isError: true,
+                        content: [{
+                            type: 'text',
+                            text: '❌ 프로젝트 이름을 지정해주세요. 예: flow_project("my-project")'
+                        }]
+                    };
+                }
+
+                const result = await pythonBridge.runCommand(
+                    'helpers.cmd_flow_with_context',
+                    [projectName]
+                );
+
+                if (result.success) {
+                    return {
+                        content: [{
+                            type: 'text',
+                            text: result.output || `✅ 프로젝트 '${projectName}'로 전환되었습니다.`
+                        }]
+                    };
+                } else {
+                    return {
+                        isError: true,
+                        content: [{
+                            type: 'text',
+                            text: `❌ 프로젝트 전환 실패: ${result.error || '알 수 없는 오류'}`
+                        }]
+                    };
+                }
+            } catch (error) {
+                return {
+                    isError: true,
+                    content: [{
+                        type: 'text',
+                        text: `❌ flow_project 실행 중 오류: ${error instanceof Error ? error.message : String(error)}`
+                    }]
+                };
+            }
+

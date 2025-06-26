@@ -472,45 +472,22 @@ Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
         },
     {
         name: 'flow_project',
-        description: `프로젝트 전환
+        description: `프로젝트 전환 및 컨텍스트 로드
         
-프로젝트를 전환하고 컨텍스트를 로드합니다.
-내부적으로 helpers.cmd_flow()를 실행합니다.
-
-기능:
-- 프로젝트 전환
-- 이전 프로젝트 컨텍스트 백업
-- 새 프로젝트 컨텍스트 로드
-- file_directory.md 자동 생성/업데이트
-
-사용 예:
-- flow_project("my-project")`,
-        inputSchema: {
-            type: 'object',
-            properties: {
-                project_name: {
-                    type: 'string',
-                    description: '전환할 프로젝트 이름'
-                }
-            },
-            required: ['project_name']
-        }
-    },
-    {
-        name: 'flow_with_context',
-        description: `프로젝트 전환 (컨텍스트 포함)
-        
-프로젝트를 전환하고 전체 컨텍스트를 로드합니다.
+지정된 프로젝트로 전환하고 전체 컨텍스트를 로드합니다.
 내부적으로 helpers.cmd_flow_with_context()를 실행합니다.
 
-기능:
-- 프로젝트 전환
-- 전체 컨텍스트 로드
+주요 기능:
+- 이전 프로젝트 컨텍스트 자동 백업
+- 새 프로젝트로 전환
+- 전체 컨텍스트 로드 (계획, 작업, 분석 정보 등)
+- file_directory.md 자동 생성/업데이트
 - Wisdom 시스템 활성화
 - 프로젝트 브리핑 표시
 
 사용 예:
-- flow_with_context("my-project")`,
+- flow_project("my-project")
+- flow_project("ai-coding-brain-mcp")`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -522,5 +499,4 @@ Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
             required: ['project_name']
         }
     }
-    },
 ];

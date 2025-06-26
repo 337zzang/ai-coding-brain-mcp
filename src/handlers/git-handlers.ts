@@ -54,11 +54,11 @@ export async function handleGitStatus(_args: any): Promise<{ content: Array<{ ty
             let errorOutput = '';
             
             pythonProcess.stdout.on('data', (data: Buffer) => {
-                output += data.toString();
+                output += data.toString('utf8');
             });
             
             pythonProcess.stderr.on('data', (data: Buffer) => {
-                errorOutput += data.toString();
+                errorOutput += data.toString('utf8');
             });
             
             pythonProcess.on('close', (code: number | null) => {
@@ -161,11 +161,11 @@ export async function handleGitCommitSmart(args: { message?: string; auto_add?: 
             let errorOutput = '';
             
             pythonProcess.stdout.on('data', (data: Buffer) => {
-                output += data.toString();
+                output += data.toString('utf8');
             });
             
             pythonProcess.stderr.on('data', (data: Buffer) => {
-                errorOutput += data.toString();
+                errorOutput += data.toString('utf8');
             });
             
             pythonProcess.on('close', (code: number | null) => {

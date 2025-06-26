@@ -1,10 +1,15 @@
-import { ToolHandler } from '../types/mcp-types';
+// API 토글 핸들러
 import { PythonShellManager } from '../utils/python-shell-manager';
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('api-toggle-handler');
-
 const pythonManager = PythonShellManager.getInstance();
+
+// ToolHandler 타입 정의
+interface ToolHandler {
+  name: string;
+  execute: (args: any) => Promise<any>;
+}
 
 export const apiToggleHandler: ToolHandler = {
   name: 'toggle_api',
@@ -25,7 +30,7 @@ result
       
       return result;
     } catch (error) {
-      logger.error('API 토글 오류:', error);
+      logger.error('API 토글 오류: ' + error);
       throw error;
     }
   }
@@ -44,7 +49,7 @@ apis
       
       return result;
     } catch (error) {
-      logger.error('API 목록 조회 오류:', error);
+      logger.error('API 목록 조회 오류: ' + error);
       throw error;
     }
   }

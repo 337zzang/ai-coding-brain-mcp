@@ -520,7 +520,7 @@ Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
       },
       required: ['api_name']
     },
-    handler: require('../handlers/api-toggle-handler').apiToggleHandler
+    // Handler is defined in index.ts
   },
   {
     name: 'list_apis',
@@ -529,6 +529,6 @@ Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
       type: 'object',
       properties: {}
     },
-    handler: require('../handlers/api-toggle-handler').listApisHandler
+    // Handler is defined in index.ts
   },
 ];

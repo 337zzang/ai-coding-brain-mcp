@@ -153,7 +153,6 @@ class AICodingBrainMCP {
             `Tool \'${name}\' not implemented yet.`
           );
         }
-        logger.error(`Tool execution error [${name}]:`, error);
       } catch (error) {
         if (error instanceof McpError) {
         throw error;

@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-06-26 21:37:00
+> 최종 업데이트: 2025-06-27 00:06:15
 
 ## 🎯 프로젝트 개요
 
@@ -51,6 +51,173 @@
 ## 🔧 설정 파일
 
 ### 주요 설정 파일 목록
+
+## 📂 디렉토리 트리 구조
+
+```
+ai-coding-brain-mcp/
+├── docs/
+│   ├── AI_IMAGE_GENERATION_GUIDE.md
+│   ├── API_Safety_Guide.md
+│   ├── DLC_Architecture_Design.md
+│   └── ... (5 more files)
+├── image/
+│   ├── image_metadata.json
+├── memory/
+│   ├── .cache/
+│   │   ├── cache_analyzed_files.json
+│   │   ├── cache_core.json
+│   │   ├── cache_plan.json
+│   │   └── ... (2 more files)
+│   ├── backups/
+│   ├── context_backups/
+│   │   └── 2025-06-26/
+│   │       ├── ai-coding-brain-mcp_context_174328.json
+│   │       ├── ai-coding-brain-mcp_context_174347.json
+│   │       ├── ai-coding-brain-mcp_context_175400.json
+│   ├── docs/
+│   ├── plan_templates/
+│   │   ├── default.json
+│   ├── wisdom/
+│   │   ├── ai-coding-brain-mcp_wisdom.json
+│   └── wisdom_data/
+│       ├── _wisdom.json
+│   ├── coding_flow.md
+│   ├── manifest_backup_20250625.json
+│   ├── manifest_backup_20250626.json
+│   └── ... (6 more files)
+├── python/
+│   ├── analyzers/
+│   │   ├── __init__.py
+│   │   ├── file_analyzer.py
+│   │   ├── manifest_manager.py
+│   │   └── ... (1 more files)
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── image_generator.py
+│   │   ├── public.py
+│   │   └── ... (1 more files)
+│   ├── commands/
+│   │   └── improved/
+│   │       ├── apply_improvements.py
+│   │       ├── next_improved.py
+│   │       ├── plan_improved.py
+│   │       └── ... (2 more files)
+│   │   ├── __init__.py
+│   │   ├── enhanced_flow.py
+│   │   ├── file_analyze.py
+│   │   └── ... (4 more files)
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── context_manager.py
+│   │   └── ... (1 more files)
+│   ├── output/
+│   │   ├── __init__.py
+│   │   ├── handlers.py
+│   ├── vendor/
+│   │   ├── tree-sitter-javascript/
+│   │   │   ├── .github/
+│   │   │   ├── bindings/
+│   │   │   ├── examples/
+│   │   │   ├── queries/
+│   │   │   ├── src/
+│   │   │   └── test/
+│   │   │   ├── grammar.js
+│   │   │   ├── package-lock.json
+│   │   │   ├── package.json
+│   │   │   └── ... (3 more files)
+│   │   ├── tree-sitter-javascript-master/
+│   │   │   ├── .github/
+│   │   │   ├── bindings/
+│   │   │   ├── examples/
+│   │   │   ├── queries/
+│   │   │   ├── src/
+│   │   │   └── test/
+│   │   │   ├── grammar.js
+│   │   │   ├── package-lock.json
+│   │   │   ├── package.json
+│   │   │   └── ... (3 more files)
+│   │   ├── tree-sitter-typescript/
+│   │   │   ├── .github/
+│   │   │   ├── bindings/
+│   │   │   ├── common/
+│   │   │   ├── examples/
+│   │   │   ├── queries/
+│   │   │   ├── test/
+│   │   │   ├── tsx/
+│   │   │   └── typescript/
+│   │   │   ├── package-lock.json
+│   │   │   ├── package.json
+│   │   │   ├── README.md
+│   │   │   └── ... (2 more files)
+│   │   └── tree-sitter-typescript-master/
+│   │       ├── .github/
+│   │       ├── bindings/
+│   │       ├── common/
+│   │       ├── examples/
+│   │       ├── queries/
+│   │       ├── test/
+│   │       ├── tsx/
+│   │       └── typescript/
+│   │       ├── package-lock.json
+│   │       ├── package.json
+│   │       ├── README.md
+│   │       └── ... (2 more files)
+│   └── wisdom_data/
+│       ├── _wisdom.json
+│       ├── ai-coding-brain-mcp_wisdom.json
+│   ├── __init__.py
+│   ├── api_manager.py
+│   ├── ast_parser_helpers.py
+│   └── ... (20 more files)
+├── src/
+│   ├── core/
+│   │   ├── domain/
+│   │   │   ├── entities/
+│   │   │   └── repositories/
+│   │   │   ├── index.ts
+│   │   └── infrastructure/
+│   │       └── filesystem/
+│   │       ├── index.ts
+│   │   ├── index.ts
+│   ├── handlers/
+│   │   ├── api-toggle-handler.ts
+│   │   ├── backup-handler.ts
+│   │   ├── build-handler.ts
+│   │   └── ... (7 more files)
+│   ├── memory/
+│   │   ├── config.ts
+│   ├── services/
+│   │   ├── logger.ts
+│   ├── tools/
+│   │   ├── tool-definitions.ts
+│   ├── types/
+│   │   ├── tool-interfaces.ts
+│   └── utils/
+│       ├── hybrid-helper-system.ts
+│       ├── logger.ts
+│   ├── index.ts
+└── test/
+    ├── app-0.10.38/
+    ├── fixtures/
+    │   ├── __init__.py
+    ├── integration/
+    │   ├── __init__.py
+    │   ├── test_workflow.py
+    └── unit/
+        ├── __init__.py
+        ├── test_commands.py
+        ├── test_context_manager.py
+    ├── conftest.py
+    ├── run_tests.py
+    ├── test_cache_v7.py
+    └── ... (1 more files)
+├── .ai-brain.config.json
+├── .eslintrc.json
+├── claude_desktop_config.json
+└── ... (17 more files)
+```
 - `.ai-brain.config.json`: AI Coding Brain 설정
 - `package.json`: Node.js 프로젝트 설정
 - `tsconfig.json`: TypeScript 설정
@@ -60,14 +227,14 @@
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 477개
+- **전체 파일 수**: 479개
 - **디렉토리 수**: 142개
 - **파일 타입 분포**:
-  - `.py`: 73개 (15.3%)
+  - `.py`: 73개 (15.2%)
   - `.json`: 53개 (11.1%)
-  - `.js`: 38개 (8.0%)
+  - `.js`: 38개 (7.9%)
   - `.ts`: 36개 (7.5%)
-  - `.h`: 32개 (6.7%)
+  - `.md`: 32개 (6.7%)
 
 ## 🚀 빠른 시작
 

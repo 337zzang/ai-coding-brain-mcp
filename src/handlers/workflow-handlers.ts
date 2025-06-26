@@ -10,8 +10,6 @@ interface ToolResponse {
 }
 
 // 글로벌 변수 저장소 키
-const GLOBAL_VARS_KEY = '__mcp_shared_vars__';
-
 /**
  * 변수 저장 코드 생성
  */
@@ -30,7 +28,7 @@ for k, v in list(globals().items()):
             pass
             
 if _user_vars:
-    helpers.update_cache('${GLOBAL_VARS_KEY}', _user_vars)
+    helpers.update_cache('__mcp_shared_vars__', _user_vars)
     print(f"💾 {len(_user_vars)}개 변수 저장됨")
 `;
 }
@@ -41,7 +39,7 @@ if _user_vars:
 function generateLoadVars(): string {
     return `
 # 이전 변수 복원
-_saved_vars = helpers.get_value('${GLOBAL_VARS_KEY}', {})
+_saved_vars = helpers.get_value('__mcp_shared_vars__', {})
 if _saved_vars:
     for k, v in _saved_vars.items():
         globals()[k] = v

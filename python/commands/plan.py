@@ -550,7 +550,7 @@ def cmd_plan(plan_name: Optional[str] = None, description: Optional[str] = None,
     }
     
     # 기본 Phase 3개 생성 (프로젝트 분석 결과 반영)
-    default_phases = [
+    default_phases = [ [
         ('phase-1', 'Phase 1: 분석 및 설계', '현재 상태 분석과 개선 방향 설계', [
             '현재 코드 구조 분석',
             '개선 사항 도출',

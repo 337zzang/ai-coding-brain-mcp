@@ -7,4 +7,10 @@
 
 ## ❌ 자주 하는 실수들
 
+### hardcoded_path (3회)
+- 올바른 방법: 문서를 참고하세요
+
+### console_usage (2회)
+- 올바른 방법: import { logger } from '../utils/logger'; logger.info('메시지');
+
 ## ✅ 베스트 프랙티스

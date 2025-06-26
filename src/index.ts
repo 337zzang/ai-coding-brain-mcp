@@ -23,7 +23,7 @@ import { handleWisdomStats, handleTrackMistake, handleAddBestPractice } from './
 import { BackupHandler } from './handlers/backup-handler';
 import { handleFileAnalyze } from './handlers/file-analyzer-handler';
 import { handleGitStatus, handleGitCommitSmart, handleGitBranchSmart, handleGitRollbackSmart, handleGitPush } from './handlers/git-handlers';
-import { handleGitignoreAnalyze, handleGitignoreUpdate, handleGitignoreCreate } from './handlers/gitignore-handlers';
+import { handleGitignoreAnalyze, handleGitignoreUpdate } from './handlers/gitignore-handlers';
 
 import { apiToggleHandler, listApisHandler } from './handlers/api-toggle-handler';
 // 로거 초기화

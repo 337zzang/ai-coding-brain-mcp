@@ -530,5 +530,31 @@ Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
       properties: {}
     },
     // Handler is defined in index.ts
+  },,
+  {
+    name: 'build_project_context',
+    description: '프로젝트 컨텍스트 문서를 자동으로 생성합니다 (README.md, PROJECT_CONTEXT.md 등)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        update_readme: {
+          type: 'boolean',
+          description: 'README.md 업데이트 여부',
+          default: true
+        },
+        update_context: {
+          type: 'boolean',
+          description: 'PROJECT_CONTEXT.md 업데이트 여부',
+          default: true
+        },
+        include_stats: {
+          type: 'boolean',
+          description: '프로젝트 통계 포함 여부',
+          default: true
+        }
+      },
+      required: []
+    },
+    handler: 'build'
   },
 ];

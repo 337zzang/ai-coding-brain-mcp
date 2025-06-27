@@ -68,35 +68,68 @@ class AIHelpers:
         # cmd_flow 초기화
         self.cmd_flow = None
         
-        try:
-            # Context 관리 (claude_code_ai_brain에서)
-            # TODO: claude_code_ai_brain_v7로 전환 필요
-            from claude_code_ai_brain import (
-                cmd_flow, initialize_context, save_context,
-                update_cache, get_value,
-                track_file_access, track_function_edit,
-                get_work_tracking_summary, _context_manager,
-                cmd_plan, cmd_task, cmd_next
-            )
-            
-            self.cmd_flow = cmd_flow
-            self.initialize_context = initialize_context
-            self.save_context = save_context
-            self.update_cache = update_cache
-            self.get_value = get_value
-            self.track_file_access = track_file_access
-            self.track_function_edit = track_function_edit
-            self.get_work_tracking_summary = get_work_tracking_summary
-            self._context_manager = _context_manager
-            self.cmd_plan = cmd_plan
-            self.cmd_task = cmd_task
-            self.cmd_next = cmd_next
-            
-        except ImportError as e:
-            print(f"⚠️ claude_code_ai_brain 로드 실패: {e}")
-            import traceback
-            traceback.print_exc()
-            self._context_manager = None
+        # 지연 로딩을 위한 헬퍼 함수들
+        def lazy_cmd_flow(*args, **kwargs):
+            if not self.cmd_flow:
+                from claude_code_ai_brain import cmd_flow
+                self.cmd_flow = cmd_flow
+            return self.cmd_flow(*args, **kwargs)
+        
+        def lazy_initialize_context(*args, **kwargs):
+            from claude_code_ai_brain import initialize_context
+            return initialize_context(*args, **kwargs)
+        
+        def lazy_save_context(*args, **kwargs):
+            from claude_code_ai_brain import save_context
+            return save_context(*args, **kwargs)
+        
+        def lazy_update_cache(*args, **kwargs):
+            from claude_code_ai_brain import update_cache
+            return update_cache(*args, **kwargs)
+        
+        def lazy_get_value(*args, **kwargs):
+            from claude_code_ai_brain import get_value
+            return get_value(*args, **kwargs)
+        
+        def lazy_track_file_access(*args, **kwargs):
+            from claude_code_ai_brain import track_file_access
+            return track_file_access(*args, **kwargs)
+        
+        def lazy_track_function_edit(*args, **kwargs):
+            from claude_code_ai_brain import track_function_edit
+            return track_function_edit(*args, **kwargs)
+        
+        def lazy_get_work_tracking_summary(*args, **kwargs):
+            from claude_code_ai_brain import get_work_tracking_summary
+            return get_work_tracking_summary(*args, **kwargs)
+        
+        def lazy_cmd_plan(*args, **kwargs):
+            from claude_code_ai_brain import cmd_plan
+            return cmd_plan(*args, **kwargs)
+        
+        def lazy_cmd_task(*args, **kwargs):
+            from claude_code_ai_brain import cmd_task
+            return cmd_task(*args, **kwargs)
+        
+        def lazy_cmd_next(*args, **kwargs):
+            from claude_code_ai_brain import cmd_next
+            return cmd_next(*args, **kwargs)
+        
+        # 지연 로딩 함수들 할당
+        self.cmd_flow = lazy_cmd_flow
+        self.initialize_context = lazy_initialize_context
+        self.save_context = lazy_save_context
+        self.update_cache = lazy_update_cache
+        self.get_value = lazy_get_value
+        self.track_file_access = lazy_track_file_access
+        self.track_function_edit = lazy_track_function_edit
+        self.get_work_tracking_summary = lazy_get_work_tracking_summary
+        self.cmd_plan = lazy_cmd_plan
+        self.cmd_task = lazy_cmd_task
+        self.cmd_next = lazy_cmd_next
+        
+        # context manager는 나중에 필요할 때 로드
+        self._context_manager = None
         
         try:
             # cmd_flow_with_context 추가 - 더 견고한 방식으로

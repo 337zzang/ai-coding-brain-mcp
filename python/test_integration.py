@@ -58,12 +58,12 @@ def test_context_manager():
         print("✅ 컨텍스트 매니저 초기화 성공")
         
         # 프로젝트 설정
-        cm.set_project("test-project", create_if_not_exists=True)
+        cm.initialize(".", "test-project")
         print(f"✅ 프로젝트 설정: {cm.context.project_name}")
         
         # 컨텍스트 정보
-        context_info = cm.get_context()
-        print(f"✅ 컨텍스트 정보: 프로젝트={context_info.get('project_name')}")
+        context = cm.get_context()
+        print(f"✅ 컨텍스트 정보: 프로젝트={context.project_name}")
         
         return True
     except Exception as e:

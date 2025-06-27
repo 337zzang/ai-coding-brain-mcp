@@ -15,6 +15,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from core.context_manager import get_context_manager
 from commands.plan import get_plan, plan_to_dict
 from commands.task import get_current_task, set_current_task, get_tasks
+from core.workflow_manager import get_workflow_manager
+from core.error_handler import StandardResponse
 
 
 def sync_task_queue_with_plan(context, plan_dict: Dict) -> None:
@@ -117,195 +119,61 @@ def sort_tasks_by_priority_and_dependencies(tasks: List[Dict], plan_dict: Dict) 
     return sorted_tasks
 
 
-def cmd_next() -> None:
-    """/next 명령어 - 다음 작업으로 진행"""
-    context = get_context_manager().context
-    if not context:
-        print("❌ 프로젝트가 선택되지 않았습니다.")
-        return
+def cmd_next() -> StandardResponse:
+    """다음 작업을 시작합니다.
     
-    # 현재 작업 확인
-    current_task_id = get_current_task(context)
-    if current_task_id:
-        print(f"⚠️ 현재 작업 [{current_task_id}]이 진행 중입니다.")
-        print("   먼저 'task done'으로 현재 작업을 완료하세요.")
-        return
+    Returns:
+        StandardResponse: 표준 응답 형식
+    """
+    wm = get_workflow_manager()
     
-    # 계획 확인
-    plan = get_plan(context)
-    if not plan:
-        print("❌ 계획이 없습니다. 먼저 'plan <계획명>'으로 새 계획을 생성하세요.")
-        return
+    # WorkflowManager가 모든 복잡한 로직을 처리
+    result = wm.start_next_task()
     
-    plan_dict = plan_to_dict(plan)
-    
-    # 작업 큐와 계획 동기화
-    sync_task_queue_with_plan(context, plan_dict)
-    
-    # 작업 큐 확인
-    tasks = get_tasks(context)
-    next_tasks = []
-    
-    if hasattr(context, 'tasks') and 'next' in context.tasks:
-        next_tasks = context.tasks['next']
-    elif isinstance(context, dict) and 'tasks' in context and 'next' in context['tasks']:
-        next_tasks = context['tasks']['next']
-    
-    if not next_tasks:
-        print("❌ 대기 중인 작업이 없습니다.")
-        print("   'task add phase-id \"작업명\"'으로 새 작업을 추가하세요.")
+    if result['success']:
+        data = result['data']
         
-        # 미완료 작업 찾기
-        pending_tasks = []
-        for phase_id, phase in plan_dict['phases'].items():
-            for task in phase['tasks']:
-                if task['status'] in ['pending', 'blocked']:
-                    pending_tasks.append({
-                        'id': task['id'],
-                        'phase': phase_id,
-                        'title': task['title'],
-                        'status': task['status']
-                    })
-        
-        if pending_tasks:
-            print("\n📋 미완료 작업 목록:")
-            for task in pending_tasks:
-                status = "🚫" if task['status'] == 'blocked' else "⏳"
-                print(f"   {status} [{task['id']}] {task['title']}")
-        
-        return
-    
-    # 작업 큐를 우선순위와 의존성에 따라 정렬
-    sorted_tasks = sort_tasks_by_priority_and_dependencies(next_tasks, plan_dict)
-    
-    # blocked가 아닌 첫 번째 작업 선택
-    available_task = None
-    for task in sorted_tasks:
-        if not task.get('blocked', False):
-            available_task = task
-            break
-    
-    if not available_task:
-        print("❌ 실행 가능한 작업이 없습니다.")
-        
-        # blocked 작업 표시
-        blocked_tasks = [t for t in sorted_tasks if t.get('blocked', False)]
-        if blocked_tasks:
-            print("\n🚫 의존성으로 인해 차단된 작업:")
-            for task in blocked_tasks[:5]:  # 최대 5개만 표시
-                deps = task.get('dependencies', [])
-                print(f"   [{task['id']}] {task.get('title', 'Unknown')}")
-                print(f"      → 대기중: {', '.join(deps)}")
-        
-        return
-    
-    # 다음 작업 선택
-    next_task_info = available_task
-    task_id = next_task_info['id']
-    phase_id = next_task_info['phase']
-    
-    # Plan에서 작업 찾기
-    task_found = False
-    for p_id, phase in plan_dict['phases'].items():
-        if p_id == phase_id:
-            for task in phase['tasks']:
-                if task['id'] == task_id:
-                    # 작업 상태 업데이트
-                    task['status'] = 'in_progress'
-                    task['started_at'] = dt.datetime.now().isoformat()
-                    task['updated_at'] = dt.datetime.now().isoformat()
+        # 상태별 처리
+        if data.get('status') == 'no_tasks':
+            print("\n📋 대기 중인 작업이 없습니다.")
+            print("\n💡 다음 옵션:")
+            print("   1. 'task add phase-id \"작업명\"'으로 새 작업 추가")
+            print("   2. 'plan'으로 전체 계획 확인")
+            
+        elif data.get('status') == 'blocked':
+            print(f"\n⚠️  {data['message']}")
+            
+            # 차단된 작업 상세 정보 표시
+            bottlenecks = wm.get_bottlenecks()
+            if bottlenecks:
+                print("\n🔒 차단된 작업들:")
+                for task_id, deps in bottlenecks.items():
+                    print(f"   - [{task_id}]: {', '.join(deps)} 완료 대기 중")
                     
-                    # Phase 상태 업데이트
-                    if phase.get('status') == 'pending':
-                        phase['status'] = 'in_progress'
-                    
-                    # 현재 작업 설정
-                    set_current_task(context, task_id)
-                    
-                    # 현재 phase 업데이트
-                    plan_dict['current_phase'] = phase_id
-                    plan_dict['current_task'] = task_id
-                    plan_dict['updated_at'] = dt.datetime.now().isoformat()
-                    
-                    task_found = True
-                    
-                    print(f"\n🚀 작업 시작: [{task['id']}] {task['title']}")
-                    print(f"   Phase: {phase['name']}")
-                    if task.get('description'):
-                        print(f"   설명: {task['description']}")
-                    
-                    # 작업 브리핑
-                    print("\n📋 작업 브리핑:")
-                    print(f"   1. 작업 ID: {task['id']}")
-                    print(f"   2. 제목: {task['title']}")
-                    print(f"   3. Phase: {phase['name']}")
-                    
-                    # 관련 파일 표시 (있을 경우)
-                    if getattr(task, 'related_files', None):
-                        print(f"\n📁 관련 파일:")
-                        for file in task['related_files']:
-                            print(f"   - {file}")
-                    
-                    # 서브태스크 표시 (있을 경우)
-                    if getattr(task, 'subtasks', None):
-                        print(f"\n📌 서브태스크:")
-                        for i, subtask in enumerate(task['subtasks'], 1):
-                            print(f"   {i}. {subtask}")
-                    
-                    print("\n💡 작업 완료 후 'task done'을 실행하세요.")
-                    
-                    break
-            if task_found:
-                break
+        elif data.get('status') == 'started':
+            task = data['task']
+            print(f"\n✅ 작업 시작: [{task.task_id}] {task.name}")
+            
+            if task.description:
+                print(f"\n📝 설명: {task.description}")
+                
+            # 작업 브리핑 표시
+            briefing = data.get('briefing', {})
+            if briefing:
+                print("\n" + "="*60)
+                print("📋 작업 브리핑")
+                print("="*60)
+                
+                for key, value in briefing.items():
+                    if value:
+                        print(f"\n{key}:")
+                        print(value)
+                        
+            # 워크플로우 상태 표시
+            status = wm.get_workflow_status()
+            print(f"\n📊 전체 진행률: {status['progress']:.1f}%")
+            print(f"   Phase {status['current_phase']}: {status['phase_progress']:.1f}% 완료")
     
-    if not task_found:
-        print(f"❌ 작업 [{task_id}]를 계획에서 찾을 수 없습니다.")
-        # next 큐에서 제거
-        if hasattr(context, 'tasks'):
-            context.tasks['next'] = next_tasks[1:]
-        elif isinstance(context, dict):
-            context['tasks']['next'] = next_tasks[1:]
-        print("   작업 큐에서 제거하고 다음 작업을 확인하세요.")
-        return
-    
-    # 변경사항 저장
-    from commands.plan import set_plan
-    set_plan(context, plan_dict)
-    
-    # Phase 변경 (metadata 사용)
-    if hasattr(context, 'metadata'):
-        if not context.metadata:
-            context.metadata = {}
-        context.metadata['phase'] = 'development'
-    
-    # 작업 추적 시작
-    if hasattr(context, 'work_tracking'):
-        if hasattr(context.work_tracking, 'current_task_work'):
-            context.work_tracking.current_task_work = {
-                'task_id': task_id,
-                'start_time': dt.datetime.now().isoformat(),
-                'files_accessed': [],
-                'functions_edited': [],
-                'operations': []
-            }
-    elif isinstance(context, dict):
-        if 'work_tracking' not in context:
-            context['work_tracking'] = {}
-        context['work_tracking']['current_task_work'] = {
-            'task_id': task_id,
-            'start_time': dt.datetime.now().isoformat(),
-            'files_accessed': [],
-            'functions_edited': [],
-            'operations': []
-        }
-    
-    get_context_manager().save()
-    
-    # 남은 작업 수 표시
-    remaining_tasks = len(next_tasks) - 1
-    if remaining_tasks > 0:
-        print(f"\n📊 대기 중인 작업: {remaining_tasks}개")
-
-
+    return result
 if __name__ == "__main__":
     cmd_next()

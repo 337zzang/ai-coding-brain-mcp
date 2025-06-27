@@ -7,6 +7,9 @@
 
 ## ❌ 자주 하는 실수들
 
+### dict_conversion (1회)
+- 올바른 방법: 문서를 참고하세요
+
 ## ✅ 베스트 프랙티스
 
 ### architecture
@@ -29,3 +32,6 @@
 
 ### task_management
 - Task 상태 이력을 추적하여 작업 분석 및 시간 추정 정확도 향상
+
+### refactoring
+- WorkflowManager 사용으로 코드 단순화

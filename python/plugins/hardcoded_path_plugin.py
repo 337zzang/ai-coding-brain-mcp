@@ -86,7 +86,8 @@ class HardcodedPathPlugin(WisdomPlugin):
                                 "filename": filename or "unknown",
                                 "pattern_name": pattern.name,
                                 "matched_path": match.group(0)
-                            }
+                            },
+                            pattern=pattern  # pattern 객체 추가
                         ))
         
         return detections

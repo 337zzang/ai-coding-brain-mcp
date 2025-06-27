@@ -99,7 +99,8 @@ class ConsoleUsagePlugin(WisdomPlugin):
                             metadata={
                                 "filename": filename or "unknown",
                                 "pattern_name": pattern.name
-                            }
+                            },
+                            pattern=pattern  # pattern 객체 추가
                         ))
         
         return detections

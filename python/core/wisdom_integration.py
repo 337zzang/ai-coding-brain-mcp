@@ -59,12 +59,12 @@ class WisdomIntegration:
             return True, code, {"status": "clean", "issues": []}
             
         # 심각한 문제가 있는지 확인
-        critical_issues = [d for d in detections if d.pattern.severity in ["critical", "high"]]
+        critical_issues = [d for d in detections if (d.pattern.severity if d.pattern else d.severity) in ["critical", "high"]]
         
         if critical_issues:
             print("\n⚠️ Wisdom System이 심각한 문제를 감지했습니다:")
             for issue in critical_issues:
-                print(f"  - {issue.pattern.description} (line {issue.line_number})")
+                print(f"  - {(issue.pattern.description if issue.pattern else issue.message)} (line {issue.line_number})")
                 
             # 자동 수정 제안
             print("\n🔧 자동 수정을 적용하시겠습니까? (권장)")
@@ -81,7 +81,7 @@ class WisdomIntegration:
                 return True, fix_result.fixed_code, self._create_analysis_report(detections, fix_result)
                 
         # 경미한 문제만 있는 경우
-        warnings = [d for d in detections if d.pattern.severity in ["medium", "low"]]
+        warnings = [d for d in detections if (d.pattern.severity if d.pattern else d.severity) in ["medium", "low"]]
         if warnings:
             print(f"\n💡 {len(warnings)}개의 경미한 문제가 감지되었습니다.")
             
@@ -99,10 +99,10 @@ class WisdomIntegration:
         
         # 심각도별 분류
         for d in detections:
-            severity = d.pattern.severity
+            severity = d.pattern.severity if d.pattern else d.severity
             report["by_severity"][severity] = report["by_severity"].get(severity, 0) + 1
             
-            pattern_id = d.pattern.id
+            pattern_id = d.pattern.key if d.pattern else d.pattern_key
             report["by_type"][pattern_id] = report["by_type"].get(pattern_id, 0) + 1
             
         # 수정 정보

@@ -20,6 +20,7 @@ class Detection:
     fix_hint: Optional[str] = None    # 수정 힌트
     auto_fix: Optional[str] = None    # 자동 수정 코드
     metadata: Dict[str, Any] = field(default_factory=dict)
+    pattern: Optional['WisdomPattern'] = None  # 연관된 패턴 객체
 
 @dataclass
 class WisdomPattern:

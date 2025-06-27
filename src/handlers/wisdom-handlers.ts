@@ -14,7 +14,8 @@ const execFileAsync = promisify(execFile);
  * Get Python path from config
  */
 function getPythonPath(): string {
-    const configPath = path.join(process.cwd(), '.ai-brain.config.json');
+    const projectRoot = getProjectRoot();
+    const configPath = path.join(projectRoot, '.ai-brain.config.json');
     
     if (fs.existsSync(configPath)) {
         try {
@@ -30,10 +31,36 @@ function getPythonPath(): string {
 }
 
 /**
+ * Get project root directory
+ */
+function getProjectRoot(): string {
+    let projectRoot = process.cwd();
+    
+    // ai-coding-brain-mcp 프로젝트 디렉토리 찾기
+    if (!projectRoot.includes('ai-coding-brain-mcp')) {
+        // 알려진 위치에서 찾기
+        const possiblePaths = [
+            'C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp',
+            path.join(process.env['USERPROFILE'] || '', 'Desktop', 'ai-coding-brain-mcp'),
+            path.join(process.env['USERPROFILE'] || '', 'Documents', 'ai-coding-brain-mcp')
+        ];
+        
+        for (const possiblePath of possiblePaths) {
+            if (fs.existsSync(path.join(possiblePath, '.ai-brain.config.json'))) {
+                projectRoot = possiblePath;
+                break;
+            }
+        }
+    }
+    
+    return projectRoot;
+}
+
+/**
  * Get Python environment
  */
 function getPythonEnv(): NodeJS.ProcessEnv {
-    const projectRoot = process.cwd();
+    const projectRoot = getProjectRoot();
     return {
         ...process.env,
         PYTHONPATH: path.join(projectRoot, 'python'),
@@ -49,7 +76,7 @@ function getPythonEnv(): NodeJS.ProcessEnv {
 async function executePythonCode(code: string): Promise<string> {
     try {
         const pythonPath = getPythonPath();
-        const projectRoot = process.cwd();
+        const projectRoot = getProjectRoot();
         
         // Add proper path setup to the code
         const fullCode = `

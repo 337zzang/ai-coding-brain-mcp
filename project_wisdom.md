@@ -16,10 +16,4 @@
 ### direct_flow (2회)
 - 올바른 방법: execute_code: helpers.cmd_flow_with_context('project-name')
 
-### test_mistake (1회)
-- 올바른 방법: 문서를 참고하세요
-
 ## ✅ 베스트 프랙티스
-
-### workflow
-- MCP 도구는 execute_code 외부에서 사용

@@ -93,18 +93,35 @@ export async function handleGitStatus(_args: any): Promise<{ content: Array<{ ty
         
         const gitResult = await executePythonScript(scriptPath, ['status'], projectRoot);
         
-        if (gitResult.success) {
+        // git_status는 success 필드가 없을 수 있으므로 branch 필드로 판단
+        if (gitResult.branch !== undefined) {
+            // 상태 메시지 생성
+            let message = `🌿 **Git 상태**\n\n`;
+            message += `• 브랜치: ${gitResult.branch}\n`;
+            message += `• 수정된 파일: ${gitResult.modified?.length || 0}개\n`;
+            message += `• 스테이징된 파일: ${gitResult.staged?.length || 0}개\n`;
+            message += `• 추적되지 않는 파일: ${gitResult.untracked?.length || 0}개\n`;
+            message += `• 상태: ${gitResult.clean ? '✅ 깨끗함' : '⚠️ 변경사항 있음'}`;
+            
             return {
                 content: [{
                     type: 'text',
-                    text: gitResult.message || JSON.stringify(gitResult, null, 2)
+                    text: message
                 }]
             };
-        } else {
+        } else if (gitResult.success === false) {
             return {
                 content: [{
                     type: 'text',
                     text: `Git 상태 확인 실패: ${gitResult.message}`
+                }]
+            };
+        } else {
+            // 기타 경우 JSON 그대로 출력
+            return {
+                content: [{
+                    type: 'text',
+                    text: JSON.stringify(gitResult, null, 2)
                 }]
             };
         }

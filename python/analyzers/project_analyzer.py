@@ -18,7 +18,7 @@ python_path = Path(__file__).parent.parent
 if str(python_path) not in sys.path:
     sys.path.insert(0, str(python_path))
 
-from analyzers.file_analyzer import FileAnalyzer
+from python.analyzers.unified_analyzer import UnifiedAnalyzer
 from analyzers.manifest_manager import ManifestManager
 
 
@@ -33,7 +33,7 @@ class ProjectAnalyzer:
         self.project_root = Path(project_root).resolve()
         self.project_name = self.project_root.name
         self.manifest_manager = ManifestManager(self.project_root)
-        self.file_analyzer = FileAnalyzer()
+        self.file_analyzer = UnifiedAnalyzer(wisdom_manager=self.wisdom_manager)
         
         # 무시할 디렉토리/파일 패턴
         self.ignore_dirs = {
@@ -163,145 +163,60 @@ class ProjectAnalyzer:
         """개별 파일을 분석합니다."""
         absolute_path = file_info['absolute_path']
         
-        # FileAnalyzer를 사용하여 분석
-        analysis = self.file_analyzer.analyze(absolute_path)
-        
-        # 기본 파일 정보와 분석 결과 병합
-        return {
-            'path': relative_path,
-            'last_modified': file_info['last_modified'],
-            'size': file_info['size'],
-            'language': self._detect_language(relative_path),
-            **analysis
-        }
-    
-    def _detect_language(self, file_path: str) -> str:
-        """파일 확장자로 언어를 감지합니다."""
-        ext = Path(file_path).suffix.lower()
-        language_map = {
-            '.py': 'python',
-            '.ts': 'typescript',
-            '.tsx': 'typescript',
-            '.js': 'javascript',
-            '.jsx': 'javascript'
-        }
-        return language_map.get(ext, 'unknown')
-    
-    def _build_directory_structure(self, file_paths: Set[str]) -> Dict[str, Any]:
-        """디렉토리 구조를 구축합니다."""
-        structure = {}
-        
-        for file_path in file_paths:
-            parts = Path(file_path).parts
-            current = structure
+        try:
+            # UnifiedAnalyzer를 사용하여 분석
+            analysis_result = self.file_analyzer.analyze(absolute_path)
             
-            for i, part in enumerate(parts[:-1]):  # 파일명 제외
-                if part not in current:
-                    current[part] = {
-                        'type': 'directory',
-                        'file_count': 0,
-                        'subdirs': {}
-                    }
-                current[part]['file_count'] += 1
-                current = current[part]['subdirs']
-        
-        return structure
-    
-    def _build_dependency_graph(self, files: Dict[str, Dict[str, Any]]) -> Dict[str, List[str]]:
-        """파일 간 의존성 그래프를 구축합니다."""
-        graph = {}
-        
-        for file_path, file_info in files.items():
-            imports = file_info.get('imports', {})
-            internal_deps = imports.get('internal', [])
+            if 'error' in analysis_result:
+                logger.warning(f"파일 분석 실패: {absolute_path} - {analysis_result['error']}")
+                # 에러가 있어도 기본 정보는 반환
+                return {
+                    'path': relative_path,
+                    'last_modified': file_info['last_modified'],
+                    'size': file_info['size'],
+                    'language': self._detect_language(relative_path),
+                    'summary': f"분석 실패: {analysis_result['error']}",
+                    'imports': {'internal': [], 'external': []},
+                    'classes': [],
+                    'functions': []
+                }
+                
+            # UnifiedAnalyzer 결과를 기존 형식으로 변환
+            file_result = {
+                'path': relative_path,
+                'last_modified': file_info['last_modified'],
+                'size': file_info['size'],
+                'language': analysis_result.get('language', self._detect_language(relative_path)),
+                'summary': analysis_result.get('summary', ''),
+                'imports': analysis_result.get('structure', {}).get('imports', {'internal': [], 'external': []}),
+                'classes': analysis_result.get('structure', {}).get('classes', []),
+                'functions': analysis_result.get('structure', {}).get('functions', []),
+                'wisdom_insights': analysis_result.get('wisdom_insights', {})
+            }
             
-            # 내부 의존성만 그래프에 포함
-            if internal_deps:
-                graph[file_path] = internal_deps
-        
-        return {'graph': graph}
-    
-    def get_manifest(self) -> Dict[str, Any]:
-        """현재 manifest를 반환합니다."""
-        return self.manifest_manager.load()
-    
-    def get_briefing_data(self) -> Dict[str, Any]:
-        """브리핑용 요약 데이터를 생성합니다."""
-        manifest = self.get_manifest()
-        
-        # 파일 타입별 통계
-        file_stats = {'python': 0, 'typescript': 0, 'javascript': 0, 'other': 0}
-        for file_info in manifest.get('files', {}).values():
-            lang = file_info.get('language', 'other')
-            if lang in file_stats:
-                file_stats[lang] += 1
-            else:
-                file_stats['other'] += 1
-        
-        return {
-            'project_name': manifest.get('project_name', 'Unknown'),
-            'last_analyzed': manifest.get('last_analyzed', 'Never'),
-            'total_files': manifest.get('total_files', 0),
-            'analyzed_files': manifest.get('analyzed_files', 0),
-            'file_stats': file_stats,
-            'structure': manifest.get('structure', {})
-        }
-    
-    def generate_structure_report(self, format: str = 'markdown') -> str:
-        """파일 구조 리포트를 생성합니다."""
-        manifest = self.get_manifest()
-        files = manifest.get('files', {})
-        
-        if format == 'markdown':
-            lines = [f"# {manifest.get('project_name', 'Project')} File Structure\n"]
-            lines.append(f"*Last analyzed: {manifest.get('last_analyzed', 'Never')}*\n")
-            lines.append(f"**Total files**: {manifest.get('total_files', 0)}\n")
+            # 품질 정보도 추가 (새로운 기능)
+            if 'quality' in analysis_result:
+                file_result['quality'] = {
+                    'issues_count': len(analysis_result['quality'].get('issues', [])),
+                    'complexity': analysis_result['quality'].get('stats', {}).get('complexity', 0),
+                    'code_lines': analysis_result['quality'].get('stats', {}).get('code_lines', 0)
+                }
+                
+            return file_result
             
-            # 디렉토리별로 그룹화
-            dirs = {}
-            for file_path in sorted(files.keys()):
-                dir_path = str(Path(file_path).parent)
-                if dir_path not in dirs:
-                    dirs[dir_path] = []
-                dirs[dir_path].append(file_path)
-            
-            # 디렉토리 트리 생성
-            for dir_path in sorted(dirs.keys()):
-                lines.append(f"\n## {dir_path}/")
-                for file_path in dirs[dir_path]:
-                    file_info = files[file_path]
-                    summary = file_info.get('summary', 'No summary')
-                    lines.append(f"- **{Path(file_path).name}**: {summary}")
-            
-            return '\n'.join(lines)
-        
-        return "Unsupported format"
-    
-    def get_file_context(self, file_path: str) -> Optional[str]:
-        """특정 파일의 컨텍스트 정보를 생성합니다."""
-        manifest = self.get_manifest()
-        files = manifest.get('files', {})
-        
-        # 상대 경로로 정규화
-        normalized_path = str(Path(file_path).as_posix())
-        
-        if normalized_path not in files:
-            return None
-        
-        file_info = files[normalized_path]
-        deps_graph = manifest.get('dependencies', {}).get('graph', {})
-        
-        # 이 파일이 의존하는 파일들
-        dependencies = deps_graph.get(normalized_path, [])
-        
-        # 이 파일을 의존하는 파일들
-        dependents = [
-            f for f, deps in deps_graph.items() 
-            if normalized_path in deps
-        ]
-        
-        context = f"""## {normalized_path}
-
+        except Exception as e:
+            logger.error(f"파일 분석 중 오류 발생: {absolute_path} - {str(e)}")
+            # 오류가 발생해도 기본 정보는 반환
+            return {
+                'path': relative_path,
+                'last_modified': file_info['last_modified'],
+                'size': file_info['size'],
+                'language': self._detect_language(relative_path),
+                'summary': f"분석 오류: {str(e)}",
+                'imports': {'internal': [], 'external': []},
+                'classes': [],
+                'functions': []
+            }
 **요약**: {file_info.get('summary', 'No summary')}
 **언어**: {file_info.get('language', 'unknown')}
 **크기**: {file_info.get('size', 0)} bytes

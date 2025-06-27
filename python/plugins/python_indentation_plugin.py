@@ -24,7 +24,7 @@ class PythonIndentationPlugin(WisdomPlugin):
                 id="manual_indent",
                 type="error",
                 severity="high",
-                pattern=r"lines\[\d+\]\s*=\s*['"]\s+['"]\s*\+\s*lines\[\d+\]",
+                pattern=r"lines\[\d+\]\s*=\s*['\"]\\s+['\"]\\s*\+\\s*lines\[\d+\]",
                 description="수동 들여쓰기 조작 감지",
                 fix_suggestion="AST 기반 도구(replace_block) 사용"
             ),
@@ -46,7 +46,7 @@ class PythonIndentationPlugin(WisdomPlugin):
             )
         ]
         
-    def check(self, code: str, filename: str) -> List[Detection]:
+    def analyze(self, code: str, filename: str) -> List[Detection]:
         """코드에서 들여쓰기 문제 검사"""
         detections = []
         lines = code.split('\n')
@@ -89,7 +89,7 @@ class PythonIndentationPlugin(WisdomPlugin):
             
         return detections
         
-    def fix(self, code: str, detection: Detection) -> Optional[str]:
+    def auto_fix(self, code: str, detection: Detection) -> Optional[str]:
         """들여쓰기 문제 자동 수정"""
         if detection.pattern.id == "tab_character":
             # 탭을 공백 4개로 변경

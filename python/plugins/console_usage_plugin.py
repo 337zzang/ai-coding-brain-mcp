@@ -54,7 +54,7 @@ class ConsoleUsagePlugin(WisdomPlugin):
             )
         ]
         
-    def check(self, code: str, filename: str) -> List[Detection]:
+    def analyze(self, code: str, filename: str) -> List[Detection]:
         """코드에서 console 사용 검사"""
         # TypeScript/JavaScript 파일만 검사
         if not filename.endswith(('.ts', '.js', '.tsx', '.jsx')):
@@ -98,7 +98,7 @@ class ConsoleUsagePlugin(WisdomPlugin):
         
         return single_quotes or double_quotes
         
-    def fix(self, code: str, detection: Detection) -> Optional[str]:
+    def auto_fix(self, code: str, detection: Detection) -> Optional[str]:
         """Console 사용을 Logger로 자동 변환"""
         replacements = {
             "console_log": ("console.log", "logger.info"),

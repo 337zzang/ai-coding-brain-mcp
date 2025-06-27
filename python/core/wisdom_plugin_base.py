@@ -164,6 +164,21 @@ class PluginManager:
             all_patterns.extend(plugin.get_patterns())
         return all_patterns
     
+    def get_plugin(self, plugin_name: str) -> Optional[WisdomPlugin]:
+        """플러그인 이름으로 플러그인 가져오기"""
+        return self.plugins.get(plugin_name)
+    
+    def check_all(self, code: str, filename: str) -> List[Detection]:
+        """analyze_all의 별칭 (하위 호환성)"""
+        return self.analyze_all(code, filename)
+    
+    def get_all_statistics(self) -> Dict[str, Dict]:
+        """모든 플러그인의 통계 반환"""
+        stats = {}
+        for name, plugin in self.plugins.items():
+            stats[name] = plugin.get_statistics()
+        return stats
+    
     def list_plugins(self) -> List[Dict[str, Any]]:
         """등록된 플러그인 목록 반환"""
         return [plugin.plugin_info for plugin in self.plugins.values()]

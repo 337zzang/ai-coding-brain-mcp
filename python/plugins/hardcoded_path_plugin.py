@@ -25,7 +25,7 @@ class HardcodedPathPlugin(WisdomPlugin):
                 id="windows_path",
                 type="warning",
                 severity="high",
-                pattern=r"['"][A-Za-z]:\\\\[^'"]+['"]",
+                pattern=r"['\"][A-Za-z]:\\\\[^'\"]+['\"]",
                 description="Windows 절대 경로",
                 fix_suggestion="os.path.join() 또는 pathlib 사용"
             ),
@@ -33,7 +33,7 @@ class HardcodedPathPlugin(WisdomPlugin):
                 id="unix_path",
                 type="warning",
                 severity="high",
-                pattern=r"['"]/(usr|home|var|etc|opt)/[^'"]+['"]",
+                pattern=r"['\"]/(usr|home|var|etc|opt)/[^'\"]+['\"]",
                 description="Unix 절대 경로",
                 fix_suggestion="os.path.join() 또는 pathlib 사용"
             ),
@@ -41,7 +41,7 @@ class HardcodedPathPlugin(WisdomPlugin):
                 id="home_path",
                 type="warning",
                 severity="medium",
-                pattern=r"['"]~/[^'"]+['"]",
+                pattern=r"['\"]~/[^'\"]+['\"]",
                 description="홈 디렉토리 경로",
                 fix_suggestion="os.path.expanduser() 사용"
             )
@@ -92,7 +92,7 @@ class HardcodedPathPlugin(WisdomPlugin):
         
     def fix(self, code: str, detection: Detection) -> Optional[str]:
         """하드코딩된 경로를 동적 경로로 변환"""
-        matched = detection.matched_text.strip('\'"\'')
+        matched = detection.matched_text.strip('"\'')
         
         if detection.pattern.id == "windows_path":
             # Windows 경로를 os.path.join으로 변환

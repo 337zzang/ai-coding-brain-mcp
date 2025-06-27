@@ -35,7 +35,7 @@ if current_dir not in sys.path:
 try:
     from project_wisdom import get_wisdom_manager
     from wisdom_hooks import get_wisdom_hooks
-    from core.wisdom_integration import wisdom_integration
+    from python.core.wisdom_integration import wisdom_integration
     WISDOM_AVAILABLE = True
 except ImportError:
     WISDOM_AVAILABLE = False

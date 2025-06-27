@@ -23,9 +23,9 @@ class WisdomIntegration:
         
     def _setup_default_plugins(self):
         """기본 플러그인 등록"""
-        self.plugin_manager.register_plugin(PythonIndentationPlugin())
-        self.plugin_manager.register_plugin(ConsoleUsagePlugin())
-        self.plugin_manager.register_plugin(HardcodedPathPlugin())
+        self.plugin_manager.register(PythonIndentationPlugin())
+        self.plugin_manager.register(ConsoleUsagePlugin())
+        self.plugin_manager.register(HardcodedPathPlugin())
         
         # AutoFixer 초기화
         self.auto_fixer = WisdomAutoFixer(self.plugin_manager)

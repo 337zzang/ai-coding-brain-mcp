@@ -230,75 +230,75 @@ class UnifiedContextManager:
         if not self.context or not self.memory_root:
             print("❌ 저장 실패: 컨텍스트가 없거나 메모리 루트가 설정되지 않았습니다.")
             return False
-        
+
         try:
-            # 업데이트 시간 갱신
-            self.context.updated_at = dt.datetime.now()
-            if not self.context.metadata:
-                self.context.metadata = {}
-            self.context.metadata['last_saved'] = dt.datetime.now().isoformat()
-            
-            cache_paths = self._get_cache_file_paths()
-            
-            # ProjectContext를 dict로 변환
-            context_dict = self.context.dict()
-            
-            # 1. 핵심 정보 저장 (cache_core.json)
-            core_data = {
-                'project_name': context_dict['project_name'],
-                'project_id': context_dict['project_id'],
-                'project_path': context_dict['project_path'],
-                'memory_root': context_dict['memory_root'],
-                'created_at': context_dict['created_at'],
-                'updated_at': context_dict['updated_at'],
-                'version': context_dict.get('version', '8.0'),
-                'current_focus': context_dict.get('current_focus', ''),
-                'current_task': context_dict.get('current_task'),
-                'coding_experiences': context_dict.get('coding_experiences', []),
-                'progress': context_dict.get('progress', {}),
-                'phase_reports': context_dict.get('phase_reports', {}),
-                'error_log': context_dict.get('error_log', []),
-                'file_access_history': context_dict.get('file_access_history', []),
-                'metadata': context_dict.get('metadata', {})
-            }
-            
-            with open(cache_paths['core'], 'w', encoding='utf-8') as f:
-                json.dump(core_data, f, indent=2, ensure_ascii=False, default=str)
-            
-            # 2. 분석 파일 저장 (cache_analyzed_files.json)
-            with open(cache_paths['analyzed_files'], 'w', encoding='utf-8') as f:
-                json.dump(context_dict.get('analyzed_files', {}), f, indent=2, ensure_ascii=False, default=str)
-            
-            # 3. 작업 추적 저장 (cache_work_tracking.json)
-            with open(cache_paths['work_tracking'], 'w', encoding='utf-8') as f:
-                json.dump(context_dict.get('work_tracking', {}), f, indent=2, ensure_ascii=False, default=str)
-            
+        # 업데이트 시간 갱신
+        self.context.updated_at = dt.datetime.now()
+        if not self.context.metadata:
+        self.context.metadata = {}
+        self.context.metadata['last_saved'] = dt.datetime.now().isoformat()
+
+        cache_paths = self._get_cache_file_paths()
+
+        # ProjectContext를 dict로 변환
+        context_dict = self.context.dict()
+
+        # 1. 핵심 정보 저장 (cache_core.json)
+        core_data = {
+        'project_name': context_dict['project_name'],
+        'project_id': context_dict['project_id'],
+        'project_path': context_dict['project_path'],
+        'memory_root': context_dict['memory_root'],
+        'created_at': context_dict['created_at'],
+        'updated_at': context_dict['updated_at'],
+        'version': context_dict.get('version', '8.0'),
+        'current_focus': context_dict.get('current_focus', ''),
+        'current_task': context_dict.get('current_task'),
+        'coding_experiences': context_dict.get('coding_experiences', []),
+        'progress': context_dict.get('progress', {}),
+        'phase_reports': context_dict.get('phase_reports', {}),
+        'error_log': context_dict.get('error_log', []),
+        'file_access_history': context_dict.get('file_access_history', []),
+        'metadata': context_dict.get('metadata', {})
+        }
+
+        with open(cache_paths['core'], 'w', encoding='utf-8') as f:
+        json.dump(core_data, f, indent=2, ensure_ascii=False, default=str)
+
+        # 2. 분석 파일 저장 (cache_analyzed_files.json)
+        with open(cache_paths['analyzed_files'], 'w', encoding='utf-8') as f:
+        json.dump(context_dict.get('analyzed_files', {}), f, indent=2, ensure_ascii=False, default=str)
+
+        # 3. 작업 추적 저장 (cache_work_tracking.json)
+        with open(cache_paths['work_tracking'], 'w', encoding='utf-8') as f:
+        json.dump(context_dict.get('work_tracking', {}), f, indent=2, ensure_ascii=False, default=str)
+
         # # 4. 작업 저장 (cache_tasks.json) # Plan에서 파생되므로 제거
-            with open(cache_paths['tasks'], 'w', encoding='utf-8') as f:
-                json.dump(context_dict.get('tasks', {}), f, indent=2, ensure_ascii=False, default=str)
-            
-            # 5. 계획 저장 (cache_plan.json)
-            plan_data = {
-                'plan': context_dict.get('plan'),
-                'plan_history': context_dict.get('plan_history', [])
-            }
-            with open(cache_paths['plan'], 'w', encoding='utf-8') as f:
-                json.dump(plan_data, f, indent=2, ensure_ascii=False, default=str)
-            
-            # print(f"✅ 캐시 저장 완료:")
-            # for name, path in cache_paths.items():
-            #     if path.exists():
-            #         size = path.stat().st_size
-            #         print(f"   • {name}: {size} bytes")
-            
-            return True
-            
+        # with open(cache_paths['tasks'], 'w', encoding='utf-8') as f:
+        #     json.dump(context_dict.get('tasks', {}), f, indent=2, ensure_ascii=False, default=str)
+
+        # 5. 계획 저장 (cache_plan.json)
+        plan_data = {
+        'plan': context_dict.get('plan'),
+        'plan_history': context_dict.get('plan_history', [])
+        }
+        with open(cache_paths['plan'], 'w', encoding='utf-8') as f:
+        json.dump(plan_data, f, indent=2, ensure_ascii=False, default=str)
+
+        # print(f"✅ 캐시 저장 완료:")
+        # for name, path in cache_paths.items():
+        #     if path.exists():
+        #         size = path.stat().st_size
+        #         print(f"   • {name}: {size} bytes")
+
+        return True
+
         except Exception as e:
-            print(f"❌ 캐시 저장 실패: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
-    
+        print(f"❌ 캐시 저장 실패: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
     def get_context(self) -> ProjectContext:
         """현재 컨텍스트 반환"""
         return self.context

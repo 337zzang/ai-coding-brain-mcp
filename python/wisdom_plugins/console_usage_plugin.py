@@ -28,11 +28,7 @@ class ConsoleUsagePlugin(WisdomPlugin):
                 severity="medium",
                 category="style",
                 fix_hint="logger.info()로 변경",
-                auto_fixable=True,
-                examples=[
-                    {"bad": "console.log('message')", 
-                     "good": "logger.info('message')"}
-                ]
+                auto_fixable=True
             ),
             WisdomPattern(
                 key="console_error",
@@ -41,24 +37,6 @@ class ConsoleUsagePlugin(WisdomPlugin):
                 severity="medium",
                 category="style",
                 fix_hint="logger.error()로 변경",
-                auto_fixable=True
-            ),
-            WisdomPattern(
-                key="console_warn",
-                name="console.warn 사용",
-                description="console.warn 대신 logger.warning 사용 권장",
-                severity="medium",
-                category="style",
-                fix_hint="logger.warning()로 변경",
-                auto_fixable=True
-            ),
-            WisdomPattern(
-                key="console_debug",
-                name="console.debug 사용",
-                description="console.debug 대신 logger.debug 사용 권장",
-                severity="low",
-                category="style",
-                fix_hint="logger.debug()로 변경",
                 auto_fixable=True
             ),
             WisdomPattern(
@@ -77,87 +55,47 @@ class ConsoleUsagePlugin(WisdomPlugin):
         detections = []
         lines = code.split('\n')
         
-        # 파일 확장자에 따라 다른 패턴 적용
+        # 파일 확장자 확인
         is_python = filename and filename.endswith('.py')
-        is_js_ts = filename and (filename.endswith('.js') or filename.endswith('.ts'))
         
         for i, line in enumerate(lines):
             # JavaScript/TypeScript console 패턴
-            if not is_python:  # JS/TS 또는 확장자 불명
-                # console.log
-                if match := re.search(r'console\.log\s*\(', line):
+            if not is_python:
+                if 'console.log' in line:
                     detections.append(Detection(
                         pattern_key="console_log",
                         line_number=i + 1,
-                        column=match.start(),
+                        column=0,
                         message="console.log 사용 감지: logger.info 사용 권장",
                         severity="medium",
                         context=line.strip(),
                         auto_fix=line.replace('console.log', 'logger.info')
                     ))
                 
-                # console.error
-                if match := re.search(r'console\.error\s*\(', line):
+                if 'console.error' in line:
                     detections.append(Detection(
                         pattern_key="console_error",
                         line_number=i + 1,
-                        column=match.start(),
+                        column=0,
                         message="console.error 사용 감지: logger.error 사용 권장",
                         severity="medium",
                         context=line.strip(),
                         auto_fix=line.replace('console.error', 'logger.error')
                     ))
-                
-                # console.warn
-                if match := re.search(r'console\.warn\s*\(', line):
-                    detections.append(Detection(
-                        pattern_key="console_warn",
-                        line_number=i + 1,
-                        column=match.start(),
-                        message="console.warn 사용 감지: logger.warning 사용 권장",
-                        severity="medium",
-                        context=line.strip(),
-                        auto_fix=line.replace('console.warn', 'logger.warning')
-                    ))
-                
-                # console.debug
-                if match := re.search(r'console\.debug\s*\(', line):
-                    detections.append(Detection(
-                        pattern_key="console_debug",
-                        line_number=i + 1,
-                        column=match.start(),
-                        message="console.debug 사용 감지: logger.debug 사용 권장",
-                        severity="low",
-                        context=line.strip(),
-                        auto_fix=line.replace('console.debug', 'logger.debug')
-                    ))
             
             # Python print() 패턴
-            if is_python:
-                # print() 함수 사용 (주석과 문자열 내부 제외)
-                # 간단한 휴리스틱: 줄의 시작이나 공백 후 print(
-                if match := re.search(r'(?:^|\s)print\s*\(', line):
-                    # 주석인지 확인
-                    if not line.strip().startswith('#'):
-                        detections.append(Detection(
-                            pattern_key="print_usage",
-                            line_number=i + 1,
-                            column=match.start(),
-                            message="print() 사용 감지: logger 사용 권장",
-                            severity="low",
-                            context=line.strip(),
-                            fix_hint="logging 모듈을 import하고 logger.info() 사용",
-                            auto_fix=self._convert_print_to_logger(line)
-                        ))
+            if is_python and 'print(' in line and not line.strip().startswith('#'):
+                detections.append(Detection(
+                    pattern_key="print_usage",
+                    line_number=i + 1,
+                    column=0,
+                    message="print() 사용 감지: logger 사용 권장",
+                    severity="low",
+                    context=line.strip(),
+                    auto_fix=line.replace('print(', 'logger.info(')
+                ))
         
         return detections
-    
-    def _convert_print_to_logger(self, line: str) -> str:
-        """print()를 logger.info()로 변환"""
-        # 간단한 변환 (복잡한 경우는 수동 처리 필요)
-        # print("text") -> logger.info("text")
-        # print(f"text {var}") -> logger.info(f"text {var}")
-        return re.sub(r'(?:^|\s)print\s*\(', 'logger.info(', line)
     
     def auto_fix(self, code: str, detection: Detection) -> str:
         """console/print 사용 자동 수정"""
@@ -165,26 +103,5 @@ class ConsoleUsagePlugin(WisdomPlugin):
             lines = code.split('\n')
             if 0 < detection.line_number <= len(lines):
                 lines[detection.line_number - 1] = detection.auto_fix
-                
-                # logger import 추가 필요 여부 확인
-                fixed_code = '\n'.join(lines)
-                
-                # Python 파일이고 logger를 사용하는 경우
-                if detection.pattern_key == "print_usage" and "logger." in detection.auto_fix:
-                    # logging import가 없으면 추가
-                    if "import logging" not in fixed_code and "from logging import" not in fixed_code:
-                        # 파일 상단에 import 추가
-                        import_line = "import logging\nlogger = logging.getLogger(__name__)\n\n"
-                        fixed_code = import_line + fixed_code
-                
-                # JS/TS 파일이고 logger를 사용하는 경우
-                elif "logger." in detection.auto_fix:
-                    # logger import가 없으면 추가 (프로젝트에 따라 다를 수 있음)
-                    if "import.*logger" not in fixed_code.lower():
-                        # 일반적인 logger import 패턴
-                        import_line = "import { logger } from './utils/logger';\n\n"
-                        fixed_code = import_line + fixed_code
-                
-                return fixed_code
-        
+                return '\n'.join(lines)
         return code

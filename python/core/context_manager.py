@@ -233,7 +233,7 @@ class UnifiedContextManager:
 
         try:
             # 업데이트 시간 갱신
-            self.context.last_updated = dt.datetime.now().isoformat()
+            self.context.updated_at = dt.datetime.now()
             
             # 캐시 디렉토리 생성
             self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -252,7 +252,7 @@ class UnifiedContextManager:
                         'project_path': context_dict.get('project_path'),
                         'language': context_dict.get('language', 'python'),
                         'created_at': context_dict.get('created_at'),
-                        'last_updated': context_dict.get('last_updated'),
+                        'updated_at': context_dict.get('updated_at'),
                         'current_phase': context_dict.get('current_phase', 'initialization'),
                         'current_task': context_dict.get('current_task'),
                         'api_safety': context_dict.get('api_safety', {}),

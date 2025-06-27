@@ -458,12 +458,14 @@ def enhance_plan_with_wisdom(plan_data: Dict) -> Dict:
     
     return plan_data
 
-def cmd_plan(name: Optional[str] = None, phase_count: int = 3) -> StandardResponse:
+def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phase_count: int = 3, reset: bool = False) -> StandardResponse:
     """프로젝트 계획 수립 또는 조회
     
     Args:
         name: 계획 이름 (없으면 현재 계획 표시)
+        description: 계획 설명
         phase_count: Phase 개수 (기본 3개)
+        reset: True일 경우 계획 초기화
         
     Returns:
         StandardResponse: 표준 응답
@@ -471,21 +473,36 @@ def cmd_plan(name: Optional[str] = None, phase_count: int = 3) -> StandardRespon
     wm = get_workflow_manager()
     
     try:
+        # reset 옵션이 True인 경우 계획 초기화
+        if reset:
+            result = wm.reset_plan()
+            if result['success']:
+                print(result['data']['message'])
+            return result
+            
         if name:
             # 새 계획 생성
             result = wm.create_plan(
                 name=name,
-                phases=phase_count
+                description=description if description else f"{name} 계획"
             )
             
             if result['success']:
-                plan = result['data']['plan']
-                print(f"✅ 새 계획 생성: {plan.name}")
-                print(f"   Phase 수: {len(plan.phases)}")
-                
-                # 기본 Phase 정보 표시
-                for phase in plan.phases:
-                    print(f"   - {phase.phase_id}: {phase.name}")
+                # plan이 Plan 객체인 경우와 문자열인 경우를 모두 처리
+                plan_data = result['data']
+                if 'plan' in plan_data and hasattr(plan_data['plan'], 'name'):
+                    plan = plan_data['plan']
+                    print(f"✅ 새 계획 생성: {plan.name}")
+                    print(f"   설명: {plan.description}")
+                    print(f"   Phase 수: {len(plan.phases)}")
+                    
+                    # 기본 Phase 정보 표시
+                    for phase_id, phase in plan.phases.items():
+                        print(f"   - {phase_id}: {phase.name}")
+                else:
+                    # 백워드 호환성
+                    print(f"✅ 새 계획 생성: {plan_data.get('plan_name', name)}")
+                    print(f"   Phase 수: {plan_data.get('phases', 0)}")
                     
                 print("\n💡 다음 단계:")
                 print("   1. 'task add phase-id \"작업명\"'으로 작업 추가")
@@ -496,10 +513,7 @@ def cmd_plan(name: Optional[str] = None, phase_count: int = 3) -> StandardRespon
         else:
             # 현재 계획 표시
             if not wm.plan:
-                return StandardResponse(
-                    success=False,
-                    message="설정된 계획이 없습니다. 'plan \"계획명\"'으로 생성하세요."
-                )
+                return StandardResponse.error("설정된 계획이 없습니다. 'plan \"계획명\"'으로 생성하세요.")
                 
             plan = wm.plan
             status = wm.get_workflow_status()
@@ -525,8 +539,7 @@ def cmd_plan(name: Optional[str] = None, phase_count: int = 3) -> StandardRespon
             if analytics['average_completion_time']:
                 print(f"\n📈 평균 작업 완료 시간: {analytics['average_completion_time']}")
                 
-            return StandardResponse(
-                success=True,
+            return StandardResponse.success(
                 data={
                     'plan': plan.dict(),
                     'status': status,
@@ -535,11 +548,8 @@ def cmd_plan(name: Optional[str] = None, phase_count: int = 3) -> StandardRespon
             )
             
     except Exception as e:
-        return StandardResponse(
-            success=False,
-            message=f"계획 처리 중 오류: {str(e)}",
-            error=str(e)
-        )
+        from core.error_handler import ErrorType
+        return StandardResponse.error(ErrorType.PLAN_ERROR, f"계획 처리 중 오류: {str(e)}")
 if __name__ == "__main__":
     # 명령줄 인자 처리
     import sys

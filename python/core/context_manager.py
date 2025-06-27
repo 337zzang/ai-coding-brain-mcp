@@ -16,7 +16,7 @@ import copy
 
 # Pydantic 모델 import
 from .models import (
-    ProjectContext, Plan, Phase, Task, 
+    ProjectContext, Plan, Phase, Task, TaskStatus,
     FileAccessEntry, WorkTracking, 
     validate_context_data
 )
@@ -398,6 +398,72 @@ class UnifiedContextManager:
             setattr(target, last_key, value)
         
         self.context.updated_at = dt.datetime.now()
+    
+    def sync_plan_to_tasks(self):
+        """Plan 모델의 모든 작업을 context.tasks 형식으로 동기화
+        
+        Plan을 Single Source of Truth로 사용하고,
+        context.tasks는 읽기 전용 뷰로 동작하도록 함
+        """
+        if not self.context.plan:
+            return
+            
+        # 새로운 tasks 구조 생성
+        next_tasks = []
+        done_tasks = []
+        
+        # 모든 phase의 작업들을 순회
+        for phase_id, phase in self.context.plan.phases.items():
+            for task in phase.tasks:
+                task_info = {
+                    'id': task.id,
+                    'phase': phase_id,
+                    'title': task.title,
+                    'description': task.description,
+                    'status': task.status.value if hasattr(task.status, 'value') else task.status
+                }
+                
+                if task.status == TaskStatus.COMPLETED or (hasattr(task.status, 'value') and task.status.value == 'completed'):
+                    task_info['completed_at'] = task.completed_at.isoformat() if task.completed_at else None
+                    done_tasks.append(task_info)
+                else:
+                    next_tasks.append(task_info)
+        
+        # context.tasks 업데이트
+        self.context.tasks = {
+            'next': next_tasks,
+            'done': done_tasks
+        }
+        
+        # 변경사항 저장
+        self.save()
+        
+    def add_task_to_plan(self, phase_id: str, title: str, description: str = "") -> Optional[Task]:
+        """Plan의 특정 Phase에 작업 추가하고 동기화"""
+        if not self.context.plan or phase_id not in self.context.plan.phases:
+            return None
+            
+        phase = self.context.plan.phases[phase_id]
+        task = phase.add_task(title, description)
+        
+        # 즉시 동기화
+        self.sync_plan_to_tasks()
+        
+        return task
+        
+    def update_task_status(self, task_id: str, new_status: TaskStatus):
+        """작업 상태 업데이트하고 동기화"""
+        if not self.context.plan:
+            return
+            
+        # 모든 phase에서 task 찾기
+        for phase in self.context.plan.phases.values():
+            task = phase.get_task_by_id(task_id)
+            if task:
+                task.update_status(new_status)
+                # 즉시 동기화
+                self.sync_plan_to_tasks()
+                break
 
 
 # 싱글톤 인스턴스

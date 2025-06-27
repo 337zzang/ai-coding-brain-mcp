@@ -84,10 +84,33 @@ class WorkflowManager:
             self._trigger_event('plan_created', plan)
             
             return StandardResponse.success({
-                'plan': plan.name,
+                'plan': plan,
+                'plan_name': plan.name,
                 'phases': len(plan.phases),
                 'tasks': len(plan.get_all_tasks())
             })
+        except Exception as e:
+            return ErrorHandler.handle_exception(e, ErrorType.PLAN_ERROR)
+    
+    @autosave
+    def reset_plan(self) -> StandardResponse:
+        """계획 초기화 (모든 계획과 작업 삭제)"""
+        try:
+            if self.context.plan:
+                old_plan_name = self.context.plan.name
+                self.context.plan = None
+                self.context.updated_at = datetime.now()
+                
+                # 이벤트 발생
+                self._trigger_event('plan_reset', {'old_plan': old_plan_name})
+                
+                return StandardResponse.success({
+                    'message': f"계획 '{old_plan_name}'이(가) 초기화되었습니다."
+                })
+            else:
+                return StandardResponse.success({
+                    'message': "초기화할 계획이 없습니다."
+                })
         except Exception as e:
             return ErrorHandler.handle_exception(e, ErrorType.PLAN_ERROR)
     
@@ -109,12 +132,15 @@ class WorkflowManager:
                 )
             
             # Task 추가 (Phase의 add_task 메서드 사용)
-            task = phase.add_task(title, description, priority)
+            task = phase.add_task(title, description)
             
             # 의존성 설정
             if dependencies:
                 for dep_id in dependencies:
                     task.add_dependency(dep_id)
+            
+            # Plan을 context.tasks와 동기화
+            self.context_manager.sync_plan_to_tasks()
             
             return StandardResponse.success({
                 'task_id': task.id,
@@ -219,6 +245,9 @@ class WorkflowManager:
             
             # 진행률 업데이트
             self.context_manager.update_progress()
+            
+            # Plan을 context.tasks와 동기화
+            self.context_manager.sync_plan_to_tasks()
             
             # 이벤트 발생
             self._trigger_event('task_completed', task)

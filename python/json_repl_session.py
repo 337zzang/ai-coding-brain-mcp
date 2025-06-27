@@ -164,6 +164,85 @@ class AIHelpers:
             return self._context_manager.context
         return None
     
+    def get_value(self, key, default=None):
+        """캐시에서 값 가져오기 (MCP 워크플로우 지원)"""
+        try:
+            # context에서 먼저 찾기
+            if self._context_manager and self._context_manager.context:
+                if key in self._context_manager.context:
+                    return self._context_manager.context[key]
+            
+            # 캐시 파일에서 찾기
+            cache_file = os.path.join('memory', '.cache', 'cache_core.json')
+            if os.path.exists(cache_file):
+                with open(cache_file, 'r', encoding='utf-8') as f:
+                    cache = json.load(f)
+                    if key in cache:
+                        return cache[key]
+            
+            return default
+        except Exception as e:
+            print(f"⚠️ get_value 오류: {e}")
+            return default
+    
+    def initialize_context(self, project_path=None):
+        """프로젝트 컨텍스트 초기화"""
+        try:
+            from api.public import initialize_context as init_ctx
+            return init_ctx(project_path)
+        except Exception as e:
+            print(f"⚠️ initialize_context 오류: {e}")
+            return None
+    
+    def update_cache(self, *args, **kwargs):
+        """캐시 업데이트"""
+        try:
+            from api.public import update_cache as update
+            # 인자가 2개일 경우 key와 value로 처리
+            if len(args) == 2:
+                return update(key=args[0], value=args[1])
+            # 인자가 1개이고 딕셔너리인 경우
+            elif len(args) == 1 and isinstance(args[0], dict):
+                # 딕셔너리의 key, value를 사용
+                return update(key=args[0].get('key'), value=args[0].get('value'))
+            # 키워드 인자로 호출된 경우
+            elif kwargs:
+                return update(**kwargs)
+            # 인자가 없는 경우 
+            else:
+                print("⚠️ update_cache: 인자가 필요합니다 (key, value)")
+                return None
+        except Exception as e:
+            print(f"⚠️ update_cache 오류: {e}")
+            return None
+    
+    def cmd_plan(self, *args, **kwargs):
+        """plan 명령 래퍼"""
+        try:
+            from commands.plan import cmd_plan
+            return cmd_plan(*args, **kwargs)
+        except Exception as e:
+            print(f"⚠️ cmd_plan 오류: {e}")
+            return None
+    
+    def cmd_task(self, *args, **kwargs):
+        """task 명령 래퍼"""
+        try:
+            from commands.task import cmd_task
+            return cmd_task(*args, **kwargs)
+        except Exception as e:
+            print(f"⚠️ cmd_task 오류: {e}")
+            return None
+    
+    def cmd_next(self, *args, **kwargs):
+        """next 명령 래퍼"""
+        try:
+            from commands.next import cmd_next
+            return cmd_next(*args, **kwargs)
+        except Exception as e:
+            print(f"⚠️ cmd_next 오류: {e}")
+            return None
+    
     def list_functions(self):
         """사용 가능한 함수 목록 표시"""
         funcs = [attr for attr in dir(self) 

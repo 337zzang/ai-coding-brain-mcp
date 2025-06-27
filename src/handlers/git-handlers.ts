@@ -208,33 +208,91 @@ export async function handleGitCommitSmart(args: { message?: string; auto_add?: 
  */
 export async function handleGitBranchSmart(args: { branch_name?: string; base_branch?: string }): Promise<{ content: Array<{ type: string; text: string }> }> {
     try {
-        const { execSync } = require('child_process');
-        const branchName = args.branch_name ? `"${args.branch_name}"` : 'None';
-        const baseBranch = args.base_branch || 'main';
+        const { spawn } = require('child_process');
+        const path = require('path');
+        const fs = require('fs');
         
-        const pythonCode = `
-from mcp_git_tools import git_branch_smart
-result = git_branch_smart(${branchName}, "${baseBranch}")
-print(json.dumps(result, ensure_ascii=False))
-`;
+        // 프로젝트 루트 찾기 (handleGitStatus와 동일한 로직)
+        let projectRoot = process.cwd();
         
-        const result = execSync(
-            `python -c "import json; ${pythonCode.replace(/"/g, '\\"')}"`,
-            { 
-                encoding: 'utf8', 
-                cwd: process.cwd(),
-                shell: true  // Windows 호환성을 위해 추가
+        if (!projectRoot.includes('ai-coding-brain-mcp')) {
+            const possiblePaths = [
+                'C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp',
+                path.join(process.env['USERPROFILE'] || '', 'Desktop', 'ai-coding-brain-mcp'),
+                path.join(process.env['USERPROFILE'] || '', 'Documents', 'ai-coding-brain-mcp')
+            ];
+            
+            for (const possiblePath of possiblePaths) {
+                if (fs.existsSync(path.join(possiblePath, '.ai-brain.config.json'))) {
+                    projectRoot = possiblePath;
+                    break;
+                }
             }
-        );
+        }
         
-        const branchResult = JSON.parse(result.trim());
+        // Python 스크립트 경로
+        const scriptPath = path.join(projectRoot, 'python', 'mcp_git_wrapper.py');
         
-        return {
-            content: [{
-                type: 'text',
-                text: branchResult.message || 'Git 브랜치 생성 완료'
-            }]
-        };
+        if (!fs.existsSync(scriptPath)) {
+            throw new Error(`Python script not found at ${scriptPath}`);
+        }
+        
+        // 인자 준비
+        const pythonArgs = [scriptPath, 'branch-smart'];
+        if (args.branch_name) {
+            pythonArgs.push(args.branch_name);
+        }
+        if (args.base_branch) {
+            pythonArgs.push('--base', args.base_branch);
+        }
+        
+        return new Promise((resolve, reject) => {
+            const pythonProcess = spawn('python', pythonArgs, {
+                cwd: projectRoot,
+                env: { ...process.env },
+                windowsHide: true
+            });
+            
+            let output = '';
+            let errorOutput = '';
+            
+            pythonProcess.stdout.on('data', (data: Buffer) => {
+                output += data.toString();
+            });
+            
+            pythonProcess.stderr.on('data', (data: Buffer) => {
+                errorOutput += data.toString();
+            });
+            
+            pythonProcess.on('close', (code: number) => {
+                if (code !== 0) {
+                    reject(new Error(`Process exited with code ${code}: ${errorOutput}`));
+                    return;
+                }
+                
+                try {
+                    const result = JSON.parse(output.trim());
+                    resolve({
+                        content: [{
+                            type: 'text',
+                            text: result.message || 'Git 브랜치 생성 완료'
+                        }]
+                    });
+                } catch (parseError) {
+                    // JSON 파싱 실패 시 출력 그대로 반환
+                    resolve({
+                        content: [{
+                            type: 'text',
+                            text: output.trim() || 'Git 브랜치 생성 완료'
+                        }]
+                    });
+                }
+            });
+            
+            pythonProcess.on('error', (error: Error) => {
+                reject(error);
+            });
+        });
     } catch (error) {
         logger.error('Git branch failed:', error);
         return {

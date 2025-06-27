@@ -75,7 +75,13 @@ def cmd_task(action: str, *args) -> StandardResponse:
             plan = wm.plan
             
             print(f"📋 계획: {plan.name}")
-            print(f"진행률: {status['progress']:.1f}% ({status['completed']}/{status['total']})")
+            # progress가 딕셔너리인 경우 처리
+            progress_value = status.get('progress', 0)
+            if isinstance(progress_value, dict):
+                progress_value = progress_value.get('value', 0)
+            completed = status.get('completed_count', status.get('completed', 0))
+            total = status.get('total_count', status.get('total', 0))
+            print(f"진행률: {progress_value:.1f}% ({completed}/{total})")
             
             # Phase별 작업 표시
             for phase in plan.phases:
@@ -97,8 +103,8 @@ def cmd_task(action: str, *args) -> StandardResponse:
             
             result = wm.add_task(
                 phase_id=phase_id,
-                name=task_name,
-                description=description
+                title=task_name,
+                description=description if description else ""
             )
             return result
             
@@ -107,17 +113,12 @@ def cmd_task(action: str, *args) -> StandardResponse:
             return wm.complete_task(task_id)
             
         else:
-            return StandardResponse(
-                success=False,
-                message=f"잘못된 명령: {action}"
-            )
+            from core.error_handler import ErrorType
+            return StandardResponse.error(ErrorType.TASK_ERROR, f"잘못된 명령: {action}")
             
     except Exception as e:
-        return StandardResponse(
-            success=False,
-            message=f"작업 처리 중 오류: {str(e)}",
-            error=str(e)
-        )
+        from core.error_handler import ErrorType
+        return StandardResponse.error(ErrorType.TASK_ERROR, f"작업 처리 중 오류: {str(e)}")
 if __name__ == "__main__":
     # 명령줄 인자 처리
     import sys

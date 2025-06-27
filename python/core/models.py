@@ -11,7 +11,17 @@ from pydantic import BaseModel, Field, validator
 from typing import List, Dict, Optional, Any, Union
 from datetime import datetime, timedelta
 from pathlib import Path
+from enum import Enum
 import json
+
+
+class TaskStatus(str, Enum):
+    """작업의 상태를 정의하는 Enum"""
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    BLOCKED = "blocked"
+    CANCELED = "canceled"
 
 
 class BaseModelWithConfig(BaseModel):
@@ -51,7 +61,7 @@ class Task(BaseModelWithConfig):
     id: str
     title: str
     description: str = ""
-    status: str = Field(default='pending', pattern='^(pending|ready|in_progress|completed|blocked|cancelled)$')
+    status: TaskStatus = Field(default=TaskStatus.PENDING)
     priority: str = Field(default='medium', pattern='^(high|medium|low)$')
     phase_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)

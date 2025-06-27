@@ -71,57 +71,25 @@ def cmd_task(action: str, *args) -> None:
         task_title = args[1]
         task_desc = ' '.join(args[2:]) if len(args) > 2 else ""
         
-        phase = plan_dict['phases'].get(phase_id)
-        if not phase:
-            print(f"❌ Phase '{phase_id}'를 찾을 수 없습니다.")
-            print(f"   사용 가능한 Phase: {', '.join(plan_dict['phases'].keys())}")
-            return
+        # Context Manager의 새로운 메서드 사용
+        context_manager = get_context_manager()
+        task = context_manager.add_task_to_plan(phase_id, task_title, task_desc)
         
-        # 새 작업 생성
-        phase_num = phase_id.split('-')[1]
-        task_num = len(phase['tasks']) + 1
-        new_task = {
-            'id': f'{phase_num}-{task_num}',
-            'title': task_title,
-            'description': task_desc,
-            'status': 'pending',
-            'created_at': dt.datetime.now().isoformat(),
-            'updated_at': dt.datetime.now().isoformat(),
-            'subtasks': []
-        }
-        
-        phase['tasks'].append(new_task)
-        plan_dict['updated_at'] = dt.datetime.now().isoformat()
-        
-        # 변경사항 저장
-        if update_plan_in_context(context, plan_dict):
-            # 작업 목록에도 추가
-            tasks = get_tasks(context)
-            if 'next' not in tasks:
-                if hasattr(context, 'tasks'):
-                    context.tasks['next'] = []
-                elif isinstance(context, dict):
-                    context.setdefault('tasks', {})['next'] = []
+        if task:
+            print(f"✅ 작업 추가됨: [{task.id}] {task.title}")
+            if task.description:
+                print(f"   설명: {task.description}")
             
-            # next 목록에 작업 추가
-            if hasattr(context, 'tasks'):
-                context.tasks.setdefault('next', []).append({
-                    'id': new_task['id'],
-                    'phase': phase_id,
-                    'title': task_title
-                })
-            elif isinstance(context, dict):
-                context.setdefault('tasks', {}).setdefault('next', []).append({
-                    'id': new_task['id'],
-                    'phase': phase_id,
-                    'title': task_title
-                })
-            
-            get_context_manager().save()
-            print(f"✅ Task 추가됨: [{new_task['id']}] {task_title}")
-            print(f"   Phase: {phase['name']}")
+            # Phase 정보 표시
+            phase = context_manager.context.plan.phases.get(phase_id)
+            if phase:
+                print(f"   Phase: {phase.name}")
+                print(f"   Phase 내 작업 수: {len(phase.tasks)}")
         else:
-            print("❌ 작업 추가 중 오류가 발생했습니다.")
+            print(f"❌ 작업 추가 실패")
+            if phase_id not in context_manager.context.plan.phases:
+                print(f"   Phase '{phase_id}'를 찾을 수 없습니다.")
+                print(f"   사용 가능한 Phase: {', '.join(context_manager.context.plan.phases.keys())}")
     
     elif action == 'done':
         if len(args) < 1:

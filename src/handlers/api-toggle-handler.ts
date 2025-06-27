@@ -1,7 +1,7 @@
 // API 토글 핸들러
 import { spawn } from 'child_process';
 import { createLogger } from '../utils/logger';
-import * as path from 'path';
+import { getPythonPath, getPythonEnv } from '../utils/python-path';
 
 const logger = createLogger('api-toggle-handler');
 
@@ -32,12 +32,11 @@ ${code}
 `;
     
     // Python 실행 파일 경로 동적으로 찾기
-    const pythonPath = process.env['PYTHON_PATH'] || 
-                      (process.platform === 'win32' ? 'python' : 'python3');
+    const pythonPath = getPythonPath();
     
     const proc = spawn(pythonPath, ['-c', pythonScript], {
       cwd: projectRoot,
-      env: { ...process.env, PYTHONPATH: path.join(projectRoot, 'python') }
+      env: getPythonEnv()
     });
     
     let stdout = '';

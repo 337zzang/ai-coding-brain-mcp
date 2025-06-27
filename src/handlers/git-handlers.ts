@@ -43,8 +43,21 @@ export async function handleGitStatus(_args: any): Promise<{ content: Array<{ ty
             throw new Error(`Python script not found at ${scriptPath}`);
         }
         
+        // 설정 파일에서 Python 경로 읽기
+        const configPath = path.join(projectRoot, '.ai-brain.config.json');
+        let pythonPath = 'python';
+        
+        if (fs.existsSync(configPath)) {
+            try {
+                const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+                pythonPath = config.python?.path || 'python';
+            } catch (e) {
+                logger.warn('Failed to read config, using default python path');
+            }
+        }
+        
         return new Promise((resolve, reject) => {
-            const pythonProcess = spawn('python', [scriptPath, 'status'], {
+            const pythonProcess = spawn(pythonPath, [scriptPath, 'status'], {
                 cwd: projectRoot,  // 프로젝트 루트를 작업 디렉토리로 설정
                 env: { ...process.env },
                 windowsHide: true
@@ -141,6 +154,19 @@ export async function handleGitCommitSmart(args: { message?: string; auto_add?: 
             throw new Error(`Python script not found at ${scriptPath}`);
         }
         
+        // 설정 파일에서 Python 경로 읽기
+        const configPath = path.join(projectRoot, '.ai-brain.config.json');
+        let pythonPath = 'python';
+        
+        if (fs.existsSync(configPath)) {
+            try {
+                const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+                pythonPath = config.python?.path || 'python';
+            } catch (e) {
+                logger.warn('Failed to read config, using default python path');
+            }
+        }
+        
         // 인자 준비
         const cmdArgs = ['commit'];
         if (args.message) {
@@ -151,7 +177,7 @@ export async function handleGitCommitSmart(args: { message?: string; auto_add?: 
         cmdArgs.push(args.auto_add !== false ? 'true' : 'false');
         
         return new Promise((resolve, reject) => {
-            const pythonProcess = spawn('python', [scriptPath, ...cmdArgs], {
+            const pythonProcess = spawn(pythonPath, [scriptPath, ...cmdArgs], {
                 cwd: projectRoot,  // 프로젝트 루트를 작업 디렉토리로 설정
                 env: { ...process.env },
                 windowsHide: true
@@ -237,6 +263,19 @@ export async function handleGitBranchSmart(args: { branch_name?: string; base_br
             throw new Error(`Python script not found at ${scriptPath}`);
         }
         
+        // 설정 파일에서 Python 경로 읽기
+        const configPath = path.join(projectRoot, '.ai-brain.config.json');
+        let pythonPath = 'python';
+        
+        if (fs.existsSync(configPath)) {
+            try {
+                const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+                pythonPath = config.python?.path || 'python';
+            } catch (e) {
+                logger.warn('Failed to read config, using default python path');
+            }
+        }
+        
         // 인자 준비
         const pythonArgs = [scriptPath, 'branch-smart'];
         if (args.branch_name) {
@@ -247,7 +286,7 @@ export async function handleGitBranchSmart(args: { branch_name?: string; base_br
         }
         
         return new Promise((resolve, reject) => {
-            const pythonProcess = spawn('python', pythonArgs, {
+            const pythonProcess = spawn(pythonPath, pythonArgs, {
                 cwd: projectRoot,
                 env: { ...process.env },
                 windowsHide: true

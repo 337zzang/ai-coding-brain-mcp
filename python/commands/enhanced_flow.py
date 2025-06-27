@@ -273,7 +273,7 @@ def generate_complete_briefing(context: Any, structure: Dict[str, Any], cache_st
     debug_log(f"🐛 브리핑 함수: cache_status = {cache_status}")
     
     # context 타입 확인
-    from core.models import ProjectContext
+    from python.core.models import ProjectContext
     is_pydantic = isinstance(context, ProjectContext)
     
     # Pydantic이 아니면 변환 시도

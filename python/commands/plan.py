@@ -11,8 +11,8 @@ from typing import Dict, Any, Optional, Union, List
 
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from core.context_manager import get_context_manager
-from core.workflow_manager import get_workflow_manager
+from python.core.context_manager import get_context_manager
+from python.core.workflow_manager import get_workflow_manager
 from core.error_handler import StandardResponse
 from python.core.models import TaskStatus
 from analyzers.project_analyzer import ProjectAnalyzer
@@ -75,7 +75,7 @@ def set_plan(context, plan_data: Dict):
     if not helpers:
         try:
             # helpers가 없으면 get_context_manager에서 가져오기 시도
-            from core.context_manager import get_context_manager
+            from python.core.context_manager import get_context_manager
             cm = get_context_manager()
             if hasattr(cm, 'helpers'):
                 helpers = cm.helpers
@@ -108,7 +108,7 @@ def set_plan(context, plan_data: Dict):
             
             # context_manager 저장 시도
             try:
-                from core.context_manager import get_context_manager
+                from python.core.context_manager import get_context_manager
                 get_context_manager().save()
                 return True, None
             except Exception as e:
@@ -131,7 +131,7 @@ def set_plan(context, plan_data: Dict):
             
             # context_manager 저장
             try:
-                from core.context_manager import get_context_manager
+                from python.core.context_manager import get_context_manager
                 get_context_manager().save()
                 return True, None
             except Exception as save_e:
@@ -148,7 +148,7 @@ def set_plan(context, plan_data: Dict):
         
         # context_manager 저장
         try:
-            from core.context_manager import get_context_manager
+            from python.core.context_manager import get_context_manager
             get_context_manager().save()
             return True, None
         except Exception as save_e:

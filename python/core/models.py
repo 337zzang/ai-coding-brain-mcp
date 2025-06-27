@@ -79,6 +79,14 @@ class Task(BaseModelWithConfig):
     estimated_hours: Optional[float] = None  # 예상 소요 시간
     actual_hours: Optional[float] = None  # 실제 소요 시간
     
+    # 의존성 확장
+    blocks: List[str] = Field(default_factory=list)  # 이 작업이 차단하는 작업 ID들
+    
+    # 자동화 및 통합 정보
+    auto_generated: bool = False  # ProjectAnalyzer가 자동 생성했는지
+    wisdom_hints: List[str] = Field(default_factory=list)  # Wisdom 시스템 힌트
+    context_data: Dict[str, Any] = Field(default_factory=dict)  # Task별 독립 컨텍스트
+    
     @validator('status')
     def validate_status(cls, v):
         valid_statuses = ['pending', 'in_progress', 'completed', 'blocked']
@@ -284,6 +292,17 @@ class Phase(BaseModelWithConfig):
     name: str
     description: str = ""
     status: str = Field(default='pending', pattern='^(pending|in_progress|completed)$')
+    
+    # Task 순서 및 진행률 관리
+    task_order: List[str] = Field(default_factory=list)  # Task 표시 순서
+    progress: float = 0.0  # Phase 진행률 (0-100%)
+    completed_tasks: int = 0  # 완료된 Task 수
+    total_tasks: int = 0  # 전체 Task 수
+    
+    # Phase 메타데이터
+    estimated_days: Optional[float] = None  # 예상 소요 일수
+    started_at: Optional[datetime] = None  # Phase 시작 시간
+    completed_at: Optional[datetime] = None  # Phase 완료 시간
     tasks: List[Task] = Field(default_factory=list)
     
     def get_task_by_id(self, task_id: str) -> Optional[Task]:
@@ -409,6 +428,68 @@ class Plan(BaseModelWithConfig):
     description: str
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
+    
+    # Phase 순서 및 진행률 관리
+    phase_order: List[str] = Field(default_factory=list)  # Phase 표시 순서
+    overall_progress: float = 0.0  # 전체 진행률 (0-100%)
+    
+    # 통합 정보
+    project_insights: Dict[str, Any] = Field(default_factory=dict)  # ProjectAnalyzer 분석 결과
+    wisdom_data: Dict[str, Any] = Field(default_factory=dict)  # Wisdom 시스템 데이터
+    
+    def get_all_tasks(self) -> List[Task]:
+        """모든 Phase의 Task를 하나의 리스트로 반환"""
+        all_tasks = []
+        for phase in self.phases.values():
+            all_tasks.extend(phase.tasks.values() if isinstance(phase.tasks, dict) else phase.tasks)
+        return all_tasks
+    
+    def get_current_task(self) -> Optional[Task]:
+        """현재 진행 중인 Task 반환"""
+        for task in self.get_all_tasks():
+            if task.status == TaskStatus.IN_PROGRESS:
+                return task
+        return None
+    
+    def get_next_tasks(self) -> List[Task]:
+        """다음에 수행 가능한 Task 목록 반환"""
+        next_tasks = []
+        all_tasks = self.get_all_tasks()
+        
+        for task in all_tasks:
+            if task.status in [TaskStatus.PENDING, TaskStatus.READY]:
+                # 의존성 체크
+                if not task.dependencies:
+                    next_tasks.append(task)
+                else:
+                    # 모든 의존성이 완료되었는지 확인
+                    deps_completed = all(
+                        any(t.id == dep_id and t.status == TaskStatus.COMPLETED 
+                            for t in all_tasks)
+                        for dep_id in task.dependencies
+                    )
+                    if deps_completed:
+                        next_tasks.append(task)
+        
+        return next_tasks
+    
+    def update_progress(self) -> None:
+        """Phase와 전체 Plan의 진행률 업데이트"""
+        total_tasks = 0
+        completed_tasks = 0
+        
+        # 각 Phase의 진행률 계산
+        for phase in self.phases.values():
+            phase_tasks = list(phase.tasks.values() if isinstance(phase.tasks, dict) else phase.tasks)
+            phase.total_tasks = len(phase_tasks)
+            phase.completed_tasks = sum(1 for t in phase_tasks if t.status == TaskStatus.COMPLETED)
+            phase.progress = (phase.completed_tasks / phase.total_tasks * 100) if phase.total_tasks > 0 else 0.0
+            
+            total_tasks += phase.total_tasks
+            completed_tasks += phase.completed_tasks
+        
+        # 전체 진행률 계산
+        self.overall_progress = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0.0
     phases: Dict[str, Phase] = Field(default_factory=dict)
     current_phase: Optional[str] = None
     current_task: Optional[str] = None

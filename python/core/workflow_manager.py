@@ -438,6 +438,79 @@ class WorkflowManager:
         """이벤트 훅 등록"""
         if event_name in self._event_hooks:
             self._event_hooks[event_name].append(callback)
+    
+    def save_unified(self) -> None:
+        """Plan 중심의 단일 파일 저장"""
+        workflow_data = {
+            "version": "2.0",
+            "last_updated": datetime.now().isoformat(),
+            "current_plan": None,
+            "archived_plans": []
+        }
+        
+        # 현재 Plan 저장
+        if self.context.plan:
+            # 진행률 업데이트
+            self.context.plan.update_progress()
+            workflow_data["current_plan"] = self.context.plan.dict()
+        
+        # 통합 파일에 저장
+        unified_path = os.path.join(self.cache_dir, "workflow_unified.json")
+        with open(unified_path, 'w', encoding='utf-8') as f:
+            json.dump(workflow_data, f, indent=2, ensure_ascii=False)
+        
+        # 레거시 파일들도 업데이트 (호환성 유지)
+        if self.context.plan:
+            # cache_plan.json 업데이트
+            plan_path = os.path.join(self.cache_dir, "cache_plan.json")
+            with open(plan_path, 'w', encoding='utf-8') as f:
+                json.dump(self.context.plan.dict(), f, indent=2, ensure_ascii=False)
+            
+            # cache_tasks.json 업데이트 (Plan 기반)
+            tasks_data = {
+                "next": [t.dict() for t in self.context.plan.get_next_tasks()],
+                "done": [t.dict() for t in self.context.plan.get_all_tasks() 
+                        if t.status == TaskStatus.COMPLETED]
+            }
+            tasks_path = os.path.join(self.cache_dir, "cache_tasks.json")
+            with open(tasks_path, 'w', encoding='utf-8') as f:
+                json.dump(tasks_data, f, indent=2, ensure_ascii=False)
+    
+    def load_unified(self) -> bool:
+        """통합 파일에서 Plan 로드"""
+        unified_path = os.path.join(self.cache_dir, "workflow_unified.json")
+        
+        if os.path.exists(unified_path):
+            try:
+                with open(unified_path, 'r', encoding='utf-8') as f:
+                    workflow_data = json.load(f)
+                
+                # 버전 확인
+                if workflow_data.get("version") == "2.0":
+                    # 현재 Plan 로드
+                    if workflow_data.get("current_plan"):
+                        self.context.plan = Plan(**workflow_data["current_plan"])
+                        return True
+            except Exception as e:
+                print(f"통합 파일 로드 실패: {e}")
+        
+        # 레거시 파일에서 로드 시도
+        return self._load_legacy()
+    
+    def _load_legacy(self) -> bool:
+        """레거시 파일에서 로드 (하위 호환성)"""
+        plan_path = os.path.join(self.cache_dir, "cache_plan.json")
+        if os.path.exists(plan_path):
+            try:
+                with open(plan_path, 'r', encoding='utf-8') as f:
+                    plan_data = json.load(f)
+                if plan_data:
+                    self.context.plan = Plan(**plan_data)
+                    return True
+            except Exception as e:
+                print(f"레거시 Plan 로드 실패: {e}")
+        
+        return False
 
 
 # 싱글톤 인스턴스

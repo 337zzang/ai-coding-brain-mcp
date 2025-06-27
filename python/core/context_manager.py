@@ -20,6 +20,7 @@ from .models import (
     FileAccessEntry, WorkTracking, 
     validate_context_data
 )
+from .decorators import autosave
 
 
 class UnifiedContextManager:
@@ -327,6 +328,7 @@ class UnifiedContextManager:
             access_info['write_count'] = access_info.get('write_count', 0) + 1
         access_info['last_access'] = dt.datetime.now().isoformat()
     
+    @autosave
     def update_progress(self):
         """진행률 업데이트"""
         if self.context and self.context.plan:
@@ -341,6 +343,7 @@ class UnifiedContextManager:
             return self.context.plan.get_task_by_id(self.context.current_task)
         return None
     
+    @autosave
     def set_current_task(self, task_id: str):
         """현재 작업 설정"""
         if self.context:
@@ -373,6 +376,7 @@ class UnifiedContextManager:
         
         return value
     
+    @autosave
     def update_cache(self, key: str, value: Any):
         """캐시 업데이트"""
         if not self.context:

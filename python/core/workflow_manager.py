@@ -461,12 +461,12 @@ class WorkflowManager:
             workflow_data["current_plan"] = json.loads(self.context.plan.json())
         
         # 통합 파일에 저장
-        unified_path = os.path.join(self.cache_dir, "workflow_unified.json")
+        unified_path = os.path.join(self.context_manager.cache_dir, "workflow_unified.json")
         with open(unified_path, 'w', encoding='utf-8') as f:
             json.dump(workflow_data, f, indent=2, ensure_ascii=False)
     def load(self) -> bool:
         """통합 파일에서 Plan 로드"""
-        unified_path = os.path.join(self.cache_dir, "workflow_unified.json")
+        unified_path = os.path.join(self.context_manager.cache_dir, "workflow_unified.json")
         
         if os.path.exists(unified_path):
             try:

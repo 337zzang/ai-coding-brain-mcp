@@ -370,8 +370,13 @@ def generate_complete_briefing(context: Any, structure: Dict[str, Any], cache_st
             briefing_lines.append(f"✏️ 현재 작업: 설정되지 않음")
     
     # tasks 처리
-    if is_pydantic and context.plan:
-        all_tasks = context.get_all_tasks()
+    if (is_pydantic and context.plan) or (isinstance(context, dict) and 'plan' in context and context['plan']):
+        all_tasks = context.get_all_tasks() if hasattr(context, 'get_all_tasks') else []
+        # dict context에서 plan이 있는 경우
+        if isinstance(context, dict) and 'plan' in context and context['plan']:
+            plan = context['plan']
+            if hasattr(plan, 'get_all_tasks'):
+                all_tasks = plan.get_all_tasks()
         pending_tasks = [t for t in all_tasks if not t.completed]
         completed_tasks = [t for t in all_tasks if t.completed]
         
@@ -382,8 +387,13 @@ def generate_complete_briefing(context: Any, structure: Dict[str, Any], cache_st
     else:
         briefing_lines.append(f"📋 작업 현황: 등록된 작업 없음")
     # 전체 요약 추가 (즉시 컨텍스트 정보 다음)
-    if is_pydantic and context.plan:
-        all_tasks = context.get_all_tasks()
+    if (is_pydantic and context.plan) or (isinstance(context, dict) and 'plan' in context and context['plan']):
+        all_tasks = context.get_all_tasks() if hasattr(context, 'get_all_tasks') else []
+        # dict context에서 plan이 있는 경우
+        if isinstance(context, dict) and 'plan' in context and context['plan']:
+            plan = context['plan']
+            if hasattr(plan, 'get_all_tasks'):
+                all_tasks = plan.get_all_tasks()
         if all_tasks:
             completed_count = len([t for t in all_tasks if t.completed])
             total_count = len(all_tasks)
@@ -478,7 +488,7 @@ def generate_complete_briefing(context: Any, structure: Dict[str, Any], cache_st
             briefing_lines.append(f"  • 현재 작업: 없음")
         
         # Phase별 진행 상황
-        if context.plan and hasattr(context.plan, 'phases'):
+        if ((hasattr(context, 'plan') and context.plan) or (isinstance(context, dict) and 'plan' in context and context['plan'])) and hasattr(context.get('plan', context.plan if hasattr(context, 'plan') else None), 'phases'):
             briefing_lines.append(f"\n📂 **Phase별 진행 상황**")
             for phase_id in context.plan.phase_order[:3]:  # 처음 3개 Phase만
                 phase = context.plan.phases.get(phase_id)
@@ -496,13 +506,32 @@ def generate_complete_briefing(context: Any, structure: Dict[str, Any], cache_st
     else:
         current_task = context.get('current_task') if not is_pydantic else None
         if current_task:
-            briefing_lines.append(f"  • 현재 작업: [{current_task.get('id', 'N/A')}] {current_task.get('title', '제목 없음')}")
-            briefing_lines.append(f"  • 상태: {'✅ 완료' if current_task.get('completed') else '⏳ 진행 중'}")
+            # current_task가 문자열(Task ID)인 경우
+            if isinstance(current_task, str):
+                briefing_lines.append(f"  • 현재 작업 ID: {current_task}")
+                # Plan에서 Task 정보 가져오기
+                if 'plan' in context and context['plan']:
+                    plan = context['plan']
+                    # plan이 dict가 아닌 객체인 경우
+                    if hasattr(plan, 'get_task_by_id'):
+                        task_obj = plan.get_task_by_id(current_task)
+                        if task_obj:
+                            briefing_lines.append(f"  • 작업명: {task_obj.title}")
+                            briefing_lines.append(f"  • 상태: {'✅ 완료' if task_obj.completed else '⏳ 진행 중'}")
+            # current_task가 dict인 경우 (기존 코드)
+            else:
+                briefing_lines.append(f"  • 현재 작업: [{current_task.get('id', 'N/A')}] {current_task.get('title', '제목 없음')}")
+                briefing_lines.append(f"  • 상태: {'✅ 완료' if current_task.get('completed') else '⏳ 진행 중'}")
         else:
             briefing_lines.append(f"  • 현재 작업: 없음")
     # 4-1. 진행률 표시
-    if is_pydantic and context.plan:
-        all_tasks = context.get_all_tasks()
+    if (is_pydantic and context.plan) or (isinstance(context, dict) and 'plan' in context and context['plan']):
+        all_tasks = context.get_all_tasks() if hasattr(context, 'get_all_tasks') else []
+        # dict context에서 plan이 있는 경우
+        if isinstance(context, dict) and 'plan' in context and context['plan']:
+            plan = context['plan']
+            if hasattr(plan, 'get_all_tasks'):
+                all_tasks = plan.get_all_tasks()
         completed_tasks = [t for t in all_tasks if t.completed]
         pending_tasks = [t for t in all_tasks if not t.completed]
         in_progress_tasks = [t for t in pending_tasks if hasattr(t, 'in_progress') and t.in_progress]
@@ -1167,9 +1196,26 @@ def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str,
         if context is None:
             context = {
                 'project_name': clean_name,
-                'project_path': str(project_path),
-                'created_at': datetime.now().isoformat()
+                'project_path': str(project_path),                'created_at': datetime.now().isoformat()
             }
+        
+        # WorkflowManager의 context와 동기화
+        try:
+            from python.core.workflow_manager import get_workflow_manager
+            workflow_manager = get_workflow_manager()
+            
+            # workflow_manager의 context가 ProjectContext 타입이고 같은 프로젝트인 경우
+            if hasattr(workflow_manager, 'context') and hasattr(workflow_manager.context, 'project_name'):
+                if workflow_manager.context.project_name == clean_name:
+                    # plan 정보가 있으면 추가
+                    if hasattr(workflow_manager.context, 'plan') and workflow_manager.context.plan:
+                        context['plan'] = workflow_manager.context.plan
+                        context['current_task'] = getattr(workflow_manager.context, 'current_task', None)
+                        context['phase'] = getattr(workflow_manager.context, 'phase', None)
+                    
+                    smart_print("✅ WorkflowManager context 동기화 완료")
+        except Exception as e:
+            smart_print(f"⚠️ WorkflowManager context 동기화 중 오류: {e}")
         
         result['context'] = context
         

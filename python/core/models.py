@@ -307,11 +307,10 @@ class Phase(BaseModelWithConfig):
     
     def get_task_by_id(self, task_id: str) -> Optional[Task]:
         """ID로 작업 찾기"""
-        for task in self.tasks:
-            if task.id == task_id:
-                return task
-        return None
-    
+        return self.tasks.get(task_id)
+    def get_task_by_id(self, task_id: str) -> Optional[Task]:
+        """ID로 작업 찾기"""
+        return self.tasks.get(task_id)
     def add_task(self, title: str, description: str = "") -> Task:
         """새 작업 추가"""
         task_id = f"{self.id.split('-')[1]}-{len(self.tasks) + 1}"

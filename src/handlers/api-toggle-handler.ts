@@ -13,8 +13,8 @@ interface ToolHandler {
 
 async function executePythonCode(code: string): Promise<any> {
   return new Promise((resolve, reject) => {
-    // 프로젝트 루트를 명시적으로 설정
-    const projectRoot = 'C:/Users/82106/Desktop/ai-coding-brain-mcp';
+    // 프로젝트 루트를 동적으로 가져오기
+    const projectRoot = process.cwd();
     const pythonScript = `
 import os
 import sys
@@ -31,7 +31,11 @@ initialize_repl()
 ${code}
 `;
     
-    const proc = spawn('python', ['-c', pythonScript], {
+    // Python 실행 파일 경로 동적으로 찾기
+    const pythonPath = process.env['PYTHON_PATH'] || 
+                      (process.platform === 'win32' ? 'python' : 'python3');
+    
+    const proc = spawn(pythonPath, ['-c', pythonScript], {
       cwd: projectRoot,
       env: { ...process.env, PYTHONPATH: path.join(projectRoot, 'python') }
     });

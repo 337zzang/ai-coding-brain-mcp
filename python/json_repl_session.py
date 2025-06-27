@@ -35,11 +35,15 @@ if current_dir not in sys.path:
 try:
     from project_wisdom import get_wisdom_manager
     from wisdom_hooks import get_wisdom_hooks
-    from python.core.wisdom_integration import wisdom_integration
+    from core.wisdom_integration import wisdom_integration
     WISDOM_AVAILABLE = True
 except ImportError:
     WISDOM_AVAILABLE = False
-    print("⚠️ Wisdom 시스템을 사용할 수 없습니다.")
+    import sys
+    if sys.stdout.encoding.lower() != 'utf-8':
+        print("Warning: Wisdom system is not available.")
+    else:
+        print("⚠️ Wisdom 시스템을 사용할 수 없습니다.")
 
 # ============================================================================
 # 🌟 전역 변수 초기화

@@ -6,7 +6,7 @@ Wisdom Auto Fixer
 import ast
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
-from python.core.wisdom_plugin_base import Detection, PluginManager
+from .wisdom_plugin_base import Detection, PluginManager
 
 
 @dataclass

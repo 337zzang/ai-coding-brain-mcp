@@ -3,9 +3,11 @@
  */
 
 import { logger } from '../utils/logger';
-import { JSONRPCExecutor } from '../json-rpc-executor';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
+import * as path from 'path';
 
-const jsonRPCExecutor = new JSONRPCExecutor();
+const execFileAsync = promisify(execFile);
 
 /**
  * Build project context handler
@@ -24,7 +26,8 @@ export async function handleBuildProjectContext(args: {
       include_file_directory = false
     } = args;
     
-    const pythonCode = `
+    // Python 스크립트 내용
+    const scriptContent = `
 # 프로젝트 컨텍스트 문서 생성
 from project_analyzer import ProjectAnalyzer
 import os
@@ -64,22 +67,27 @@ if ${include_file_directory ? 'True' : 'False'}:
 for result in results:
     print(result)
 `;
+    
+    // Python 스크립트 실행
+    try {
+      const { stdout, stderr } = await execFileAsync('python', ['-c', scriptContent], {
+        env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+        cwd: path.join(process.cwd(), 'python')
+      });
 
-    const executeResult = await jsonRPCExecutor.execute({
-      code: pythonCode,
-      language: 'python'
-    });
+      if (stderr) {
+        logger.warn(`Python stderr: ${stderr}`);
+      }
 
-    if (!executeResult.success) {
-      throw new Error(executeResult.stderr || 'Build context failed');
+      return {
+        content: [
+          { type: 'text', text: '📋 Project Context Build Complete\n\n' },
+          { type: 'text', text: stdout }
+        ]
+      };
+    } catch (error: any) {
+      throw new Error(error.message || 'Build context failed');
     }
-
-    return {
-      content: [
-        { type: 'text', text: '📋 Project Context Build Complete\n\n' },
-        { type: 'text', text: executeResult.stdout }
-      ]
-    };
   } catch (error) {
     logger.error('Build project context error:', error);
     return {

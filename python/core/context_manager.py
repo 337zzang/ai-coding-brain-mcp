@@ -23,10 +23,22 @@ if python_path not in sys.path:
     sys.path.insert(0, python_path)
 
 from core.models import (
-    ProjectContext, Plan, Phase, Task, TaskStatus,
+    ProjectContext, Plan, Phase, Task,
     FileAccessEntry, WorkTracking, 
     validate_context_data
 )
+# TaskStatus를 별도로 import
+try:
+    from core.models import TaskStatus
+except ImportError:
+    # TaskStatus가 import 되지 않을 경우 임시로 정의
+    from enum import Enum
+    class TaskStatus(str, Enum):
+        PENDING = "pending"
+        IN_PROGRESS = "in_progress"
+        COMPLETED = "completed"
+        BLOCKED = "blocked"
+        CANCELED = "canceled"
 from core.decorators import autosave
 
 

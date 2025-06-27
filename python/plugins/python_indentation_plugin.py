@@ -4,7 +4,7 @@ Python Indentation Plugin - Simple Version
 
 import re
 from typing import List, Optional
-from python.core.wisdom_plugin_base import WisdomPlugin, Detection, WisdomPattern
+from core.wisdom_plugin_base import WisdomPlugin, Detection, WisdomPattern
 
 
 class PythonIndentationPlugin(WisdomPlugin):
@@ -26,12 +26,13 @@ class PythonIndentationPlugin(WisdomPlugin):
     def _init_patterns(self) -> List[WisdomPattern]:
         return [
             WisdomPattern(
-                id="manual_indent",
-                type="error",
+                key="manual_indent",
+                name="수동 들여쓰기 조작",
+                description="수동으로 들여쓰기를 조작하는 패턴 감지",
                 severity="high",
-                pattern=r"lines\[\d+\]\s*=\s*['"]\s+['"]\s*\+\s*lines\[\d+\]",
-                description="수동 들여쓰기 조작",
-                fix_suggestion="AST 도구 사용"
+                category="syntax",
+                fix_hint="AST 도구 사용",
+                auto_fixable=False
             )
         ]
         

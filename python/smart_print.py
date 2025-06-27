@@ -12,7 +12,7 @@
 - 임시 파일 저장 지원
 
 사용법:
-    from python.smart_print import sp, esp
+    from smart_print import sp, esp
     
     sp(large_content)              # 기본 스마트 출력
     esp(typescript_code)           # 고급 구조 분석

@@ -210,6 +210,19 @@ class ProjectWisdomManager:
         # Markdown 파일도 업데이트
         self._update_wisdom_markdown()
     
+    def get_statistics(self):
+        """Wisdom 시스템 통계 반환"""
+        stats = {
+            'total_mistakes': sum(data['count'] for data in self.wisdom_data.get('common_mistakes', {}).values()),
+            'total_errors': sum(data['count'] for data in self.wisdom_data.get('error_patterns', {}).values()),
+            'total_best_practices': len(self.wisdom_data.get('best_practices', [])),
+            'mistake_types': len(self.wisdom_data.get('common_mistakes', {})),
+            'error_types': len(self.wisdom_data.get('error_patterns', {})),
+            'last_updated': self.wisdom_data.get('last_updated', 'Never'),
+            'project_name': self.project_name
+        }
+        return stats
+    
     def _update_wisdom_markdown(self):
         """project_wisdom.md 파일 업데이트"""
         content = f"""# 🧠 Project Wisdom - {self.project_root.name}

@@ -4,7 +4,7 @@ Hardcoded Path Plugin - Simple Version
 
 import re
 from typing import List, Optional
-from python.core.wisdom_plugin_base import WisdomPlugin, Detection, WisdomPattern
+from core.wisdom_plugin_base import WisdomPlugin, Detection, WisdomPattern
 
 
 class HardcodedPathPlugin(WisdomPlugin):
@@ -29,7 +29,7 @@ class HardcodedPathPlugin(WisdomPlugin):
                 id="windows_path",
                 type="warning",
                 severity="high",
-                pattern=r"['"][A-Za-z]:\\\\[^'"]+['"]",
+                pattern=r"['\"][A-Za-z]:\\\\[^'\"]+['\"]",
                 description="Windows 절대 경로",
                 fix_suggestion="os.path.join() 사용"
             )

@@ -4,7 +4,7 @@ Console Usage Plugin - Simple Version
 
 import re
 from typing import List, Optional
-from python.core.wisdom_plugin_base import WisdomPlugin, Detection, WisdomPattern
+from core.wisdom_plugin_base import WisdomPlugin, Detection, WisdomPattern
 
 
 class ConsoleUsagePlugin(WisdomPlugin):

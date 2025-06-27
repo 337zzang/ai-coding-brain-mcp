@@ -4,7 +4,7 @@ Wisdom Migration Helper
 """
 
 # 기존 get_wisdom_manager 함수를 WisdomFactory로 리다이렉트
-from python.core.wisdom_factory import get_wisdom_manager as new_get_wisdom_manager
+from core.wisdom_factory import get_wisdom_manager as new_get_wisdom_manager
 
 # 하위 호환성을 위한 wrapper
 def get_wisdom_manager(project_id=None):
@@ -12,8 +12,8 @@ def get_wisdom_manager(project_id=None):
     return new_get_wisdom_manager(project_id)
 
 # 플러그인 매니저 초기화
-from python.core.wisdom_plugin_base import PluginManager
-from python.wisdom_plugins import (
+from core.wisdom_plugin_base import PluginManager
+from wisdom_plugins import (
     PythonIndentationPlugin,
     ConsoleUsagePlugin,
     HardcodedPathPlugin

@@ -399,19 +399,19 @@ class WorkflowManager:
                 'id': 'phase-1',
                 'name': 'Phase 1: 분석 및 설계',
                 'description': '요구사항 분석 및 설계',
-                'tasks': []
+                'tasks': {}
             },
             {
                 'id': 'phase-2',
                 'name': 'Phase 2: 핵심 구현',
                 'description': '주요 기능 구현',
-                'tasks': []
+                'tasks': {}
             },
             {
                 'id': 'phase-3',
                 'name': 'Phase 3: 테스트 및 문서화',
                 'description': '테스트 및 문서 작성',
-                'tasks': []
+                'tasks': {}
             }
         ]
     

@@ -80,7 +80,8 @@ class WorkflowManager:
             plan = Plan(
                 name=name,
                 description=description,
-                phases={phase['id']: Phase(**phase) for phase in phases}
+                phases={phase['id']: Phase(**phase) for phase in phases},
+                phase_order=[phase['id'] for phase in phases]  # Phase 순서 설정
             )
             
             # 컨텍스트에 설정

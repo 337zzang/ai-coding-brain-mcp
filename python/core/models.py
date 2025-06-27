@@ -494,6 +494,18 @@ class Plan(BaseModelWithConfig):
             completed_tasks += phase.completed_tasks
         
         # 전체 진행률 계산
+
+    def get_next_task(self) -> Optional[Tuple[str, Task]]:
+        """다음에 수행할 작업 반환 (phase_id, task)"""
+        for phase_id in self.phase_order:
+            phase = self.phases.get(phase_id)
+            if phase and phase.status != 'completed':
+                # Task order에 따라 순서대로 확인
+                for task_id in phase.task_order:
+                    task = phase.tasks.get(task_id)
+                    if task and task.status == TaskStatus.PENDING:
+                        return phase_id, task
+        return None
         self.overall_progress = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0.0
 class WorkTracking(BaseModelWithConfig):
     """작업 추적 모델"""

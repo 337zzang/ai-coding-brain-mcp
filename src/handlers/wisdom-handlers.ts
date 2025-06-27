@@ -233,18 +233,57 @@ export async function handleWisdomAnalyze(args: { code: string; filename?: strin
         const escapedCode = code.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
         
         const pythonCode = `
+import contextlib
+import io
 from wisdom_hooks import get_wisdom_hooks
-hooks = get_wisdom_hooks()
 
-code = '''${escapedCode}'''
-filename = '${filename}'
+# stdout 리다이렉트하여 경고 메시지 캡처
+captured_warnings = []
+original_print = print
 
-detected = hooks.check_code_patterns(code, filename)
+def capture_print(*args, **kwargs):
+    output = io.StringIO()
+    original_print(*args, file=output, **kwargs)
+    captured_warnings.append(output.getvalue())
+
+# 일시적으로 print 함수 대체
+import builtins
+builtins.print = capture_print
+
+try:
+    hooks = get_wisdom_hooks()
+    code = '''${escapedCode}'''
+    filename = '${filename}'
+    
+    detected = hooks.check_code_patterns(code, filename)
+    
+    # 감지된 패턴을 직렬화 가능한 형태로 변환
+    detected_list = []
+    for d in detected:
+        if hasattr(d, '__dict__'):
+            detected_list.append({
+                'pattern': getattr(d, 'pattern', 'unknown'),
+                'message': getattr(d, 'message', ''),
+                'line': getattr(d, 'line', 0),
+                'location': getattr(d, 'location', '')
+            })
+        else:
+            # 문자열이나 다른 형태인 경우
+            detected_list.append({
+                'pattern': str(d),
+                'message': str(d),
+                'line': 0,
+                'location': ''
+            })
+finally:
+    # print 함수 복원
+    builtins.print = original_print
 
 import json
 print(json.dumps({
-    'detected': detected,
-    'count': len(detected)
+    'detected': detected_list,
+    'count': len(detected_list),
+    'warnings': captured_warnings
 }, ensure_ascii=False))
 `;
 
@@ -265,8 +304,18 @@ print(json.dumps({
         
         for (const detection of analysis.detected) {
             message += `⚠️ **${detection.pattern}**\n`;
-            message += `• 위치: ${detection.location || '알 수 없음'}\n`;
+            message += `• 위치: ${detection.location || `줄 ${detection.line}` || '알 수 없음'}\n`;
             message += `• 설명: ${detection.message || ''}\n\n`;
+        }
+        
+        // 경고 메시지가 있으면 추가
+        if (analysis.warnings && analysis.warnings.length > 0) {
+            message += `\n💡 **추가 정보:**\n`;
+            for (const warning of analysis.warnings) {
+                if (warning.trim()) {
+                    message += `${warning}`;
+                }
+            }
         }
         
         return {

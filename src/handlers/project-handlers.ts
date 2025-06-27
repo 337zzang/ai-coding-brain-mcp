@@ -11,9 +11,6 @@ import * as fs from 'fs';
 const execFileAsync = promisify(execFile);
 
 /**
- * Get Python path from config
- */
-/**
  * Get project root directory
  */
 function getProjectRoot(): string {
@@ -39,6 +36,9 @@ function getProjectRoot(): string {
     return projectRoot;
 }
 
+/**
+ * Get Python path from config
+ */
 function getPythonPath(): string {
     const configPath = path.join(getProjectRoot(), '.ai-brain.config.json');
     
@@ -109,30 +109,47 @@ if ${update_readme ? 'True' : 'False'}:
         readme_content = builder.build_readme(project_name)
         with open('README.md', 'w', encoding='utf-8') as f:
             f.write(readme_content)
-        results.append(f"✅ README.md 업데이트 완료")
+        results.append("✅ README.md 업데이트 완료")
     except Exception as e:
         results.append(f"❌ README.md 업데이트 실패: {str(e)}")
 
 # PROJECT_CONTEXT.md 업데이트
 if ${update_context ? 'True' : 'False'}:
     try:
-        context_content = builder.build_context(
-            project_name, 
+        context_content = builder.build_project_context(
             include_stats=${include_stats ? 'True' : 'False'}
         )
         with open('PROJECT_CONTEXT.md', 'w', encoding='utf-8') as f:
             f.write(context_content)
-        results.append(f"✅ PROJECT_CONTEXT.md 업데이트 완료")
+        results.append("✅ PROJECT_CONTEXT.md 업데이트 완료")
     except Exception as e:
         results.append(f"❌ PROJECT_CONTEXT.md 업데이트 실패: {str(e)}")
 
 # file_directory.md 생성
 if ${include_file_directory ? 'True' : 'False'}:
     try:
-        directory_content = builder.build_file_directory(project_name)
+        # 간단한 파일 목록 생성
+        import glob
+        
+        directory_content = "# 📂 파일 디렉토리 구조\\n\\n"
+        directory_content += "\`\`\`\\n"
+        directory_content += f"{project_name}/\\n"
+        
+        # 파일 목록 생성
+        files = []
+        for ext in ['*.py', '*.ts', '*.js', '*.json', '*.md']:
+            files.extend(glob.glob(f'**/{ext}', recursive=True))
+        
+        for f in sorted(set(files))[:100]:  # 최대 100개 파일
+            directory_content += f"├── {f}\\n"
+        if len(files) > 100:
+            directory_content += f"└── ... ({len(files) - 100} more files)\\n"
+        
+        directory_content += "\`\`\`\\n"
+        
         with open('file_directory.md', 'w', encoding='utf-8') as f:
             f.write(directory_content)
-        results.append(f"✅ file_directory.md 생성 완료")
+        results.append("✅ file_directory.md 생성 완료")
     except Exception as e:
         results.append(f"❌ file_directory.md 생성 실패: {str(e)}")
 

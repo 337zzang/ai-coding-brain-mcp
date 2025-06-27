@@ -84,9 +84,12 @@ import sys
 sys.path.insert(0, r'${projectRoot.replace(/\\/g, '\\\\')}\\python')
 os.chdir(r'${projectRoot.replace(/\\/g, '\\\\')}')
 
-# Initialize REPL environment
-from json_repl_session import initialize_repl, repl_globals
-initialize_repl()
+# Initialize REPL environment without output
+import contextlib
+import io
+with contextlib.redirect_stdout(io.StringIO()):
+    from json_repl_session import initialize_repl, repl_globals
+    initialize_repl()
 
 ${code}
 `;

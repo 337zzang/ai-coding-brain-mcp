@@ -321,14 +321,15 @@ class Phase(BaseModelWithConfig):
             description=description,
             phase_id=self.id
         )
-        self.tasks.append(task)
+        self.tasks[task_id] = task
+        self.task_order.append(task_id)  # 순서 기록
         return task
     
     @property
     def progress(self) -> Dict[str, Any]:
         """진행률 계산"""
         total = len(self.tasks)
-        completed = len([t for t in self.tasks if t.completed])
+        completed = len([t for t in self.tasks.values() if t.completed])
         return {
             'total': total,
             'completed': completed,

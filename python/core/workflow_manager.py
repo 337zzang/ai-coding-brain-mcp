@@ -483,7 +483,7 @@ class WorkflowManager:
     def analyze_and_generate_tasks(self, project_path: str = ".") -> Dict[str, List[Task]]:
         """ProjectAnalyzer를 사용하여 자동으로 Task 생성"""
         from analyzers.project_analyzer import ProjectAnalyzer
-        from python.project_wisdom import get_wisdom_manager
+        from project_wisdom import get_wisdom_manager
         
         analyzer = ProjectAnalyzer()
         wisdom = get_wisdom_manager()
@@ -565,7 +565,7 @@ class WorkflowManager:
     
     def apply_wisdom_hints(self, task: Task) -> None:
         """Task에 Wisdom 시스템의 힌트 적용"""
-        from python.project_wisdom import get_wisdom_manager
+        from project_wisdom import get_wisdom_manager
         
         wisdom = get_wisdom_manager()
         
@@ -626,7 +626,7 @@ class WorkflowManager:
                 plan.phase_order.append("auto-phase-2")
             
             # Wisdom 데이터 Plan에 저장
-            from python.project_wisdom import get_wisdom_manager
+            from project_wisdom import get_wisdom_manager
             wisdom = get_wisdom_manager()
             plan.wisdom_data = {
                 "applied_at": datetime.now().isoformat(),

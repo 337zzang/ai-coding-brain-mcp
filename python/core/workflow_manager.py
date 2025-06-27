@@ -195,7 +195,7 @@ class WorkflowManager:
             phase_id, next_task = result
             
             # 작업 시작
-            next_task.transition_to('in_progress')
+            next_task.status = TaskStatus.IN_PROGRESS
             self.context.current_task = next_task.id
             self.context_manager.set_current_task(next_task.id)
             

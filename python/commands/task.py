@@ -84,15 +84,15 @@ def cmd_task(action: str, *args) -> StandardResponse:
             print(f"진행률: {progress_value:.1f}% ({completed}/{total})")
             
             # Phase별 작업 표시
-            for phase in plan.phases:
-                phase_tasks = [t for t in plan.tasks if t.phase_id == phase.phase_id]
+            for phase_id, phase in plan.phases.items():
+                phase_tasks = list(phase.tasks.values()) if hasattr(phase.tasks, 'values') else phase.tasks
                 if phase_tasks:
                     completed = len([t for t in phase_tasks if t.status == TaskStatus.COMPLETED])
                     print(f"\n{'✅' if completed == len(phase_tasks) else '🔄'} {phase.name} ({completed}/{len(phase_tasks)} 완료)")
                     
                     for task in phase_tasks:
                         icon = "✅" if task.status == TaskStatus.COMPLETED else ("🔄" if task.status == TaskStatus.IN_PROGRESS else "⏳")
-                        print(f"   {icon} [{task.task_id}] {task.name}")
+                        print(f"   {icon} [{task.id}] {task.title}")
                             
             return StandardResponse(success=True, data=status)
             

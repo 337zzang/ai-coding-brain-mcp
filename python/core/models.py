@@ -442,6 +442,11 @@ class Plan(BaseModelWithConfig):
     wisdom_data: Dict[str, Any] = Field(default_factory=dict)  # Wisdom 시스템 데이터
     
     
+    @property
+    def tasks(self) -> List[Task]:
+        """모든 Phase의 Task를 하나의 리스트로 반환하는 프로퍼티"""
+        return self.get_all_tasks()
+
     def get_all_tasks(self) -> List[Task]:
         """모든 Phase의 Task를 하나의 리스트로 반환"""
         all_tasks = []

@@ -63,7 +63,7 @@ class WisdomAutoFixer:
                 
             # 수정 시도
             try:
-                suggested_fix = plugin.fix(fixed_code, detection)
+                suggested_fix = plugin.auto_fix(fixed_code, detection)
                 if suggested_fix and self._validate_fix(suggested_fix, filename):
                     if auto_apply:
                         fixed_code = suggested_fix
@@ -136,7 +136,7 @@ class WisdomAutoFixer:
                     break
                 
                 if plugin:
-                    suggested_fix = plugin.fix(fixed_code, detection)
+                    suggested_fix = plugin.auto_fix(fixed_code, detection)
                     if suggested_fix and self._validate_fix(suggested_fix, filename):
                         fixed_code = suggested_fix
                         applied_fixes.append(detection)

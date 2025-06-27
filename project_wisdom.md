@@ -7,7 +7,13 @@
 
 ## ❌ 자주 하는 실수들
 
-### hardcoded_path (3회)
+### console_usage (8회)
+- 올바른 방법: import { logger } from '../utils/logger'; logger.info('메시지');
+
+### hardcoded_path (7회)
 - 올바른 방법: 문서를 참고하세요
 
 ## ✅ 베스트 프랙티스
+
+### refactoring
+- Plan/Phase/Task 구조 수정 시 AST 기반 도구 사용이 효과적

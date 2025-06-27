@@ -524,8 +524,8 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
             
             # Phase별 진행 상황
             print("\n📊 Phase별 진행 상황:")
-            for phase in plan.phases:
-                phase_tasks = [t for t in plan.tasks if t.phase_id == phase.phase_id]
+            for phase_id, phase in plan.phases.items():
+                phase_tasks = list(phase.tasks.values()) if hasattr(phase.tasks, 'values') else phase.tasks
                 if phase_tasks:
                     completed = len([t for t in phase_tasks if t.status == TaskStatus.COMPLETED])
                     progress = (completed / len(phase_tasks)) * 100

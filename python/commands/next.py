@@ -45,7 +45,7 @@ def cmd_next() -> StandardResponse:
                     
         elif data.get('status') == 'started':
             task = data['task']
-            print(f"\n✅ 작업 시작: [{task.task_id}] {task.name}")
+            print(f"\n✅ 작업 시작: [{task.id}] {task.title}")
             
             if task.description:
                 print(f"\n📝 설명: {task.description}")

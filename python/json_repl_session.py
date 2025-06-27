@@ -665,6 +665,51 @@ def initialize_repl():
 # 💻 코드 실행
 # ============================================================================
 
+
+def check_and_reload_modules():
+    """변경된 모듈을 자동으로 reload"""
+    import importlib
+    
+    # Wisdom 관련 모듈들
+    modules_to_check = [
+        'core.wisdom_integration',
+        'core.wisdom_auto_fixer', 
+        'core.wisdom_plugin_base',
+        'plugins.console_usage_plugin',
+        'plugins.hardcoded_path_plugin',
+        'plugins.python_indentation_plugin'
+    ]
+    
+    reloaded = []
+    for module_name in modules_to_check:
+        if module_name in sys.modules:
+            module = sys.modules[module_name]
+            if hasattr(module, '__file__') and module.__file__:
+                try:
+                    current_mtime = os.path.getmtime(module.__file__)
+                    
+                    # 이전 수정 시간과 비교
+                    if not hasattr(module, '_last_mtime'):
+                        module._last_mtime = current_mtime
+                    elif current_mtime > module._last_mtime:
+                        # 모듈이 변경됨 - reload
+                        importlib.reload(module)
+                        module._last_mtime = current_mtime
+                        reloaded.append(module_name)
+                        
+                        # wisdom_integration 전역 변수도 업데이트
+                        if module_name == 'core.wisdom_integration':
+                            global wisdom_integration
+                            from core.wisdom_integration import wisdom_integration
+                except:
+                    pass
+    
+    if reloaded:
+        print(f"🔄 자동 reload된 모듈: {', '.join(reloaded)}")
+    
+    return reloaded
+
+
 def execute_code(code: str) -> Dict[str, Any]:
     """Python 코드 실행"""
     global execution_count, WISDOM_AVAILABLE, hooks
@@ -672,10 +717,13 @@ def execute_code(code: str) -> Dict[str, Any]:
     stdout_capture = io.StringIO()
     stderr_capture = io.StringIO()
     start_time = time.time()
-    
+
     try:
+        # 변경된 모듈 자동 reload
+        check_and_reload_modules()
+
         with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
-            # Wisdom Integration 실행 (코드 실행 전 분석 및 자동 수정)
+        # Wisdom Integration 실행 (코드 실행 전 분석 및 자동 수정)
             if WISDOM_AVAILABLE and hasattr(wisdom_integration, 'pre_execute_check'):
                 try:
                     should_proceed, modified_code, analysis = wisdom_integration.pre_execute_check(

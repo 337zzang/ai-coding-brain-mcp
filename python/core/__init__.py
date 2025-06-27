@@ -5,7 +5,7 @@ Wisdom System Core
 from .wisdom_factory import WisdomFactory
 from .wisdom_plugin_base import WisdomPlugin, PluginManager, Detection, WisdomPattern
 from .wisdom_auto_fixer import WisdomAutoFixer
-from .wisdom_integration import wisdom_integration
+# Removed wisdom_integration to avoid circular import
 
 __all__ = [
     'WisdomFactory',
@@ -13,6 +13,5 @@ __all__ = [
     'PluginManager',
     'Detection',
     'WisdomPattern',
-    'WisdomAutoFixer',
-    'wisdom_integration'
+    'WisdomAutoFixer'
 ]

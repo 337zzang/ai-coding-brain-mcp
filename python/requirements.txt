@@ -28,3 +28,5 @@ typing-extensions>=4.5.0
 numpy>=1.24.0
 pandas>=2.0.0
 matplotlib>=3.7.0
+
+astor>=0.8.1  # AST to source code conversion

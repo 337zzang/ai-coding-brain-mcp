@@ -423,7 +423,7 @@ class UnifiedContextManager:
         
         # 모든 phase의 작업들을 순회
         for phase_id, phase in self.context.plan.phases.items():
-            for task in phase.tasks:
+            for task in phase.tasks.values():
                 task_info = {
                     'id': task.id,
                     'phase': phase_id,

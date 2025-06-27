@@ -65,3 +65,16 @@ LICENSE
 *.cache
 temp/
 tmp/
+
+
+# Documentation
+docs/
+
+# Images
+image/
+
+# Python cache
+**/__pycache__/
+
+# Vendor dependencies
+python/vendor/

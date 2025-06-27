@@ -5,7 +5,6 @@ ProjectContext와 dict 모두 지원하는 유연한 구조
 """
 
 import os
-import json
 import datetime as dt
 from pathlib import Path
 from typing import Dict, Any, Optional, Union, List
@@ -13,7 +12,6 @@ from typing import Dict, Any, Optional, Union, List
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from core.context_manager import get_context_manager
-from core.config import get_paths_from_config
 from core.workflow_manager import get_workflow_manager
 from core.error_handler import StandardResponse
 from core.models import TaskStatus

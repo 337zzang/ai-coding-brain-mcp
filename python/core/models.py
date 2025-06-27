@@ -9,7 +9,7 @@ AI Coding Brain Pydantic 데이터 모델
 
 from pydantic import BaseModel, Field, validator
 from typing import List, Dict, Optional, Any, Union
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 import json
 
@@ -62,6 +62,12 @@ class Task(BaseModelWithConfig):
     work_summary: Optional[Dict[str, Any]] = None
     dependencies: List[str] = Field(default_factory=list)  # 의존성 작업 ID 목록
     related_files: List[str] = Field(default_factory=list)  # 관련 파일 목록
+    
+    # 상태 관리 강화 필드
+    state_history: List[Dict[str, Any]] = Field(default_factory=list)  # 상태 변경 이력
+    blocking_reason: Optional[str] = None  # 차단 이유
+    estimated_hours: Optional[float] = None  # 예상 소요 시간
+    actual_hours: Optional[float] = None  # 실제 소요 시간
     
     @validator('status')
     def validate_status(cls, v):
@@ -122,12 +128,26 @@ class Task(BaseModelWithConfig):
         self.status = new_status
         self.updated_at = datetime.now()
         
+        # 상태 이력 기록
+        self.state_history.append({
+            'from': old_status,
+            'to': new_status,
+            'timestamp': self.updated_at,
+            'reason': self.blocking_reason if new_status == 'blocked' else None
+        })
+        
         # 상태별 추가 처리
         if new_status == 'in_progress':
             self.started_at = datetime.now()
         elif new_status == 'completed':
             self.completed_at = datetime.now()
             self.completed = True
+            # 실제 소요 시간 계산
+            if self.started_at:
+                self.actual_hours = (self.completed_at - self.started_at).total_seconds() / 3600
+        elif new_status == 'blocked':
+            # blocking_reason은 transition_to 호출 전에 설정되어야 함
+            pass
         
         return True
     
@@ -172,6 +192,80 @@ class Task(BaseModelWithConfig):
         if self.dependencies and task_id in self.dependencies:
             self.dependencies.remove(task_id)
             self.updated_at = datetime.now()
+    
+    def get_time_in_state(self, state: Optional[str] = None) -> float:
+        """특정 상태(또는 현재 상태)에 머문 시간 계산 (시간 단위)
+        
+        Args:
+            state: 조회할 상태 (None이면 현재 상태)
+            
+        Returns:
+            float: 해당 상태에 머문 시간 (시간 단위)
+        """
+        if state is None:
+            state = self.status
+        
+        total_hours = 0.0
+        
+        # 상태 이력에서 해당 상태에 머문 시간 계산
+        for i, entry in enumerate(self.state_history):
+            if entry['to'] == state:
+                # 다음 상태 변경까지의 시간 계산
+                if i + 1 < len(self.state_history):
+                    next_entry = self.state_history[i + 1]
+                    duration = next_entry['timestamp'] - entry['timestamp']
+                else:
+                    # 마지막 상태면 현재까지의 시간
+                    duration = datetime.now() - entry['timestamp']
+                
+                total_hours += duration.total_seconds() / 3600
+        
+        # 현재 상태가 요청한 상태와 같고 이력이 없으면
+        if state == self.status and total_hours == 0:
+            if state == 'in_progress' and self.started_at:
+                total_hours = (datetime.now() - self.started_at).total_seconds() / 3600
+            elif state == 'completed' and self.completed_at and self.started_at:
+                total_hours = (self.completed_at - self.started_at).total_seconds() / 3600
+        
+        return total_hours
+    
+    def set_blocking_reason(self, reason: str) -> None:
+        """차단 이유 설정
+        
+        Args:
+            reason: 차단 이유
+        """
+        self.blocking_reason = reason
+        self.updated_at = datetime.now()
+    
+    def estimate_completion_time(self) -> Optional[datetime]:
+        """예상 완료 시간 계산
+        
+        Returns:
+            Optional[datetime]: 예상 완료 시간
+        """
+        if self.status == 'completed':
+            return self.completed_at
+        
+        if self.status == 'in_progress' and self.started_at and self.estimated_hours:
+            # 시작 시간 + 예상 소요 시간
+            return self.started_at + timedelta(hours=self.estimated_hours)
+        
+        return None
+    
+    def get_progress_percentage(self) -> float:
+        """작업 진행률 계산 (0-100)
+        
+        Returns:
+            float: 진행률 (0-100)
+        """
+        if self.status == 'completed':
+            return 100.0
+        elif self.status == 'in_progress' and self.started_at and self.estimated_hours:
+            elapsed = (datetime.now() - self.started_at).total_seconds() / 3600
+            return min(100.0, (elapsed / self.estimated_hours) * 100)
+        else:
+            return 0.0
 
 
 class Phase(BaseModelWithConfig):
@@ -211,6 +305,92 @@ class Phase(BaseModelWithConfig):
             'completed': completed,
             'percentage': (completed / total * 100) if total > 0 else 0
         }
+    
+    def get_progress_details(self) -> Dict[str, Any]:
+        """상세 진행 상황 반환
+        
+        Returns:
+            Dict[str, Any]: 상태별 작업 수, 진행률 등 상세 정보
+        """
+        status_count = {
+            'pending': 0,
+            'ready': 0,
+            'in_progress': 0,
+            'completed': 0,
+            'blocked': 0,
+            'cancelled': 0
+        }
+        
+        for task in self.tasks:
+            status_count[task.status] = status_count.get(task.status, 0) + 1
+        
+        return {
+            'status_count': status_count,
+            'total_tasks': len(self.tasks),
+            'active_tasks': status_count['in_progress'],
+            'completion_rate': self.progress['percentage'],
+            'blocked_rate': (status_count['blocked'] / len(self.tasks) * 100) if self.tasks else 0
+        }
+    
+    def get_active_task(self) -> Optional[Task]:
+        """현재 진행 중인 작업 반환
+        
+        Returns:
+            Optional[Task]: 진행 중인 작업 (없으면 None)
+        """
+        for task in self.tasks:
+            if task.status == 'in_progress':
+                return task
+        return None
+    
+    def can_complete(self) -> bool:
+        """Phase 완료 가능 여부 확인
+        
+        Returns:
+            bool: 모든 작업이 완료/취소되었으면 True
+        """
+        for task in self.tasks:
+            if task.status not in ['completed', 'cancelled']:
+                return False
+        return True
+    
+    def estimate_remaining_time(self) -> float:
+        """남은 예상 시간 계산 (시간 단위)
+        
+        Returns:
+            float: 남은 예상 시간
+        """
+        remaining_hours = 0.0
+        
+        for task in self.tasks:
+            if task.status in ['pending', 'ready', 'blocked']:
+                # 예상 시간이 설정된 경우
+                if task.estimated_hours:
+                    remaining_hours += task.estimated_hours
+            elif task.status == 'in_progress':
+                # 진행 중인 작업의 남은 시간
+                if task.estimated_hours and task.started_at:
+                    elapsed = (datetime.now() - task.started_at).total_seconds() / 3600
+                    remaining = max(0, task.estimated_hours - elapsed)
+                    remaining_hours += remaining
+        
+        return remaining_hours
+    
+    def get_next_task(self) -> Optional[Task]:
+        """Phase 내에서 다음 실행할 작업 반환
+        
+        Returns:
+            Optional[Task]: 다음 작업 (없으면 None)
+        """
+        # pending이나 ready 상태의 작업 중 우선순위가 가장 높은 것
+        available_tasks = [t for t in self.tasks if t.status in ['pending', 'ready']]
+        
+        if not available_tasks:
+            return None
+        
+        # 우선순위로 정렬
+        available_tasks.sort(key=lambda t: t.get_priority_value(), reverse=True)
+        return available_tasks[0]
 
 
 class Plan(BaseModelWithConfig):

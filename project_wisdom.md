@@ -25,3 +25,6 @@
 
 ### file_handling
 - 파일 경로 문제시 절대 경로 사용 - os.path.join()으로 안전하게 구성
+
+### task_management
+- Task 상태 이력을 추적하여 작업 분석 및 시간 추정 정확도 향상

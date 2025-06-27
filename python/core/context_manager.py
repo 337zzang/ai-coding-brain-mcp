@@ -238,7 +238,7 @@ class UnifiedContextManager:
             # 캐시 디렉토리 생성
             self.cache_dir.mkdir(parents=True, exist_ok=True)
             
-            context_dict = self.context.to_dict()
+            context_dict = self.context.model_dump()
             cache_paths = self._get_cache_file_paths()
             
             # 사용 가능한 캐시 파일만 저장
@@ -278,7 +278,7 @@ class UnifiedContextManager:
             # 5. 계획 저장 (cache_plan.json)
             if 'plan' in cache_paths and hasattr(self.context, 'plan') and self.context.plan:
                 with open(cache_paths['plan'], 'w', encoding='utf-8') as f:
-                    json.dump(self.context.plan.to_dict(), f, indent=2, ensure_ascii=False, default=str)
+                    json.dump(self.context.plan.model_dump(), f, indent=2, ensure_ascii=False, default=str)
                     saved_count += 1
             
             print(f"💾 {saved_count}개 변수 저장됨")

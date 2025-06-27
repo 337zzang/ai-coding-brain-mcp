@@ -96,39 +96,45 @@ sys.path.insert(0, r'${projectRoot.replace(/\\/g, '\\\\')}\\python')
 os.chdir(r'${projectRoot.replace(/\\/g, '\\\\')}')
 
 # 프로젝트 컨텍스트 문서 생성
-from project_analyzer import ProjectAnalyzer
+from project_context_builder import ProjectContextBuilder
 
-analyzer = ProjectAnalyzer()
+builder = ProjectContextBuilder()
 project_name = os.path.basename(os.getcwd())
 
 results = []
 
 # README.md 업데이트
 if ${update_readme ? 'True' : 'False'}:
-    readme_path = analyzer.update_readme(project_name)
-    if readme_path:
-        results.append(f"✅ README.md 업데이트 완료: {readme_path}")
-    else:
-        results.append("❌ README.md 업데이트 실패")
+    try:
+        readme_content = builder.build_readme(project_name)
+        with open('README.md', 'w', encoding='utf-8') as f:
+            f.write(readme_content)
+        results.append(f"✅ README.md 업데이트 완료")
+    except Exception as e:
+        results.append(f"❌ README.md 업데이트 실패: {str(e)}")
 
 # PROJECT_CONTEXT.md 업데이트
 if ${update_context ? 'True' : 'False'}:
-    context_path = analyzer.update_project_context(
-        project_name, 
-        include_stats=${include_stats ? 'True' : 'False'}
-    )
-    if context_path:
-        results.append(f"✅ PROJECT_CONTEXT.md 업데이트 완료: {context_path}")
-    else:
-        results.append("❌ PROJECT_CONTEXT.md 업데이트 실패")
+    try:
+        context_content = builder.build_context(
+            project_name, 
+            include_stats=${include_stats ? 'True' : 'False'}
+        )
+        with open('PROJECT_CONTEXT.md', 'w', encoding='utf-8') as f:
+            f.write(context_content)
+        results.append(f"✅ PROJECT_CONTEXT.md 업데이트 완료")
+    except Exception as e:
+        results.append(f"❌ PROJECT_CONTEXT.md 업데이트 실패: {str(e)}")
 
 # file_directory.md 생성
 if ${include_file_directory ? 'True' : 'False'}:
-    directory_path = analyzer.create_file_directory(project_name)
-    if directory_path:
-        results.append(f"✅ file_directory.md 생성 완료: {directory_path}")
-    else:
-        results.append("❌ file_directory.md 생성 실패")
+    try:
+        directory_content = builder.build_file_directory(project_name)
+        with open('file_directory.md', 'w', encoding='utf-8') as f:
+            f.write(directory_content)
+        results.append(f"✅ file_directory.md 생성 완료")
+    except Exception as e:
+        results.append(f"❌ file_directory.md 생성 실패: {str(e)}")
 
 # 결과 출력
 for result in results:

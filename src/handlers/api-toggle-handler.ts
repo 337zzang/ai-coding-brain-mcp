@@ -146,11 +146,53 @@ export const listApisHandler: ToolHandler = {
 import json
 from api_manager import api_manager
 apis = api_manager.list_apis()
-print(json.dumps(apis, ensure_ascii=False))
+
+# 결과 포맷팅
+if apis:
+    available = apis.get('available', [])
+    enabled = apis.get('enabled', [])
+    
+    message = "🔌 **API 목록**\\n\\n"
+    
+    if available:
+        message += f"**사용 가능한 API ({len(available)}개):**\\n"
+        for api in available:
+            status = "✅" if api in enabled else "❌"
+            message += f"  • {api} {status}\\n"
+    else:
+        message += "사용 가능한 API가 없습니다.\\n"
+    
+    result = {
+        "content": [{
+            "type": "text",
+            "text": message
+        }]
+    }
+else:
+    result = {
+        "content": [{
+            "type": "text",
+            "text": "API 목록을 가져올 수 없습니다."
+        }]
+    }
+
+print(json.dumps(result, ensure_ascii=False))
 `;
     
     try {
-      return await executePythonCode(code);
+      const result = await executePythonCode(code);
+      // executePythonCode가 이미 JSON 파싱을 하므로, result를 그대로 반환
+      if (result.content) {
+        return result;
+      } else {
+        // 파싱 실패 시 기본 응답
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify(result, null, 2)
+          }]
+        };
+      }
     } catch (error) {
       logger.error('API 목록 조회 오류: ' + error);
       throw error;

@@ -229,6 +229,7 @@ class ProjectAnalyzer:
 ### 의존성
 - 이 파일이 사용: {', '.join(dependencies) if dependencies else 'None'}
 - 이 파일을 사용: {', '.join(dependents) if dependents else 'None'}
+"""\
 """
         
         # 함수 목록 추가

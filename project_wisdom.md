@@ -20,6 +20,7 @@
 - 이원화된 데이터 구조(Plan.tasks와 context.tasks['next'])를 단일화하여 동기화 문제 해결
 - 상태 전환 로직을 모델 메서드(transition_to)로 캡슐화하여 일관성 확보
 - WorkflowManager 패턴으로 비즈니스 로직을 중앙화하여 유지보수성 향상
+- WorkflowManager로 복잡한 로직 캡슐화
 
 ### bug_fix
 - get_snippet_preview 버그 수정 완료 - parser.get_snippet_preview() → parse_with_snippets() + _get_snippet() 조합으로 해결
@@ -35,3 +36,14 @@
 
 ### refactoring
 - WorkflowManager 사용으로 코드 단순화
+- replace_block으로 대규모 함수 안전하게 교체
+- 대규모 리팩토링시 Git stash + replace_block 조합
+
+### process
+- 대규모 리팩토링은 단계별로 진행
+
+### safety
+- 각 함수별로 Git stash로 백업
+
+### technique
+- replace_block으로 구조적 무결성 유지

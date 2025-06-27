@@ -14,6 +14,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from core.context_manager import get_context_manager
 from core.config import get_paths_from_config
+from core.workflow_manager import get_workflow_manager
+from core.error_handler import StandardResponse
+from core.models import TaskStatus
 from analyzers.project_analyzer import ProjectAnalyzer
 
 # Wisdom 시스템 통합
@@ -457,342 +460,88 @@ def enhance_plan_with_wisdom(plan_data: Dict) -> Dict:
     
     return plan_data
 
-def cmd_plan(plan_name: Optional[str] = None, description: Optional[str] = None, interactive: bool = False) -> None:
-    """새로운 계획 수립 또는 현재 계획 조회
+def cmd_plan(name: Optional[str] = None, phase_count: int = 3) -> StandardResponse:
+    """프로젝트 계획 수립 또는 조회
     
     Args:
-        plan_name: 계획 이름
-        description: 계획 설명
-        interactive: 대화형 모드 활성화 (--interactive)
+        name: 계획 이름 (없으면 현재 계획 표시)
+        phase_count: Phase 개수 (기본 3개)
+        
+    Returns:
+        StandardResponse: 표준 응답
     """
-    
-    # helpers 전역 변수 사용
-    helpers = globals().get('helpers', None)
-    context = get_context_manager().context
-    
-    # 인자가 없으면 현재 계획 표시
-    if not plan_name:
-        plan = get_plan(context)
-        
-        if not plan:
-            print("❌ 수립된 계획이 없습니다. 'plan <계획명>'으로 새 계획을 생성하세요.")
-            return
-        
-        # dict로 변환하여 일관된 처리
-        plan_dict = plan_to_dict(plan)
-        
-        print(f"\n📋 현재 계획: {plan_dict['name']}")
-        print(f"   설명: {plan_dict['description']}")
-        print(f"   생성: {plan_dict.get('created_at', 'N/A')}")
-        print(f"   현재 Phase: {plan_dict.get('current_phase', 'N/A')}")
-        
-        # Phase 목록 표시
-        if plan_dict.get('phases'):
-            print("\n📊 Phase 목록:")
-            for phase_id, phase in plan_dict['phases'].items():
-                tasks = phase.get('tasks', [])
-                completed = sum(1 for t in tasks if t.get('status') == 'completed')
-                status = "✅" if phase.get('status') == 'completed' else "🔄" if phase.get('status') == 'in_progress' else "⏳"
-                print(f"   {status} {phase['name']} ({completed}/{len(tasks)} 완료)")
-        return
-    
-    # 새 계획 생성
-    if interactive:
-        # 대화형 모드
-        if not description:
-            description = input("계획 설명을 입력하세요: ").strip()
-            if not description:
-                description = f"{plan_name} 프로젝트 계획"
-        
-        plan = interactive_plan_creation(plan_name, description)
-        
-        # 사용자 승인
-        print("\n📊 생성된 계획 요약:")
-        print(f"  • 계획명: {plan['name']}")
-        print(f"  • 설명: {plan['description']}")
-        print(f"  • Phase 수: {len(plan['phases'])}")
-        total_tasks = sum(len(phase.get('tasks', [])) for phase in plan['phases'])
-        print(f"  • 전체 Task 수: {total_tasks}")
-        
-        print("\n📋 Phase 상세:")
-        for phase in plan['phases']:
-            print(f"\n  Phase {phase['id']}: {phase['name']}")
-            if phase.get('goal'):
-                print(f"    목표: {phase['goal']}")
-            print(f"    Tasks: {len(phase.get('tasks', []))}개")
-            for task in phase.get('tasks', [])[:3]:  # 처음 3개만 표시
-                print(f"      - {task['task']}")
-            if len(phase.get('tasks', [])) > 3:
-                print(f"      ... 외 {len(phase['tasks']) - 3}개")
-        
-        confirm = input("\n이 계획을 저장하시겠습니까? (y/n) [y]: ").strip().lower()
-        if confirm == 'n':
-            print("❌ 계획 수립이 취소되었습니다.")
-            return
-            
-    else:
-        # 기존 자동 모드
-        print(f"\n🎯 새로운 계획 '{plan_name}' 수립 중...")
-    
-    # ProjectAnalyzer를 활용한 프로젝트 분석
-    print("🔍 프로젝트 구조 분석 중...")
-    project_path = get_context_manager().project_path
-    analyzer = ProjectAnalyzer(project_path)
+    wm = get_workflow_manager()
     
     try:
-        # 프로젝트 분석 수행
-        analyzer.analyze_and_update()
-        briefing = analyzer.get_briefing_data()
-        
-        print(f"  ✅ 분석 완료: {briefing.get('total_files', 0)}개 파일")
-        languages = briefing.get('languages', {})
-        if languages:
-            print(f"  📊 주요 언어: {', '.join(list(languages.keys())[:3])}")
-        
-        # 프로젝트 특성에 따른 추천 작업 생성
-        recommendations = []
-        
-        # TypeScript/JavaScript 프로젝트
-        if any(lang in languages for lang in ['.ts', '.js', '.tsx', '.jsx']):
-            recommendations.append({
-                'phase': 'phase-1',
-                'task': 'TypeScript 타입 안전성 개선',
-                'priority': 'high'
-            })
-            recommendations.append({
-                'phase': 'phase-2',
-                'task': '테스트 커버리지 향상',
-                'priority': 'medium'
-            })
-        
-        # Python 프로젝트
-        if '.py' in languages:
-            recommendations.append({
-                'phase': 'phase-1',
-                'task': 'Python 코드 품질 분석 (flake8, mypy)',
-                'priority': 'high'
-            })
-            recommendations.append({
-                'phase': 'phase-2',
-                'task': 'docstring 및 타입 힌트 추가',
-                'priority': 'medium'
-            })
-        
-        # 문서화 필요성
-        if briefing.get('readme_exists'):
-            recommendations.append({
-                'phase': 'phase-3',
-                'task': 'README.md 업데이트',
-                'priority': 'low'
-            })
-        else:
-            recommendations.append({
-                'phase': 'phase-3',
-                'task': 'README.md 작성',
-                'priority': 'high'
-            })
-        
-    except Exception as e:
-        print(f"  ⚠️ 프로젝트 분석 실패: {e}")
-        recommendations = []
-    
-    timestamp = dt.datetime.now().isoformat()
-    
-    # 계획 데이터를 dictionary로 생성
-    new_plan_dict = {
-        'name': plan_name,
-        'description': description or f"{get_context_manager().project_name} 작업 계획",
-        'created_at': timestamp,
-        'updated_at': timestamp,
-        'phases': {},
-        'current_phase': None,
-        'current_task': None,
-        'analysis_summary': briefing if 'briefing' in locals() else None
-    }
-    
-    
-    # 기본 Phase 3개 생성 (프로젝트 분석 결과 반영)
-    # Flow 시스템 개선인 경우 특별한 Phase와 작업들 사용
-    if 'flow' in plan_name.lower() or (description and 'flow' in description.lower()):
-        # Flow 시스템 개선을 위한 특별한 Phase와 작업들
-        default_phases = [
-            ('phase-1', 'Phase 1: 긴급 버그 수정', '즉시 적용 가능한 버그 수정 및 도구 정의', [
-                ('flow_project 도구 정의 추가', 'tool-definitions.ts에 누락된 flow_project 도구 정의 추가', 'HIGH'),
-                ('헬퍼 모듈 초기화 오류 수정', 'ImportError: helpers not available 오류 해결', 'HIGH'),
-                ('프로젝트 구조 캐싱 버그 수정', 'get_project_structure()가 빈 결과 반환하는 문제 해결', 'HIGH')
-            ]),
-            ('phase-2', 'Phase 2: 시스템 구조 단순화', '복잡한 호출 체인을 단순화하고 성능 개선', [
-                ('호출 체인 단순화', '5단계 호출 체인을 3단계로 축소', 'MEDIUM'),
-                ('smart_print 토큰 제한 개선', '과도한 출력을 제어하는 로직 개선', 'MEDIUM'),
-                ('변수 저장/복원 시스템 개선', 'JSON 직렬화 제한 해결 및 성능 개선', 'MEDIUM')
-            ]),
-            ('phase-3', 'Phase 3: 성능 최적화', '프로젝트 스캔 성능을 대폭 개선', [
-                ('메모리 캐시 시스템 구현', '파일 캐시와 별도로 메모리 캐시 추가', 'MEDIUM'),
-                ('증분 스캔 기능 구현', '변경된 파일만 재스캔하는 기능', 'LOW'),
-                ('병렬 처리 도입', '대규모 프로젝트 스캔시 병렬 처리', 'LOW')
-            ]),
-            ('phase-4', 'Phase 4: 테스트 및 문서화', '안정성 확보를 위한 테스트와 사용자 문서', [
-                ('단위 테스트 작성', '핵심 기능들에 대한 단위 테스트', 'MEDIUM'),
-                ('통합 테스트 작성', '전체 flow 시스템 통합 테스트', 'MEDIUM'),
-                ('사용자 가이드 작성', '개선된 flow 시스템 사용 가이드', 'LOW')
-            ])
-        ]
-    else:
-        # 일반적인 프로젝트를 위한 기본 Phase
-        default_phases = [
-        ('phase-1', 'Phase 1: 분석 및 설계', '현재 상태 분석과 개선 방향 설계', [
-            '현재 코드 구조 분석',
-            '개선 사항 도출',
-            '구현 계획 수립'
-        ]),
-        ('phase-2', 'Phase 2: 핵심 구현', '주요 기능 구현 및 개선', [
-            '핵심 기능 구현',
-            '단위 테스트 작성',
-            '코드 리뷰 및 리팩토링'
-        ]),
-        ('phase-3', 'Phase 3: 테스트 및 문서화', '테스트 작성 및 문서 정리', [
-            '통합 테스트 작성',
-            'API 문서화',
-            'README 및 가이드 업데이트'
-        ])
-    ]
-    
-    for phase_id, phase_name, phase_desc, default_tasks in default_phases:
-        # 기본 tasks 생성
-        tasks = []
-        for i, task_info in enumerate(default_tasks, 1):
-            task_id = f"{phase_id}-task-{i}"
+        if name:
+            # 새 계획 생성
+            result = wm.create_plan(
+                name=name,
+                phases=phase_count
+            )
             
-            # task_info가 튜플인 경우 (Flow 시스템 개선 등)
-            if isinstance(task_info, tuple):
-                task_title, task_desc, task_priority = task_info
-                tasks.append({
-                    'id': task_id,
-                    'title': task_title,
-                    'description': task_desc,
-                    'priority': task_priority,
-                    'status': 'pending',
-                    'created_at': timestamp,
-                    'phase_id': phase_id
-                })
-            else:
-                # 일반적인 문자열 작업명
-                tasks.append({
-                    'id': task_id,
-                    'title': task_info,
-                    'status': 'pending',
-                    'created_at': timestamp,
-                    'phase_id': phase_id
-                })
-        
-        new_plan_dict['phases'][phase_id] = {
-            'id': phase_id,
-            'name': phase_name,
-            'description': phase_desc,
-            'status': 'pending',
-            'tasks': tasks,
-            'created_at': timestamp,
-            'updated_at': timestamp
-        }
-    
-    new_plan_dict['current_phase'] = 'phase-1'
-    
-    # 프로젝트 분석 기반 추천 작업을 Phase에 추가
-    if recommendations:
-        print("\n📋 프로젝트 분석 기반 추천 작업:")
-        task_counter = 1
-        for rec in recommendations:
-            phase_id = rec['phase']
-            if phase_id in new_plan_dict['phases']:
-                task_id = f"{phase_id}-task-{task_counter}"
-                task = {
-                    'id': task_id,
-                    'title': rec['task'],
-                    'description': f"[{rec['priority'].upper()}] {rec['task']}",
-                    'status': 'pending',
-                    'priority': rec['priority'],
-                    'created_at': timestamp,
-                    'updated_at': timestamp
-                }
-                new_plan_dict['phases'][phase_id]['tasks'].append(task)
-                print(f"   ➕ {phase_id}: {rec['task']} (우선순위: {rec['priority']})")
-                task_counter += 1
-    
-    # context에 plan 설정
-    success, error_msg = set_plan(context, new_plan_dict)
-    if success:
-        # 기존 작업 큐 정리 (새 계획 생성 시)
-        if hasattr(context, 'tasks'):
-            # 완료된 작업은 보존, next 큐만 초기화
-            old_next_count = len(context.tasks.get('next', []))
-            if old_next_count > 0:
-                print(f"  🧹 기존 대기 작업 {old_next_count}개 정리")
-            context.tasks['next'] = []
-        elif isinstance(context, dict) and 'tasks' in context:
-            old_next_count = len(context['tasks'].get('next', []))
-            if old_next_count > 0:
-                print(f"  🧹 기존 대기 작업 {old_next_count}개 정리")
-            context['tasks']['next'] = []
-        
-        # plan_history 업데이트
-        if hasattr(context, 'plan_history'):
-            if not context.plan_history:
-                context.plan_history = []
-            context.plan_history.append({
-                'name': plan_name,
-                'created_at': timestamp,
-                'id': f"plan-{len(context.plan_history) + 1}"
-            })
-        elif isinstance(context, dict):
-            if 'plan_history' not in context:
-                context['plan_history'] = []
-            context['plan_history'].append({
-                'name': plan_name,
-                'created_at': timestamp,
-                'id': f"plan-{len(context['plan_history']) + 1}"
-            })
-        
-        # Phase 변경 (metadata 사용)
-        if hasattr(context, 'metadata'):
-            if not context.metadata:
-                context.metadata = {}
-            context.metadata['phase'] = 'planning'
-        
-        get_context_manager().save()
-        
-        print(f"\n✅ 새 계획 '{plan_name}' 생성 완료!")
-        print(f"   설명: {new_plan_dict['description']}")
-        
-        # Flow 시스템 개선인 경우 더 자세한 정보 표시
-        if 'flow' in plan_name.lower() or (description and 'flow' in description.lower()):
-            print(f"\n   {len(default_phases)}개의 Phase와 구체적인 작업들이 생성되었습니다:")
-            total_tasks = 0
-            for phase_id, phase in new_plan_dict['phases'].items():
-                task_count = len(phase['tasks'])
-                total_tasks += task_count
-                print(f"   - {phase['name']} ({task_count}개 작업)")
-                # HIGH 우선순위 작업만 표시
-                high_priority_tasks = [t for t in phase['tasks'] if t.get('priority') == 'HIGH']
-                for task in high_priority_tasks[:2]:
-                    print(f"     ⚡ [{task['id']}] {task['title']}")
-            print(f"\n   총 {total_tasks}개 작업 (HIGH: {sum(1 for p in new_plan_dict['phases'].values() for t in p['tasks'] if t.get('priority') == 'HIGH')}개)")
+            if result['success']:
+                plan = result['data']['plan']
+                print(f"✅ 새 계획 생성: {plan.name}")
+                print(f"   Phase 수: {len(plan.phases)}")
+                
+                # 기본 Phase 정보 표시
+                for phase in plan.phases:
+                    print(f"   - {phase.phase_id}: {phase.name}")
+                    
+                print("\n💡 다음 단계:")
+                print("   1. 'task add phase-id \"작업명\"'으로 작업 추가")
+                print("   2. 'next'로 작업 시작")
+                
+            return result
+            
         else:
-            print(f"\n   {len(default_phases)}개의 기본 Phase가 생성되었습니다:")
-            for phase_id, phase_name, _, _ in default_phases:
-                print(f"   - {phase_name}")
-        
-        print(f"\n💡 다음 단계:")
-        print(f"   1. 'task add phase-1 \"작업명\"'으로 작업 추가")
-        print(f"   2. 'next'로 작업 시작")
-        print(f"   3. 'task done'으로 작업 완료")
-        
-        # 에러 메시지가 있으면 경고로 표시
-        if error_msg:
-            print(f"\n⚠️ 경고: {error_msg}")
-    else:
-        print(f"❌ 계획 저장 중 오류가 발생했습니다: {error_msg if error_msg else 'Unknown error'}")
-
-
+            # 현재 계획 표시
+            if not wm.plan:
+                return StandardResponse(
+                    success=False,
+                    message="설정된 계획이 없습니다. 'plan \"계획명\"'으로 생성하세요."
+                )
+                
+            plan = wm.plan
+            status = wm.get_workflow_status()
+            
+            print(f"📋 현재 계획: {plan.name}")
+            print(f"진행률: {status['progress']:.1f}% ({status['completed']}/{status['total']})")
+            print(f"\n생성일: {plan.created_at}")
+            
+            # Phase별 진행 상황
+            print("\n📊 Phase별 진행 상황:")
+            for phase in plan.phases:
+                phase_tasks = [t for t in plan.tasks if t.phase_id == phase.phase_id]
+                if phase_tasks:
+                    completed = len([t for t in phase_tasks if t.status == TaskStatus.COMPLETED])
+                    progress = (completed / len(phase_tasks)) * 100
+                    icon = "✅" if progress == 100 else ("🔄" if progress > 0 else "⏳")
+                    print(f"{icon} {phase.name}: {progress:.0f}% ({completed}/{len(phase_tasks)})")
+                else:
+                    print(f"⏳ {phase.name}: 작업 없음")
+                    
+            # 분석 정보
+            analytics = wm.get_task_analytics()
+            if analytics['average_completion_time']:
+                print(f"\n📈 평균 작업 완료 시간: {analytics['average_completion_time']}")
+                
+            return StandardResponse(
+                success=True,
+                data={
+                    'plan': plan.dict(),
+                    'status': status,
+                    'analytics': analytics
+                }
+            )
+            
+    except Exception as e:
+        return StandardResponse(
+            success=False,
+            message=f"계획 처리 중 오류: {str(e)}",
+            error=str(e)
+        )
 if __name__ == "__main__":
     # 명령줄 인자 처리
     import sys

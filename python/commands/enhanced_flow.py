@@ -266,6 +266,63 @@ def debug_log(message):
                 })
         
         return results
+
+def create_progress_bar(percentage: float, width: int = 30) -> str:
+    """시각적 진행률 바 생성"""
+    filled = int(width * percentage / 100)
+    empty = width - filled
+    bar = "█" * filled + "░" * empty
+    return f"[{bar}] {percentage:.1f}%"
+
+
+def format_task_status(task) -> str:
+    """작업 상태를 이모지로 표현"""
+    if task.completed:
+        return "✅"
+    elif hasattr(task, 'in_progress') and task.in_progress:
+        return "🔄"
+    elif hasattr(task, 'priority') and task.priority == 'high':
+        return "🔴"
+    elif hasattr(task, 'priority') and task.priority == 'medium':
+        return "🟡"
+    else:
+        return "⏳"
+
+
+def get_today_completed_tasks(all_tasks) -> list:
+    """오늘 완료된 작업들 가져오기"""
+    from datetime import datetime, date
+    today = date.today()
+    completed_today = []
+    
+    for task in all_tasks:
+        if task.completed and hasattr(task, 'completed_at'):
+            try:
+                completed_date = datetime.fromisoformat(task.completed_at).date()
+                if completed_date == today:
+                    completed_today.append(task)
+            except:
+                pass
+    
+    return completed_today
+
+
+def estimate_remaining_time(pending_tasks) -> str:
+    """남은 작업들의 예상 소요시간 계산"""
+    total_hours = 0
+    for task in pending_tasks:
+        if hasattr(task, 'estimated_hours'):
+            total_hours += task.estimated_hours
+        else:
+            # 기본값: 작업당 2시간
+            total_hours += 2
+    
+    if total_hours < 8:
+        return f"{total_hours}시간"
+    else:
+        days = total_hours / 8  # 하루 8시간 기준
+        return f"{days:.1f}일 ({total_hours}시간)"
+
 def generate_complete_briefing(context: Any, structure: Dict[str, Any], cache_status: Dict[str, Any] = None) -> str:
     """완전한 프로젝트 브리핑 생성 - ProjectContext 전용"""
     briefing_lines = []
@@ -324,6 +381,35 @@ def generate_complete_briefing(context: Any, structure: Dict[str, Any], cache_st
             briefing_lines.append(f"\n  • 작업 현황: 등록된 작업 없음")
     else:
         briefing_lines.append(f"📋 작업 현황: 등록된 작업 없음")
+    # 전체 요약 추가 (즉시 컨텍스트 정보 다음)
+    if is_pydantic and context.plan:
+        all_tasks = context.get_all_tasks()
+        if all_tasks:
+            completed_count = len([t for t in all_tasks if t.completed])
+            total_count = len(all_tasks)
+            progress = (completed_count / total_count * 100) if total_count > 0 else 0
+            
+            briefing_lines.append(f"\n🎯 **프로젝트 진행 요약**")
+            briefing_lines.append(f"  • 전체 진행률: {create_progress_bar(progress, width=20)}")
+            briefing_lines.append(f"  • 작업 현황: {completed_count}/{total_count} 완료")
+            
+            # 오늘의 성과
+            today_completed = get_today_completed_tasks(all_tasks)
+            if today_completed:
+                briefing_lines.append(f"  • 오늘 완료: {len(today_completed)}개 작업")
+            
+            # 현재 진행 중
+            in_progress = [t for t in all_tasks if hasattr(t, 'in_progress') and t.in_progress and not t.completed]
+            if in_progress:
+                briefing_lines.append(f"  • 진행 중: {in_progress[0].title[:30]}...")
+            
+            # 다음 목표
+            pending = [t for t in all_tasks if not t.completed]
+            if pending:
+                high_priority = [t for t in pending if hasattr(t, 'priority') and t.priority == 'high']
+                next_target = high_priority[0] if high_priority else pending[0]
+                briefing_lines.append(f"  • 다음 목표: {next_target.title[:30]}...")
+    
     
     briefing_lines.append("\n" + "="*70)
     briefing_lines.append("📊 **프로젝트 상태 브리핑**")
@@ -374,21 +460,39 @@ def generate_complete_briefing(context: Any, structure: Dict[str, Any], cache_st
         if context.current_task and context.plan:
             task_obj = context.plan.get_task_by_id(context.current_task)
             if task_obj:
-                briefing_lines.append(f"  • 현재 작업: [{task_obj.id}] {task_obj.title}")
-                briefing_lines.append(f"  • 상태: {'✅ 완료' if task_obj.completed else '⏳ 진행 중'}")
+                status_emoji = format_task_status(task_obj)
+                briefing_lines.append(f"  {status_emoji} 현재 작업: [{task_obj.id}] {task_obj.title}")
+                briefing_lines.append(f"  • 상태: {'✅ 완료' if task_obj.completed else '🔄 진행 중' if hasattr(task_obj, 'in_progress') and task_obj.in_progress else '⏳ 대기 중'}")
+                
+                # 추가 정보
+                if hasattr(task_obj, 'assigned_to'):
+                    briefing_lines.append(f"  • 담당: {task_obj.assigned_to}")
+                if hasattr(task_obj, 'started_at') and task_obj.started_at:
+                    briefing_lines.append(f"  • 시작: {task_obj.started_at}")
+                if hasattr(task_obj, 'progress_percentage'):
+                    progress_bar = create_progress_bar(task_obj.progress_percentage, width=20)
+                    briefing_lines.append(f"  • 진행도: {progress_bar}")
             else:
                 briefing_lines.append(f"  • 현재 작업: {context.current_task}")
         else:
             briefing_lines.append(f"  • 현재 작업: 없음")
         
-        # 대기 중인 작업들 (상위 5개)
-        if context.plan:
-            all_tasks = context.get_all_tasks()
-            pending_tasks = [t for t in all_tasks if not t.completed][:5]
-            if pending_tasks:
-                briefing_lines.append(f"\n  📌 대기 중인 작업:")
-                for task in pending_tasks:
-                    briefing_lines.append(f"    - [{task.id}] {task.title}")
+        # Phase별 진행 상황
+        if context.plan and hasattr(context.plan, 'phases'):
+            briefing_lines.append(f"\n📂 **Phase별 진행 상황**")
+            for phase_id in context.plan.phase_order[:3]:  # 처음 3개 Phase만
+                phase = context.plan.phases.get(phase_id)
+                if phase and phase.tasks:
+                    phase_completed = len([t for t in phase.tasks.values() if t.completed])
+                    phase_total = len(phase.tasks)
+                    phase_progress = (phase_completed / phase_total * 100) if phase_total > 0 else 0
+                    
+                    briefing_lines.append(f"  • {phase.name}: {phase_progress:.0f}% ({phase_completed}/{phase_total})")
+                    if phase_progress < 100:
+                        # 해당 Phase의 다음 작업 표시
+                        next_in_phase = next((t for t in phase.tasks.values() if not t.completed), None)
+                        if next_in_phase:
+                            briefing_lines.append(f"    다음: [{next_in_phase.id}] {next_in_phase.title}")
     else:
         current_task = context.get('current_task') if not is_pydantic else None
         if current_task:
@@ -396,8 +500,6 @@ def generate_complete_briefing(context: Any, structure: Dict[str, Any], cache_st
             briefing_lines.append(f"  • 상태: {'✅ 완료' if current_task.get('completed') else '⏳ 진행 중'}")
         else:
             briefing_lines.append(f"  • 현재 작업: 없음")
-    
-
     # 4-1. 진행률 표시
     if is_pydantic and context.plan:
         all_tasks = context.get_all_tasks()
@@ -407,23 +509,79 @@ def generate_complete_briefing(context: Any, structure: Dict[str, Any], cache_st
         
         if all_tasks:
             total_progress = (len(completed_tasks) / len(all_tasks) * 100)
-            briefing_lines.append(f"\n📊 **전체 진행률**: {total_progress:.1f}%")
+            
+            # 시각적 진행률 바 추가
+            briefing_lines.append(f"\n📊 **전체 진행 상황**")
+            progress_bar = create_progress_bar(total_progress)
+            briefing_lines.append(f"  {progress_bar}")
             briefing_lines.append(f"  • ✅ 완료: {len(completed_tasks)}개")
             briefing_lines.append(f"  • 🔄 진행 중: {len(in_progress_tasks)}개")
             briefing_lines.append(f"  • ⏳ 대기: {len(pending_tasks) - len(in_progress_tasks)}개")
             
-            # 다음 해야 할 일
+            # 예상 남은 시간
             if pending_tasks:
-                briefing_lines.append(f"\n🎯 **다음 해야 할 일**")
-                next_task = pending_tasks[0]
-                briefing_lines.append(f"  • 다음 작업: [{next_task.id}] {next_task.title}")
+                remaining_time = estimate_remaining_time(pending_tasks)
+                briefing_lines.append(f"  • ⏱️ 예상 남은 시간: {remaining_time}")
+            
+            # 오늘 완료한 작업들
+            today_completed = get_today_completed_tasks(all_tasks)
+            if today_completed:
+                briefing_lines.append(f"\n✨ **오늘 완료한 작업** ({len(today_completed)}개)")
+                for task in today_completed[:3]:  # 최대 3개만 표시
+                    briefing_lines.append(f"  ✅ [{task.id}] {task.title}")
+                if len(today_completed) > 3:
+                    briefing_lines.append(f"  ... 외 {len(today_completed) - 3}개")
+            
+            # 현재 진행 중인 작업 상세
+            if in_progress_tasks:
+                briefing_lines.append(f"\n🔄 **현재 진행 중인 작업**")
+                for task in in_progress_tasks:
+                    status_emoji = format_task_status(task)
+                    briefing_lines.append(f"  {status_emoji} [{task.id}] {task.title}")
+                    if hasattr(task, 'progress_percentage'):
+                        task_progress_bar = create_progress_bar(task.progress_percentage, width=20)
+                        briefing_lines.append(f"     {task_progress_bar}")
+                    if hasattr(task, 'current_step'):
+                        briefing_lines.append(f"     현재 단계: {task.current_step}")
+            
+            # 다음 할일 (우선순위별)
+            if pending_tasks:
+                briefing_lines.append(f"\n🎯 **다음 할일** (우선순위순)")
+                
+                # 우선순위별로 정렬
+                high_priority = [t for t in pending_tasks if hasattr(t, 'priority') and t.priority == 'high']
+                medium_priority = [t for t in pending_tasks if hasattr(t, 'priority') and t.priority == 'medium']
+                normal_priority = [t for t in pending_tasks if not hasattr(t, 'priority') or t.priority == 'normal']
+                
+                # 높은 우선순위
+                if high_priority:
+                    briefing_lines.append(f"\n  🔴 **긴급**")
+                    for task in high_priority[:2]:
+                        briefing_lines.append(f"    • [{task.id}] {task.title}")
+                        if hasattr(task, 'deadline'):
+                            briefing_lines.append(f"      마감: {task.deadline}")
+                
+                # 중간 우선순위
+                if medium_priority:
+                    briefing_lines.append(f"\n  🟡 **중요**")
+                    for task in medium_priority[:2]:
+                        briefing_lines.append(f"    • [{task.id}] {task.title}")
+                
+                # 일반 우선순위
+                if normal_priority:
+                    briefing_lines.append(f"\n  🟢 **일반**")
+                    for task in normal_priority[:3]:
+                        briefing_lines.append(f"    • [{task.id}] {task.title}")
+                
+                # 다음 작업 추천
+                next_task = high_priority[0] if high_priority else (medium_priority[0] if medium_priority else pending_tasks[0])
+                briefing_lines.append(f"\n  💡 **추천 다음 작업**: [{next_task.id}] {next_task.title}")
                 if hasattr(next_task, 'estimated_time'):
-                    briefing_lines.append(f"  • 예상 소요시간: {next_task.estimated_time}")
+                    briefing_lines.append(f"     예상 시간: {next_task.estimated_time}")
                 if hasattr(next_task, 'description') and next_task.description:
-                    desc_preview = next_task.description[:100] + "..." if len(next_task.description) > 100 else next_task.description
-                    briefing_lines.append(f"  • 작업 설명: {desc_preview}")
-                briefing_lines.append(f"\n  💡 시작하려면: next_task() 명령을 사용하세요")
-
+                    desc_preview = next_task.description[:80] + "..." if len(next_task.description) > 80 else next_task.description
+                    briefing_lines.append(f"     설명: {desc_preview}")
+                briefing_lines.append(f"\n  🚀 시작하려면: `next_task()` 명령을 사용하세요")
     # 5. Phase 정보 추가
     phase = getattr(context, 'phase', None) if is_pydantic else context.get('phase')
     if phase:

@@ -12,6 +12,7 @@ AI Coding Brain MCP - Workflow Manager
 
 from typing import Optional, List, Dict, Any, Tuple
 from datetime import datetime
+import json
 import logging
 
 from core.context_manager import get_context_manager

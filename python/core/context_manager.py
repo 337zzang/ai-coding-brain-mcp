@@ -211,15 +211,27 @@ class UnifiedContextManager:
             if cache_paths['plan'].exists():
                 with open(cache_paths['plan'], 'r', encoding='utf-8') as f:
                     plan_data = json.load(f)
-                    context_data['plan'] = plan_data.get('plan')
-                    context_data['plan_history'] = plan_data.get('plan_history', [])
+                    # Plan 데이터를 직접 사용 (이미 model_dump()로 저장됨)
+                    context_data['plan'] = plan_data
+                    # plan_history는 context의 별도 필드
+                    if 'plan_history' in context_data:
+                        context_data['plan_history'] = context_data.get('plan_history', [])
             
             # 경로 업데이트
             context_data['project_path'] = str(self.project_path)
             context_data['memory_root'] = str(self.memory_root)
             
             # ProjectContext로 변환
-            return ProjectContext.from_dict(context_data)
+            # ProjectContext 생성 (필수 필드 추가)
+            if 'project_id' not in context_data:
+                context_data['project_id'] = context_data.get('project_name', self.project_name)
+            
+            # Plan 데이터가 있으면 Plan 객체로 변환
+            if 'plan' in context_data and context_data['plan']:
+                from core.models import Plan
+                context_data['plan'] = Plan(**context_data['plan'])
+            
+            return ProjectContext(**context_data)
             
         except Exception as e:
             print(f"⚠️ 캐시 로드 실패: {e}")

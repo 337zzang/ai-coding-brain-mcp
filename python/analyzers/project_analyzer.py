@@ -217,20 +217,6 @@ class ProjectAnalyzer:
                 'classes': [],
                 'functions': []
             }
-**요약**: {file_info.get('summary', 'No summary')}
-**언어**: {file_info.get('language', 'unknown')}
-**크기**: {file_info.get('size', 0)} bytes
-**최종 수정**: {file_info.get('last_modified', 'unknown')}
-
-### 구조
-- 클래스: {len(file_info.get('classes', []))}개
-- 함수: {len(file_info.get('functions', []))}개
-
-### 의존성
-- 이 파일이 사용: {', '.join(dependencies) if dependencies else 'None'}
-- 이 파일을 사용: {', '.join(dependents) if dependents else 'None'}
-"""\
-"""
         
         # 함수 목록 추가
         functions = file_info.get('functions', [])

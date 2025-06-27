@@ -60,7 +60,7 @@ class WorkflowManager:
             
             # 레거시 큐 마이그레이션 체크
             if hasattr(self.context, 'tasks') and self.context.tasks:
-                self.migrate_legacy_queue()
+                # 레거시 마이그레이션 제거됨
             
             return StandardResponse.success({
                 'project': self.context.project_name,
@@ -360,7 +360,7 @@ class WorkflowManager:
     
     # ========== 동기화 및 마이그레이션 ==========
     
-    @autosave
+    
     def migrate_legacy_queue(self) -> StandardResponse:
         """레거시 큐(context.tasks) 마이그레이션"""
         try:
@@ -440,44 +440,28 @@ class WorkflowManager:
         if event_name in self._event_hooks:
             self._event_hooks[event_name].append(callback)
     
-    def save_unified(self) -> None:
-        """Plan 중심의 단일 파일 저장"""
+    
+    def save(self) -> None:
+        """Plan 중심의 통합 저장"""
         workflow_data = {
             "version": "2.0",
             "last_updated": datetime.now().isoformat(),
-            "current_plan": None,
-            "archived_plans": []
+            "current_plan": None
         }
         
         # 현재 Plan 저장
         if self.context.plan:
             # 진행률 업데이트
             self.context.plan.update_progress()
-            workflow_data["current_plan"] = self.context.plan.dict()
+            # Pydantic 모델의 json() 메서드 사용하여 datetime 처리
+            workflow_data["current_plan"] = json.loads(self.context.plan.json())
         
         # 통합 파일에 저장
         unified_path = os.path.join(self.cache_dir, "workflow_unified.json")
         with open(unified_path, 'w', encoding='utf-8') as f:
             json.dump(workflow_data, f, indent=2, ensure_ascii=False)
-        
-        # 레거시 파일들도 업데이트 (호환성 유지)
-        if self.context.plan:
-            # cache_plan.json 업데이트
-            plan_path = os.path.join(self.cache_dir, "cache_plan.json")
-            with open(plan_path, 'w', encoding='utf-8') as f:
-                json.dump(self.context.plan.dict(), f, indent=2, ensure_ascii=False)
-            
-            # cache_tasks.json 업데이트 (Plan 기반)
-            tasks_data = {
-                "next": [t.dict() for t in self.context.plan.get_next_tasks()],
-                "done": [t.dict() for t in self.context.plan.get_all_tasks() 
-                        if t.status == TaskStatus.COMPLETED]
-            }
-            tasks_path = os.path.join(self.cache_dir, "cache_tasks.json")
-            with open(tasks_path, 'w', encoding='utf-8') as f:
-                json.dump(tasks_data, f, indent=2, ensure_ascii=False)
     
-    def load_unified(self) -> bool:
+    def load(self) -> bool:
         """통합 파일에서 Plan 로드"""
         unified_path = os.path.join(self.cache_dir, "workflow_unified.json")
         
@@ -493,33 +477,6 @@ class WorkflowManager:
                         self.context.plan = Plan(**workflow_data["current_plan"])
                         return True
             except Exception as e:
-                print(f"통합 파일 로드 실패: {e}")
-        
-        # 레거시 파일에서 로드 시도
-        return self._load_legacy()
-    
-    def _load_legacy(self) -> bool:
-        """레거시 파일에서 로드 (하위 호환성)"""
-        plan_path = os.path.join(self.cache_dir, "cache_plan.json")
-        if os.path.exists(plan_path):
-            try:
-                with open(plan_path, 'r', encoding='utf-8') as f:
-                    plan_data = json.load(f)
-                if plan_data:
-                    self.context.plan = Plan(**plan_data)
-                    return True
-            except Exception as e:
-                print(f"레거시 Plan 로드 실패: {e}")
+                print(f"워크플로우 로드 실패: {e}")
         
         return False
-
-
-# 싱글톤 인스턴스
-_workflow_manager_instance = None
-
-def get_workflow_manager() -> WorkflowManager:
-    """WorkflowManager 싱글톤 인스턴스 반환"""
-    global _workflow_manager_instance
-    if _workflow_manager_instance is None:
-        _workflow_manager_instance = WorkflowManager()
-    return _workflow_manager_instance

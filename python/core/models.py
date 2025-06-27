@@ -428,6 +428,9 @@ class Plan(BaseModelWithConfig):
     description: str
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
+    phases: Dict[str, Phase] = Field(default_factory=dict)  # Phase ID -> Phase 객체
+    current_phase: Optional[str] = None  # 현재 진행 중인 Phase ID
+    current_task: Optional[str] = None  # 현재 진행 중인 Task ID
     
     # Phase 순서 및 진행률 관리
     phase_order: List[str] = Field(default_factory=list)  # Phase 표시 순서

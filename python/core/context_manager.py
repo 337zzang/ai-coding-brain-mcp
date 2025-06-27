@@ -138,7 +138,7 @@ class UnifiedContextManager:
             'core': self.cache_dir / 'cache_core.json',
             'analyzed_files': self.cache_dir / 'cache_analyzed_files.json',
             'work_tracking': self.cache_dir / 'cache_work_tracking.json',
-            'tasks': self.cache_dir / 'cache_tasks.json',
+        # 'tasks': self.cache_dir / 'cache_tasks.json', # Plan에서 파생되므로 제거
             'plan': self.cache_dir / 'cache_plan.json'
         }
     
@@ -273,7 +273,7 @@ class UnifiedContextManager:
             with open(cache_paths['work_tracking'], 'w', encoding='utf-8') as f:
                 json.dump(context_dict.get('work_tracking', {}), f, indent=2, ensure_ascii=False, default=str)
             
-            # 4. 작업 저장 (cache_tasks.json)
+        # # 4. 작업 저장 (cache_tasks.json) # Plan에서 파생되므로 제거
             with open(cache_paths['tasks'], 'w', encoding='utf-8') as f:
                 json.dump(context_dict.get('tasks', {}), f, indent=2, ensure_ascii=False, default=str)
             

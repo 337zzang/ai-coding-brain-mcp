@@ -15,7 +15,17 @@ class ConsoleUsagePlugin(WisdomPlugin):
         super().__init__()
         self.name = "Console Usage Checker"
         self.description = "console.log/error를 logger로 변환"
-        self.patterns = self._init_patterns()
+        self.patterns = self._init_patterns()    
+    @property
+    def plugin_name(self) -> str:
+        """플러그인 이름"""
+        return self.name
+        
+    @property
+    def plugin_version(self) -> str:
+        """플러그인 버전"""
+        return "1.0.0"
+
         
     def _init_patterns(self) -> List[WisdomPattern]:
         """Console 사용 패턴 정의"""

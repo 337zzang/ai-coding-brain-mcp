@@ -16,7 +16,17 @@ class HardcodedPathPlugin(WisdomPlugin):
         super().__init__()
         self.name = "Hardcoded Path Checker"
         self.description = "절대 경로 하드코딩 감지"
-        self.patterns = self._init_patterns()
+        self.patterns = self._init_patterns()    
+    @property
+    def plugin_name(self) -> str:
+        """플러그인 이름"""
+        return self.name
+        
+    @property
+    def plugin_version(self) -> str:
+        """플러그인 버전"""
+        return "1.0.0"
+
         
     def _init_patterns(self) -> List[WisdomPattern]:
         """경로 패턴 정의"""
@@ -47,7 +57,7 @@ class HardcodedPathPlugin(WisdomPlugin):
             )
         ]
         
-    def check(self, code: str, filename: str) -> List[Detection]:
+    def analyze(self, code: str, filename: str) -> List[Detection]:
         """코드에서 하드코딩된 경로 검사"""
         detections = []
         lines = code.split('\n')
@@ -90,7 +100,7 @@ class HardcodedPathPlugin(WisdomPlugin):
             
         return True
         
-    def fix(self, code: str, detection: Detection) -> Optional[str]:
+    def auto_fix(self, code: str, detection: Detection) -> Optional[str]:
         """하드코딩된 경로를 동적 경로로 변환"""
         matched = detection.matched_text.strip('"\'')
         

@@ -454,6 +454,14 @@ class Plan(BaseModelWithConfig):
             all_tasks.extend(phase.tasks.values())
         return all_tasks
     
+
+    def get_task_by_id(self, task_id: str) -> Optional[Task]:
+        """ID로 Task 조회 (모든 Phase에서 검색)"""
+        for phase in self.phases.values():
+            task = phase.get_task_by_id(task_id)
+            if task:
+                return task
+        return None
     def get_current_task(self) -> Optional[Task]:
         """현재 진행 중인 Task 반환"""
         for task in self.get_all_tasks():
@@ -639,26 +647,39 @@ class ProjectContext(BaseModelWithConfig):
             self.progress.update(progress_info)
     
     @classmethod
+    @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ProjectContext':
-        """딕셔너리에서 ProjectContext 생성"""
-        # Plan 데이터 처리
-        if 'plan' in data and data['plan'] and isinstance(data['plan'], dict):
-            plan_data = data['plan'].copy()
-            # phases 처리
-            if 'phases' in plan_data:
-                phases = {}
-                for phase_id, phase_data in plan_data['phases'].items():
-                    if 'tasks' in phase_data:
-                        tasks = []
-                        for task_data in phase_data['tasks']:
-                            tasks.append(Task(**task_data))
-                        phase_data['tasks'] = tasks
-                    phases[phase_id] = Phase(**phase_data)
-                plan_data['phases'] = phases
-            data['plan'] = Plan(**plan_data)
+        """딕셔너리에서 ProjectContext 생성 (Plan 처리 개선)"""
+        # 복사본 생성하여 원본 데이터 보호
+        data = data.copy()
         
+        # datetime 문자열 처리
+        for field in ['created_at', 'updated_at']:
+            if field in data and isinstance(data[field], str):
+                try:
+                    data[field] = datetime.fromisoformat(data[field].replace('Z', '+00:00'))
+                except:
+                    data[field] = datetime.now()
+        
+        # Plan 데이터는 dict 상태로 유지
+        # ProjectContext의 validator가 자동으로 Plan 객체로 변환
+        if 'plan' in data and data['plan']:
+            if isinstance(data['plan'], dict):
+                # phases가 있으면 tasks 구조만 정리
+                plan_data = data['plan']
+                if 'phases' in plan_data and isinstance(plan_data['phases'], dict):
+                    for phase_id, phase_data in plan_data['phases'].items():
+                        if 'tasks' in phase_data:
+                            # tasks가 list인 경우 dict로 변환
+                            if isinstance(phase_data['tasks'], list):
+                                tasks_dict = {}
+                                for task in phase_data['tasks']:
+                                    if isinstance(task, dict) and 'id' in task:
+                                        tasks_dict[task['id']] = task
+                                phase_data['tasks'] = tasks_dict
+        
+        # ProjectContext 생성
         return cls(**data)
-    
     def to_json(self) -> str:
         """JSON 문자열로 변환"""
         return json.dumps(self.model_dump(), indent=2, ensure_ascii=False, default=str)

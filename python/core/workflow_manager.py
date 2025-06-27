@@ -16,7 +16,7 @@ import json
 import logging
 
 from core.context_manager import get_context_manager
-from core.models import Plan, Phase, Task, ProjectContext
+from core.models import Plan, Phase, Task, ProjectContext, TaskStatus
 from core.decorators import autosave
 from core.error_handler import ErrorHandler, ErrorType, StandardResponse
 
@@ -446,6 +446,7 @@ class WorkflowManager:
     
     def save(self) -> None:
         """Plan 중심의 통합 저장"""
+        import os  # 메서드 내부에서 import
         workflow_data = {
             "version": "2.0",
             "last_updated": datetime.now().isoformat(),
@@ -463,7 +464,6 @@ class WorkflowManager:
         unified_path = os.path.join(self.cache_dir, "workflow_unified.json")
         with open(unified_path, 'w', encoding='utf-8') as f:
             json.dump(workflow_data, f, indent=2, ensure_ascii=False)
-    
     def load(self) -> bool:
         """통합 파일에서 Plan 로드"""
         unified_path = os.path.join(self.cache_dir, "workflow_unified.json")

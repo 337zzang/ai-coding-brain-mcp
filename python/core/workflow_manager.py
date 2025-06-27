@@ -59,8 +59,7 @@ class WorkflowManager:
                 )
             
             # 레거시 큐 마이그레이션 체크
-            if hasattr(self.context, 'tasks') and self.context.tasks:
-                # 레거시 마이그레이션 제거됨
+            # 레거시 tasks 체크 제거됨
             
             return StandardResponse.success({
                 'project': self.context.project_name,
@@ -480,3 +479,165 @@ class WorkflowManager:
                 print(f"워크플로우 로드 실패: {e}")
         
         return False
+
+    def analyze_and_generate_tasks(self, project_path: str = ".") -> Dict[str, List[Task]]:
+        """ProjectAnalyzer를 사용하여 자동으로 Task 생성"""
+        from python.analyzers.project_analyzer import ProjectAnalyzer
+        from python.project_wisdom import get_wisdom_manager
+        
+        analyzer = ProjectAnalyzer()
+        wisdom = get_wisdom_manager()
+        
+        # 프로젝트 분석
+        print("🔍 프로젝트 분석 중...")
+        analysis_result = analyzer.analyze_project(project_path)
+        
+        # 분석 결과를 Plan에 저장
+        if self.context.plan:
+            self.context.plan.project_insights = {
+                "total_files": analysis_result.get("total_files", 0),
+                "file_types": analysis_result.get("file_types", {}),
+                "complexity_score": analysis_result.get("average_complexity", 0),
+                "largest_files": analysis_result.get("largest_files", []),
+                "analysis_timestamp": datetime.now().isoformat()
+            }
+        
+        # Task 자동 생성
+        generated_tasks = {
+            "analysis": [],    # 분석 기반 Task
+            "wisdom": []       # Wisdom 기반 Task
+        }
+        
+        # 1. 복잡도가 높은 파일에 대한 리팩토링 Task
+        complex_files = analysis_result.get("complex_files", [])
+        for idx, file_info in enumerate(complex_files[:5]):  # 상위 5개
+            task = Task(
+                id=f"auto-complexity-{idx+1}",
+                title=f"리팩토링: {file_info['file']}",
+                description=f"복잡도 {file_info['complexity']:.1f}인 파일 개선",
+                priority="high" if file_info['complexity'] > 15 else "medium",
+                auto_generated=True,
+                wisdom_hints=["복잡한 함수를 작은 단위로 분리", "중복 코드 제거"],
+                context_data={
+                    "file_path": file_info['file'],
+                    "complexity": file_info['complexity'],
+                    "functions": file_info.get('functions', [])
+                }
+            )
+            generated_tasks["analysis"].append(task)
+        
+        # 2. Wisdom 기반 예방 Task
+        common_mistakes = wisdom.get_common_mistakes()
+        for idx, (mistake_type, count) in enumerate(common_mistakes[:3]):  # 상위 3개
+            task = Task(
+                id=f"auto-wisdom-{idx+1}",
+                title=f"예방: {mistake_type} 패턴 개선",
+                description=f"{count}회 발생한 실수 패턴 예방",
+                priority="high" if count > 5 else "medium",
+                auto_generated=True,
+                wisdom_hints=wisdom.get_prevention_tips(mistake_type),
+                context_data={
+                    "mistake_type": mistake_type,
+                    "occurrence_count": count
+                }
+            )
+            generated_tasks["wisdom"].append(task)
+        
+        # 3. 큰 파일 분할 Task
+        large_files = analysis_result.get("largest_files", [])
+        for idx, file_info in enumerate(large_files[:3]):  # 상위 3개
+            if file_info['size'] > 10000:  # 10KB 이상
+                task = Task(
+                    id=f"auto-size-{idx+1}",
+                    title=f"파일 분할: {file_info['file']}",
+                    description=f"{file_info['size']:,} bytes 파일을 모듈화",
+                    priority="medium",
+                    auto_generated=True,
+                    wisdom_hints=["단일 책임 원칙 적용", "관련 기능별로 분리"],
+                    context_data={
+                        "file_path": file_info['file'],
+                        "size": file_info['size']
+                    }
+                )
+                generated_tasks["analysis"].append(task)
+        
+        return generated_tasks
+    
+    def apply_wisdom_hints(self, task: Task) -> None:
+        """Task에 Wisdom 시스템의 힌트 적용"""
+        from python.project_wisdom import get_wisdom_manager
+        
+        wisdom = get_wisdom_manager()
+        
+        # Task 제목/설명에서 키워드 추출
+        keywords = task.title.lower().split() + task.description.lower().split()
+        
+        # 관련 Best Practice 찾기
+        best_practices = wisdom.get_best_practices()
+        relevant_hints = []
+        
+        for practice in best_practices:
+            if any(keyword in practice.lower() for keyword in keywords):
+                relevant_hints.append(practice)
+        
+        # 관련 실수 패턴에서 예방 팁 추가
+        for mistake_type in wisdom.wisdom_data.get("common_mistakes", {}).keys():
+            if any(keyword in mistake_type.lower() for keyword in keywords):
+                tips = wisdom.get_prevention_tips(mistake_type)
+                relevant_hints.extend(tips)
+        
+        # 중복 제거 후 Task에 추가
+        task.wisdom_hints = list(set(task.wisdom_hints + relevant_hints))[:5]  # 최대 5개
+    
+    def create_smart_plan(self, name: str, description: str, auto_analyze: bool = True) -> Plan:
+        """ProjectAnalyzer와 Wisdom을 활용한 스마트 Plan 생성"""
+        # 기본 Plan 생성
+        plan = Plan(name=name, description=description)
+        
+        # context에 설정
+        self.context.plan = plan
+        
+        if auto_analyze:
+            # 자동 분석 및 Task 생성
+            generated_tasks = self.analyze_and_generate_tasks()
+            
+            # Phase 1: 자동 생성된 분석 Task
+            if generated_tasks["analysis"]:
+                phase1 = Phase(
+                    id="auto-phase-1",
+                    name="자동 분석 기반 개선",
+                    description="ProjectAnalyzer가 발견한 개선 사항"
+                )
+                for task in generated_tasks["analysis"]:
+                    phase1.tasks[task.id] = task
+                plan.phases["auto-phase-1"] = phase1
+                plan.phase_order.append("auto-phase-1")
+            
+            # Phase 2: Wisdom 기반 예방 Task
+            if generated_tasks["wisdom"]:
+                phase2 = Phase(
+                    id="auto-phase-2",
+                    name="Wisdom 기반 예방",
+                    description="과거 실수 패턴 예방"
+                )
+                for task in generated_tasks["wisdom"]:
+                    phase2.tasks[task.id] = task
+                plan.phases["auto-phase-2"] = phase2
+                plan.phase_order.append("auto-phase-2")
+            
+            # Wisdom 데이터 Plan에 저장
+            from python.project_wisdom import get_wisdom_manager
+            wisdom = get_wisdom_manager()
+            plan.wisdom_data = {
+                "applied_at": datetime.now().isoformat(),
+                "total_mistakes_tracked": sum(wisdom.wisdom_data.get("common_mistakes", {}).values()),
+                "best_practices_count": len(wisdom.get_best_practices())
+            }
+            
+            # 진행률 초기화
+            plan.update_progress()
+            
+            print(f"✅ 스마트 Plan 생성 완료!")
+            print(f"   - 자동 생성 Task: {len(generated_tasks['analysis']) + len(generated_tasks['wisdom'])}개")
+        
+        return plan

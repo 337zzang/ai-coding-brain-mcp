@@ -1,4 +1,4 @@
-import { ExecuteCodeHandler } from './execute-code-handler.js';
+import { ExecuteCodeHandler } from './execute-code-handler';
 
 // 타입 정의
 interface ToolResponse {

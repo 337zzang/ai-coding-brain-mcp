@@ -530,7 +530,7 @@ Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
       properties: {}
     },
     // Handler is defined in index.ts
-  },,
+  },
   {
     name: 'build_project_context',
     description: '프로젝트 컨텍스트 문서를 자동으로 생성합니다 (README.md, PROJECT_CONTEXT.md 등)',
@@ -559,7 +559,7 @@ Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
         }
       },
       required: []
-    },
-    handler: 'build'
+    }
+    // Handler is defined in index.ts
   },
 ];

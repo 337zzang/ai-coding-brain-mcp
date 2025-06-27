@@ -18,7 +18,7 @@ import { toolDefinitions } from './tools/tool-definitions';
 
 // 핸들러 클래스들 import
 import { ExecuteCodeHandler } from './handlers/execute-code-handler';
-import { handleFlowProject, handlePlanProject, handleTaskManage, handleNextTask } from './handlers/workflow-handlers.js';
+import { handleFlowProject, handlePlanProject, handleTaskManage, handleNextTask } from './handlers/workflow-handlers';
 import { handleWisdomStats, handleTrackMistake, handleAddBestPractice } from './handlers/wisdom-handlers';
 import { BackupHandler } from './handlers/backup-handler';
 import { handleFileAnalyze } from './handlers/file-analyzer-handler';

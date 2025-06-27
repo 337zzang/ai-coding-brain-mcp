@@ -1,4 +1,4 @@
-import { ExecuteCodeHandler } from './execute-code-handler.js';
+import { ExecuteCodeHandler } from './execute-code-handler';
 
 // ========== 세션 공유 MCP 도구 핸들러 ==========
 

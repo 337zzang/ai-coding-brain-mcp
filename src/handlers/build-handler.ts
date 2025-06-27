@@ -1,10 +1,9 @@
-import { logger } from '../utils/logger';
+import { createLogger } from '../utils/logger';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { spawn } from 'child_process';
-import { promisify } from 'util';
 
-const execAsync = promisify(require('child_process').exec);
+const logger = createLogger('build-handler');
 
 export interface BuildProjectContextArgs {
   update_readme?: boolean;
@@ -77,7 +76,7 @@ export async function handleBuildProjectContext(args: BuildProjectContextArgs): 
           await updateFileDirectory(process.cwd());
           docs.push('file_directory.md');
         } catch (e) {
-          logger.warn('⚠️ file_directory.md 업데이트 실패:', e.message);
+          logger.warn(`⚠️ file_directory.md 업데이트 실패: ${e instanceof Error ? e.message : String(e)}`);
         }
         
         resolve({
@@ -90,7 +89,7 @@ export async function handleBuildProjectContext(args: BuildProjectContextArgs): 
     });
     
   } catch (error) {
-    logger.error('❌ 빌드 실패:', error);
+    logger.error(`❌ 빌드 실패: ${error}`);
     throw error;
   }
 }

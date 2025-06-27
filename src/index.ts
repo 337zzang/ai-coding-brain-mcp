@@ -23,8 +23,8 @@ import { handleWisdomStats, handleTrackMistake, handleAddBestPractice } from './
 import { BackupHandler } from './handlers/backup-handler';
 import { handleFileAnalyze } from './handlers/file-analyzer-handler';
 import { handleGitStatus, handleGitCommitSmart, handleGitBranchSmart, handleGitRollbackSmart, handleGitPush } from './handlers/git-handlers';
-import { handleGitignoreAnalyze, handleGitignoreUpdate } from './handlers/gitignore-handlers';
-
+import { handleGitignoreAnalyze, handleGitignoreUpdate, handleGitignoreCreate } from './handlers/gitignore-handlers';
+import { handleBuildProjectContext } from './handlers/build-handler';
 import { apiToggleHandler, listApisHandler } from './handlers/api-toggle-handler';
 // 로거 초기화
 const logger = createLogger('ai-coding-brain-mcp');
@@ -142,10 +142,13 @@ class AICodingBrainMCP {
         } else if (name === 'gitignore_update') {
           return await handleGitignoreUpdate(args as { patterns: string[]; category?: string });
         } else if (name === 'gitignore_create') {
+          return await handleGitignoreCreate(args as { categories?: string[] });
         } else if (name === 'toggle_api') {
           return await apiToggleHandler.execute(args);
         } else if (name === 'list_apis') {
           return await listApisHandler.execute(args);
+        } else if (name === 'build_project_context') {
+          return await handleBuildProjectContext(args as any);
         } else {
           // TODO: Implement remaining tools
           throw new McpError(

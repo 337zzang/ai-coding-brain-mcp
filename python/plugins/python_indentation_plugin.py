@@ -5,7 +5,7 @@ Python Indentation Plugin
 
 import re
 from typing import List, Optional, Tuple
-from core.wisdom_plugin_base import WisdomPlugin, Detection, WisdomPattern
+from python.core.wisdom_plugin_base import WisdomPlugin, Detection, WisdomPattern
 
 
 class PythonIndentationPlugin(WisdomPlugin):

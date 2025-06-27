@@ -6,7 +6,7 @@ Windows/Unix 절대 경로 감지
 import re
 from typing import List, Optional
 import os
-from core.wisdom_plugin_base import WisdomPlugin, Detection, WisdomPattern
+from python.core.wisdom_plugin_base import WisdomPlugin, Detection, WisdomPattern
 
 
 class HardcodedPathPlugin(WisdomPlugin):

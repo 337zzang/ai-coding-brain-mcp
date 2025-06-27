@@ -5,7 +5,7 @@ console.log/error 사용을 logger로 변환
 
 import re
 from typing import List, Optional
-from core.wisdom_plugin_base import WisdomPlugin, Detection, WisdomPattern
+from python.core.wisdom_plugin_base import WisdomPlugin, Detection, WisdomPattern
 
 
 class ConsoleUsagePlugin(WisdomPlugin):

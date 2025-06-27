@@ -6,10 +6,10 @@ execute_code와 Wisdom System 통합
 import os
 import json
 from typing import Dict, Any, Optional, Tuple
-from core.wisdom_factory import WisdomFactory
-from core.wisdom_plugin_base import PluginManager
-from core.wisdom_auto_fixer import WisdomAutoFixer
-from plugins import PythonIndentationPlugin, ConsoleUsagePlugin, HardcodedPathPlugin
+from python.core.wisdom_factory import WisdomFactory
+from python.core.wisdom_plugin_base import PluginManager
+from python.core.wisdom_auto_fixer import WisdomAutoFixer
+from python.plugins import PythonIndentationPlugin, ConsoleUsagePlugin, HardcodedPathPlugin
 
 
 class WisdomIntegration:

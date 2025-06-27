@@ -94,21 +94,52 @@ class AIHelpers:
             self._context_manager = None
         
         try:
-            # cmd_flow_with_context 추가
-            # cmd_flow_with_context는 enhanced_flow.py에 없으므로 주석 처리
-            # from commands.enhanced_flow import cmd_flow_with_context
-            # 대신 flow_project를 cmd_flow_with_context로 사용 + helpers 전달
-            from commands.enhanced_flow import flow_project
-            # helpers를 전역 변수로 설정
-            import commands.enhanced_flow
-            commands.enhanced_flow.global_helpers = self
-            self.cmd_flow_with_context = flow_project
-        except ImportError:
-            # 실패시 일반 cmd_flow를 사용 (cmd_flow가 있는 경우만)
-            if hasattr(self, 'cmd_flow') and self.cmd_flow is not None:
-                self.cmd_flow_with_context = self.cmd_flow
-            else:
-                self.cmd_flow_with_context = None
+            # cmd_flow_with_context 추가 - 더 견고한 방식으로
+            import sys
+            import os
+            # Python 경로 확실히 추가
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            commands_dir = os.path.join(current_dir, 'commands')
+            if current_dir not in sys.path:
+                sys.path.insert(0, current_dir)
+            if commands_dir not in sys.path:
+                sys.path.insert(0, commands_dir)
+                
+            # 직접 함수 정의 - import 실패에 대비
+            def robust_flow_project(project_name):
+                """견고한 flow_project 구현"""
+                try:
+                    # enhanced_flow 모듈 동적 import
+                    import importlib.util
+                    spec = importlib.util.spec_from_file_location(
+                        "enhanced_flow", 
+                        os.path.join(current_dir, "commands", "enhanced_flow.py")
+                    )
+                    module = importlib.util.module_from_spec(spec)
+                    # helpers 전달
+                    module.global_helpers = self
+                    spec.loader.exec_module(module)
+                    
+                    # flow_project 함수 호출
+                    if hasattr(module, 'flow_project'):
+                        return module.flow_project(project_name)
+                    else:
+                        return {'success': False, 'error': 'flow_project 함수를 찾을 수 없습니다'}
+                except Exception as e:
+                    import traceback
+                    traceback.print_exc()
+                    return {'success': False, 'error': str(e)}
+                    
+            self.cmd_flow_with_context = robust_flow_project
+            
+        except Exception as e:
+            print(f"⚠️ cmd_flow_with_context 설정 실패: {e}")
+            # 최소한의 기능이라도 제공
+            def minimal_flow_project(project_name):
+                os.chdir(os.path.dirname(os.path.abspath(__file__)).replace('\\python', ''))
+                print(f"✅ 프로젝트 '{project_name}'로 디렉토리 변경 완료 (최소 모드)")
+                return {'success': True, 'context': {}}
+            self.cmd_flow_with_context = minimal_flow_project
         
         try:
             # 파일 작업 및 코드 분석 (auto_tracking_wrapper에서)

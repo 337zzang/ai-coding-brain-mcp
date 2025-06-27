@@ -14,13 +14,20 @@ from typing import Optional, Dict, Any, List
 from collections import defaultdict
 import copy
 
-# Pydantic 모델 import
-from .models import (
+# Pydantic 모델 import - 절대 경로 사용
+import sys
+import os
+# Python 경로에 추가
+python_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if python_path not in sys.path:
+    sys.path.insert(0, python_path)
+
+from core.models import (
     ProjectContext, Plan, Phase, Task, TaskStatus,
     FileAccessEntry, WorkTracking, 
     validate_context_data
 )
-from .decorators import autosave
+from core.decorators import autosave
 
 
 class UnifiedContextManager:

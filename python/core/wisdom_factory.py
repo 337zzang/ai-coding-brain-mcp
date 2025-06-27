@@ -4,9 +4,16 @@ AI Coding Brain MCP 환경에서 프로젝트별 Wisdom Manager를 싱글톤으�
 """
 
 import os
+import sys
 from typing import Dict, Optional
 from pathlib import Path
-from ..project_wisdom import ProjectWisdomManager
+
+# Python 경로 설정
+python_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if python_path not in sys.path:
+    sys.path.insert(0, python_path)
+
+from project_wisdom import ProjectWisdomManager
 
 class WisdomFactory:
     """MCP 환경에서 공유되는 Wisdom 인스턴스 관리"""

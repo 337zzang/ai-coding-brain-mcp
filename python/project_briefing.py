@@ -11,6 +11,13 @@ from datetime import datetime
 
 def print_project_briefing(briefing_data: Dict[str, Any]):
     """ProjectAnalyzer가 제공한 브리핑 데이터를 출력"""
+    import sys
+    import os
+    # Python 경로 설정
+    python_path = os.path.dirname(os.path.abspath(__file__))
+    if python_path not in sys.path:
+        sys.path.insert(0, python_path)
+    
     from smart_print import smart_print
     
     print("\n" + "=" * 70)

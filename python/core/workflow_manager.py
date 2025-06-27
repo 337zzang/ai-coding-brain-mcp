@@ -1,4 +1,11 @@
 """
+import sys
+import os
+# Python 경로 설정
+python_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if python_path not in sys.path:
+    sys.path.insert(0, python_path)
+
 AI Coding Brain MCP - Workflow Manager
 통합 워크플로우 관리자
 """
@@ -7,10 +14,10 @@ from typing import Optional, List, Dict, Any, Tuple
 from datetime import datetime
 import logging
 
-from .context_manager import get_context_manager
-from .models import Plan, Phase, Task, ProjectContext
-from .decorators import autosave
-from .error_handler import ErrorHandler, ErrorType, StandardResponse
+from core.context_manager import get_context_manager
+from core.models import Plan, Phase, Task, ProjectContext
+from core.decorators import autosave
+from core.error_handler import ErrorHandler, ErrorType, StandardResponse
 
 logger = logging.getLogger(__name__)
 

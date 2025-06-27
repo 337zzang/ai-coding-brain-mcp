@@ -14,9 +14,12 @@ from pathlib import Path
 # 프로젝트 루트를 sys.path에 추가
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
+python_path = Path(__file__).parent.parent
+if str(python_path) not in sys.path:
+    sys.path.insert(0, str(python_path))
 
-from .file_analyzer import FileAnalyzer
-from .manifest_manager import ManifestManager
+from analyzers.file_analyzer import FileAnalyzer
+from analyzers.manifest_manager import ManifestManager
 
 
 class ProjectAnalyzer:

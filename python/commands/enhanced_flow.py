@@ -14,15 +14,18 @@ from pathlib import Path
 helpers = globals().get('helpers', None)
 
 # 기본 imports
+import sys
+import os
+
+# Python 경로 설정 - 상대 import 문제 해결
+python_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if python_path not in sys.path:
+    sys.path.insert(0, python_path)
+
+# 이제 절대 import 사용
 from core.context_manager import get_context_manager, initialize_context
 from core.config import get_project_path
 from smart_print import smart_print
-# 새로운 analyzer import - 패키지로 import
-import sys
-import os
-python_path = os.path.dirname(os.path.dirname(__file__))
-if python_path not in sys.path:
-    sys.path.insert(0, python_path)
 from analyzers.project_analyzer import ProjectAnalyzer
 from project_briefing import print_project_briefing
 

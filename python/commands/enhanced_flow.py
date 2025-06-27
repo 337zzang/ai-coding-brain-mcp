@@ -312,7 +312,7 @@ def estimate_remaining_time(pending_tasks) -> str:
     total_hours = 0
     for task in pending_tasks:
         if hasattr(task, 'estimated_hours'):
-            total_hours += task.estimated_hours
+            total_hours += task.estimated_hours if task.estimated_hours is not None else 0
         else:
             # 기본값: 작업당 2시간
             total_hours += 2

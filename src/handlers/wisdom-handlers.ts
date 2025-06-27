@@ -1,139 +1,161 @@
 /**
- * Wisdom 시스템 핸들러
- * wisdom_stats, track_mistake, add_best_practice 도구 처리
+ * Wisdom System Handlers
  */
 
-import { spawn } from 'child_process';
-import { join } from 'path';
+import { logger } from '../utils/logger';
+import { JSONRPCExecutor } from '../json-rpc-executor';
 
-// Result interfaces removed - not used
+const jsonRPCExecutor = new JSONRPCExecutor();
 
 /**
- * Python 명령어 실행 헬퍼
+ * Wisdom analyze handler - 코드 분석
  */
-async function executePythonCommand(command: string, args: any[] = []): Promise<any> {
-  return new Promise((resolve, reject) => {
-    const pythonPath = process.env['PYTHON_PATH'] || 
-      (process.platform === 'win32' ? 'C:\\Users\\Administrator\\miniconda3\\python.exe' : 'python3');
-    const scriptPath = join(__dirname, '..', '..', 'python', 'commands', 'wisdom.py');
+export async function handleWisdomAnalyze(args: {
+  code: string;
+  filename?: string;
+  auto_fix?: boolean;
+}): Promise<{ content: Array<{ type: string; text: string }> }> {
+  try {
+    const { code, filename = 'temp.py', auto_fix = false } = args;
     
-    const pythonArgs = [scriptPath, command, ...args.map(arg => JSON.stringify(arg))];
-    const pythonProcess = spawn(pythonPath, pythonArgs);
-    
-    let stdout = '';
-    let stderr = '';
-    
-    pythonProcess.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-    
-    pythonProcess.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-    
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error(`Python process exited with code ${code}: ${stderr}`));
-      } else {
-        try {
-          // 결과를 파싱 시도
-          const lines = stdout.trim().split('\n');
-          const lastLine = lines[lines.length - 1];
-          
-          // JSON 결과가 있는지 확인
-          if (lastLine && lastLine.startsWith('{') && lastLine.endsWith('}')) {
-            resolve(JSON.parse(lastLine));
-          } else {
-            // 텍스트 결과 반환
-            resolve({ output: stdout });
-          }
-        } catch (error: any) {
-          // 파싱 실패시 원본 반환
-          resolve({ output: stdout });
-        }
-      }
-    });
-  });
+    const pythonCode = `
+from core.wisdom_integration import wisdom_integration
+
+# 코드 분석
+code = """${code.replace(/"""/g, '\"\"\""')}"""
+filename = "${filename}"
+auto_fix = ${auto_fix ? 'True' : 'False'}
+
+# 분석 실행
+should_proceed, modified_code, analysis_result = wisdom_integration.pre_execute_check(
+    code, 
+    language="${filename.endsWith('.py') ? 'python' : filename.endsWith('.ts') ? 'typescript' : 'javascript'}"
+)
+
+# 결과 생성
+result = {
+    "should_proceed": should_proceed,
+    "modified_code": modified_code if modified_code != code else None,
+    "analysis": analysis_result,
+    "detections_count": analysis_result.get("total_issues", 0)
 }
 
-/**
- * wisdom_stats 핸들러
- */
-export async function handleWisdomStats(_args: {}): Promise<any> {
-  try {
-    const result = await executePythonCommand('wisdom_stats');
+import json
+print(json.dumps(result, indent=2, ensure_ascii=False))
+`;
+
+    const executeResult = await jsonRPCExecutor.execute({
+      code: pythonCode,
+      language: 'python'
+    });
+
+    if (!executeResult.success) {
+      throw new Error(executeResult.stderr || 'Analysis failed');
+    }
+
+    // 결과 파싱
+    const result = JSON.parse(executeResult.stdout);
     
     return {
       content: [
-        {
-          type: 'text',
-          text: result.output || JSON.stringify(result, null, 2)
-        }
+        { type: 'text', text: `🧠 Wisdom Analysis Complete\n\n` },
+        { type: 'text', text: `📊 Total Issues: ${result.detections_count}\n` },
+        { type: 'text', text: `Status: ${result.analysis.status}\n\n` },
+        { type: 'text', text: JSON.stringify(result.analysis, null, 2) }
       ]
     };
-  } catch (error: any) {
+  } catch (error) {
+    logger.error('Wisdom analyze error:', error);
     return {
       content: [
-        {
-          type: 'text',
-          text: `Error getting wisdom stats: ${error.message}`
-        }
+        { type: 'text', text: `❌ Analysis failed: ${error instanceof Error ? error.message : String(error)}` }
       ]
     };
   }
 }
 
 /**
- * track_mistake 핸들러
+ * Wisdom analyze file handler - 파일 분석
  */
-export async function handleTrackMistake(args: { mistake_type: string; context?: string }): Promise<any> {
+export async function handleWisdomAnalyzeFile(args: {
+  filepath: string;
+}): Promise<{ content: Array<{ type: string; text: string }> }> {
   try {
-    const { mistake_type, context = '' } = args;
-    const result = await executePythonCommand('track_mistake', [mistake_type, context]);
+    const { filepath } = args;
+    
+    const pythonCode = `
+from core.wisdom_integration import wisdom_integration
+
+# 파일 분석
+result = wisdom_integration.analyze_file("${filepath}")
+
+import json
+print(json.dumps(result, indent=2, ensure_ascii=False))
+`;
+
+    const executeResult = await jsonRPCExecutor.execute({
+      code: pythonCode,
+      language: 'python'
+    });
+
+    if (!executeResult.success) {
+      throw new Error(executeResult.stderr || 'File analysis failed');
+    }
+
+    const result = JSON.parse(executeResult.stdout);
     
     return {
       content: [
-        {
-          type: 'text',
-          text: result.output || JSON.stringify(result, null, 2)
-        }
+        { type: 'text', text: `🧠 File Analysis: ${filepath}\n\n` },
+        { type: 'text', text: JSON.stringify(result, null, 2) }
       ]
     };
-  } catch (error: any) {
+  } catch (error) {
+    logger.error('Wisdom analyze file error:', error);
     return {
       content: [
-        {
-          type: 'text',
-          text: `Error tracking mistake: ${error.message}`
-        }
+        { type: 'text', text: `❌ File analysis failed: ${error instanceof Error ? error.message : String(error)}` }
       ]
     };
   }
 }
 
 /**
- * add_best_practice 핸들러
+ * Wisdom report handler - 리포트 생성
  */
-export async function handleAddBestPractice(args: { practice: string; category?: string }): Promise<any> {
+export async function handleWisdomReport(args: {
+  output_file?: string;
+}): Promise<{ content: Array<{ type: string; text: string }> }> {
   try {
-    const { practice, category = 'general' } = args;
-    const result = await executePythonCommand('add_best_practice', [practice, category]);
+    const { output_file } = args;
     
+    const pythonCode = `
+from core.wisdom_integration import wisdom_integration
+
+# 리포트 생성
+report = wisdom_integration.generate_wisdom_report(${output_file ? `"${output_file}"` : 'None'})
+print(report)
+`;
+
+    const executeResult = await jsonRPCExecutor.execute({
+      code: pythonCode,
+      language: 'python'
+    });
+
+    if (!executeResult.success) {
+      throw new Error(executeResult.stderr || 'Report generation failed');
+    }
+
     return {
       content: [
-        {
-          type: 'text',
-          text: result.output || JSON.stringify(result, null, 2)
-        }
+        { type: 'text', text: executeResult.stdout }
       ]
     };
-  } catch (error: any) {
+  } catch (error) {
+    logger.error('Wisdom report error:', error);
     return {
       content: [
-        {
-          type: 'text',
-          text: `Error adding best practice: ${error.message}`
-        }
+        { type: 'text', text: `❌ Report generation failed: ${error instanceof Error ? error.message : String(error)}` }
       ]
     };
   }

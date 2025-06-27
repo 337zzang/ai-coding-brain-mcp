@@ -35,6 +35,7 @@ if current_dir not in sys.path:
 try:
     from project_wisdom import get_wisdom_manager
     from wisdom_hooks import get_wisdom_hooks
+    from core.wisdom_integration import wisdom_integration
     WISDOM_AVAILABLE = True
 except ImportError:
     WISDOM_AVAILABLE = False
@@ -637,6 +638,34 @@ def execute_code(code: str) -> Dict[str, Any]:
     
     try:
         with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
+            # Wisdom Integration 실행 (코드 실행 전 분석 및 자동 수정)
+            if WISDOM_AVAILABLE and hasattr(wisdom_integration, 'pre_execute_check'):
+                try:
+                    should_proceed, modified_code, analysis = wisdom_integration.pre_execute_check(
+                        code, 
+                        language="python"
+                    )
+                    
+                    # 코드가 수정된 경우
+                    if modified_code and modified_code != code:
+                        print("\n✅ Wisdom System이 코드를 자동 수정했습니다.")
+                        code = modified_code
+                        
+                    # 심각한 문제로 실행 중단이 필요한 경우
+                    if not should_proceed:
+                        print("\n❌ Wisdom System이 심각한 문제를 감지하여 실행을 중단합니다.")
+                        return {
+                            "success": False,
+                            "output": "",
+                            "error": "Code execution blocked by Wisdom System",
+                            "execution_time": time.time() - start_time,
+                            "variable_count": len(repl_globals),
+                            "execution_count": execution_count,
+                            "wisdom_analysis": analysis
+                        }
+                except Exception as e:
+                    print(f"⚠️ Wisdom Integration 오류: {e}")
+            
             # Wisdom Hooks 실행 (코드 실행 전)
             if WISDOM_AVAILABLE and hooks:
                 try:

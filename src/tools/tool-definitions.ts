@@ -562,4 +562,56 @@ Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
     }
     // Handler is defined in index.ts
   },
+  {
+    name: 'wisdom_analyze',
+    description: '코드를 분석하여 문제점을 감지합니다 (들여쓰기, console 사용, 하드코딩 경로 등)',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        code: {
+          type: 'string',
+          description: '분석할 코드'
+        },
+        filename: {
+          type: 'string',
+          description: '파일명 (언어 감지용)',
+          default: 'temp.py'
+        },
+        auto_fix: {
+          type: 'boolean',
+          description: '자동 수정 적용 여부',
+          default: false
+        }
+      },
+      required: ['code']
+    }
+  },
+  {
+    name: 'wisdom_analyze_file',
+    description: '파일을 분석하여 코드 품질 문제를 감지합니다',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filepath: {
+          type: 'string',
+          description: '분석할 파일 경로'
+        }
+      },
+      required: ['filepath']
+    }
+  },
+  {
+    name: 'wisdom_report',
+    description: '프로젝트의 Wisdom 통계 및 리포트를 생성합니다',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        output_file: {
+          type: 'string',
+          description: '리포트 저장 파일 경로 (선택사항)'
+        }
+      },
+      required: []
+    }
+  }
 ];

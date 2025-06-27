@@ -26,6 +26,9 @@ import { handleGitStatus, handleGitCommitSmart, handleGitBranchSmart, handleGitR
 import { handleGitignoreAnalyze, handleGitignoreUpdate, handleGitignoreCreate } from './handlers/gitignore-handlers';
 import { handleBuildProjectContext } from './handlers/build-handler';
 import { apiToggleHandler, listApisHandler } from './handlers/api-toggle-handler';
+import { handleWisdomAnalyze, handleWisdomAnalyzeFile, handleWisdomReport } from './handlers/wisdom-handlers';
+import { handleBuildProjectContext } from './handlers/project-handlers';
+
 // 로거 초기화
 const logger = createLogger('ai-coding-brain-mcp');
 
@@ -149,6 +152,12 @@ class AICodingBrainMCP {
           return await listApisHandler.execute(args);
         } else if (name === 'build_project_context') {
           return await handleBuildProjectContext(args as any);
+        } else if (name === 'wisdom_analyze') {
+          return await handleWisdomAnalyze(args as any);
+        } else if (name === 'wisdom_analyze_file') {
+          return await handleWisdomAnalyzeFile(args as any);
+        } else if (name === 'wisdom_report') {
+          return await handleWisdomReport(args as any);
         } else {
           // TODO: Implement remaining tools
           throw new McpError(

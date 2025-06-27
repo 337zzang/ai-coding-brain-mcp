@@ -123,7 +123,7 @@ class WorkflowIntegrations:
                 description=f"{count}회 발생한 실수 패턴 예방",
                 priority="high" if count > 5 else "medium",
                 auto_generated=True,
-                wisdom_hints=wisdom.get_prevention_tips(mistake_type),
+                wisdom_hints=[f"{mistake_type} 방지: 주의 깊은 검토 필요"],
                 context_data={
                     "mistake_type": mistake_type,
                     "occurrence_count": count
@@ -136,7 +136,9 @@ class WorkflowIntegrations:
     def create_smart_plan(self, name: str, description: str, auto_analyze: bool = True) -> Plan:
         """ProjectAnalyzer와 Wisdom을 활용한 스마트 Plan 생성"""
         # 기본 Plan 생성
-        plan = self.workflow_manager.create_plan(name, description)
+        from python.core.models import Plan
+        plan = Plan(name=name, description=description)
+        self.workflow_manager.context.plan = plan
         
         if auto_analyze:
             # 자동 분석 및 Task 생성
@@ -172,7 +174,7 @@ class WorkflowIntegrations:
             plan.wisdom_data = {
                 "applied_at": datetime.now().isoformat(),
                 "total_mistakes_tracked": sum(wisdom.wisdom_data.get("common_mistakes", {}).values()),
-                "best_practices_count": len(wisdom.get_best_practices())
+                "best_practices_count": len(wisdom.wisdom_data.get("best_practices", []))
             }
             
             # 진행률 초기화

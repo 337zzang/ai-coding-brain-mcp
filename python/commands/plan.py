@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from core.context_manager import get_context_manager
 from core.workflow_manager import get_workflow_manager
 from core.error_handler import StandardResponse
-from core.models import TaskStatus
+from python.core.models import TaskStatus
 from analyzers.project_analyzer import ProjectAnalyzer
 
 # Wisdom 시스템 통합
@@ -87,7 +87,7 @@ def set_plan(context, plan_data: Dict):
     if hasattr(context, 'plan'):
         # Plan 객체로 변환 시도
         try:
-            from core.models import Plan, Phase
+            from python.core.models import Plan, Phase
             phases = {}
             for phase_id, phase_data in plan_data.get('phases', {}).items():
                 if isinstance(phase_data, dict):

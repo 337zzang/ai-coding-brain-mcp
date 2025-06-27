@@ -8,11 +8,59 @@ import { createLogger } from '../services/logger';
 const logger = createLogger('git-handlers');
 
 /**
+ * Python 스크립트 실행 헬퍼 함수
+ */
+async function executePythonScript(scriptPath: string, args: string[], projectRoot: string): Promise<any> {
+    const { execFile } = require('child_process');
+    const { promisify } = require('util');
+    const execFileAsync = promisify(execFile);
+    const path = require('path');
+    const fs = require('fs');
+    
+    // 설정 파일에서 Python 경로 읽기
+    const configPath = path.join(projectRoot, '.ai-brain.config.json');
+    let pythonPath = 'python';
+    
+    if (fs.existsSync(configPath)) {
+        try {
+            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            pythonPath = config.python?.path || 'python';
+        } catch (e) {
+            logger.warn('Failed to read config, using default python path');
+        }
+    }
+    
+    // Python 실행 환경 설정
+    const env = {
+        ...process.env,
+        PYTHONPATH: path.join(projectRoot, 'python'),
+        PYTHONIOENCODING: 'utf-8',
+        PYTHONDONTWRITEBYTECODE: '1'
+    };
+    
+    try {
+        const { stdout, stderr } = await execFileAsync(pythonPath, [scriptPath, ...args], {
+            cwd: projectRoot,
+            env: env,
+            windowsHide: true
+        });
+        
+        if (stderr) {
+            logger.warn(`Python stderr: ${stderr}`);
+        }
+        
+        return JSON.parse(stdout.trim());
+    } catch (error: any) {
+        logger.error('Python execution failed:', error);
+        throw new Error(`Failed to execute Python script: ${error.message}`);
+    }
+}
+
+/**
  * Git 상태 확인
  */
 export async function handleGitStatus(_args: any): Promise<{ content: Array<{ type: string; text: string }> }> {
     try {
-        const { spawn } = require('child_process');
         const path = require('path');
         const fs = require('fs');
         
@@ -43,70 +91,23 @@ export async function handleGitStatus(_args: any): Promise<{ content: Array<{ ty
             throw new Error(`Python script not found at ${scriptPath}`);
         }
         
-        // 설정 파일에서 Python 경로 읽기
-        const configPath = path.join(projectRoot, '.ai-brain.config.json');
-        let pythonPath = 'python';
+        const gitResult = await executePythonScript(scriptPath, ['status'], projectRoot);
         
-        if (fs.existsSync(configPath)) {
-            try {
-                const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-                pythonPath = config.python?.path || 'python';
-            } catch (e) {
-                logger.warn('Failed to read config, using default python path');
-            }
+        if (gitResult.success) {
+            return {
+                content: [{
+                    type: 'text',
+                    text: gitResult.message || JSON.stringify(gitResult, null, 2)
+                }]
+            };
+        } else {
+            return {
+                content: [{
+                    type: 'text',
+                    text: `Git 상태 확인 실패: ${gitResult.message}`
+                }]
+            };
         }
-        
-        return new Promise((resolve, reject) => {
-            const pythonProcess = spawn(pythonPath, [scriptPath, 'status'], {
-                cwd: projectRoot,  // 프로젝트 루트를 작업 디렉토리로 설정
-                env: { ...process.env },
-                windowsHide: true
-            });
-            
-            let output = '';
-            let errorOutput = '';
-            
-            pythonProcess.stdout.on('data', (data: Buffer) => {
-                output += data.toString('utf8');
-            });
-            
-            pythonProcess.stderr.on('data', (data: Buffer) => {
-                errorOutput += data.toString('utf8');
-            });
-            
-            pythonProcess.on('close', (code: number | null) => {
-                if (code !== 0) {
-                    reject(new Error(`Process exited with code ${code}: ${errorOutput}`));
-                    return;
-                }
-                
-                try {
-                    const gitResult = JSON.parse(output.trim());
-                    
-                    if (gitResult.success) {
-                        resolve({
-                            content: [{
-                                type: 'text',
-                                text: gitResult.message
-                            }]
-                        });
-                    } else {
-                        resolve({
-                            content: [{
-                                type: 'text',
-                                text: `Git 상태 확인 실패: ${gitResult.message}`
-                            }]
-                        });
-                    }
-                } catch (parseError) {
-                    reject(new Error(`Failed to parse output: ${output}`));
-                }
-            });
-            
-            pythonProcess.on('error', (error: Error) => {
-                reject(error);
-            });
-        });
     } catch (error) {
         logger.error('Git status failed:', error);
         return {
@@ -123,7 +124,6 @@ export async function handleGitStatus(_args: any): Promise<{ content: Array<{ ty
  */
 export async function handleGitCommitSmart(args: { message?: string; auto_add?: boolean }): Promise<{ content: Array<{ type: string; text: string }> }> {
     try {
-        const { spawn } = require('child_process');
         const path = require('path');
         const fs = require('fs');
         
@@ -154,19 +154,6 @@ export async function handleGitCommitSmart(args: { message?: string; auto_add?: 
             throw new Error(`Python script not found at ${scriptPath}`);
         }
         
-        // 설정 파일에서 Python 경로 읽기
-        const configPath = path.join(projectRoot, '.ai-brain.config.json');
-        let pythonPath = 'python';
-        
-        if (fs.existsSync(configPath)) {
-            try {
-                const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-                pythonPath = config.python?.path || 'python';
-            } catch (e) {
-                logger.warn('Failed to read config, using default python path');
-            }
-        }
-        
         // 인자 준비
         const cmdArgs = ['commit'];
         if (args.message) {
@@ -176,48 +163,14 @@ export async function handleGitCommitSmart(args: { message?: string; auto_add?: 
         }
         cmdArgs.push(args.auto_add !== false ? 'true' : 'false');
         
-        return new Promise((resolve, reject) => {
-            const pythonProcess = spawn(pythonPath, [scriptPath, ...cmdArgs], {
-                cwd: projectRoot,  // 프로젝트 루트를 작업 디렉토리로 설정
-                env: { ...process.env },
-                windowsHide: true
-            });
-            
-            let output = '';
-            let errorOutput = '';
-            
-            pythonProcess.stdout.on('data', (data: Buffer) => {
-                output += data.toString('utf8');
-            });
-            
-            pythonProcess.stderr.on('data', (data: Buffer) => {
-                errorOutput += data.toString('utf8');
-            });
-            
-            pythonProcess.on('close', (code: number | null) => {
-                if (code !== 0) {
-                    reject(new Error(`Process exited with code ${code}: ${errorOutput}`));
-                    return;
-                }
-                
-                try {
-                    const commitResult = JSON.parse(output.trim());
-                    
-                    resolve({
-                        content: [{
-                            type: 'text',
-                            text: commitResult.message || 'Git 커밋 완료'
-                        }]
-                    });
-                } catch (parseError) {
-                    reject(new Error(`Failed to parse output: ${output}`));
-                }
-            });
-            
-            pythonProcess.on('error', (error: Error) => {
-                reject(error);
-            });
-        });
+        const commitResult = await executePythonScript(scriptPath, cmdArgs, projectRoot);
+        
+        return {
+            content: [{
+                type: 'text',
+                text: commitResult.message || 'Git 커밋 완료'
+            }]
+        };
     } catch (error) {
         logger.error('Git commit failed:', error);
         return {
@@ -234,7 +187,6 @@ export async function handleGitCommitSmart(args: { message?: string; auto_add?: 
  */
 export async function handleGitBranchSmart(args: { branch_name?: string; base_branch?: string }): Promise<{ content: Array<{ type: string; text: string }> }> {
     try {
-        const { spawn } = require('child_process');
         const path = require('path');
         const fs = require('fs');
         
@@ -263,21 +215,8 @@ export async function handleGitBranchSmart(args: { branch_name?: string; base_br
             throw new Error(`Python script not found at ${scriptPath}`);
         }
         
-        // 설정 파일에서 Python 경로 읽기
-        const configPath = path.join(projectRoot, '.ai-brain.config.json');
-        let pythonPath = 'python';
-        
-        if (fs.existsSync(configPath)) {
-            try {
-                const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-                pythonPath = config.python?.path || 'python';
-            } catch (e) {
-                logger.warn('Failed to read config, using default python path');
-            }
-        }
-        
         // 인자 준비
-        const pythonArgs = [scriptPath, 'branch-smart'];
+        const pythonArgs = ['branch-smart'];
         if (args.branch_name) {
             pythonArgs.push(args.branch_name);
         }
@@ -285,53 +224,14 @@ export async function handleGitBranchSmart(args: { branch_name?: string; base_br
             pythonArgs.push('--base', args.base_branch);
         }
         
-        return new Promise((resolve, reject) => {
-            const pythonProcess = spawn(pythonPath, pythonArgs, {
-                cwd: projectRoot,
-                env: { ...process.env },
-                windowsHide: true
-            });
-            
-            let output = '';
-            let errorOutput = '';
-            
-            pythonProcess.stdout.on('data', (data: Buffer) => {
-                output += data.toString();
-            });
-            
-            pythonProcess.stderr.on('data', (data: Buffer) => {
-                errorOutput += data.toString();
-            });
-            
-            pythonProcess.on('close', (code: number) => {
-                if (code !== 0) {
-                    reject(new Error(`Process exited with code ${code}: ${errorOutput}`));
-                    return;
-                }
-                
-                try {
-                    const result = JSON.parse(output.trim());
-                    resolve({
-                        content: [{
-                            type: 'text',
-                            text: result.message || 'Git 브랜치 생성 완료'
-                        }]
-                    });
-                } catch (parseError) {
-                    // JSON 파싱 실패 시 출력 그대로 반환
-                    resolve({
-                        content: [{
-                            type: 'text',
-                            text: output.trim() || 'Git 브랜치 생성 완료'
-                        }]
-                    });
-                }
-            });
-            
-            pythonProcess.on('error', (error: Error) => {
-                reject(error);
-            });
-        });
+        const result = await executePythonScript(scriptPath, pythonArgs, projectRoot);
+        
+        return {
+            content: [{
+                type: 'text',
+                text: result.message || 'Git 브랜치 생성 완료'
+            }]
+        };
     } catch (error) {
         logger.error('Git branch failed:', error);
         return {

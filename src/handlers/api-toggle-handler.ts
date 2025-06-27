@@ -1,9 +1,12 @@
 // API 토글 핸들러
-import { spawn } from 'child_process';
 import { createLogger } from '../utils/logger';
-import { getPythonPath, getPythonEnv } from '../utils/python-path';
+import * as path from 'path';
+import * as fs from 'fs';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 
 const logger = createLogger('api-toggle-handler');
+const execFileAsync = promisify(execFile);
 
 // ToolHandler 타입 정의
 interface ToolHandler {
@@ -11,58 +14,76 @@ interface ToolHandler {
   execute: (args: any) => Promise<any>;
 }
 
-async function executePythonCode(code: string): Promise<any> {
-  return new Promise((resolve, reject) => {
-    // 프로젝트 루트를 동적으로 가져오기
+/**
+ * Get Python path from config
+ */
+function getPythonPath(): string {
+    const configPath = path.join(process.cwd(), '.ai-brain.config.json');
+    
+    if (fs.existsSync(configPath)) {
+        try {
+            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            return config.python?.path || 'python';
+        } catch (e) {
+            logger.warn('Failed to read config, using default python path');
+        }
+    }
+    
+    return 'python';
+}
+
+/**
+ * Get Python environment
+ */
+function getPythonEnv(): NodeJS.ProcessEnv {
     const projectRoot = process.cwd();
-    const pythonScript = `
+    return {
+        ...process.env,
+        PYTHONPATH: path.join(projectRoot, 'python'),
+        PYTHONIOENCODING: 'utf-8',
+        PYTHONDONTWRITEBYTECODE: '1',
+        PYTHONUNBUFFERED: '1'
+    };
+}
+
+async function executePythonCode(code: string): Promise<any> {
+    try {
+        const pythonPath = getPythonPath();
+        const projectRoot = process.cwd();
+        
+        // Add proper path setup
+        const fullCode = `
 import os
 import sys
-os.chdir(r'${projectRoot}')
-sys.path.insert(0, os.path.join(r'${projectRoot}', 'python'))
+sys.path.insert(0, r'${projectRoot.replace(/\\/g, '\\\\')}\\python')
+os.chdir(r'${projectRoot.replace(/\\/g, '\\\\')}')
 
-# JSON REPL 세션에서 실행
+# Initialize REPL environment
 from json_repl_session import initialize_repl, repl_globals
-
-# REPL 초기화
 initialize_repl()
 
-# 코드 실행
 ${code}
 `;
-    
-    // Python 실행 파일 경로 동적으로 찾기
-    const pythonPath = getPythonPath();
-    
-    const proc = spawn(pythonPath, ['-c', pythonScript], {
-      cwd: projectRoot,
-      env: getPythonEnv()
-    });
-    
-    let stdout = '';
-    let stderr = '';
-    
-    proc.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-    
-    proc.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-    
-    proc.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error(stderr || 'Python execution failed'));
-      } else {
-        try {
-          const result = JSON.parse(stdout.trim());
-          resolve(result);
-        } catch (e) {
-          resolve({ success: true, output: stdout });
+        
+        const { stdout, stderr } = await execFileAsync(pythonPath, ['-c', fullCode], {
+            env: getPythonEnv(),
+            cwd: projectRoot,
+            windowsHide: true
+        });
+        
+        if (stderr) {
+            logger.warn(`Python stderr: ${stderr}`);
         }
-      }
-    });
-  });
+        
+        try {
+            return JSON.parse(stdout.trim());
+        } catch (e) {
+            return { success: true, output: stdout };
+        }
+    } catch (error: any) {
+        logger.error('Python execution error:', error);
+        throw new Error(`Python execution failed: ${error.message}`);
+    }
 }
 
 export const apiToggleHandler: ToolHandler = {

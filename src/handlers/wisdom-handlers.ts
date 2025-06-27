@@ -6,37 +6,84 @@ import { logger } from '../utils/logger';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
-import { getPythonPath, getPythonEnv } from '../utils/python-path';
+import * as fs from 'fs';
 
 const execFileAsync = promisify(execFile);
+
+/**
+ * Get Python path from config
+ */
+function getPythonPath(): string {
+    const configPath = path.join(process.cwd(), '.ai-brain.config.json');
+    
+    if (fs.existsSync(configPath)) {
+        try {
+            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            return config.python?.path || 'python';
+        } catch (e) {
+            logger.warn('Failed to read config, using default python path');
+        }
+    }
+    
+    // Fallback to system python
+    return 'python';
+}
+
+/**
+ * Get Python environment
+ */
+function getPythonEnv(): NodeJS.ProcessEnv {
+    const projectRoot = process.cwd();
+    return {
+        ...process.env,
+        PYTHONPATH: path.join(projectRoot, 'python'),
+        PYTHONIOENCODING: 'utf-8',
+        PYTHONDONTWRITEBYTECODE: '1',
+        PYTHONUNBUFFERED: '1'
+    };
+}
 
 /**
  * Execute Python code helper
  */
 async function executePythonCode(code: string): Promise<string> {
-  try {
-    const pythonPath = getPythonPath();
-    const { stdout, stderr } = await execFileAsync(pythonPath, ['-c', code], {
-      env: getPythonEnv(),
-      cwd: path.join(process.cwd(), 'python')
-    });
-    
-    if (stderr) {
-      logger.warn(`Python stderr: ${stderr}`);
+    try {
+        const pythonPath = getPythonPath();
+        const projectRoot = process.cwd();
+        
+        // Add proper path setup to the code
+        const fullCode = `
+import sys
+import os
+sys.path.insert(0, r'${projectRoot.replace(/\\/g, '\\\\')}\\python')
+os.chdir(r'${projectRoot.replace(/\\/g, '\\\\')}')
+
+${code}
+`;
+        
+        const { stdout, stderr } = await execFileAsync(pythonPath, ['-c', fullCode], {
+            env: getPythonEnv(),
+            cwd: projectRoot,
+            windowsHide: true
+        });
+        
+        if (stderr) {
+            logger.warn(`Python stderr: ${stderr}`);
+        }
+        
+        return stdout;
+    } catch (error: any) {
+        logger.error('Python execution error:', error);
+        throw new Error(`Python execution failed: ${error.message}`);
     }
-    
-    return stdout;
-  } catch (error: any) {
-    throw new Error(`Python execution failed: ${error.message}`);
-  }
 }
 
 /**
  * Wisdom stats handler - 통계 정보
  */
 export async function handleWisdomStats(): Promise<{ content: Array<{ type: string; text: string }> }> {
-  try {
-    const pythonCode = `
+    try {
+        const pythonCode = `
 from project_wisdom import get_wisdom_manager
 wisdom = get_wisdom_manager()
 stats = wisdom.get_statistics()
@@ -45,220 +92,289 @@ import json
 print(json.dumps(stats, indent=2, ensure_ascii=False))
 `;
 
-    const result = await executePythonCode(pythonCode);
-    const stats = JSON.parse(result) as any;
-    
-    return {
-      content: [
-        { type: 'text', text: `🧠 Wisdom System Statistics\n\n` },
-        { type: 'text', text: JSON.stringify(stats, null, 2) }
-      ]
-    };
-  } catch (error) {
-    logger.error('Wisdom stats error:', error);
-    return {
-      content: [
-        { type: 'text', text: `❌ Failed to get statistics: ${error instanceof Error ? error.message : String(error)}` }
-      ]
-    };
-  }
+        const result = await executePythonCode(pythonCode);
+        const stats = JSON.parse(result) as any;
+        
+        let message = `🧠 **Wisdom 시스템 통계**\n\n`;
+        message += `📊 **전체 현황**\n`;
+        message += `• 총 실수: ${stats.total_mistakes || 0}\n`;
+        message += `• 총 오류: ${stats.total_errors || 0}\n`;
+        message += `• 베스트 프랙티스: ${stats.total_best_practices || 0}\n\n`;
+        
+        if (stats.mistake_types && Object.keys(stats.mistake_types).length > 0) {
+            message += `❌ **자주 하는 실수**\n`;
+            const sortedMistakes = Object.entries(stats.mistake_types)
+                .sort((a, b) => (b[1] as number) - (a[1] as number))
+                .slice(0, 5);
+            
+            for (const [type, count] of sortedMistakes) {
+                message += `• ${type}: ${count}회\n`;
+            }
+        }
+        
+        return {
+            content: [{
+                type: 'text',
+                text: message
+            }]
+        };
+    } catch (error) {
+        logger.error('Failed to get wisdom stats:', error);
+        return {
+            content: [{
+                type: 'text',
+                text: `❌ Failed to get statistics: ${error}`
+            }]
+        };
+    }
 }
 
 /**
- * Track mistake handler - 실수 추적
+ * Track mistake handler
  */
-export async function handleTrackMistake(args: {
-  mistake_type: string;
-  context?: string;
-}): Promise<{ content: Array<{ type: string; text: string }> }> {
-  try {
-    const { mistake_type, context = '' } = args;
-    
-    const pythonCode = `
+export async function handleTrackMistake(args: { mistake_type: string; context?: string }): Promise<{ content: Array<{ type: string; text: string }> }> {
+    try {
+        const { mistake_type, context = '' } = args;
+        
+        const pythonCode = `
 from project_wisdom import get_wisdom_manager
 wisdom = get_wisdom_manager()
-wisdom.track_mistake("${mistake_type}", "${context}")
-print(f"✅ Mistake tracked: {mistake_type}")
+wisdom.track_mistake('${mistake_type}', '${context.replace(/'/g, "\\'")}')
+print("Success")
 `;
 
-    const result = await executePythonCode(pythonCode);
-    
-    return {
-      content: [
-        { type: 'text', text: result.trim() }
-      ]
-    };
-  } catch (error) {
-    logger.error('Track mistake error:', error);
-    return {
-      content: [
-        { type: 'text', text: `❌ Failed to track mistake: ${error instanceof Error ? error.message : String(error)}` }
-      ]
-    };
-  }
+        await executePythonCode(pythonCode);
+        
+        return {
+            content: [{
+                type: 'text',
+                text: `✅ 실수가 기록되었습니다: ${mistake_type}`
+            }]
+        };
+    } catch (error) {
+        logger.error('Failed to track mistake:', error);
+        return {
+            content: [{
+                type: 'text',
+                text: `❌ Failed to track mistake: ${error}`
+            }]
+        };
+    }
 }
 
 /**
- * Add best practice handler - 베스트 프랙티스 추가
+ * Add best practice handler
  */
-export async function handleAddBestPractice(args: {
-  practice: string;
-  category?: string;
-}): Promise<{ content: Array<{ type: string; text: string }> }> {
-  try {
-    const { practice, category = 'general' } = args;
-    
-    const pythonCode = `
+export async function handleAddBestPractice(args: { practice: string; category?: string }): Promise<{ content: Array<{ type: string; text: string }> }> {
+    try {
+        const { practice, category = 'general' } = args;
+        
+        const pythonCode = `
 from project_wisdom import get_wisdom_manager
 wisdom = get_wisdom_manager()
-wisdom.add_best_practice("${practice}", "${category}")
-print(f"✅ Best practice added: {practice}")
+wisdom.add_best_practice('${practice.replace(/'/g, "\\'")}', '${category}')
+print("Success")
 `;
 
-    const result = await executePythonCode(pythonCode);
-    
-    return {
-      content: [
-        { type: 'text', text: result.trim() }
-      ]
-    };
-  } catch (error) {
-    logger.error('Add best practice error:', error);
-    return {
-      content: [
-        { type: 'text', text: `❌ Failed to add best practice: ${error instanceof Error ? error.message : String(error)}` }
-      ]
-    };
-  }
+        await executePythonCode(pythonCode);
+        
+        return {
+            content: [{
+                type: 'text',
+                text: `✅ 베스트 프랙티스가 추가되었습니다: ${practice}`
+            }]
+        };
+    } catch (error) {
+        logger.error('Failed to add best practice:', error);
+        return {
+            content: [{
+                type: 'text',
+                text: `❌ Failed to add best practice: ${error}`
+            }]
+        };
+    }
 }
 
 /**
  * Wisdom analyze handler - 코드 분석
  */
-export async function handleWisdomAnalyze(args: {
-  code: string;
-  filename?: string;
-  auto_fix?: boolean;
-}): Promise<{ content: Array<{ type: string; text: string }> }> {
-  try {
-    const { code, filename = 'temp.py', auto_fix = false } = args;
-    
-    const pythonCode = `
-from core.wisdom_integration import wisdom_integration
+export async function handleWisdomAnalyze(args: { code: string; filename?: string; auto_fix?: boolean }): Promise<{ content: Array<{ type: string; text: string }> }> {
+    try {
+        const { code, filename = 'temp.py' } = args;
+        
+        // Escape the code properly
+        const escapedCode = code.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+        
+        const pythonCode = `
+from wisdom_hooks import get_wisdom_hooks
+hooks = get_wisdom_hooks()
 
-# 코드 분석
-code = """${code.replace(/"""/g, '\\"\\"\\"')}"""
-filename = "${filename}"
-auto_fix = ${auto_fix ? 'True' : 'False'}
+code = '''${escapedCode}'''
+filename = '${filename}'
 
-# 분석 실행
-should_proceed, modified_code, analysis_result = wisdom_integration.pre_execute_check(
-    code, 
-    language="${filename.endsWith('.py') ? 'python' : filename.endsWith('.ts') ? 'typescript' : 'javascript'}"
-)
-
-# 결과 생성
-result = {
-    "should_proceed": should_proceed,
-    "modified_code": modified_code if modified_code != code else None,
-    "analysis": analysis_result,
-    "detections_count": analysis_result.get("total_issues", 0)
-}
+detected = hooks.check_code_patterns(code, filename)
 
 import json
-print(json.dumps(result, indent=2, ensure_ascii=False))
+print(json.dumps({
+    'detected': detected,
+    'count': len(detected)
+}, ensure_ascii=False))
 `;
 
-    const result = await executePythonCode(pythonCode);
-    const analysisResult = JSON.parse(result) as any;
-    
-    return {
-      content: [
-        { type: 'text', text: `🧠 Wisdom Analysis Complete\n\n` },
-        { type: 'text', text: `📊 Total Issues: ${analysisResult.detections_count}\n` },
-        { type: 'text', text: `Status: ${analysisResult.analysis.status}\n\n` },
-        { type: 'text', text: JSON.stringify(analysisResult.analysis, null, 2) }
-      ]
-    };
-  } catch (error) {
-    logger.error('Wisdom analyze error:', error);
-    return {
-      content: [
-        { type: 'text', text: `❌ Analysis failed: ${error instanceof Error ? error.message : String(error)}` }
-      ]
-    };
-  }
+        const result = await executePythonCode(pythonCode);
+        const analysis = JSON.parse(result);
+        
+        if (analysis.count === 0) {
+            return {
+                content: [{
+                    type: 'text',
+                    text: '✅ 코드 분석 완료: 문제점이 발견되지 않았습니다.'
+                }]
+            };
+        }
+        
+        let message = `🔍 **코드 분석 결과**\n\n`;
+        message += `발견된 문제: ${analysis.count}개\n\n`;
+        
+        for (const detection of analysis.detected) {
+            message += `⚠️ **${detection.pattern}**\n`;
+            message += `• 위치: ${detection.location || '알 수 없음'}\n`;
+            message += `• 설명: ${detection.message || ''}\n\n`;
+        }
+        
+        return {
+            content: [{
+                type: 'text',
+                text: message
+            }]
+        };
+    } catch (error) {
+        logger.error('Failed to analyze code:', error);
+        return {
+            content: [{
+                type: 'text',
+                text: `❌ Analysis failed: ${error}`
+            }]
+        };
+    }
 }
 
 /**
- * Wisdom analyze file handler - 파일 분석
+ * Wisdom analyze file handler
  */
-export async function handleWisdomAnalyzeFile(args: {
-  filepath: string;
-}): Promise<{ content: Array<{ type: string; text: string }> }> {
-  try {
-    const { filepath } = args;
+export async function handleWisdomAnalyzeFile(args: { filepath: string }): Promise<{ content: Array<{ type: string; text: string }> }> {
+    try {
+        const { filepath } = args;
+        
+        const pythonCode = `
+import os
+from wisdom_hooks import get_wisdom_hooks
+
+filepath = r'${filepath.replace(/\\/g, '\\\\')}'
+
+if not os.path.exists(filepath):
+    print(json.dumps({'error': 'File not found'}, ensure_ascii=False))
+else:
+    with open(filepath, 'r', encoding='utf-8') as f:
+        code = f.read()
     
-    const pythonCode = `
-from core.wisdom_integration import wisdom_integration
-
-# 파일 분석
-result = wisdom_integration.analyze_file("${filepath}")
-
-import json
-print(json.dumps(result, indent=2, ensure_ascii=False))
+    hooks = get_wisdom_hooks()
+    detected = hooks.check_code_patterns(code, filepath)
+    
+    import json
+    print(json.dumps({
+        'detected': detected,
+        'count': len(detected),
+        'filepath': filepath
+    }, ensure_ascii=False))
 `;
 
-    const result = await executePythonCode(pythonCode);
-    const analysisResult = JSON.parse(result) as any;
-    
-    return {
-      content: [
-        { type: 'text', text: `🧠 File Analysis: ${filepath}\n\n` },
-        { type: 'text', text: JSON.stringify(analysisResult, null, 2) }
-      ]
-    };
-  } catch (error) {
-    logger.error('Wisdom analyze file error:', error);
-    return {
-      content: [
-        { type: 'text', text: `❌ File analysis failed: ${error instanceof Error ? error.message : String(error)}` }
-      ]
-    };
-  }
+        const result = await executePythonCode(pythonCode);
+        const analysis = JSON.parse(result);
+        
+        if (analysis.error) {
+            return {
+                content: [{
+                    type: 'text',
+                    text: `❌ 파일을 찾을 수 없습니다: ${filepath}`
+                }]
+            };
+        }
+        
+        if (analysis.count === 0) {
+            return {
+                content: [{
+                    type: 'text',
+                    text: `✅ 파일 분석 완료: ${filepath}\n문제점이 발견되지 않았습니다.`
+                }]
+            };
+        }
+        
+        let message = `🔍 **파일 분석 결과: ${filepath}**\n\n`;
+        message += `발견된 문제: ${analysis.count}개\n\n`;
+        
+        for (const detection of analysis.detected) {
+            message += `⚠️ **${detection.pattern}**\n`;
+            message += `• 위치: ${detection.location || '알 수 없음'}\n`;
+            message += `• 설명: ${detection.message || ''}\n\n`;
+        }
+        
+        return {
+            content: [{
+                type: 'text',
+                text: message
+            }]
+        };
+    } catch (error) {
+        logger.error('Failed to analyze file:', error);
+        return {
+            content: [{
+                type: 'text',
+                text: `❌ File analysis failed: ${error}`
+            }]
+        };
+    }
 }
 
 /**
- * Wisdom report handler - 리포트 생성
+ * Wisdom report handler
  */
-export async function handleWisdomReport(args: {
-  output_file?: string;
-}): Promise<{ content: Array<{ type: string; text: string }> }> {
-  try {
-    const { output_file } = args;
-    
-    const pythonCode = `
-from core.wisdom_integration import wisdom_integration
+export async function handleWisdomReport(args: { output_file?: string }): Promise<{ content: Array<{ type: string; text: string }> }> {
+    try {
+        const { output_file } = args;
+        
+        const pythonCode = `
+from project_wisdom import get_wisdom_manager
+wisdom = get_wisdom_manager()
 
-# 리포트 생성
-report = wisdom_integration.generate_wisdom_report(${output_file ? `"${output_file}"` : 'None'})
-print(report)
+# Generate report
+report = wisdom.generate_report()
+
+# Save if output file specified
+output_file = ${output_file ? `'${output_file}'` : 'None'}
+if output_file:
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(report)
+    print(f"Report saved to: {output_file}")
+else:
+    print(report)
 `;
 
-    const result = await executePythonCode(pythonCode);
-    
-    return {
-      content: [
-        { type: 'text', text: `🧠 Wisdom Report Generated\n\n` },
-        { type: 'text', text: result }
-      ]
-    };
-  } catch (error) {
-    logger.error('Wisdom report error:', error);
-    return {
-      content: [
-        { type: 'text', text: `❌ Report generation failed: ${error instanceof Error ? error.message : String(error)}` }
-      ]
-    };
-  }
+        const result = await executePythonCode(pythonCode);
+        
+        return {
+            content: [{
+                type: 'text',
+                text: result.trim()
+            }]
+        };
+    } catch (error) {
+        logger.error('Failed to generate report:', error);
+        return {
+            content: [{
+                type: 'text',
+                text: `❌ Report generation failed: ${error}`
+            }]
+        };
+    }
 }

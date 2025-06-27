@@ -6,6 +6,7 @@ import { logger } from '../utils/logger';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
+import { getPythonPath, getPythonEnv } from '../utils/python-path';
 
 const execFileAsync = promisify(execFile);
 
@@ -70,8 +71,9 @@ for result in results:
     
     // Python 스크립트 실행
     try {
-      const { stdout, stderr } = await execFileAsync('python', ['-c', scriptContent], {
-        env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+      const pythonPath = getPythonPath();
+      const { stdout, stderr } = await execFileAsync(pythonPath, ['-c', scriptContent], {
+        env: getPythonEnv(),
         cwd: path.join(process.cwd(), 'python')
       });
 

@@ -6,6 +6,7 @@ import { logger } from '../utils/logger';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
+import { getPythonPath, getPythonEnv } from '../utils/python-path';
 
 const execFileAsync = promisify(execFile);
 
@@ -14,8 +15,9 @@ const execFileAsync = promisify(execFile);
  */
 async function executePythonCode(code: string): Promise<string> {
   try {
-    const { stdout, stderr } = await execFileAsync('python', ['-c', code], {
-      env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+    const pythonPath = getPythonPath();
+    const { stdout, stderr } = await execFileAsync(pythonPath, ['-c', code], {
+      env: getPythonEnv(),
       cwd: path.join(process.cwd(), 'python')
     });
     

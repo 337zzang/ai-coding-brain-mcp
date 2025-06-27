@@ -175,8 +175,8 @@ class WorkflowManager:
                     )
             
             # 다음 작업 선택
-            next_task = self.plan.get_next_task()
-            if not next_task:
+            result = self.plan.get_next_task()
+            if not result:
                 # 차단된 작업 확인
                 blocked = self.plan.get_blocked_tasks()
                 if blocked:
@@ -191,13 +191,16 @@ class WorkflowManager:
                         'message': "대기 중인 작업이 없습니다"
                     })
             
+            # tuple 분해: (phase_id, task)
+            phase_id, next_task = result
+            
             # 작업 시작
             next_task.transition_to('in_progress')
             self.context.current_task = next_task.id
             self.context_manager.set_current_task(next_task.id)
             
             # Phase 상태 업데이트
-            phase = self._get_task_phase(next_task.id)
+            phase = self.plan.phases.get(phase_id)
             if phase and phase.status == 'pending':
                 phase.status = 'in_progress'
             

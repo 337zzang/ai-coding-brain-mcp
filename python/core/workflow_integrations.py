@@ -4,7 +4,7 @@ WorkflowManager 확장 - ProjectAnalyzer/Wisdom 통합
 import os
 from typing import Dict, List
 from datetime import datetime
-from python.core.models import Task, Phase, Plan, TaskStatus
+from core.models import Task, Phase, Plan, TaskStatus
 
 
 class WorkflowIntegrations:
@@ -16,7 +16,7 @@ class WorkflowIntegrations:
     
     def analyze_and_generate_tasks(self, project_path: str = ".") -> Dict[str, List[Task]]:
         """ProjectAnalyzer를 사용하여 자동으로 Task 생성"""
-        from python.analyzers.project_analyzer import ProjectAnalyzer
+        from analyzers.project_analyzer import ProjectAnalyzer
         from python.project_wisdom import get_wisdom_manager
         
         analyzer = ProjectAnalyzer(project_path)
@@ -136,7 +136,7 @@ class WorkflowIntegrations:
     def create_smart_plan(self, name: str, description: str, auto_analyze: bool = True) -> Plan:
         """ProjectAnalyzer와 Wisdom을 활용한 스마트 Plan 생성"""
         # 기본 Plan 생성
-        from python.core.models import Plan
+        from core.models import Plan
         plan = Plan(name=name, description=description)
         self.workflow_manager.context.plan = plan
         

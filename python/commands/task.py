@@ -10,9 +10,9 @@ from typing import Dict, Any, Optional, List
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from core.context_manager import get_context_manager
-from python.core.workflow_manager import get_workflow_manager
+from core.workflow_manager import get_workflow_manager
 from core.error_handler import StandardResponse
-from python.core.models import TaskStatus
+from core.models import TaskStatus
 from commands.plan import get_plan, set_plan, plan_to_dict
 from analyzers.project_analyzer import ProjectAnalyzer
 

@@ -482,7 +482,7 @@ class WorkflowManager:
 
     def analyze_and_generate_tasks(self, project_path: str = ".") -> Dict[str, List[Task]]:
         """ProjectAnalyzer를 사용하여 자동으로 Task 생성"""
-        from python.analyzers.project_analyzer import ProjectAnalyzer
+        from analyzers.project_analyzer import ProjectAnalyzer
         from python.project_wisdom import get_wisdom_manager
         
         analyzer = ProjectAnalyzer()
@@ -641,3 +641,13 @@ class WorkflowManager:
             print(f"   - 자동 생성 Task: {len(generated_tasks['analysis']) + len(generated_tasks['wisdom'])}개")
         
         return plan
+
+# Singleton instance
+_workflow_manager_instance = None
+
+def get_workflow_manager():
+    """Get or create WorkflowManager singleton instance"""
+    global _workflow_manager_instance
+    if _workflow_manager_instance is None:
+        _workflow_manager_instance = WorkflowManager()
+    return _workflow_manager_instance

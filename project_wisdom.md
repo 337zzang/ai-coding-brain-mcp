@@ -15,6 +15,7 @@
 - 자동 저장 데코레이터(@autosave)를 상태 변경 메서드에 적용하여 데이터 안정성 확보
 - Pydantic 모델에 비즈니스 로직을 메서드로 구현하여 타입 안전성과 캡슐화 확보
 - 이원화된 데이터 구조(Plan.tasks와 context.tasks['next'])를 단일화하여 동기화 문제 해결
+- 상태 전환 로직을 모델 메서드(transition_to)로 캡슐화하여 일관성 확보
 
 ### bug_fix
 - get_snippet_preview 버그 수정 완료 - parser.get_snippet_preview() → parse_with_snippets() + _get_snippet() 조합으로 해결

@@ -51,7 +51,7 @@ class Task(BaseModelWithConfig):
     id: str
     title: str
     description: str = ""
-    status: str = Field(default='pending', pattern='^(pending|in_progress|completed|blocked)$')
+    status: str = Field(default='pending', pattern='^(pending|ready|in_progress|completed|blocked|cancelled)$')
     priority: str = Field(default='medium', pattern='^(high|medium|low)$')
     phase_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
@@ -92,6 +92,86 @@ class Task(BaseModelWithConfig):
         """우선순위를 숫자로 변환 (정렬용)"""
         priority_map = {'high': 3, 'medium': 2, 'low': 1}
         return priority_map.get(self.priority, 2)
+    
+    def transition_to(self, new_status: str) -> bool:
+        """유효한 상태 전환 수행
+        
+        Args:
+            new_status: 전환할 상태
+            
+        Returns:
+            bool: 전환 성공 여부
+        """
+        # 유효한 상태 전환 규칙
+        valid_transitions = {
+            'pending': ['ready', 'blocked', 'cancelled'],
+            'ready': ['in_progress', 'blocked', 'cancelled'],
+            'blocked': ['ready', 'cancelled'],
+            'in_progress': ['completed', 'blocked', 'cancelled'],
+            'completed': [],  # 완료된 작업은 상태 변경 불가
+            'cancelled': []   # 취소된 작업은 상태 변경 불가
+        }
+        
+        current_valid = valid_transitions.get(self.status, [])
+        
+        if new_status not in current_valid:
+            return False
+        
+        # 상태 전환
+        old_status = self.status
+        self.status = new_status
+        self.updated_at = datetime.now()
+        
+        # 상태별 추가 처리
+        if new_status == 'in_progress':
+            self.started_at = datetime.now()
+        elif new_status == 'completed':
+            self.completed_at = datetime.now()
+            self.completed = True
+        
+        return True
+    
+    def can_start(self) -> bool:
+        """작업 시작 가능 여부 확인
+        
+        Returns:
+            bool: 시작 가능하면 True
+        """
+        # 시작 가능한 상태: pending 또는 ready
+        return self.status in ['pending', 'ready']
+    
+    def check_dependencies(self) -> List[str]:
+        """충족되지 않은 의존성 목록 반환
+        
+        Returns:
+            List[str]: 충족되지 않은 의존성 ID 목록
+        """
+        # 실제 의존성 체크는 Plan 레벨에서 수행
+        # 여기서는 의존성 목록만 반환
+        return self.dependencies if self.dependencies else []
+    
+    def add_dependency(self, task_id: str) -> None:
+        """의존성 추가
+        
+        Args:
+            task_id: 의존할 작업 ID
+        """
+        if not self.dependencies:
+            self.dependencies = []
+        
+        if task_id not in self.dependencies:
+            self.dependencies.append(task_id)
+            self.updated_at = datetime.now()
+    
+    def remove_dependency(self, task_id: str) -> None:
+        """의존성 제거
+        
+        Args:
+            task_id: 제거할 의존성 작업 ID
+        """
+        if self.dependencies and task_id in self.dependencies:
+            self.dependencies.remove(task_id)
+            self.updated_at = datetime.now()
 
 
 class Phase(BaseModelWithConfig):
@@ -175,6 +255,115 @@ class Plan(BaseModelWithConfig):
             'completed_tasks': completed,
             'percentage': (completed / total * 100) if total > 0 else 0
         }
+    
+    def get_next_task(self) -> Optional[Task]:
+        """우선순위와 의존성을 고려하여 다음 실행할 작업 반환
+        
+        Returns:
+            Optional[Task]: 다음 실행할 작업, 없으면 None
+        """
+        ready_tasks = self.get_ready_tasks()
+        
+        if not ready_tasks:
+            return None
+        
+        # 우선순위로 정렬 (HIGH > MEDIUM > LOW)
+        ready_tasks.sort(key=lambda t: t.get_priority_value(), reverse=True)
+        
+        # 동일 우선순위인 경우 생성 시간 순
+        ready_tasks.sort(key=lambda t: (t.get_priority_value(), t.created_at), 
+                        reverse=True)
+        
+        return ready_tasks[0]
+    
+    def get_ready_tasks(self) -> List[Task]:
+        """실행 가능한 모든 작업 목록 반환
+        
+        Returns:
+            List[Task]: 실행 가능한 작업들
+        """
+        ready_tasks = []
+        
+        for phase in self.phases.values():
+            for task in phase.tasks:
+                # pending 상태이고 의존성이 충족된 작업
+                if task.status == "pending" and self._check_task_dependencies(task):
+                    ready_tasks.append(task)
+                # 이미 ready 상태인 작업
+                elif task.status == "ready":
+                    ready_tasks.append(task)
+        
+        return ready_tasks
+    
+    def get_blocked_tasks(self) -> List[Task]:
+        """의존성으로 인해 차단된 작업 목록 반환
+        
+        Returns:
+            List[Task]: 차단된 작업들
+        """
+        blocked_tasks = []
+        
+        for phase in self.phases.values():
+            for task in phase.tasks:
+                # pending 상태이지만 의존성이 충족되지 않은 작업
+                if task.status == "pending" and not self._check_task_dependencies(task):
+                    blocked_tasks.append(task)
+                # 명시적으로 blocked 상태인 작업
+                elif task.status == "blocked":
+                    blocked_tasks.append(task)
+        
+        return blocked_tasks
+    
+    def reorder_by_priority(self) -> None:
+        """모든 Phase의 작업을 우선순위로 재정렬"""
+        for phase in self.phases.values():
+            # Phase 내 작업들을 우선순위로 정렬
+            phase.tasks.sort(key=lambda t: t.get_priority_value(), reverse=True)
+    
+    def update_task_status(self, task_id: str, status: str) -> bool:
+        """작업 상태 업데이트
+        
+        Args:
+            task_id: 작업 ID
+            status: 새로운 상태
+            
+        Returns:
+            bool: 성공 여부
+        """
+        task = self.get_task_by_id(task_id)
+        if task:
+            old_status = task.status
+            task.status = status
+            task.updated_at = datetime.now()
+            
+            # 상태 전환에 따른 추가 처리
+            if status == "in_progress" and old_status != "in_progress":
+                task.started_at = datetime.now()
+            elif status == "completed" and old_status != "completed":
+                task.completed_at = datetime.now()
+                task.completed = True
+            
+            return True
+        return False
+    
+    def _check_task_dependencies(self, task: Task) -> bool:
+        """작업의 의존성 충족 여부 확인 (내부 헬퍼)
+        
+        Args:
+            task: 확인할 작업
+            
+        Returns:
+            bool: 의존성이 모두 충족되면 True
+        """
+        if not task.dependencies:
+            return True
+        
+        for dep_id in task.dependencies:
+            dep_task = self.get_task_by_id(dep_id)
+            if not dep_task or dep_task.status != "completed":
+                return False
+        
+        return True
 
 
 class WorkTracking(BaseModelWithConfig):

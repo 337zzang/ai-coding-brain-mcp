@@ -1,7 +1,16 @@
-def replace_block(file_path: str, block_name: str, new_content: str) -> dict:
+def insert_block(file_path: str, target_name: str, position: str, new_code: str) -> dict:
     """
-    AST 기반으로 코드 블록(함수/클래스)을 안전하게 교체
-    EnhancedFunctionReplacer를 사용하여 들여쓰기 자동 처리
+    AST 기반으로 코드 블록을 안전하게 삽입
+    BlockInsertTransformer를 사용하여 들여쓰기 자동 처리
+
+    Args:
+        file_path: 대상 파일 경로
+        target_name: 삽입 위치 기준이 되는 블록 이름
+        position: 'before', 'after', 'start', 'end' 중 하나
+        new_code: 삽입할 새로운 코드
+
+    Returns:
+        dict: 성공 여부와 상세 정보
     """
     import ast
     import os
@@ -10,7 +19,7 @@ def replace_block(file_path: str, block_name: str, new_content: str) -> dict:
     # 작업 추적 (있으면 사용)
     try:
         from work_tracking import WorkTracker
-        WorkTracker().track_function_edit(file_path, block_name)
+        WorkTracker().track_function_edit(file_path, f"{target_name}:{position}")
     except ImportError:
         pass
     
@@ -20,7 +29,7 @@ def replace_block(file_path: str, block_name: str, new_content: str) -> dict:
             original_content = f.read()
         
         # ast_parser_helpers import
-        from ast_parser_helpers import EnhancedFunctionReplacer
+        from ast_parser_helpers import BlockInsertTransformer
         
         # AST 파싱
         try:
@@ -36,9 +45,9 @@ def replace_block(file_path: str, block_name: str, new_content: str) -> dict:
                 }
             }
         
-        # EnhancedFunctionReplacer로 코드 교체
-        replacer = EnhancedFunctionReplacer(block_name, new_content)
-        new_tree = replacer.visit(tree)
+        # BlockInsertTransformer로 코드 삽입
+        inserter = BlockInsertTransformer(target_name, position, new_code)
+        new_tree = inserter.visit(tree)
         
         # AST를 다시 코드로 변환 (들여쓰기 자동 처리)
         try:
@@ -61,10 +70,11 @@ def replace_block(file_path: str, block_name: str, new_content: str) -> dict:
         # 성공 응답
         return {
             'success': True,
-            'message': f'{block_name} 블록이 성공적으로 교체되었습니다',
+            'message': f'{target_name}의 {position} 위치에 코드가 삽입되었습니다',
             'details': {
                 'file': file_path,
-                'block': block_name,
+                'target': target_name,
+                'position': position,
                 'original_size': len(original_content),
                 'new_size': len(new_content),
                 'ast_based': True

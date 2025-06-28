@@ -124,21 +124,15 @@ def insert_block(file_path: str, target_name: str, position: str, new_code: str)
     import ast
     import os
     import sys
-    from work_tracking import WorkTracker
-    WorkTracker().track_function_edit(file_path, f'{target_name}:{position}')
+    try:
+        from work_tracking import WorkTracker
+        WorkTracker().track_function_edit(file_path, f'{target_name}:{position}')
+    except ImportError:
+        pass
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             original_content = f.read()
-        current_dir = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() else os.getcwd()
-        if current_dir not in sys.path:
-            sys.path.insert(0, current_dir)
-        try:
-            from ast_parser_helpers import BlockInsertTransformer
-        except ImportError:
-            parent_dir = os.path.dirname(current_dir)
-            if parent_dir not in sys.path:
-                sys.path.insert(0, parent_dir)
-            from ast_parser_helpers import BlockInsertTransformer
+        from ast_parser_helpers import BlockInsertTransformer
         try:
             tree = ast.parse(original_content)
         except SyntaxError as e:

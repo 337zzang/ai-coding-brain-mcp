@@ -19,6 +19,7 @@ from core.context_manager import get_context_manager
 from core.models import Plan, Phase, Task, ProjectContext, TaskStatus
 from core.decorators import autosave
 from core.error_handler import ErrorHandler, ErrorType, StandardResponse
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +126,21 @@ class WorkflowManager:
     # ========== 작업 관리 ==========
     
     @autosave
+
+    def generate_unique_task_id(self, phase_id: str) -> str:
+        """고유한 Task ID를 생성합니다.
+        
+        Args:
+            phase_id: Phase ID
+            
+        Returns:
+            고유한 Task ID (예: 1-1-a1b2)
+        """
+        phase_num = phase_id.split('-')[1] if '-' in phase_id else phase_id
+        task_count = len(self.plan.phases[phase_id].tasks) + 1 if phase_id in self.plan.phases else 1
+        unique_suffix = uuid.uuid4().hex[:4]
+        return f'{phase_num}-{task_count}-{unique_suffix}'
+
     def add_task(self, phase_id: str, title: str, description: str = "", 
                  priority: str = "medium", dependencies: List[str] = None) -> StandardResponse:
         """작업 추가"""

@@ -1,700 +1,673 @@
 """
-AI Coding Brain Pydantic 데이터 모델
-버전: 1.0
-작성일: 2025-06-24
+import sys
+import os
+# Python 경로 설정
+python_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if python_path not in sys.path:
+    sys.path.insert(0, python_path)
 
-이 모듈은 프로젝트의 모든 데이터 구조를 Pydantic 모델로 정의합니다.
-타입 안정성과 자동 검증을 제공하여 런타임 오류를 방지합니다.
+AI Coding Brain MCP - Workflow Manager
+통합 워크플로우 관리자
 """
 
-from pydantic import BaseModel, Field, validator
-from typing import List, Dict, Optional, Any, Union, Tuple
-from datetime import datetime, timedelta
-from pathlib import Path
-from enum import Enum
+from typing import Optional, List, Dict, Any, Tuple
+from datetime import datetime
 import json
+import logging
+
+from core.context_manager import get_context_manager
+from core.models import Plan, Phase, Task, ProjectContext, TaskStatus
+from core.decorators import autosave
+from core.error_handler import ErrorHandler, ErrorType, StandardResponse
+import uuid
+
+logger = logging.getLogger(__name__)
 
 
-class TaskStatus(str, Enum):
-    """작업의 상태를 정의하는 Enum"""
-    PENDING = "pending"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    BLOCKED = "blocked"
-    CANCELED = "canceled"
-
-
-class BaseModelWithConfig(BaseModel):
-    """
-    JSON 직렬화와 Path 객체 처리를 위한 기본 모델
-    """
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {
-            Path: str,
-            datetime: lambda v: v.isoformat() if v else None
+class WorkflowManager:
+    """Plan/Task 조작을 일원화하는 통합 매니저"""
+    
+    def __init__(self):
+        self.context_manager = get_context_manager()
+        self._event_hooks = {
+            'task_started': [],
+            'task_completed': [],
+            'plan_created': [],
+            'task_blocked': []
         }
-        
-    def model_dump(self, **kwargs):
-        """Path 객체를 문자열로 변환하여 반환"""
-        d = super().model_dump(**kwargs)
-        return self._convert_paths_to_str(d)
-    
-    # 하위 호환성을 위한 별칭
-    def dict(self, **kwargs):
-        """하위 호환성을 위한 별칭 (deprecated)"""
-        return self.model_dump(**kwargs)
-    
-    def _convert_paths_to_str(self, obj):
-        """재귀적으로 Path 객체를 문자열로 변환"""
-        if isinstance(obj, dict):
-            return {k: self._convert_paths_to_str(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [self._convert_paths_to_str(item) for item in obj]
-        elif isinstance(obj, Path):
-            return str(obj)
-        return obj
-
-
-class Task(BaseModelWithConfig):
-    """작업(Task) 모델"""
-    id: str
-    title: str
-    description: str = ""
-    status: TaskStatus = Field(default=TaskStatus.PENDING)
-    priority: str = Field(default='medium', pattern='^(high|medium|low)$')
-    phase_id: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.now)
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    completed: bool = False
-    subtasks: List[str] = Field(default_factory=list)
-    work_summary: Optional[Dict[str, Any]] = None
-    dependencies: List[str] = Field(default_factory=list)  # 의존성 작업 ID 목록
-    related_files: List[str] = Field(default_factory=list)  # 관련 파일 목록
-    
-    # 상태 관리 강화 필드
-    state_history: List[Dict[str, Any]] = Field(default_factory=list)  # 상태 변경 이력
-    blocking_reason: Optional[str] = None  # 차단 이유
-    estimated_hours: Optional[float] = None  # 예상 소요 시간
-    actual_hours: Optional[float] = None  # 실제 소요 시간
-    
-    # 의존성 확장
-    blocks: List[str] = Field(default_factory=list)  # 이 작업이 차단하는 작업 ID들
-    
-    # 자동화 및 통합 정보
-    auto_generated: bool = False  # ProjectAnalyzer가 자동 생성했는지
-    wisdom_hints: List[str] = Field(default_factory=list)  # Wisdom 시스템 힌트
-    context_data: Dict[str, Any] = Field(default_factory=dict)  # Task별 독립 컨텍스트
-    
-    @validator('status')
-    def validate_status(cls, v):
-        valid_statuses = ['pending', 'in_progress', 'completed', 'blocked']
-        if v not in valid_statuses:
-            raise ValueError(f'Status must be one of {valid_statuses}')
-        return v
-    
-    @validator('priority')
-    def validate_priority(cls, v):
-        valid_priorities = ['high', 'medium', 'low']
-        if v not in valid_priorities:
-            raise ValueError(f'Priority must be one of {valid_priorities}')
-        return v
-    
-    def mark_completed(self):
-        """작업을 완료 상태로 표시"""
-        self.completed = True
-        self.status = 'completed'
-        self.completed_at = datetime.now()
-    
-    def mark_started(self):
-        """작업을 시작 상태로 표시"""
-        self.status = 'in_progress'
-        self.started_at = datetime.now()
-    
-    def get_priority_value(self) -> int:
-        """우선순위를 숫자로 변환 (정렬용)"""
-        priority_map = {'high': 3, 'medium': 2, 'low': 1}
-        return priority_map.get(self.priority, 2)
-    
-    def transition_to(self, new_status: str) -> bool:
-        """유효한 상태 전환 수행
-        
-        Args:
-            new_status: 전환할 상태
-            
-        Returns:
-            bool: 전환 성공 여부
-        """
-        # 유효한 상태 전환 규칙
-        valid_transitions = {
-            'pending': ['ready', 'blocked', 'cancelled'],
-            'ready': ['in_progress', 'blocked', 'cancelled'],
-            'blocked': ['ready', 'cancelled'],
-            'in_progress': ['completed', 'blocked', 'cancelled'],
-            'completed': [],  # 완료된 작업은 상태 변경 불가
-            'cancelled': []   # 취소된 작업은 상태 변경 불가
-        }
-        
-        current_valid = valid_transitions.get(self.status, [])
-        
-        if new_status not in current_valid:
-            return False
-        
-        # 상태 전환
-        old_status = self.status
-        self.status = new_status
-        self.updated_at = datetime.now()
-        
-        # 상태 이력 기록
-        self.state_history.append({
-            'from': old_status,
-            'to': new_status,
-            'timestamp': self.updated_at,
-            'reason': self.blocking_reason if new_status == 'blocked' else None
-        })
-        
-        # 상태별 추가 처리
-        if new_status == 'in_progress':
-            self.started_at = datetime.now()
-        elif new_status == 'completed':
-            self.completed_at = datetime.now()
-            self.completed = True
-            # 실제 소요 시간 계산
-            if self.started_at:
-                self.actual_hours = (self.completed_at - self.started_at).total_seconds() / 3600
-        elif new_status == 'blocked':
-            # blocking_reason은 transition_to 호출 전에 설정되어야 함
-            pass
-        
-        return True
-    
-    def can_start(self) -> bool:
-        """작업 시작 가능 여부 확인
-        
-        Returns:
-            bool: 시작 가능하면 True
-        """
-        # 시작 가능한 상태: pending 또는 ready
-        return self.status in ['pending', 'ready']
-    
-    def check_dependencies(self) -> List[str]:
-        """충족되지 않은 의존성 목록 반환
-        
-        Returns:
-            List[str]: 충족되지 않은 의존성 ID 목록
-        """
-        # 실제 의존성 체크는 Plan 레벨에서 수행
-        # 여기서는 의존성 목록만 반환
-        return self.dependencies if self.dependencies else []
-    
-    def add_dependency(self, task_id: str) -> None:
-        """의존성 추가
-        
-        Args:
-            task_id: 의존할 작업 ID
-        """
-        if not self.dependencies:
-            self.dependencies = []
-        
-        if task_id not in self.dependencies:
-            self.dependencies.append(task_id)
-            self.updated_at = datetime.now()
-    
-    def remove_dependency(self, task_id: str) -> None:
-        """의존성 제거
-        
-        Args:
-            task_id: 제거할 의존성 작업 ID
-        """
-        if self.dependencies and task_id in self.dependencies:
-            self.dependencies.remove(task_id)
-            self.updated_at = datetime.now()
-    
-    def get_time_in_state(self, state: Optional[str] = None) -> float:
-        """특정 상태(또는 현재 상태)에 머문 시간 계산 (시간 단위)
-        
-        Args:
-            state: 조회할 상태 (None이면 현재 상태)
-            
-        Returns:
-            float: 해당 상태에 머문 시간 (시간 단위)
-        """
-        if state is None:
-            state = self.status
-        
-        total_hours = 0.0
-        
-        # 상태 이력에서 해당 상태에 머문 시간 계산
-        for i, entry in enumerate(self.state_history):
-            if entry['to'] == state:
-                # 다음 상태 변경까지의 시간 계산
-                if i + 1 < len(self.state_history):
-                    next_entry = self.state_history[i + 1]
-                    duration = next_entry['timestamp'] - entry['timestamp']
-                else:
-                    # 마지막 상태면 현재까지의 시간
-                    duration = datetime.now() - entry['timestamp']
-                
-                total_hours += duration.total_seconds() / 3600
-        
-        # 현재 상태가 요청한 상태와 같고 이력이 없으면
-        if state == self.status and total_hours == 0:
-            if state == 'in_progress' and self.started_at:
-                total_hours = (datetime.now() - self.started_at).total_seconds() / 3600
-            elif state == 'completed' and self.completed_at and self.started_at:
-                total_hours = (self.completed_at - self.started_at).total_seconds() / 3600
-        
-        return total_hours
-    
-    def set_blocking_reason(self, reason: str) -> None:
-        """차단 이유 설정
-        
-        Args:
-            reason: 차단 이유
-        """
-        self.blocking_reason = reason
-        self.updated_at = datetime.now()
-    
-    def estimate_completion_time(self) -> Optional[datetime]:
-        """예상 완료 시간 계산
-        
-        Returns:
-            Optional[datetime]: 예상 완료 시간
-        """
-        if self.status == 'completed':
-            return self.completed_at
-        
-        if self.status == 'in_progress' and self.started_at and self.estimated_hours:
-            # 시작 시간 + 예상 소요 시간
-            return self.started_at + timedelta(hours=self.estimated_hours)
-        
-        return None
-    
-    def get_progress_percentage(self) -> float:
-        """작업 진행률 계산 (0-100)
-        
-        Returns:
-            float: 진행률 (0-100)
-        """
-        if self.status == 'completed':
-            return 100.0
-        elif self.status == 'in_progress' and self.started_at and self.estimated_hours:
-            elapsed = (datetime.now() - self.started_at).total_seconds() / 3600
-            return min(100.0, (elapsed / self.estimated_hours) * 100)
-        else:
-            return 0.0
-
-
-class Phase(BaseModelWithConfig):
-    """단계(Phase) 모델"""
-    id: str
-    name: str
-    description: str = ""
-    status: str = Field(default='pending', pattern='^(pending|in_progress|completed)$')
-    
-    # Task 순서 및 진행률 관리
-    task_order: List[str] = Field(default_factory=list)  # Task 표시 순서
-    progress: float = 0.0  # Phase 진행률 (0-100%)
-    completed_tasks: int = 0  # 완료된 Task 수
-    total_tasks: int = 0  # 전체 Task 수
-    
-    # Phase 메타데이터
-    estimated_days: Optional[float] = None  # 예상 소요 일수
-    started_at: Optional[datetime] = None  # Phase 시작 시간
-    completed_at: Optional[datetime] = None  # Phase 완료 시간
-    tasks: Dict[str, Task] = Field(default_factory=dict)
-    
-    def get_task_by_id(self, task_id: str) -> Optional[Task]:
-        """ID로 작업 찾기"""
-        return self.tasks.get(task_id)
-    def get_task_by_id(self, task_id: str) -> Optional[Task]:
-        """ID로 작업 찾기"""
-        return self.tasks.get(task_id)
-    def add_task(self, title: str, description: str = "") -> Task:
-        """새 작업 추가"""
-        task_id = f"{self.id.split('-')[1]}-{len(self.tasks) + 1}"
-        task = Task(
-            id=task_id,
-            title=title,
-            description=description,
-            phase_id=self.id
-        )
-        self.tasks[task_id] = task
-        self.task_order.append(task_id)  # 순서 기록
-        return task
     
     @property
-    def progress(self) -> Dict[str, Any]:
-        """진행률 계산"""
-        total = len(self.tasks)
-        completed = len([t for t in self.tasks.values() if t.completed])
-        return {
-            'total': total,
-            'completed': completed,
-            'percentage': (completed / total * 100) if total > 0 else 0
-        }
+    def context(self) -> Optional[ProjectContext]:
+        """현재 컨텍스트"""
+        return self.context_manager.context
     
-    def get_progress_details(self) -> Dict[str, Any]:
-        """상세 진행 상황 반환
+    @property
+    def plan(self) -> Optional[Plan]:
+        """현재 계획"""
+        return self.context.plan if self.context else None
+    
+    # ========== 프로젝트 관리 ==========
+    
+    def load_project(self, project_name: str) -> StandardResponse:
+        """프로젝트 로드"""
+        try:
+            # 컨텍스트 초기화는 context_manager가 담당
+            # 여기서는 Plan 관련 추가 작업만
+            if not self.context:
+                return StandardResponse.error(
+                    ErrorType.CONTEXT_ERROR,
+                    "프로젝트 컨텍스트 로드 실패"
+                )
+            
+            # 레거시 큐 마이그레이션 체크
+            # 레거시 tasks 체크 제거됨
+            
+            return StandardResponse.success({
+                'project': self.context.project_name,
+                'plan': self.plan.name if self.plan else None
+            })
+        except Exception as e:
+            return ErrorHandler.handle_exception(e, ErrorType.CONTEXT_ERROR)
+    
+    @autosave
+    def create_plan(self, name: str, description: str, phases: List[Dict[str, Any]] = None) -> StandardResponse:
+        """새 계획 생성"""
+        try:
+            # 기본 Phase 구조
+            if not phases:
+                phases = self._get_default_phases()
+            
+            # Plan 객체 생성
+            plan = Plan(
+                name=name,
+                description=description,
+                phases={phase['id']: Phase(**phase) for phase in phases},
+                phase_order=[phase['id'] for phase in phases]  # Phase 순서 설정
+            )
+            
+            # 컨텍스트에 설정
+            self.context.plan = plan
+            self.context.updated_at = datetime.now()
+            
+            # 이벤트 발생
+            self._trigger_event('plan_created', plan)
+            
+            return StandardResponse.success({
+                'plan': plan,
+                'plan_name': plan.name,
+                'phases': len(plan.phases),
+                'tasks': len(plan.get_all_tasks())
+            })
+        except Exception as e:
+            return ErrorHandler.handle_exception(e, ErrorType.PLAN_ERROR)
+    
+    @autosave
+    def reset_plan(self) -> StandardResponse:
+        """계획 초기화 (모든 계획과 작업 삭제)"""
+        try:
+            if self.context.plan:
+                old_plan_name = self.context.plan.name
+                self.context.plan = None
+                self.context.updated_at = datetime.now()
+                
+                # 이벤트 발생
+                self._trigger_event('plan_reset', {'old_plan': old_plan_name})
+                
+                return StandardResponse.success({
+                    'message': f"계획 '{old_plan_name}'이(가) 초기화되었습니다."
+                })
+            else:
+                return StandardResponse.success({
+                    'message': "초기화할 계획이 없습니다."
+                })
+        except Exception as e:
+            return ErrorHandler.handle_exception(e, ErrorType.PLAN_ERROR)
+    
+    # ========== 작업 관리 ==========
+    
+    @autosave
+
+    def generate_unique_task_id(self, phase_id: str) -> str:
+        """고유한 Task ID를 생성합니다.
         
+        Args:
+            phase_id: Phase ID
+            
         Returns:
-            Dict[str, Any]: 상태별 작업 수, 진행률 등 상세 정보
+            고유한 Task ID (예: 1-1-a1b2)
         """
-        status_count = {
-            'pending': 0,
-            'ready': 0,
-            'in_progress': 0,
-            'completed': 0,
-            'blocked': 0,
-            'cancelled': 0
-        }
+        phase_num = phase_id.split('-')[1] if '-' in phase_id else phase_id
+        task_count = len(self.plan.phases[phase_id].tasks) + 1 if phase_id in self.plan.phases else 1
+        unique_suffix = uuid.uuid4().hex[:4]
+        return f'{phase_num}-{task_count}-{unique_suffix}'
+
+    def add_task(self, phase_id: str, title: str, description: str = "", 
+                 priority: str = "medium", dependencies: List[str] = None) -> StandardResponse:
+        """작업 추가"""
+        try:
+            if not self.plan:
+                return StandardResponse.error(ErrorType.PLAN_ERROR, "계획이 없습니다")
+            
+            phase = self.plan.phases.get(phase_id)
+            if not phase:
+                return StandardResponse.error(
+                    ErrorType.VALIDATION_ERROR,
+                    f"Phase {phase_id}를 찾을 수 없습니다"
+                )
+            
+            # Task 추가 (Phase의 add_task 메서드 사용)
+            task = phase.add_task(title, description)
+            
+            # 의존성 설정
+            if dependencies:
+                for dep_id in dependencies:
+                    task.add_dependency(dep_id)
+            
+            # Plan을 context.tasks와 동기화
+            self.context_manager.sync_plan_to_tasks()
+            
+            return StandardResponse.success({
+                'task_id': task.id,
+                'title': task.title,
+                'phase': phase.name
+            })
+        except Exception as e:
+            return ErrorHandler.handle_exception(e, ErrorType.TASK_ERROR)
+    
+    @autosave
+    def start_next_task(self) -> StandardResponse:
+        """다음 작업 시작"""
+        try:
+            if not self.plan:
+                return StandardResponse.error(ErrorType.PLAN_ERROR, "계획이 없습니다")
+            
+            # 현재 작업이 있으면 확인
+            if self.context.current_task:
+                current = self.plan.get_task_by_id(self.context.current_task)
+                if current and current.status == 'in_progress':
+                    return StandardResponse.error(
+                        ErrorType.TASK_ERROR,
+                        f"현재 작업 '{current.title}'이 진행 중입니다"
+                    )
+            
+            # 다음 작업 선택
+            result = self.plan.get_next_task()
+            if not result:
+                # 차단된 작업 확인
+                blocked = self.plan.get_blocked_tasks()
+                if blocked:
+                    return StandardResponse.success({
+                        'status': 'blocked',
+                        'blocked_tasks': len(blocked),
+                        'message': f"{len(blocked)}개 작업이 의존성으로 차단됨"
+                    })
+                else:
+                    return StandardResponse.success({
+                        'status': 'no_tasks',
+                        'message': "대기 중인 작업이 없습니다"
+                    })
+            
+            # tuple 분해: (phase_id, task)
+            phase_id, next_task = result
+            
+            # 작업 시작
+            next_task.status = TaskStatus.IN_PROGRESS
+            self.context.current_task = next_task.id
+            self.context_manager.set_current_task(next_task.id)
+            
+            # Phase 상태 업데이트
+            phase = self.plan.phases.get(phase_id)
+            if phase and phase.status == 'pending':
+                phase.status = 'in_progress'
+            
+            # 이벤트 발생
+            self._trigger_event('task_started', next_task)
+            
+            return StandardResponse.success({
+                'task_id': next_task.id,
+                'title': next_task.title,
+                'phase': phase.name if phase else None,
+                'estimated_hours': next_task.estimated_hours
+            })
+        except Exception as e:
+            return ErrorHandler.handle_exception(e, ErrorType.TASK_ERROR)
+    
+    @autosave
+    def complete_task(self, task_id: Optional[str] = None) -> StandardResponse:
+        """작업 완료"""
+        try:
+            if not self.plan:
+                return StandardResponse.error(ErrorType.PLAN_ERROR, "계획이 없습니다")
+            
+            # 대상 작업 확인
+            if not task_id:
+                task_id = self.context.current_task
+            
+            if not task_id:
+                return StandardResponse.error(ErrorType.TASK_ERROR, "완료할 작업이 없습니다")
+            
+            task = self.plan.get_task_by_id(task_id)
+            if not task:
+                return StandardResponse.error(
+                    ErrorType.TASK_ERROR,
+                    f"작업 {task_id}를 찾을 수 없습니다"
+                )
+            
+            # 상태 전환
+            if not task.transition_to('completed'):
+                return StandardResponse.error(
+                    ErrorType.TASK_ERROR,
+                    f"작업을 완료할 수 없습니다 (현재 상태: {task.status})"
+                )
+            
+            # 현재 작업이면 해제
+            if task_id == self.context.current_task:
+                self.context.current_task = None
+                self.context_manager.set_current_task(None)
+            
+            # Phase 완료 체크
+            phase = self._get_task_phase(task_id)
+            if phase and phase.can_complete():
+                phase.status = 'completed'
+            
+            # 진행률 업데이트
+            self.context_manager.update_progress()
+            
+            # Plan을 context.tasks와 동기화
+            self.context_manager.sync_plan_to_tasks()
+            
+            # 이벤트 발생
+            self._trigger_event('task_completed', task)
+            
+            return StandardResponse.success({
+                'task_id': task.id,
+                'title': task.title,
+                'actual_hours': task.actual_hours,
+                'phase_completed': phase.status == 'completed' if phase else False
+            })
+        except Exception as e:
+            return ErrorHandler.handle_exception(e, ErrorType.TASK_ERROR)
+    
+    # ========== 조회 및 분석 ==========
+    
+    def get_workflow_status(self) -> Dict[str, Any]:
+        """전체 워크플로우 상태"""
+        if not self.plan:
+            return {'status': 'no_plan'}
         
-        for task in self.tasks:
+        all_tasks = self.plan.get_all_tasks()
+        
+        status_count = {}
+        for task in all_tasks:
             status_count[task.status] = status_count.get(task.status, 0) + 1
         
         return {
-            'status_count': status_count,
-            'total_tasks': len(self.tasks),
-            'active_tasks': status_count['in_progress'],
-            'completion_rate': self.progress['percentage'],
-            'blocked_rate': (status_count['blocked'] / len(self.tasks) * 100) if self.tasks else 0
+            'plan': self.plan.name,
+            'total_tasks': len(all_tasks),
+            'status_breakdown': status_count,
+            'current_task': self.context.current_task,
+            'progress': self.plan.overall_progress,
+            'phases': {
+                phase_id: {
+                    'name': phase.name,
+                    'status': phase.status,
+                    'progress': phase.progress
+                }
+                for phase_id, phase in self.plan.phases.items()
+            }
         }
     
-    def get_active_task(self) -> Optional[Task]:
-        """현재 진행 중인 작업 반환
+    def get_task_analytics(self) -> Dict[str, Any]:
+        """작업 분석 데이터"""
+        if not self.plan:
+            return {}
         
-        Returns:
-            Optional[Task]: 진행 중인 작업 (없으면 None)
-        """
-        for task in self.tasks:
+        tasks = self.plan.get_all_tasks()
+        
+        # 시간 분석
+        total_estimated = sum(t.estimated_hours or 0 for t in tasks)
+        total_actual = sum(t.actual_hours or 0 for t in tasks if t.status == 'completed')
+        
+        # 상태별 평균 시간
+        time_by_status = {}
+        for status in ['pending', 'in_progress', 'completed']:
+            status_times = [t.get_time_in_state(status) for t in tasks]
+            time_by_status[status] = sum(status_times) / len(status_times) if status_times else 0
+        
+        return {
+            'total_estimated_hours': total_estimated,
+            'total_actual_hours': total_actual,
+            'efficiency': (total_estimated / total_actual * 100) if total_actual > 0 else None,
+            'average_time_by_status': time_by_status,
+            'blocked_tasks': len(self.plan.get_blocked_tasks()),
+            'ready_tasks': len(self.plan.get_ready_tasks())
+        }
+    
+    def get_bottlenecks(self) -> List[Dict[str, Any]]:
+        """병목 현상 분석"""
+        if not self.plan:
+            return []
+        
+        bottlenecks = []
+        
+        # 차단된 작업들
+        blocked_tasks = self.plan.get_blocked_tasks()
+        for task in blocked_tasks:
+            bottlenecks.append({
+                'type': 'blocked_task',
+                'task_id': task.id,
+                'title': task.title,
+                'reason': task.blocking_reason or '의존성 미충족',
+                'dependencies': task.check_dependencies()
+            })
+        
+        # 오래 진행 중인 작업
+        for task in self.plan.get_all_tasks():
             if task.status == 'in_progress':
-                return task
-        return None
+                hours_in_progress = task.get_time_in_state('in_progress')
+                if task.estimated_hours and hours_in_progress > task.estimated_hours * 1.5:
+                    bottlenecks.append({
+                        'type': 'overdue_task',
+                        'task_id': task.id,
+                        'title': task.title,
+                        'estimated': task.estimated_hours,
+                        'actual': hours_in_progress,
+                        'overdue_by': hours_in_progress - task.estimated_hours
+                    })
+        
+        return bottlenecks
     
-    def can_complete(self) -> bool:
-        """Phase 완료 가능 여부 확인
-        
-        Returns:
-            bool: 모든 작업이 완료/취소되었으면 True
-        """
-        for task in self.tasks:
-            if task.status not in ['completed', 'cancelled']:
-                return False
-        return True
+    # ========== 동기화 및 마이그레이션 ==========
     
-    def estimate_remaining_time(self) -> float:
-        """남은 예상 시간 계산 (시간 단위)
-        
-        Returns:
-            float: 남은 예상 시간
-        """
-        remaining_hours = 0.0
-        
-        for task in self.tasks:
-            if task.status in ['pending', 'ready', 'blocked']:
-                # 예상 시간이 설정된 경우
-                if task.estimated_hours:
-                    remaining_hours += task.estimated_hours
-            elif task.status == 'in_progress':
-                # 진행 중인 작업의 남은 시간
-                if task.estimated_hours and task.started_at:
-                    elapsed = (datetime.now() - task.started_at).total_seconds() / 3600
-                    remaining = max(0, task.estimated_hours - elapsed)
-                    remaining_hours += remaining
-        
-        return remaining_hours
     
-    def get_next_task(self) -> Optional[Task]:
-        """Phase 내에서 다음 실행할 작업 반환
-        
-        Returns:
-            Optional[Task]: 다음 작업 (없으면 None)
-        """
-        # pending이나 ready 상태의 작업 중 우선순위가 가장 높은 것
-        available_tasks = [t for t in self.tasks if t.status in ['pending', 'ready']]
-        
-        if not available_tasks:
+    def migrate_legacy_queue(self) -> StandardResponse:
+        """레거시 큐(context.tasks) 마이그레이션"""
+        try:
+            if not self.context or not hasattr(self.context, 'tasks'):
+                return StandardResponse.success({'migrated': 0})
+            
+            migrated = 0
+            
+            # next 큐의 작업들을 Plan에 반영
+            if 'next' in self.context.tasks:
+                for task_info in self.context.tasks['next']:
+                    task_id = task_info.get('id')
+                    if task_id and self.plan:
+                        task = self.plan.get_task_by_id(task_id)
+                        if task and task.status == 'pending':
+                            # ready 상태로 변경 (큐에 있었으므로)
+                            task.status = 'ready'
+                            migrated += 1
+            
+            # 큐 제거
+            if hasattr(self.context, 'tasks'):
+                delattr(self.context, 'tasks')
+            
+            return StandardResponse.success({
+                'migrated': migrated,
+                'message': f"{migrated}개 작업을 마이그레이션했습니다"
+            })
+        except Exception as e:
+            return ErrorHandler.handle_exception(e, ErrorType.CONTEXT_ERROR)
+    
+    # ========== 헬퍼 메서드 ==========
+    
+    def _get_default_phases(self) -> List[Dict[str, Any]]:
+        """기본 Phase 구조"""
+        return [
+            {
+                'id': 'phase-1',
+                'name': 'Phase 1: 분석 및 설계',
+                'description': '요구사항 분석 및 설계',
+                'tasks': {}
+            },
+            {
+                'id': 'phase-2',
+                'name': 'Phase 2: 핵심 구현',
+                'description': '주요 기능 구현',
+                'tasks': {}
+            },
+            {
+                'id': 'phase-3',
+                'name': 'Phase 3: 테스트 및 문서화',
+                'description': '테스트 및 문서 작성',
+                'tasks': {}
+            }
+        ]
+    
+    def _get_task_phase(self, task_id: str) -> Optional[Phase]:
+        """작업이 속한 Phase 찾기"""
+        if not self.plan:
             return None
         
-        # 우선순위로 정렬
-        available_tasks.sort(key=lambda t: t.get_priority_value(), reverse=True)
-        return available_tasks[0]
-
-
-class Plan(BaseModelWithConfig):
-    """계획(Plan) 모델"""
-    name: str
-    description: str
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
-    phases: Dict[str, Phase] = Field(default_factory=dict)  # Phase ID -> Phase 객체
-    current_phase: Optional[str] = None  # 현재 진행 중인 Phase ID
-    current_task: Optional[str] = None  # 현재 진행 중인 Task ID
-    
-    # Phase 순서 및 진행률 관리
-    phase_order: List[str] = Field(default_factory=list)  # Phase 표시 순서
-    overall_progress: float = 0.0  # 전체 진행률 (0-100%)
-    
-    # 통합 정보
-    project_insights: Dict[str, Any] = Field(default_factory=dict)  # ProjectAnalyzer 분석 결과
-    wisdom_data: Dict[str, Any] = Field(default_factory=dict)  # Wisdom 시스템 데이터
-    
-    
-    @property
-    def tasks(self) -> List[Task]:
-        """모든 Phase의 Task를 하나의 리스트로 반환하는 프로퍼티"""
-        return self.get_all_tasks()
-
-    def get_all_tasks(self) -> List[Task]:
-        """모든 Phase의 Task를 하나의 리스트로 반환"""
-        all_tasks = []
-        for phase in self.phases.values():
-            all_tasks.extend(phase.tasks.values())
-        return all_tasks
-    
-
-    def get_task_by_id(self, task_id: str) -> Optional[Task]:
-        """ID로 Task 조회 (모든 Phase에서 검색)"""
-        for phase in self.phases.values():
-            task = phase.get_task_by_id(task_id)
-            if task:
-                return task
-        return None
-    def get_current_task(self) -> Optional[Task]:
-        """현재 진행 중인 Task 반환"""
-        for task in self.get_all_tasks():
-            if task.status == TaskStatus.IN_PROGRESS:
-                return task
+        for phase in self.plan.phases.values():
+            if phase.get_task_by_id(task_id):
+                return phase
         return None
     
-    def get_next_tasks(self) -> List[Task]:
-        """다음에 수행 가능한 Task 목록 반환"""
-        next_tasks = []
-        all_tasks = self.get_all_tasks()
-        
-        for task in all_tasks:
-            if task.status in [TaskStatus.PENDING, TaskStatus.READY]:
-                # 의존성 체크
-                if not task.dependencies:
-                    next_tasks.append(task)
-                else:
-                    # 모든 의존성이 완료되었는지 확인
-                    deps_completed = all(
-                        any(t.id == dep_id and t.status == TaskStatus.COMPLETED 
-                            for t in all_tasks)
-                        for dep_id in task.dependencies
-                    )
-                    if deps_completed:
-                        next_tasks.append(task)
-        
-        return next_tasks
-    
-    def update_progress(self) -> None:
-        """Phase와 전체 Plan의 진행률 업데이트"""
-        total_tasks = 0
-        completed_tasks = 0
-        
-        # 각 Phase의 진행률 계산
-        for phase in self.phases.values():
-            phase_tasks = list(phase.tasks.values())
-            phase.total_tasks = len(phase_tasks)
-            phase.completed_tasks = sum(1 for t in phase_tasks if t.status == TaskStatus.COMPLETED)
-            phase.progress = (phase.completed_tasks / phase.total_tasks * 100) if phase.total_tasks > 0 else 0.0
-            
-            total_tasks += phase.total_tasks
-            completed_tasks += phase.completed_tasks
-        
-        # 전체 진행률 계산
-
-    def get_next_task(self) -> Optional[Tuple[str, Task]]:
-        """다음에 수행할 작업 반환 (phase_id, task)"""
-        for phase_id in self.phase_order:
-            phase = self.phases.get(phase_id)
-            if phase and phase.status != 'completed':
-                # Task order에 따라 순서대로 확인
-                for task_id in phase.task_order:
-                    task = phase.tasks.get(task_id)
-                    if task and task.status == TaskStatus.PENDING:
-                        return phase_id, task
-        return None
-        self.overall_progress = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0.0
-class WorkTracking(BaseModelWithConfig):
-    """작업 추적 모델"""
-    file_access: Dict[str, Any] = Field(default_factory=dict)  # 더 유연한 타입
-    file_edits: Dict[str, int] = Field(default_factory=dict)
-    function_edits: Dict[str, Dict[str, int]] = Field(default_factory=dict)
-    session_start: Union[datetime, str] = Field(default_factory=datetime.now)
-    total_operations: int = 0
-    task_tracking: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
-    current_task_work: Dict[str, Any] = Field(default_factory=lambda: {
-        'task_id': None,
-        'start_time': None,
-        'files_accessed': [],
-        'functions_edited': [],
-        'operations': []
-    })
-    
-    @validator('session_start', pre=True)
-    def parse_session_start(cls, v):
-        if isinstance(v, str):
-            return datetime.fromisoformat(v.replace('Z', '+00:00'))
-        return v
-
-
-class FileAccessEntry(BaseModelWithConfig):
-    """파일 접근 기록 항목"""
-    file: str
-    operation: str
-    timestamp: Union[datetime, str]
-    task_id: Optional[str] = None
-    
-    @validator('timestamp', pre=True)
-    def parse_timestamp(cls, v):
-        if isinstance(v, str):
-            return datetime.fromisoformat(v.replace('Z', '+00:00'))
-        return v
-
-
-class ProjectContext(BaseModelWithConfig):
-    """프로젝트 컨텍스트 - 메인 모델"""
-    # 기본 정보
-    project_name: str
-    project_id: str
-    project_path: Union[str, Path]
-    memory_root: Union[str, Path]
-    
-    # 시간 정보
-    created_at: Union[datetime, str] = Field(default_factory=datetime.now)
-    updated_at: Union[datetime, str] = Field(default_factory=datetime.now)
-    
-    # 버전 및 메타데이터
-    version: str = "7.0"
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    
-    # 작업 관련
-    plan: Optional[Plan] = None
-    current_focus: str = ""
-    current_task: Optional[str] = None
-    tasks: Dict[str, List[Any]] = Field(default_factory=lambda: {'next': [], 'done': []})
-    
-    # 분석 및 추적
-    analyzed_files: Dict[str, Any] = Field(default_factory=dict)
-    work_tracking: Union[WorkTracking, Dict[str, Any]] = Field(default_factory=WorkTracking)
-    file_access_history: List[Union[FileAccessEntry, Dict[str, Any]]] = Field(default_factory=list)
-    
-    # 기타
-    plan_history: List[Dict[str, Any]] = Field(default_factory=list)
-    coding_experiences: List[str] = Field(default_factory=list)
-    progress: Dict[str, Any] = Field(default_factory=lambda: {
-        'completed_tasks': 0,
-        'total_tasks': 0,
-        'percentage': 0.0
-    })
-    phase_reports: Dict[str, Any] = Field(default_factory=dict)
-    error_log: List[Dict[str, Any]] = Field(default_factory=list)
-    
-    # 추가 필드 (선택적)
-    function_edit_history: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
-    
-    @validator('project_path', 'memory_root', pre=True)
-    def convert_to_path(cls, v):
-        if isinstance(v, str):
-            return Path(v)
-        return v
-    
-    @validator('created_at', 'updated_at', pre=True)
-    def parse_datetime(cls, v):
-        if isinstance(v, str):
-            return datetime.fromisoformat(v.replace('Z', '+00:00'))
-        return v
-    
-    @validator('work_tracking', pre=True)
-    def parse_work_tracking(cls, v):
-        if isinstance(v, dict) and not isinstance(v, WorkTracking):
-            return WorkTracking(**v)
-        return v
-    
-    @validator('file_access_history', pre=True)
-    def parse_file_access_history(cls, v):
-        if isinstance(v, list):
-            parsed = []
-            for item in v:
-                if isinstance(item, dict) and not isinstance(item, FileAccessEntry):
-                    parsed.append(FileAccessEntry(**item))
-                else:
-                    parsed.append(item)
-            return parsed
-        return v
-    
-    def get_current_phase(self) -> Optional[Phase]:
-        """현재 단계 반환"""
-        if self.plan:
-            return self.plan.get_current_phase()
-        return None
-    
-    def get_all_tasks(self) -> List[Task]:
-        """모든 작업 반환"""
-        if self.plan:
-            return self.plan.get_all_tasks()
-        return []
-    
-    def update_progress(self):
-        """진행률 업데이트"""
-        if self.plan:
-            progress_info = self.plan.overall_progress
-            self.progress.update(progress_info)
-    
-    @classmethod
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ProjectContext':
-        """딕셔너리에서 ProjectContext 생성 (Plan 처리 개선)"""
-        # 복사본 생성하여 원본 데이터 보호
-        data = data.copy()
-        
-        # datetime 문자열 처리
-        for field in ['created_at', 'updated_at']:
-            if field in data and isinstance(data[field], str):
+    def _trigger_event(self, event_name: str, data: Any) -> None:
+        """이벤트 발생"""
+        if event_name in self._event_hooks:
+            for hook in self._event_hooks[event_name]:
                 try:
-                    data[field] = datetime.fromisoformat(data[field].replace('Z', '+00:00'))
-                except:
-                    data[field] = datetime.now()
-        
-        # Plan 데이터는 dict 상태로 유지
-        # ProjectContext의 validator가 자동으로 Plan 객체로 변환
-        if 'plan' in data and data['plan']:
-            if isinstance(data['plan'], dict):
-                # phases가 있으면 tasks 구조만 정리
-                plan_data = data['plan']
-                if 'phases' in plan_data and isinstance(plan_data['phases'], dict):
-                    for phase_id, phase_data in plan_data['phases'].items():
-                        if 'tasks' in phase_data:
-                            # tasks가 list인 경우 dict로 변환
-                            if isinstance(phase_data['tasks'], list):
-                                tasks_dict = {}
-                                for task in phase_data['tasks']:
-                                    if isinstance(task, dict) and 'id' in task:
-                                        tasks_dict[task['id']] = task
-                                phase_data['tasks'] = tasks_dict
-        
-        # ProjectContext 생성
-        return cls(**data)
-    def to_json(self) -> str:
-        """JSON 문자열로 변환"""
-        return json.dumps(self.model_dump(), indent=2, ensure_ascii=False, default=str)
+                    hook(data)
+                except Exception as e:
+                    logger.error(f"Event hook error: {e}")
     
-    @classmethod
-    def from_json(cls, json_str: str) -> 'ProjectContext':
-        """JSON 문자열에서 생성"""
-        data = json.loads(json_str)
-        return cls.from_dict(data)
+    def register_hook(self, event_name: str, callback: callable) -> None:
+        """이벤트 훅 등록"""
+        if event_name in self._event_hooks:
+            self._event_hooks[event_name].append(callback)
+    
+    
+    def save(self) -> None:
+        """Plan 중심의 통합 저장"""
+        import os  # 메서드 내부에서 import
+        workflow_data = {
+            "version": "2.0",
+            "last_updated": datetime.now().isoformat(),
+            "current_plan": None
+        }
+        
+        # 현재 Plan 저장
+        if self.context.plan:
+            # 진행률 업데이트
+            self.context.plan.update_progress()
+            # Pydantic 모델의 json() 메서드 사용하여 datetime 처리
+            workflow_data["current_plan"] = json.loads(self.context.plan.json())
+        
+        # 통합 파일에 저장
+        unified_path = os.path.join(self.context_manager.cache_dir, "workflow_unified.json")
+        with open(unified_path, 'w', encoding='utf-8') as f:
+            json.dump(workflow_data, f, indent=2, ensure_ascii=False)
+    def load(self) -> bool:
+        """통합 파일에서 Plan 로드"""
+        unified_path = os.path.join(self.context_manager.cache_dir, "workflow_unified.json")
+        
+        if os.path.exists(unified_path):
+            try:
+                with open(unified_path, 'r', encoding='utf-8') as f:
+                    workflow_data = json.load(f)
+                
+                # 버전 확인
+                if workflow_data.get("version") == "2.0":
+                    # 현재 Plan 로드
+                    if workflow_data.get("current_plan"):
+                        self.context.plan = Plan(**workflow_data["current_plan"])
+                        return True
+            except Exception as e:
+                print(f"워크플로우 로드 실패: {e}")
+        
+        return False
 
+    def analyze_and_generate_tasks(self, project_path: str = ".") -> Dict[str, List[Task]]:
+        """ProjectAnalyzer를 사용하여 자동으로 Task 생성"""
+        from analyzers.project_analyzer import ProjectAnalyzer
+        from project_wisdom import get_wisdom_manager
+        
+        analyzer = ProjectAnalyzer()
+        wisdom = get_wisdom_manager()
+        
+        # 프로젝트 분석
+        print("🔍 프로젝트 분석 중...")
+        analysis_result = analyzer.analyze_project(project_path)
+        
+        # 분석 결과를 Plan에 저장
+        if self.context.plan:
+            self.context.plan.project_insights = {
+                "total_files": analysis_result.get("total_files", 0),
+                "file_types": analysis_result.get("file_types", {}),
+                "complexity_score": analysis_result.get("average_complexity", 0),
+                "largest_files": analysis_result.get("largest_files", []),
+                "analysis_timestamp": datetime.now().isoformat()
+            }
+        
+        # Task 자동 생성
+        generated_tasks = {
+            "analysis": [],    # 분석 기반 Task
+            "wisdom": []       # Wisdom 기반 Task
+        }
+        
+        # 1. 복잡도가 높은 파일에 대한 리팩토링 Task
+        complex_files = analysis_result.get("complex_files", [])
+        for idx, file_info in enumerate(complex_files[:5]):  # 상위 5개
+            task = Task(
+                id=f"auto-complexity-{idx+1}",
+                title=f"리팩토링: {file_info['file']}",
+                description=f"복잡도 {file_info['complexity']:.1f}인 파일 개선",
+                priority="high" if file_info['complexity'] > 15 else "medium",
+                auto_generated=True,
+                wisdom_hints=["복잡한 함수를 작은 단위로 분리", "중복 코드 제거"],
+                context_data={
+                    "file_path": file_info['file'],
+                    "complexity": file_info['complexity'],
+                    "functions": file_info.get('functions', [])
+                }
+            )
+            generated_tasks["analysis"].append(task)
+        
+        # 2. Wisdom 기반 예방 Task
+        common_mistakes = wisdom.get_common_mistakes()
+        for idx, (mistake_type, count) in enumerate(common_mistakes[:3]):  # 상위 3개
+            task = Task(
+                id=f"auto-wisdom-{idx+1}",
+                title=f"예방: {mistake_type} 패턴 개선",
+                description=f"{count}회 발생한 실수 패턴 예방",
+                priority="high" if count > 5 else "medium",
+                auto_generated=True,
+                wisdom_hints=wisdom.get_prevention_tips(mistake_type),
+                context_data={
+                    "mistake_type": mistake_type,
+                    "occurrence_count": count
+                }
+            )
+            generated_tasks["wisdom"].append(task)
+        
+        # 3. 큰 파일 분할 Task
+        large_files = analysis_result.get("largest_files", [])
+        for idx, file_info in enumerate(large_files[:3]):  # 상위 3개
+            if file_info['size'] > 10000:  # 10KB 이상
+                task = Task(
+                    id=f"auto-size-{idx+1}",
+                    title=f"파일 분할: {file_info['file']}",
+                    description=f"{file_info['size']:,} bytes 파일을 모듈화",
+                    priority="medium",
+                    auto_generated=True,
+                    wisdom_hints=["단일 책임 원칙 적용", "관련 기능별로 분리"],
+                    context_data={
+                        "file_path": file_info['file'],
+                        "size": file_info['size']
+                    }
+                )
+                generated_tasks["analysis"].append(task)
+        
+        return generated_tasks
+    
+    def apply_wisdom_hints(self, task: Task) -> None:
+        """Task에 Wisdom 시스템의 힌트 적용"""
+        from project_wisdom import get_wisdom_manager
+        
+        wisdom = get_wisdom_manager()
+        
+        # Task 제목/설명에서 키워드 추출
+        keywords = task.title.lower().split() + task.description.lower().split()
+        
+        # 관련 Best Practice 찾기
+        best_practices = wisdom.get_best_practices()
+        relevant_hints = []
+        
+        for practice in best_practices:
+            if any(keyword in practice.lower() for keyword in keywords):
+                relevant_hints.append(practice)
+        
+        # 관련 실수 패턴에서 예방 팁 추가
+        for mistake_type in wisdom.wisdom_data.get("common_mistakes", {}).keys():
+            if any(keyword in mistake_type.lower() for keyword in keywords):
+                tips = wisdom.get_prevention_tips(mistake_type)
+                relevant_hints.extend(tips)
+        
+        # 중복 제거 후 Task에 추가
+        task.wisdom_hints = list(set(task.wisdom_hints + relevant_hints))[:5]  # 최대 5개
+    
+    def create_smart_plan(self, name: str, description: str, auto_analyze: bool = True) -> Plan:
+        """ProjectAnalyzer와 Wisdom을 활용한 스마트 Plan 생성"""
+        # 기본 Plan 생성
+        plan = Plan(name=name, description=description)
+        
+        # context에 설정
+        self.context.plan = plan
+        
+        if auto_analyze:
+            # 자동 분석 및 Task 생성
+            generated_tasks = self.analyze_and_generate_tasks()
+            
+            # Phase 1: 자동 생성된 분석 Task
+            if generated_tasks["analysis"]:
+                phase1 = Phase(
+                    id="auto-phase-1",
+                    name="자동 분석 기반 개선",
+                    description="ProjectAnalyzer가 발견한 개선 사항"
+                )
+                for task in generated_tasks["analysis"]:
+                    phase1.tasks[task.id] = task
+                plan.phases["auto-phase-1"] = phase1
+                plan.phase_order.append("auto-phase-1")
+            
+            # Phase 2: Wisdom 기반 예방 Task
+            if generated_tasks["wisdom"]:
+                phase2 = Phase(
+                    id="auto-phase-2",
+                    name="Wisdom 기반 예방",
+                    description="과거 실수 패턴 예방"
+                )
+                for task in generated_tasks["wisdom"]:
+                    phase2.tasks[task.id] = task
+                plan.phases["auto-phase-2"] = phase2
+                plan.phase_order.append("auto-phase-2")
+            
+            # Wisdom 데이터 Plan에 저장
+            from project_wisdom import get_wisdom_manager
+            wisdom = get_wisdom_manager()
+            plan.wisdom_data = {
+                "applied_at": datetime.now().isoformat(),
+                "total_mistakes_tracked": sum(wisdom.wisdom_data.get("common_mistakes", {}).values()),
+                "best_practices_count": len(wisdom.get_best_practices())
+            }
+            
+            # 진행률 초기화
+            plan.update_progress()
+            
+            print(f"✅ 스마트 Plan 생성 완료!")
+            print(f"   - 자동 생성 Task: {len(generated_tasks['analysis']) + len(generated_tasks['wisdom'])}개")
+        
+        return plan
 
-# 유틸리티 함수
-def validate_context_data(data: Dict[str, Any]) -> Optional[ProjectContext]:
-    """컨텍스트 데이터 검증 및 변환"""
-    try:
-        return ProjectContext.from_dict(data)
-    except Exception as e:
-        print(f"❌ 컨텍스트 데이터 검증 실패: {e}")
-        return None
+# Singleton instance
+_workflow_manager_instance = None
+
+def get_workflow_manager():
+    """Get or create WorkflowManager singleton instance"""
+    global _workflow_manager_instance
+    if _workflow_manager_instance is None:
+        _workflow_manager_instance = WorkflowManager()
+    return _workflow_manager_instance

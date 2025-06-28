@@ -66,136 +66,143 @@ def cmd_task(action: str, *args) -> StandardResponse:
     Returns:
         StandardResponse: 표준 응답
     """
-    wm = get_workflow_manager()
-    
     try:
-        if action == 'list':
-            # 작업 목록 표시
-            status = wm.get_workflow_status()
-            plan = wm.plan
+        wm = get_workflow_manager()
+    
+        try:
+            if action == 'list':
+                # 작업 목록 표시
+                status = wm.get_workflow_status()
+                plan = wm.plan
             
-            print(f"📋 계획: {plan.name}")
-            # progress가 딕셔너리인 경우 처리
-            progress_value = status.get('progress', 0)
-            if isinstance(progress_value, dict):
-                progress_value = progress_value.get('value', 0)
-            completed = status.get('completed_count', status.get('completed', 0))
-            total = status.get('total_count', status.get('total', 0))
-            print(f"진행률: {progress_value:.1f}% ({completed}/{total})")
+                print(f"📋 계획: {plan.name}")
+                # progress가 딕셔너리인 경우 처리
+                progress_value = status.get('progress', 0)
+                if isinstance(progress_value, dict):
+                    progress_value = progress_value.get('value', 0)
+                completed = status.get('completed_count', status.get('completed', 0))
+                total = status.get('total_count', status.get('total', 0))
+                print(f"진행률: {progress_value:.1f}% ({completed}/{total})")
             
-            # Phase별 작업 표시
-            for phase_id, phase in plan.phases.items():
-                phase_tasks = list(phase.tasks.values()) if hasattr(phase.tasks, 'values') else phase.tasks
-                if phase_tasks:
-                    completed = len([t for t in phase_tasks if t.status == TaskStatus.COMPLETED])
-                    print(f"\n{'✅' if completed == len(phase_tasks) else '🔄'} {phase.name} ({completed}/{len(phase_tasks)} 완료)")
+                # Phase별 작업 표시
+                for phase_id, phase in plan.phases.items():
+                    phase_tasks = list(phase.tasks.values()) if hasattr(phase.tasks, 'values') else phase.tasks
+                    if phase_tasks:
+                        completed = len([t for t in phase_tasks if t.status == TaskStatus.COMPLETED])
+                        print(f"\n{'✅' if completed == len(phase_tasks) else '🔄'} {phase.name} ({completed}/{len(phase_tasks)} 완료)")
                     
-                    for task in phase_tasks:
-                        icon = "✅" if task.status == TaskStatus.COMPLETED else ("🔄" if task.status == TaskStatus.IN_PROGRESS else "⏳")
-                        print(f"   {icon} [{task.id}] {task.title}")
+                        for task in phase_tasks:
+                            icon = "✅" if task.status == TaskStatus.COMPLETED else ("🔄" if task.status == TaskStatus.IN_PROGRESS else "⏳")
+                            print(f"   {icon} [{task.id}] {task.title}")
                             
-            return StandardResponse(success=True, data=status)
+                return StandardResponse(success=True, data=status)
             
-        elif action == 'add' and len(args) >= 1:
+            elif action == 'add' and len(args) >= 1:
 
             
-            # Phase ID 결정 로직 개선
+                # Phase ID 결정 로직 개선
 
             
-            if len(args) >= 2 and args[0].startswith('phase-'):
+                if len(args) >= 2 and args[0].startswith('phase-'):
 
             
-                # 명시적으로 phase_id가 제공된 경우
+                    # 명시적으로 phase_id가 제공된 경우
 
             
-                phase_id = args[0]
+                    phase_id = args[0]
 
             
-                task_name = args[1]
+                    task_name = args[1]
 
             
-                description = args[2] if len(args) > 2 else None
+                    description = args[2] if len(args) > 2 else None
 
             
-            else:
+                else:
 
             
-                # phase_id가 없으면 현재 phase 사용
+                    # phase_id가 없으면 현재 phase 사용
 
             
-                current_phase = wm.plan.current_phase if wm.plan else None
+                    current_phase = wm.plan.current_phase if wm.plan else None
 
             
-                if not current_phase:
+                    if not current_phase:
 
             
-                    # Plan의 phase_order에서 첫 번째 phase 사용
+                        # Plan의 phase_order에서 첫 번째 phase 사용
 
             
-                    if wm.plan and wm.plan.phase_order:
+                        if wm.plan and wm.plan.phase_order:
 
             
-                        current_phase = wm.plan.phase_order[0]
+                            current_phase = wm.plan.phase_order[0]
 
             
-                    else:
+                        else:
 
             
-                        return StandardResponse.error(
+                            return StandardResponse.error(
 
             
-                            ErrorType.VALIDATION_ERROR,
+                                ErrorType.VALIDATION_ERROR,
 
             
-                            "현재 Phase가 설정되지 않았습니다"
+                                "현재 Phase가 설정되지 않았습니다"
 
             
-                        )
+                            )
 
             
                 
 
             
-                phase_id = current_phase
+                    phase_id = current_phase
 
             
-                task_name = args[0]
+                    task_name = args[0]
 
             
-                description = args[1] if len(args) > 1 else None
+                    description = args[1] if len(args) > 1 else None
 
             
             
 
             
-            result = wm.add_task(
+                result = wm.add_task(
 
             
-                phase_id=phase_id,
+                    phase_id=phase_id,
 
             
-                title=task_name,
+                    title=task_name,
 
             
-                description=description if description else ""
+                    description=description if description else ""
 
             
-            )
+                )
 
             
-            return result
+                return result
             
-        elif action == 'done' and args:
-            task_id = args[0]
-            return wm.complete_task(task_id)
+            elif action == 'done' and args:
+                task_id = args[0]
+                return wm.complete_task(task_id)
             
-        else:
+            else:
+                from core.error_handler import ErrorType
+                return StandardResponse.error(ErrorType.TASK_ERROR, f"잘못된 명령: {action}")
+            
+        except Exception as e:
             from core.error_handler import ErrorType
-            return StandardResponse.error(ErrorType.TASK_ERROR, f"잘못된 명령: {action}")
-            
+            return StandardResponse.error(ErrorType.TASK_ERROR, f"작업 처리 중 오류: {str(e)}")
     except Exception as e:
-        from core.error_handler import ErrorType
-        return StandardResponse.error(ErrorType.TASK_ERROR, f"작업 처리 중 오류: {str(e)}")
+        logger.error(f"cmd_task 오류: {str(e)}")
+        return StandardResponse.error(
+            ErrorType.SYSTEM_ERROR,
+            f"작업 관리 중 오류 발생: {str(e)}"
+        )
 if __name__ == "__main__":
     # 명령줄 인자 처리
     import sys

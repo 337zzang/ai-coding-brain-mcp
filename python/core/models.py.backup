@@ -71,7 +71,6 @@ class Task(BaseModelWithConfig):
     completed: bool = False
     subtasks: List[str] = Field(default_factory=list)
     work_summary: Optional[Dict[str, Any]] = None
-    content: Optional[str] = None  # 🆕 작업 완료 시 수행한 내용 (투명성)
     dependencies: List[str] = Field(default_factory=list)  # 의존성 작업 ID 목록
     related_files: List[str] = Field(default_factory=list)  # 관련 파일 목록
     
@@ -103,13 +102,11 @@ class Task(BaseModelWithConfig):
             raise ValueError(f'Priority must be one of {valid_priorities}')
         return v
     
-    def mark_completed(self, content: Optional[str] = None):
-        """작업을 완료 상태로 표시하고 content 기록"""
+    def mark_completed(self):
+        """작업을 완료 상태로 표시"""
         self.completed = True
         self.status = 'completed'
         self.completed_at = datetime.now()
-        if content:
-            self.content = content
     
     def mark_started(self):
         """작업을 시작 상태로 표시"""

@@ -2,6 +2,7 @@
 """
 개선된 다음 작업(Next) 진행 명령어
 WorkflowManager 기반으로 완전히 리팩토링됨
+- content 기능 추가로 투명성 강화
 """
 
 import os
@@ -12,15 +13,31 @@ from core.workflow_manager import get_workflow_manager
 from core.error_handler import StandardResponse
 
 
-def cmd_next() -> StandardResponse:
-    """다음 작업을 시작합니다.
+def cmd_next(content: str = None) -> StandardResponse:
+    """다음 작업을 시작하거나 현재 작업을 완료하고 다음으로 진행
     
+    Args:
+        content: 현재 작업 완료 시 수행한 내용 (선택사항)
+        
     Returns:
         StandardResponse: 표준 응답 형식
     """
     wm = get_workflow_manager()
     
-    # WorkflowManager가 모든 복잡한 로직을 처리
+    # 현재 진행 중인 작업이 있는지 확인
+    current_task_id = wm.context.current_task
+    if current_task_id:
+        current_task = wm.plan.get_task_by_id(current_task_id)
+        if current_task and current_task.status == 'in_progress':
+            # content가 없으면 자동 생성
+            if not content:
+                content = input(f"\n📝 '{current_task.title}' 작업에서 수행한 내용을 입력하세요: ")
+            
+            # 현재 작업 완료
+            print(f"\n🔄 현재 작업 완료 중...")
+            wm.complete_task(current_task_id, content)
+    
+    # 다음 작업 시작
     result = wm.start_next_task()
     
     if result['success']:
@@ -32,6 +49,7 @@ def cmd_next() -> StandardResponse:
             print("\n💡 다음 옵션:")
             print("   1. 'task add phase-id \"작업명\"'으로 새 작업 추가")
             print("   2. 'plan'으로 전체 계획 확인")
+            print("   3. 'flow'로 전체 진행 히스토리 확인")
             
         elif data.get('status') == 'blocked':
             print(f"\n⚠️  {data['message']}")
@@ -49,6 +67,13 @@ def cmd_next() -> StandardResponse:
             
             if task.description:
                 print(f"\n📝 설명: {task.description}")
+                
+            # 이전 작업 결과 반영
+            previous_tasks = [t for t in wm.plan.get_all_tasks() if t.status == 'completed' and t.content]
+            if previous_tasks:
+                recent_task = previous_tasks[-1]
+                print(f"\n📌 이전 작업 결과: {recent_task.content}")
+                print("   (이전 작업 결과를 참고하여 진행하세요)")
                 
             # 작업 브리핑 표시
             briefing = data.get('briefing', {})

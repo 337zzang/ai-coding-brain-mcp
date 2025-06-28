@@ -1257,6 +1257,10 @@ def sync_context_from_plan(context: Any, plan: Any) -> Any:
         setattr(context, 'phase_task_counts', phase_task_counts)
     
     return context
+
+# ProjectAnalyzer 사용 여부 (오류가 많아서 임시로 비활성화)
+USE_PROJECT_ANALYZER = False
+
 def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str, Any]:
     """리팩토링된 flow_project - 자동 백업 및 프로젝트 설정 지원"""
     import time

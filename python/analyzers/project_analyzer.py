@@ -10,6 +10,10 @@ import json
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Set
 from pathlib import Path
+import logging
+
+# Logger 설정
+logger = logging.getLogger(__name__)
 
 # 프로젝트 루트를 sys.path에 추가
 project_root = Path(__file__).parent.parent.parent
@@ -118,7 +122,7 @@ class ProjectAnalyzer:
         })
         
         # 7. 의존성 그래프 생성
-        manifest['dependencies'] = self._build_dependency_graph(manifest['files'])
+        manifest['dependencies'] = self._build_dependency_graph(list(manifest['files'].values()))
         
         # 8. Manifest 저장
         self.manifest_manager.save(manifest)
@@ -177,7 +181,7 @@ class ProjectAnalyzer:
                     'path': relative_path,
                     'last_modified': file_info['last_modified'],
                     'size': file_info['size'],
-                    'language': self._detect_language(relative_path),
+                    'language': self._detect_file_language(relative_path),
                     'summary': f"분석 실패: {analysis_result['error']}",
                     'imports': {'internal': [], 'external': []},
                     'classes': [],
@@ -189,7 +193,7 @@ class ProjectAnalyzer:
                 'path': relative_path,
                 'last_modified': file_info['last_modified'],
                 'size': file_info['size'],
-                'language': analysis_result.get('language', self._detect_language(relative_path)),
+                'language': analysis_result.get('language', self._detect_file_language(relative_path)),
                 'summary': analysis_result.get('summary', ''),
                 'imports': analysis_result.get('structure', {}).get('imports', {'internal': [], 'external': []}),
                 'classes': analysis_result.get('structure', {}).get('classes', []),
@@ -214,7 +218,7 @@ class ProjectAnalyzer:
                 'path': relative_path,
                 'last_modified': file_info['last_modified'],
                 'size': file_info['size'],
-                'language': self._detect_language(relative_path),
+                'language': self._detect_file_language(relative_path),
                 'summary': f"분석 오류: {str(e)}",
                 'imports': {'internal': [], 'external': []},
                 'classes': [],
@@ -233,39 +237,47 @@ class ProjectAnalyzer:
 
 # 사용 예시
 
-    def _build_directory_structure(self, files: Set[Path]) -> Dict[str, Any]:
-        """디렉토리 구조를 딕셔너리 형태로 구성"""
+    def _build_directory_structure(self, files: Set[str]) -> Dict[str, Any]:
+        """디렉토리 구조를 계층적으로 구성"""
         structure = {
-            'name': self.project_name,
             'type': 'directory',
             'path': str(self.project_root),
             'children': {}
         }
         
         for file_path in sorted(files):
-            relative_path = file_path.relative_to(self.project_root)
-            parts = relative_path.parts
-            
-            current = structure['children']
-            for i, part in enumerate(parts[:-1]):
-                if part not in current:
-                    current[part] = {
-                        'name': part,
-                        'type': 'directory',
-                        'children': {}
-                    }
-                current = current[part]['children']
-            
-            # 파일 추가
-            filename = parts[-1]
-            current[filename] = {
-                'name': filename,
-                'type': 'file',
-                'path': str(file_path)
-            }
+            try:
+                # 절대 경로로 변환하여 비교
+                abs_file_path = Path(file_path).resolve()
+                abs_project_root = Path(self.project_root).resolve()
+                
+                # 프로젝트 루트 내부 파일인지 확인
+                if not str(abs_file_path).startswith(str(abs_project_root)):
+                    continue  # 외부 파일은 스킵
+                
+                relative_path = abs_file_path.relative_to(abs_project_root)
+                parts = relative_path.parts
+    
+                current = structure['children']
+                for i, part in enumerate(parts[:-1]):
+                    if part not in current:
+                        current[part] = {
+                            'type': 'directory',
+                            'path': str(Path(*parts[:i+1])),
+                            'children': {}
+                        }
+                    current = current[part]['children']
+                
+                # 파일 추가
+                current[parts[-1]] = {
+                    'type': 'file',
+                    'path': str(relative_path).replace('\\', '/')
+                }
+            except Exception as e:
+                # 경로 문제가 있는 파일은 스킵
+                continue
         
         return structure
-    
     def _build_dependency_graph(self, analyses: List[Dict[str, Any]]) -> Dict[str, List[str]]:
         """파일 간 의존성 그래프 구성"""
         graph = {}
@@ -326,6 +338,46 @@ class ProjectAnalyzer:
         
         return 'Unknown'
 
+
+    def _detect_file_language(self, file_path: str) -> str:
+        """개별 파일의 언어 감지"""
+        ext = Path(file_path).suffix.lower()
+        
+        language_map = {
+            '.py': 'Python',
+            '.js': 'JavaScript', 
+            '.ts': 'TypeScript',
+            '.jsx': 'JavaScript',
+            '.tsx': 'TypeScript',
+            '.java': 'Java',
+            '.cpp': 'C++',
+            '.c': 'C',
+            '.cs': 'C#',
+            '.go': 'Go',
+            '.rs': 'Rust',
+            '.php': 'PHP',
+            '.rb': 'Ruby',
+            '.swift': 'Swift',
+            '.kt': 'Kotlin',
+            '.scala': 'Scala',
+            '.r': 'R',
+            '.m': 'MATLAB',
+            '.lua': 'Lua',
+            '.pl': 'Perl',
+            '.sh': 'Shell',
+            '.bat': 'Batch',
+            '.ps1': 'PowerShell',
+            '.html': 'HTML',
+            '.css': 'CSS',
+            '.xml': 'XML',
+            '.json': 'JSON',
+            '.yaml': 'YAML',
+            '.yml': 'YAML',
+            '.md': 'Markdown',
+            '.sql': 'SQL'
+        }
+        
+        return language_map.get(ext, 'Unknown')
 if __name__ == '__main__':
     analyzer = ProjectAnalyzer('.')
     result = analyzer.analyze_and_update()

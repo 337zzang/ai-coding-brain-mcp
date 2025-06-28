@@ -7,7 +7,7 @@
 
 ## ❌ 자주 하는 실수들
 
-### long_function (17회)
+### long_function (18회)
 - 올바른 방법: 문서를 참고하세요
 
 ### console_usage (11회)

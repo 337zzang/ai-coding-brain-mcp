@@ -624,5 +624,28 @@ Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
       },
       required: []
     }
-  }
+  },
+  {
+    name: "work_history",
+    description: "프로젝트 작업 히스토리 표시. 완료된 모든 작업의 content를 종합하여 보여줍니다.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        phase_id: {
+          type: "string",
+          description: "특정 Phase의 히스토리만 보기 (선택사항)"
+        },
+        format: {
+          type: "string",
+          enum: ["timeline", "phase", "summary"],
+          default: "timeline",
+          description: "표시 형식 (timeline: 시간순, phase: Phase별 그룹, summary: 요약)"
+        }
+      },
+      required: []
+    },
+    handler: async (args: any) => {
+      return await executeCommand("history", args);
+    }
+  },
 ];

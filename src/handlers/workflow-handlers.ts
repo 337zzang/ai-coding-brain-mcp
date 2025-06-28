@@ -96,8 +96,6 @@ ${generateSaveVars()}
     return ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
 }
 
-    return ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
-}
 
 /**
  * 개선된 작업 관리 핸들러 (변수 유지)

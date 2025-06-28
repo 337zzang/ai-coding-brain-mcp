@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleFlowProject = handleFlowProject;
 exports.handlePlanProject = handlePlanProject;
+exports.handleTaskManage = handleTaskManage;
+exports.handleNextTask = handleNextTask;
 const execute_code_handler_1 = require("./execute-code-handler");
 // 글로벌 변수 저장소 키
 /**
@@ -65,75 +67,54 @@ ${generateSaveVars()}
  * 개선된 계획 수립 핸들러 (변수 유지)
  */
 async function handlePlanProject(params) {
-    const code = `
+    const code = params.reset
+        ? `
 ${generateLoadVars()}
 
 # 계획 수립 또는 리셋
-${params.reset ? 'result = helpers.cmd_plan(reset=True)' :
-        `result = helpers.cmd_plan(${params.plan_name ? `"${params.plan_name}"` : 'None'}, ${params.description ? `"${params.description}"` : 'None'})`}
+result = helpers.cmd_plan(reset=True)
+print(result)
+
+${generateSaveVars()}
+`
+        : `
+${generateLoadVars()}
+
+# 계획 수립
+result = helpers.cmd_plan(${params.plan_name ? `"${params.plan_name}"` : 'None'}, ${params.description ? `"${params.description}"` : 'None'})
 print(result)
 
 ${generateSaveVars()}
 `;
     return execute_code_handler_1.ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
 }
-#;
-계획;
-수립;
-result = helpers.cmd_plan($, { params, : .plan_name ? `"${params.plan_name}"` : 'None' }, $, { params, : .description ? `"${params.description}"` : 'None' });
-print(result);
-$;
-{
-    generateSaveVars();
-}
-`;
-    return ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
-}
-
 /**
  * 개선된 작업 관리 핸들러 (변수 유지)
  */
-export async function handleTaskManage(params: { action: string, args?: string[] }): Promise<ToolResponse> {
-    const argsStr = params.args ? params.args.map(arg => `;
-"${arg}" `).join(', ') : '';
-    const code = `;
-$;
-{
-    generateLoadVars();
-}
-#;
-작업;
-관리;
-helpers.cmd_task("${params.action}", $, { argsStr, ', ': +argsStr, '':  });
-$;
-{
-    generateSaveVars();
-}
-`;
-    return ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
-}
+async function handleTaskManage(params) {
+    const argsStr = params.args ? params.args.map(arg => `"${arg}"`).join(', ') : '';
+    const code = `
+${generateLoadVars()}
 
+# 작업 관리
+helpers.cmd_task("${params.action}"${argsStr ? ', ' + argsStr : ''})
+
+${generateSaveVars()}
+`;
+    return execute_code_handler_1.ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
+}
 /**
  * 개선된 다음 작업 핸들러 (변수 유지)
  */
-export async function handleNextTask(_params: {}): Promise<ToolResponse> {
-    const code = `;
-$;
-{
-    generateLoadVars();
-}
-#;
-다음;
-작업;
-진행;
-helpers.cmd_next();
-$;
-{
-    generateSaveVars();
-}
-`;
-    return ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
-}
+async function handleNextTask(_params) {
+    const code = `
+${generateLoadVars()}
 
-;
+# 다음 작업 진행
+helpers.cmd_next()
+
+${generateSaveVars()}
+`;
+    return execute_code_handler_1.ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
+}
 //# sourceMappingURL=workflow-handlers.js.map

@@ -618,9 +618,6 @@ Python, Node.js, IDE, OS 등 카테고리별로 분류하여 제공합니다.`,
             },
             required: []
         },
-        handler: async (args) => {
-            return await executeCommand("history", args);
-        }
     },
 ];
 //# sourceMappingURL=tool-definitions.js.map

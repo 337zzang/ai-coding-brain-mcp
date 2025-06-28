@@ -174,6 +174,7 @@ class EnhancedFunctionReplacer(ast.NodeTransformer):
     def __init__(self, target_name: str, new_code: str):
         import textwrap
         self.target_name = target_name
+        self.replaced = False
         parts = target_name.split('.')
         if len(parts) == 1:
             self.target_path = []
@@ -217,7 +218,6 @@ class EnhancedFunctionReplacer(ast.NodeTransformer):
             else:
                 return self.new_nodes
         return node
-
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
         """비동기 함수 정의 방문"""
         if self._is_target_function(node.name):
@@ -250,6 +250,7 @@ class BlockInsertTransformer(ast.NodeTransformer):
 
     def __init__(self, target_name: str, position: str, new_code: str):
         self.target_name = target_name
+        self.inserted = False
         self.position = position
         parts = target_name.split('.')
         if len(parts) == 1:
@@ -313,6 +314,7 @@ class BlockInsertTransformer(ast.NodeTransformer):
             else:
                 node.body = node.body + self.new_nodes
             self.found_and_inserted = True
+        self.inserted = True
         return node
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):

@@ -7,11 +7,11 @@
 
 ## ❌ 자주 하는 실수들
 
-### long_function (18회)
-- 올바른 방법: 문서를 참고하세요
-
 ### console_usage (11회)
 - 올바른 방법: import { logger } from '../utils/logger'; logger.info('메시지');
+
+### long_function (9회)
+- 올바른 방법: 문서를 참고하세요
 
 ### hardcoded_path (7회)
 - 올바른 방법: 문서를 참고하세요

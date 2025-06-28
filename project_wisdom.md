@@ -7,10 +7,10 @@
 
 ## ❌ 자주 하는 실수들
 
-### long_function (31회)
+### long_function (34회)
 - 올바른 방법: 문서를 참고하세요
 
-### console_usage (16회)
+### console_usage (17회)
 - 올바른 방법: import { logger } from '../utils/logger'; logger.info('메시지');
 
 ### too_many_parameters (8회)

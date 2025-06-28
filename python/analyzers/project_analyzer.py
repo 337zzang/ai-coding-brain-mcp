@@ -24,7 +24,7 @@ if str(python_path) not in sys.path:
 
 from python.analyzers.unified_analyzer import UnifiedAnalyzer
 from analyzers.manifest_manager import ManifestManager
-from project_wisdom import get_wisdom_manager
+from python.project_wisdom import get_wisdom_manager
 
 
 class ProjectAnalyzer:

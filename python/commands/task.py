@@ -96,16 +96,93 @@ def cmd_task(action: str, *args) -> StandardResponse:
                             
             return StandardResponse(success=True, data=status)
             
-        elif action == 'add' and len(args) >= 2:
-            phase_id = args[0]
-            task_name = args[1]
-            description = args[2] if len(args) > 2 else None
+        elif action == 'add' and len(args) >= 1:
+
+            
+            # Phase ID 결정 로직 개선
+
+            
+            if len(args) >= 2 and args[0].startswith('phase-'):
+
+            
+                # 명시적으로 phase_id가 제공된 경우
+
+            
+                phase_id = args[0]
+
+            
+                task_name = args[1]
+
+            
+                description = args[2] if len(args) > 2 else None
+
+            
+            else:
+
+            
+                # phase_id가 없으면 현재 phase 사용
+
+            
+                current_phase = wm.plan.current_phase if wm.plan else None
+
+            
+                if not current_phase:
+
+            
+                    # Plan의 phase_order에서 첫 번째 phase 사용
+
+            
+                    if wm.plan and wm.plan.phase_order:
+
+            
+                        current_phase = wm.plan.phase_order[0]
+
+            
+                    else:
+
+            
+                        return StandardResponse.error(
+
+            
+                            ErrorType.VALIDATION_ERROR,
+
+            
+                            "현재 Phase가 설정되지 않았습니다"
+
+            
+                        )
+
+            
+                
+
+            
+                phase_id = current_phase
+
+            
+                task_name = args[0]
+
+            
+                description = args[1] if len(args) > 1 else None
+
+            
+            
+
             
             result = wm.add_task(
+
+            
                 phase_id=phase_id,
+
+            
                 title=task_name,
+
+            
                 description=description if description else ""
+
+            
             )
+
+            
             return result
             
         elif action == 'done' and args:

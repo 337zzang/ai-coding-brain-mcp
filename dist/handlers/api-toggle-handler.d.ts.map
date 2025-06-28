@@ -1,0 +1,1 @@
+{"version":3,"file":"api-toggle-handler.d.ts","sourceRoot":"","sources":["../../src/handlers/api-toggle-handler.ts"],"names":[],"mappings":"AAWA,UAAU,WAAW;IACnB,IAAI,EAAE,MAAM,CAAC;IACb,OAAO,EAAE,CAAC,IAAI,EAAE,GAAG,KAAK,OAAO,CAAC,GAAG,CAAC,CAAC;CACtC;AAuGD,eAAO,MAAM,gBAAgB,EAAE,WAwB9B,CAAC;AAEF,eAAO,MAAM,eAAe,EAAE,WA4D7B,CAAC"}

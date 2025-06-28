@@ -1,12 +1,12 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { spawn } from 'child_process';
+import { spawnSync } from 'child_process';
 
 export function getPythonPath(): string {
     // 1. 환경변수에서 PYTHON_PATH 확인
-    if (process.env.PYTHON_PATH && fs.existsSync(process.env.PYTHON_PATH)) {
-        console.log(`Using PYTHON_PATH from environment: ${process.env.PYTHON_PATH}`);
-        return process.env.PYTHON_PATH;
+    if (process.env['PYTHON_PATH'] && fs.existsSync(process.env['PYTHON_PATH'])) {
+        console.log(`Using PYTHON_PATH from environment: ${process.env['PYTHON_PATH']}`);
+        return process.env['PYTHON_PATH'];
     }
 
     // 2. 시스템 PATH에서 python 찾기
@@ -16,7 +16,7 @@ export function getPythonPath(): string {
 
     for (const cmd of pythonCommands) {
         try {
-            const result = spawn.sync(cmd, ['--version'], { encoding: 'utf8' });
+            const result = spawnSync(cmd, ['--version'], { encoding: 'utf8' });
             if (result.status === 0) {
                 console.log(`Found Python in PATH: ${cmd}`);
                 return cmd;
@@ -62,7 +62,7 @@ export function getPythonPath(): string {
 
 export function validatePythonPath(pythonPath: string): boolean {
     try {
-        const result = spawn.sync(pythonPath, ['--version'], { encoding: 'utf8' });
+        const result = spawnSync(pythonPath, ['--version'], { encoding: 'utf8' });
         return result.status === 0;
     } catch (e) {
         return false;

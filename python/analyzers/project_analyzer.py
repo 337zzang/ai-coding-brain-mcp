@@ -20,6 +20,7 @@ if str(python_path) not in sys.path:
 
 from python.analyzers.unified_analyzer import UnifiedAnalyzer
 from analyzers.manifest_manager import ManifestManager
+from project_wisdom import get_wisdom_manager
 
 
 class ProjectAnalyzer:
@@ -33,6 +34,8 @@ class ProjectAnalyzer:
         self.project_root = Path(project_root).resolve()
         self.project_name = self.project_root.name
         self.manifest_manager = ManifestManager(self.project_root)
+        # wisdom_manager 초기화
+        self.wisdom_manager = get_wisdom_manager()
         self.file_analyzer = UnifiedAnalyzer(wisdom_manager=self.wisdom_manager)
         
         # 무시할 디렉토리/파일 패턴
@@ -229,6 +232,100 @@ class ProjectAnalyzer:
 
 
 # 사용 예시
+
+    def _build_directory_structure(self, files: Set[Path]) -> Dict[str, Any]:
+        """디렉토리 구조를 딕셔너리 형태로 구성"""
+        structure = {
+            'name': self.project_name,
+            'type': 'directory',
+            'path': str(self.project_root),
+            'children': {}
+        }
+        
+        for file_path in sorted(files):
+            relative_path = file_path.relative_to(self.project_root)
+            parts = relative_path.parts
+            
+            current = structure['children']
+            for i, part in enumerate(parts[:-1]):
+                if part not in current:
+                    current[part] = {
+                        'name': part,
+                        'type': 'directory',
+                        'children': {}
+                    }
+                current = current[part]['children']
+            
+            # 파일 추가
+            filename = parts[-1]
+            current[filename] = {
+                'name': filename,
+                'type': 'file',
+                'path': str(file_path)
+            }
+        
+        return structure
+    
+    def _build_dependency_graph(self, analyses: List[Dict[str, Any]]) -> Dict[str, List[str]]:
+        """파일 간 의존성 그래프 구성"""
+        graph = {}
+        
+        for analysis in analyses:
+            file_path = analysis.get('file_path', '')
+            imports = analysis.get('imports', [])
+            
+            # 간단한 의존성 그래프
+            dependencies = []
+            for imp in imports:
+                # 상대 경로나 프로젝트 내부 import만 추가
+                if isinstance(imp, dict):
+                    module = imp.get('module', '')
+                    if not module.startswith(('.', self.project_name)):
+                        continue
+                    dependencies.append(module)
+            
+            if file_path:
+                graph[file_path] = dependencies
+        
+        return graph
+    
+    def _detect_language(self) -> str:
+        """프로젝트의 주 언어 감지"""
+        # 파일 확장자별 카운트
+        extension_counts = {}
+        
+        for root, dirs, files in os.walk(self.project_root):
+            # 무시할 디렉토리 건너뛰기
+            dirs[:] = [d for d in dirs if d not in self.ignore_dirs]
+            
+            for file in files:
+                ext = Path(file).suffix.lower()
+                if ext in self.ignore_extensions:
+                    continue
+                    
+                extension_counts[ext] = extension_counts.get(ext, 0) + 1
+        
+        # 가장 많은 확장자로 언어 결정
+        language_map = {
+            '.py': 'Python',
+            '.js': 'JavaScript',
+            '.ts': 'TypeScript',
+            '.jsx': 'React',
+            '.tsx': 'React TypeScript',
+            '.java': 'Java',
+            '.cpp': 'C++',
+            '.c': 'C',
+            '.go': 'Go',
+            '.rs': 'Rust'
+        }
+        
+        # 가장 많은 파일 타입 찾기
+        if extension_counts:
+            most_common_ext = max(extension_counts, key=extension_counts.get)
+            return language_map.get(most_common_ext, 'Unknown')
+        
+        return 'Unknown'
+
 if __name__ == '__main__':
     analyzer = ProjectAnalyzer('.')
     result = analyzer.analyze_and_update()

@@ -1122,6 +1122,141 @@ def flow_compare_folders(folder1: str, folder2: str) -> Dict[str, Any]:
     return comparison
 
 
+
+def sync_context_from_plan(context: Any, plan: Any) -> Any:
+    """Plan 객체의 데이터를 context 최상위 레벨로 동기화
+    
+    Args:
+        context: 업데이트할 컨텍스트 (dict 또는 ProjectContext 객체)
+        plan: WorkflowManager의 Plan 객체
+        
+    Returns:
+        업데이트된 context
+    """
+    if not plan:
+        return context
+    
+    # context가 dict인지 객체인지 확인
+    is_dict = isinstance(context, dict)
+    
+    # 1. 현재 Phase 설정 (None이면 첫 번째 Phase로 설정)
+    current_phase = plan.current_phase
+    if not current_phase and plan.phase_order:
+        current_phase = plan.phase_order[0]
+    
+    if is_dict:
+        context['phase'] = current_phase
+    else:
+        # ProjectContext 객체인 경우 동적으로 속성 추가
+        setattr(context, 'phase', current_phase)
+    
+    # 2. 전체 작업 목록 생성
+    all_tasks = []
+    for phase_id, phase in plan.phases.items():
+        for task_id, task in phase.tasks.items():
+            task_dict = {
+                'id': task.id,
+                'title': task.title,
+                'status': task.status.value if hasattr(task.status, 'value') else str(task.status),
+                'phase_id': task.phase_id,
+                'priority': task.priority,
+                'description': task.description
+            }
+            all_tasks.append(task_dict)
+    
+    if is_dict:
+        context['tasks'] = all_tasks
+    else:
+        # ProjectContext는 tasks가 다른 구조이므로 all_tasks 속성 추가
+        setattr(context, 'all_tasks', all_tasks)
+    
+    # 3. 현재 Phase 정보 추가
+    if current_phase and current_phase in plan.phases:
+        current_phase_obj = plan.phases[current_phase]
+        if is_dict:
+            context['phase_name'] = current_phase_obj.name
+            context['phase_progress'] = current_phase_obj.progress
+        else:
+            setattr(context, 'phase_name', current_phase_obj.name)
+            setattr(context, 'phase_progress', current_phase_obj.progress)
+    
+    # 4. 전체 진행률 추가
+    if is_dict:
+        context['overall_progress'] = plan.overall_progress
+    else:
+        setattr(context, 'overall_progress', plan.overall_progress)
+    
+    # 5. Phase별 작업 수 추가 (디버깅용)
+    phase_task_counts = {
+        phase_id: len(phase.tasks) 
+        for phase_id, phase in plan.phases.items()
+    }
+    
+    if is_dict:
+        context['phase_task_counts'] = phase_task_counts
+    else:
+        setattr(context, 'phase_task_counts', phase_task_counts)
+    
+    return context
+    
+    # context가 dict인지 객체인지 확인
+    is_dict = isinstance(context, dict)
+    
+    # 1. 현재 Phase 설정
+    if is_dict:
+        context['phase'] = plan.current_phase
+    else:
+        # ProjectContext 객체인 경우 동적으로 속성 추가
+        setattr(context, 'phase', plan.current_phase)
+    
+    # 2. 전체 작업 목록 생성
+    all_tasks = []
+    for phase_id, phase in plan.phases.items():
+        for task_id, task in phase.tasks.items():
+            task_dict = {
+                'id': task.id,
+                'title': task.title,
+                'status': task.status.value if hasattr(task.status, 'value') else str(task.status),
+                'phase_id': task.phase_id,
+                'priority': task.priority,
+                'description': task.description
+            }
+            all_tasks.append(task_dict)
+    
+    if is_dict:
+        context['tasks'] = all_tasks
+    else:
+        # ProjectContext는 tasks가 다른 구조이므로 all_tasks 속성 추가
+        setattr(context, 'all_tasks', all_tasks)
+    
+    # 3. 현재 Phase 정보 추가
+    if plan.current_phase and plan.current_phase in plan.phases:
+        current_phase_obj = plan.phases[plan.current_phase]
+        if is_dict:
+            context['phase_name'] = current_phase_obj.name
+            context['phase_progress'] = current_phase_obj.progress
+        else:
+            setattr(context, 'phase_name', current_phase_obj.name)
+            setattr(context, 'phase_progress', current_phase_obj.progress)
+    
+    # 4. 전체 진행률 추가
+    if is_dict:
+        context['overall_progress'] = plan.overall_progress
+    else:
+        setattr(context, 'overall_progress', plan.overall_progress)
+    
+    # 5. Phase별 작업 수 추가 (디버깅용)
+    phase_task_counts = {
+        phase_id: len(phase.tasks) 
+        for phase_id, phase in plan.phases.items()
+    }
+    
+    if is_dict:
+        context['phase_task_counts'] = phase_task_counts
+    else:
+        setattr(context, 'phase_task_counts', phase_task_counts)
+    
+    return context
 def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str, Any]:
     """리팩토링된 flow_project - 자동 백업 및 프로젝트 설정 지원"""
     import time
@@ -1210,8 +1345,9 @@ def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str,
                     # plan 정보가 있으면 추가
                     if hasattr(workflow_manager.context, 'plan') and workflow_manager.context.plan:
                         context['plan'] = workflow_manager.context.plan
+                        sync_context_from_plan(context, context['plan'])
                         context['current_task'] = getattr(workflow_manager.context, 'current_task', None)
-                        context['phase'] = getattr(workflow_manager.context, 'phase', None)
+                        # context['phase']는 sync_context_from_plan에서 설정됨
                     
                     smart_print("✅ WorkflowManager context 동기화 완료")
         except Exception as e:
@@ -1222,6 +1358,20 @@ def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str,
         # 5. 프로젝트 자동 분석 또는 캐시 사용
         smart_print("\n📂 프로젝트 구조를 분석하는 중...")
         
+        try:
+            analyzer = ProjectAnalyzer(project_path)
+            analysis_result = analyzer.analyze_and_update()
+            
+            # 파일 구조 업데이트
+            directory_tree = analysis_result.get('structure', {})
+            file_count = analysis_result.get('file_count', 0)
+            
+        except Exception as e:
+            print(f"⚠️ ProjectAnalyzer 오류 (계속 진행): {e}")
+            # 기본값 설정
+            analysis_result = {}
+            directory_tree = {}
+            file_count = 0
         analyzer = ProjectAnalyzer(project_path)
         # 설정에서 제외 패턴 적용
         if hasattr(analyzer, 'ignore_patterns'):

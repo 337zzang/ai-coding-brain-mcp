@@ -37,9 +37,20 @@ JSON REPL 세션에서 Python 코드를 실행합니다.
 - helpers.search_files_advanced(path, pattern) - 파일명 검색
   예: helpers.search_files_advanced(".", "*.py")
   반환: {'results': [파일정보 리스트]}
-- helpers.search_code_content(path, pattern, file_pattern) - 코드 내용 검색
+- helpers.search_code_content(path, pattern, file_pattern) - 코드 내용 검색 (안전한 형식)
   예: helpers.search_code_content("python", "def", "*.py")
-  반환: {'results': [파일별 매치 정보]}
+  반환: {
+    'success': bool,        # 검색 성공/실패
+    'results': [{           # 결과 배열 (항상 존재)
+      'file': str,          # 파일 경로
+      'matches': [{         # 매치 배열
+        'line_number': int, # 줄 번호
+        'line': str         # 줄 내용
+      }]
+    }],
+    'total_matches': int,   # 전체 매치 수
+    'error': str            # 오류 메시지 (실패 시만)
+  }
 - helpers.replace_block(file, target, new_code) - 코드 블록 교체
 - helpers.cmd_flow_with_context(project) - 프로젝트 전환
 

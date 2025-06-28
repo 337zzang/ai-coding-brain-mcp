@@ -538,29 +538,102 @@ def search_code_content(path: str = '.', pattern: str = '',
         whole_word: 단어 단위 검색
     
     Returns:
-        SearchHelper.search_code 결과
+        항상 안전한 형식의 결과:
+        {
+            "success": bool,
+            "results": [
+                {
+                    "file": str,
+                    "matches": [
+                        {"line_number": int, "line": str},
+                        ...
+                    ]
+                },
+                ...
+            ],
+            "total_matches": int,
+            "error": str (실패 시)
+        }
     """
     # ----- (1) 추적 -----
     track_file_access('search_code', path)
     
-    # ----- (2) SearchHelper 호출 -----
-    # _search_code_content는 search_helpers.search_code_content
-    result = _search_code_content(
-        path=path,
-        pattern=pattern,
-        file_pattern=file_pattern,
-        max_results=max_results,
-        case_sensitive=case_sensitive,
-        whole_word=whole_word
-    )
-    
-    # ----- (3) 결과에 추적 정보 추가 -----
-    if result and 'results' in result:
-        for file_result in result['results']:
-            if 'file_path' in file_result:
-                track_file_access('search_code', file_result['file_path'])
-    
-    return result
+    try:
+        # ----- (2) SearchHelper 호출 -----
+        # _search_code_content는 search_helpers.search_code_content
+        result = _search_code_content(
+            path=path,
+            pattern=pattern,
+            file_pattern=file_pattern,
+            max_results=max_results,
+            case_sensitive=case_sensitive,
+            whole_word=whole_word
+        )
+        
+        # ----- (3) 결과 안전성 검사 및 변환 -----
+        if not result:
+            return {"success": False, "results": [], "error": "No result returned"}
+        
+        # 에러가 있는 경우
+        if 'error' in result:
+            return {
+                "success": False,
+                "results": [],
+                "error": result.get('error', 'Unknown error')
+            }
+        
+        # results 키가 없는 경우
+        if 'results' not in result:
+            return {"success": False, "results": [], "error": "No results key in response"}
+        
+        # 안전한 결과 변환
+        safe_results = []
+        for file_result in result.get('results', []):
+            if not isinstance(file_result, dict):
+                continue
+            
+            # 파일 경로 추적
+            file_path = file_result.get('file_path', file_result.get('file_name', 'Unknown'))
+            if file_path != 'Unknown':
+                track_file_access('search_code', file_path)
+            
+            # 안전한 형식으로 변환
+            safe_entry = {
+                "file": file_path,
+                "matches": []
+            }
+            
+            # matches 처리
+            for match in file_result.get('matches', []):
+                if not isinstance(match, dict):
+                    continue
+                
+                # 다양한 키 이름 처리
+                line_number = match.get('line_number', match.get('line_start', match.get('line', 0)))
+                line_content = match.get('content', match.get('line_content', match.get('text', '')))
+                
+                safe_match = {
+                    "line_number": line_number,
+                    "line": line_content
+                }
+                safe_entry["matches"].append(safe_match)
+            
+            if safe_entry["matches"]:  # 매치가 있는 경우만 추가
+                safe_results.append(safe_entry)
+        
+        return {
+            "success": True,
+            "results": safe_results,
+            "total_matches": result.get('total_matches', sum(len(r["matches"]) for r in safe_results))
+        }
+        
+    except Exception as e:
+        # 예외 발생 시에도 안전한 형식 반환
+        return {
+            "success": False,
+            "results": [],
+            "error": f"Search failed: {str(e)}"
+        }
 globals()['parse_with_snippets'] = parse_with_snippets
 globals()['get_snippet_preview'] = get_snippet_preview
 globals()['scan_directory'] = _scan_directory

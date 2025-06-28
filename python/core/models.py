@@ -62,7 +62,7 @@ class Task(BaseModelWithConfig):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
     description: str = ""
-    status: str = Field(default=TaskStatus.PENDIN.valueG.value)
+    status: str = Field(default=TaskStatus.PENDING.value)
     priority: str = Field(default='medium', pattern='^(high|medium|low)$')
     phase_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)

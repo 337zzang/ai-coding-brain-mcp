@@ -11,6 +11,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from core.workflow_manager import get_workflow_manager
 from core.error_handler import StandardResponse
+from core.models import Task
+from typing import List, Dict
 
 
 def cmd_next(content: str = None) -> StandardResponse:
@@ -34,7 +36,7 @@ def cmd_next(content: str = None) -> StandardResponse:
                 # AI가 자동으로 content 생성
                 previous_tasks = []
                 if hasattr(current_task, 'context_data') and current_task.context_data:
-                previous_tasks = current_task.context_data.get('previous_tasks', [])
+                    previous_tasks = current_task.context_data.get('previous_tasks', [])
 
                 content = generate_task_content(current_task, previous_tasks)
                 print(f"\n🤖 AI가 작업 내용을 생성했습니다:")
@@ -43,7 +45,7 @@ def cmd_next(content: str = None) -> StandardResponse:
                 # 사용자 확인
                 user_input = input("\n이 내용으로 진행하시겠습니까? (Y/n): ").strip().lower()
                 if user_input == 'n':
-                content = input(f"\n📝 '{current_task.title}' 작업에서 수행한 내용을 입력하세요: ")
+                    content = input(f"\n📝 '{current_task.title}' 작업에서 수행한 내용을 입력하세요: ")
             
             # 현재 작업 완료
             print(f"\n🔄 현재 작업 완료 중...")

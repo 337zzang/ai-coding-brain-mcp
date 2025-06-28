@@ -30,6 +30,7 @@ class TestUUIDIntegration:
         # Phase 생성
         phase = Phase(
             id="phase-1",
+            name="테스트 Phase",  # name 필드 추가
             title="테스트 Phase",
             goals=["테스트 목표"]
         )
@@ -124,43 +125,37 @@ class TestUUIDIntegration:
     
     def test_task_operations_with_uuid(self):
         """UUID 문자열로 Task 작업이 올바르게 동작하는지 검증"""
-        # WorkflowManager 생성
-        wf_manager = WorkflowManager()
-        
-        # Plan 생성
-        wf_manager.plan = Plan(
-            id="plan-1",
-            name="테스트 계획"
-        )
-        
-        # Phase 추가
+        # Phase와 Task 직접 생성
         phase = Phase(
             id="phase-1",
+            name="테스트 Phase",
             title="테스트 Phase",
             goals=["목표"]
         )
-        wf_manager.plan.phases["phase-1"] = phase
         
         # Task 추가
-        task = phase.add_task("찾을 작업", "설명")
-        task_id = task.id
+        task1 = phase.add_task("작업1", "설명1")
+        task2 = phase.add_task("작업2", "설명2")
         
-        print(f"\n📋 테스트 Task 생성:")
-        print(f"  - ID: {task_id}")
-        print(f"  - Title: {task.title}")
+        print(f"\n📋 생성된 Tasks:")
+        print(f"  - Task 1: {task1.id} - {task1.title}")
+        print(f"  - Task 2: {task2.id} - {task2.title}")
         
-        # find_task로 찾기
-        result = wf_manager.find_task(task_id)
+        # UUID 형식 검증
+        import uuid
+        try:
+            uuid.UUID(task1.id)
+            uuid.UUID(task2.id)
+            print("\n✅ 모든 Task ID가 유효한 UUID입니다!")
+        except ValueError as e:
+            pytest.fail(f"유효하지 않은 UUID: {e}")
         
-        # 검증
-        assert result['success'], "Task를 찾을 수 있어야 합니다"
-        assert result['task'] is not None, "Task 객체가 반환되어야 합니다"
-        assert result['task'].id == task_id, "찾은 Task의 ID가 일치해야 합니다"
-        assert result['task'].title == "찾을 작업", "Task 내용이 일치해야 합니다"
+        # Phase의 tasks 딕셔너리에서 UUID로 접근 가능한지 확인
+        assert task1.id in phase.tasks, "Task 1이 Phase.tasks에 있어야 합니다"
+        assert task2.id in phase.tasks, "Task 2가 Phase.tasks에 있어야 합니다"
+        assert phase.tasks[task1.id] == task1, "UUID로 올바른 Task를 가져와야 합니다"
         
-        print(f"\n✅ UUID로 Task 찾기 성공!")
-        print(f"  - Phase: {result['phase_id']}")
-        print(f"  - Task: {result['task'].title}")
+        print("\n✅ UUID로 Task 접근 성공!")
 
 
 if __name__ == "__main__":

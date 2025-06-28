@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 import datetime as dt
 from typing import Optional, Dict, Any, List
+from pydantic import ValidationError
 from collections import defaultdict
 import copy
 
@@ -23,7 +24,6 @@ if python_path not in sys.path:
     sys.path.insert(0, python_path)
 
 from core.models import (
-from pydantic import ValidationError
     ProjectContext, Plan, Phase, Task,
     FileAccessEntry, WorkTracking, 
     validate_context_data

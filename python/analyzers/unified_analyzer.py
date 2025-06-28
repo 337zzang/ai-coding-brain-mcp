@@ -50,7 +50,7 @@ class UnifiedAnalyzer:
         else:
             self.helpers = None
             
-        def analyze(self, file_path: str, force_reparse: bool = False) -> Dict[str, Any]:
+    def analyze(self, file_path: str, force_reparse: bool = False) -> Dict[str, Any]:
         """
         파일을 분석하여 구조와 품질 정보를 통합 반환
         
@@ -116,10 +116,14 @@ class UnifiedAnalyzer:
         result['wisdom_insights'] = self._generate_wisdom_insights(quality_metrics)
         
         return result
+        
     def _create_error_result(self, error_msg: str) -> Dict[str, Any]:
         """에러 결과 생성"""
         return {
             'path': '',
+            'file_path': '',
+            'last_modified': datetime.now().isoformat(),
+            'size': 0,
             'language': 'unknown',
             'summary': f'Analysis failed: {error_msg}',
             'imports': {'internal': [], 'external': []},
@@ -130,7 +134,7 @@ class UnifiedAnalyzer:
                 'error': error_msg
             },
             'quality_metrics': {},
-            'wisdom_insights': {}
+            'wisdom_insights': {'potential_issues': [error_msg], 'improvement_suggestions': []}
         }
         
     def _count_lines(self, file_path: str) -> int:
@@ -167,14 +171,23 @@ class UnifiedAnalyzer:
         class_count = len(classes)
         func_count = len(functions)
         
+        # 품질 정보 포함
+        quality_info = ""
+        if 'quality_metrics' in result:
+            issues = len(result['quality_metrics'].get('code_smells', []))
+            if issues > 0:
+                quality_info = f", {issues}개의 코드 품질 이슈 발견"
+        
         if class_count > 0 and func_count > 0:
-            return f"{language} 모듈 - {class_count}개의 클래스와 {func_count}개의 함수 포함"
+            main_class = classes[0]['name'] if classes else ""
+            return f"{filename}: {class_count}개의 클래스와 {func_count}개의 함수, 주요 클래스: {main_class}{quality_info}"
         elif class_count > 0:
-            return f"{language} 모듈 - {class_count}개의 클래스 정의"
+            main_class = classes[0]['name'] if classes else ""
+            return f"{filename}: {class_count}개의 클래스, 주요 클래스: {main_class}{quality_info}"
         elif func_count > 0:
-            return f"{language} 모듈 - {func_count}개의 함수 제공"
+            return f"{filename}: {func_count}개의 함수{quality_info}"
         else:
-            return f"{language} 파일"
+            return f"{filename}: {language} 파일{quality_info}"
             
     def _extract_imports(self, parse_result: Dict) -> Dict[str, List[str]]:
         """import 정보 추출 및 내부/외부 분류"""
@@ -495,7 +508,6 @@ class UnifiedAnalyzer:
                 "전반적인 코드 복잡도가 높습니다. 리팩토링을 고려해보세요."
             )
             
-        
         # Wisdom Manager에 기록
         if self.wisdom_manager:
             for smell in quality_metrics.get('code_smells', []):

@@ -483,50 +483,27 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
             return result
             
         if name:
+            # 기존 계획이 있는지 확인
+            if wm.plan and hasattr(wm.plan, 'name'):
+                existing_tasks = wm.get_workflow_status()['total_tasks']
+                if existing_tasks > 0:
+                    print(f"⚠️  기존 계획 '{wm.plan.name}'에 {existing_tasks}개의 작업이 있습니다.")
+                    # 비대화형 모드: 자동으로 저장하고 진행
+                    save_result = wm.save()
+                    if save_result['success']:
+                        print(f"✅ 기존 계획 '{wm.plan.name}'이 저장되었습니다.")
+                    
+                    # 계획 초기화
+                    reset_result = wm.reset_plan()
+                    if not reset_result['success']:
+                        from core.error_handler import ErrorType
+                        return StandardResponse.error(ErrorType.PLAN_ERROR, f"계획 초기화 실패: {reset_result.get('message', '')}")
+            
             # 새 계획 생성
             result = wm.create_plan(
                 name=name,
                 description=description if description else f"{name} 계획"
             )
-            
-            # content가 제공되면 Plan에 저장
-            if content and result['success']:
-                wm.plan.content = content
-                if not hasattr(wm.plan, 'content_history'):
-                    wm.plan.content_history = []
-                wm.plan.content_history.append({
-                    'timestamp': datetime.now().isoformat(),
-                    'action': 'created',
-                    'content': content
-                })
-                wm.save_context()
-                print(f"\n📝 계획 내용이 저장되었습니다.")
-    
-            if result['success']:
-                # plan이 Plan 객체인 경우와 문자열인 경우를 모두 처리
-                plan_data = result['data']
-                if 'plan' in plan_data and hasattr(plan_data['plan'], 'name'):
-                    plan = plan_data['plan']
-                    print(f"✅ 새 계획 생성: {plan.name}")
-                    print(f"   설명: {plan.description}")
-                    print(f"   Phase 수: {len(plan.phases)}")
-                    if content:
-                        print(f"   📝 내용: {content[:100]}...")
-                    
-                    # 기본 Phase 정보 표시
-                    for phase_id, phase in plan.phases.items():
-                        print(f"   - {phase_id}: {phase.name}")
-                else:
-                    # 백워드 호환성
-                    print(f"✅ 새 계획 생성: {plan_data.get('plan_name', name)}")
-                    print(f"   Phase 수: {plan_data.get('phases', 0)}")
-                    
-                print("\n💡 다음 단계:")
-                print("   1. 'task add phase-id \"작업명\" \"내용\"'으로 작업 추가")
-                print("   2. 'next'로 작업 시작")
-                
-            return result
-            
         else:
             # 현재 계획 표시
             if not wm.plan:

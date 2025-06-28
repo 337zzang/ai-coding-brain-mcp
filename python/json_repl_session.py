@@ -104,15 +104,15 @@ class AIHelpers:
             return get_work_tracking_summary(*args, **kwargs)
         
         def lazy_cmd_plan(*args, **kwargs):
-            from claude_code_ai_brain import cmd_plan
+            from commands.plan import cmd_plan
             return cmd_plan(*args, **kwargs)
         
         def lazy_cmd_task(*args, **kwargs):
-            from claude_code_ai_brain import cmd_task
+            from commands.task import cmd_task
             return cmd_task(*args, **kwargs)
         
         def lazy_cmd_next(*args, **kwargs):
-            from claude_code_ai_brain import cmd_next
+            from commands.next import cmd_next
             return cmd_next(*args, **kwargs)
         
         # 지연 로딩 함수들 할당

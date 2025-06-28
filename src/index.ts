@@ -115,7 +115,7 @@ class AICodingBrainMCP {
         } else if (name === 'flow_project') {
           return await handleFlowProject(args as { project_name: string });
         } else if (name === 'plan_project') {
-          return await handlePlanProject(args as { plan_name?: string; description?: string });
+          return await handlePlanProject(args as { plan_name?: string; description?: string; reset?: boolean });
         } else if (name === 'task_manage') {
           return await handleTaskManage(args as { action: string; args?: string[] });
         } else if (name === 'next_task') {

@@ -138,12 +138,17 @@ restart_json_repl(keep_helpers=False)  # 완전 초기화
                 plan_name: {
                     type: 'string',
                     description: '계획 이름 (선택사항)'
-                ,
-                content: {
+                },
+                description: {
                     type: 'string',
-                    description: '계획의 상세 내용 (프로젝트 목표, 전략, 기술 스택 등)'
-                }},
-            required: ['content']
+                    description: '계획 설명 (선택사항)'
+                },
+                reset: {
+                    type: 'boolean',
+                    description: '기존 계획을 삭제하고 새로 시작 (기본값: false)'
+                }
+            },
+            required: []
         }
     },
 

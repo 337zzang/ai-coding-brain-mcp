@@ -138,13 +138,12 @@ restart_json_repl(keep_helpers=False)  # 완전 초기화
                 plan_name: {
                     type: 'string',
                     description: '계획 이름 (선택사항)'
-                },
-                description: {
+                ,
+                content: {
                     type: 'string',
-                    description: '계획 설명 (선택사항)'
-                }
-            },
-            required: []
+                    description: '계획의 상세 내용 (프로젝트 목표, 전략, 기술 스택 등)'
+                }},
+            required: ['content']
         }
     },
 
@@ -156,7 +155,7 @@ restart_json_repl(keep_helpers=False)  # 완전 초기화
 내부적으로 helpers.cmd_task()를 실행합니다.
 
 사용 예:
-- task_manage("add", "새로운 기능 구현")
+- task_manage("add", ["phase-1", "새로운 기능 구현", "상세 작업 내용"])
 - task_manage("list")
 - task_manage("done", 1)`,
         inputSchema: {

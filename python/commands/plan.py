@@ -4,6 +4,7 @@
 ProjectContext와 dict 모두 지원하는 유연한 구조
 """
 
+from datetime import datetime
 import os
 import datetime as dt
 from pathlib import Path
@@ -458,7 +459,7 @@ def enhance_plan_with_wisdom(plan_data: Dict) -> Dict:
     
     return plan_data
 
-def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phase_count: int = 3, reset: bool = False) -> StandardResponse:
+def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phase_count: int = 3, reset: bool = False, content: Optional[str] = None) -> StandardResponse:
     """프로젝트 계획 수립 또는 조회
     
     Args:
@@ -466,6 +467,7 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
         description: 계획 설명
         phase_count: Phase 개수 (기본 3개)
         reset: True일 경우 계획 초기화
+        content: 계획의 상세 내용 (프로젝트 목표, 전략 등)
         
     Returns:
         StandardResponse: 표준 응답
@@ -487,6 +489,19 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                 description=description if description else f"{name} 계획"
             )
             
+            # content가 제공되면 Plan에 저장
+            if content and result['success']:
+                wm.plan.content = content
+                if not hasattr(wm.plan, 'content_history'):
+                    wm.plan.content_history = []
+                wm.plan.content_history.append({
+                    'timestamp': datetime.now().isoformat(),
+                    'action': 'created',
+                    'content': content
+                })
+                wm.save_context()
+                print(f"\n📝 계획 내용이 저장되었습니다.")
+    
             if result['success']:
                 # plan이 Plan 객체인 경우와 문자열인 경우를 모두 처리
                 plan_data = result['data']
@@ -495,6 +510,8 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                     print(f"✅ 새 계획 생성: {plan.name}")
                     print(f"   설명: {plan.description}")
                     print(f"   Phase 수: {len(plan.phases)}")
+                    if content:
+                        print(f"   📝 내용: {content[:100]}...")
                     
                     # 기본 Phase 정보 표시
                     for phase_id, phase in plan.phases.items():
@@ -505,7 +522,7 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                     print(f"   Phase 수: {plan_data.get('phases', 0)}")
                     
                 print("\n💡 다음 단계:")
-                print("   1. 'task add phase-id \"작업명\"'으로 작업 추가")
+                print("   1. 'task add phase-id \"작업명\" \"내용\"'으로 작업 추가")
                 print("   2. 'next'로 작업 시작")
                 
             return result
@@ -522,6 +539,11 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
             print(f"진행률: {status['progress']:.1f}% ({status['completed']}/{status['total']})")
             print(f"\n생성일: {plan.created_at}")
             
+            # Plan content 표시
+            if hasattr(plan, 'content') and plan.content:
+                print(f"\n📝 계획 내용:")
+                print(f"   {plan.content}")
+            
             # Phase별 진행 상황
             print("\n📊 Phase별 진행 상황:")
             for phase_id, phase in plan.phases.items():
@@ -537,7 +559,7 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                     if completed_tasks:
                         print("   📝 완료된 작업 내용:")
                         for task in completed_tasks[:3]:  # 최대 3개만 표시
-                            content_preview = task.content
+                            content_preview = task.content[:80] + "..." if len(task.content) > 80 else task.content
                             print(f"      • {task.title}: {content_preview}")
                         if len(completed_tasks) > 3:
                             print(f"      ... 외 {len(completed_tasks)-3}개 작업")
@@ -551,7 +573,7 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                 
             return StandardResponse.success(
                 data={
-                    'plan': plan.dict(),
+                    'plan': plan.dict() if hasattr(plan, 'dict') else plan,
                     'status': status,
                     'analytics': analytics
                 }

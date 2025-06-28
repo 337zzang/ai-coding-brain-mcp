@@ -66,6 +66,8 @@ class Task(BaseModelWithConfig):
     priority: str = Field(default='medium', pattern='^(high|medium|low)$')
     phase_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
+
+    updated_at: Optional[datetime] = None
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     completed: bool = False
@@ -108,6 +110,7 @@ class Task(BaseModelWithConfig):
         self.completed = True
         self.status = 'completed'
         self.completed_at = datetime.now()
+        self.updated_at = datetime.now()
         if content:
             self.content = content
     
@@ -435,6 +438,11 @@ class Plan(BaseModelWithConfig):
     
     # Phase 순서 및 진행률 관리
     phase_order: List[str] = Field(default_factory=list)  # Phase 표시 순서
+    
+    # Content 관련 필드
+    content: Optional[str] = None  # 계획 상세 내용
+    content_history: List[Dict[str, Any]] = Field(default_factory=list)  # 변경 이력
+
     overall_progress: float = 0.0  # 전체 진행률 (0-100%)
     
     # 통합 정보
@@ -542,6 +550,29 @@ class WorkTracking(BaseModelWithConfig):
             return datetime.fromisoformat(v.replace('Z', '+00:00'))
         return v
 
+    
+    def get_blocked_tasks(self) -> Dict[str, List[str]]:
+        """의존성으로 인해 차단된 작업 목록 반환
+        
+        Returns:
+            Dict[str, List[str]]: {작업ID: [차단하는 작업ID들]}
+        """
+        blocked = {}
+        all_tasks = self.get_all_tasks()
+        
+        for task in all_tasks:
+            if task.status in ['pending', 'ready'] and task.dependencies:
+                # 완료되지 않은 의존성 찾기
+                incomplete_deps = []
+                for dep_id in task.dependencies:
+                    dep_task = self.get_task_by_id(dep_id)
+                    if dep_task and dep_task.status != 'completed':
+                        incomplete_deps.append(dep_id)
+                
+                if incomplete_deps:
+                    blocked[task.id] = incomplete_deps
+        
+        return blocked
 
 class FileAccessEntry(BaseModelWithConfig):
     """파일 접근 기록 항목"""

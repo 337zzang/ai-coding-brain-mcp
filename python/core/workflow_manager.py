@@ -141,7 +141,7 @@ class WorkflowManager:
     # unique_suffix = uuid.uuid4().hex[:4]
     # return f'{phase_num}-{task_count}-{unique_suffix}'
 
-    def add_task(self, phase_id: str, title: str, description: str = "", 
+    def add_task(self, phase_id: str, title: str, description: str = "", content: Optional[str] = None, 
                  priority: str = "medium", dependencies: List[str] = None) -> StandardResponse:
         """작업 추가"""
         try:
@@ -541,7 +541,7 @@ class WorkflowManager:
                 context_data={
                     "file_path": file_info['file'],
                     "complexity": file_info['complexity'],
-                    "functions": file_info.get('functions', [])
+                    "functions": file_info.get('functions', [], content=content)
                 }
             )
             generated_tasks["analysis"].append(task)

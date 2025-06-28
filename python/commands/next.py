@@ -38,18 +38,30 @@ def cmd_next(content: str = None) -> StandardResponse:
                 if hasattr(current_task, 'context_data') and current_task.context_data:
                     previous_tasks = current_task.context_data.get('previous_tasks', [])
 
-                content = generate_task_content(current_task, previous_tasks)
-                print(f"\n🤖 AI가 작업 내용을 생성했습니다:")
-                print(f"   {content}")
-
-                # 사용자 확인
-                user_input = input("\n이 내용으로 진행하시겠습니까? (Y/n): ").strip().lower()
-                if user_input == 'n':
-                    content = input(f"\n📝 '{current_task.title}' 작업에서 수행한 내용을 입력하세요: ")
+                generated_content = generate_task_content(current_task, previous_tasks)
+                
+                # MCP 환경에서는 input() 사용 불가
+                # 생성된 content와 함께 확인 요청 반환
+                return StandardResponse(
+                    success=False,
+                    message="작업 완료 내용을 확인해주세요",
+                    data={
+                        'action': 'confirm_content',
+                        'task_id': current_task_id,
+                        'task_title': current_task.title,
+                        'generated_content': generated_content,
+                        'instruction': '생성된 내용으로 진행하려면 content와 함께 다시 호출하세요'
+                    }
+                )
             
             # 현재 작업 완료
-            print(f"\n🔄 현재 작업 완료 중...")
-            wm.complete_task(current_task_id, content)
+            complete_result = wm.complete_task(current_task_id, content)
+            if not complete_result['success']:
+                return StandardResponse(
+                    success=False,
+                    message=f"작업 완료 실패: {complete_result.get('message')}",
+                    error=complete_result.get('error')
+                )
     
     # 다음 작업 시작
     result = wm.start_next_task()
@@ -59,57 +71,89 @@ def cmd_next(content: str = None) -> StandardResponse:
         
         # 상태별 처리
         if data.get('status') == 'no_tasks':
-            print("\n📋 대기 중인 작업이 없습니다.")
-            print("\n💡 다음 옵션:")
-            print("   1. 'task add phase-id \"작업명\"'으로 새 작업 추가")
-            print("   2. 'plan'으로 전체 계획 확인")
-            print("   3. 'flow'로 전체 진행 히스토리 확인")
+            message = "📋 대기 중인 작업이 없습니다."
+            suggestions = [
+                "1. 'task add phase-id \"작업명\" \"내용\"'으로 새 작업 추가",
+                "2. 'plan'으로 전체 계획 확인",
+                "3. 'flow'로 전체 진행 히스토리 확인"
+            ]
+            
+            return StandardResponse(
+                success=True,
+                message=message,
+                data={
+                    'status': 'no_tasks',
+                    'suggestions': suggestions
+                }
+            )
             
         elif data.get('status') == 'blocked':
-            print(f"\n⚠️  {data['message']}")
+            message = f"⚠️  {data['message']}"
+            bottlenecks = wm.get_bottlenecks() if hasattr(wm, 'get_bottlenecks') else {}
             
-            # 차단된 작업 상세 정보 표시
-            bottlenecks = wm.get_bottlenecks()
+            blocked_info = []
             if bottlenecks:
-                print("\n🔒 차단된 작업들:")
                 for task_id, deps in bottlenecks.items():
-                    print(f"   - [{task_id}]: {', '.join(deps)} 완료 대기 중")
+                    blocked_info.append({
+                        'task_id': task_id,
+                        'waiting_for': deps
+                    })
+            
+            return StandardResponse(
+                success=True,
+                message=message,
+                data={
+                    'status': 'blocked',
+                    'blocked_tasks': blocked_info
+                }
+            )
                     
         elif data.get('status') == 'started':
             task = data['task']
-            print(f"\n✅ 작업 시작: [{task.id}] {task.title}")
+            message = f"✅ 작업 시작: [{task.id}] {task.title}"
             
             if task.description:
-                print(f"\n📝 설명: {task.description}")
+                message += f"\n📝 설명: {task.description}"
                 
-            # 이전 작업 결과 반영
-            previous_tasks = [t for t in wm.plan.get_all_tasks() if t.status == 'completed' and t.content]
-            if previous_tasks:
-                recent_task = previous_tasks[-1]
-                print(f"\n📌 이전 작업 결과: {recent_task.content}")
-                print("   (이전 작업 결과를 참고하여 진행하세요)")
-                
-            # 작업 브리핑 표시
-            briefing = data.get('briefing', {})
-            if briefing:
-                print("\n" + "="*60)
-                print("📋 작업 브리핑")
-                print("="*60)
-                
-                for key, value in briefing.items():
-                    if value:
-                        print(f"\n{key}:")
-                        print(value)
-                        
-            # 워크플로우 상태 표시
+            # 이전 작업 결과 수집
+            previous_results = []
+            all_tasks = wm.plan.get_all_tasks()
+            for t in all_tasks:
+                if t.status == 'completed' and hasattr(t, 'content') and t.content:
+                    previous_results.append({
+                        'title': t.title,
+                        'content': t.content
+                    })
+            
+            # 워크플로우 상태
             status = wm.get_workflow_status()
-            print(f"\n📊 전체 진행률: {status['progress']:.1f}%")
-            print(f"   Phase {status['current_phase']}: {status['phase_progress']:.1f}% 완료")
+            
+            return StandardResponse(
+                success=True,
+                message=message,
+                data={
+                    'status': 'started',
+                    'task': {
+                        'id': task.id,
+                        'title': task.title,
+                        'description': task.description
+                    },
+                    'previous_results': previous_results[-3:],  # 최근 3개
+                    'workflow_status': {
+                        'progress': status.get('progress', 0),
+                        'current_phase': status.get('current_phase'),
+                        'phase_progress': status.get('phase_progress', 0)
+                    },
+                    'briefing': data.get('briefing', {})
+                }
+            )
     
-    return result
-
-
-
+    # 실패한 경우
+    return StandardResponse(
+        success=False,
+        message=result.get('message', '다음 작업 시작 실패'),
+        error=result.get('error')
+    )
 def generate_task_content(task: Task, previous_tasks: List[Dict] = None) -> str:
     """AI가 작업 내용을 자동 생성"""
     

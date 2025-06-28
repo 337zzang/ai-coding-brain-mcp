@@ -8,7 +8,8 @@ Phase별로 그룹화하여 프로젝트 전체 히스토리를 제공합니다.
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from python.core.workflow_manager import get_workflow_manager
-from python.core.models import TaskStatus, StandardResponse
+from python.core.models import TaskStatus
+from python.core.error_handler import StandardResponse, ErrorType
 
 
 def cmd_history(phase_id: Optional[str] = None, format: str = "timeline") -> StandardResponse:
@@ -133,8 +134,7 @@ def cmd_history(phase_id: Optional[str] = None, format: str = "timeline") -> Sta
             avg_time_hours = total_time / len(tasks_with_time) / 3600
             print(f"   평균 작업 시간: {avg_time_hours:.1f}시간")
         
-        return StandardResponse(
-            success=True,
+        return StandardResponse.success(
             data={
                 'total_completed': len(completed_tasks),
                 'tasks': [item['task'].dict() for item in completed_tasks]
@@ -143,8 +143,8 @@ def cmd_history(phase_id: Optional[str] = None, format: str = "timeline") -> Sta
         
     except Exception as e:
         print(f"❌ 오류 발생: {str(e)}")
-        return StandardResponse(
-            success=False,
+        return StandardResponse.error(
+            ErrorType.GENERAL_ERROR,
             error=str(e)
         )
 

@@ -537,7 +537,7 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                     if completed_tasks:
                         print("   📝 완료된 작업 내용:")
                         for task in completed_tasks[:3]:  # 최대 3개만 표시
-                            content_preview = task.content[:80] + '...' if len(task.content) > 80 else task.content
+                            content_preview = task.content
                             print(f"      • {task.title}: {content_preview}")
                         if len(completed_tasks) > 3:
                             print(f"      ... 외 {len(completed_tasks)-3}개 작업")

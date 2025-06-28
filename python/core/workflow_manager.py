@@ -662,65 +662,6 @@ class WorkflowManager:
         
         return plan
 
-
-def get_last_completed_task(self, phase_id: Optional[str] = None) -> Optional[Task]:
-        """최근 완료된 작업 가져오기
-        
-        Args:
-            phase_id: 특정 Phase에서만 찾기 (선택사항)
-            
-        Returns:
-            최근 완료된 Task 또는 None
-        """
-        if not self.plan:
-            return None
-            
-        completed_tasks = []
-        
-        # 모든 Phase에서 완료된 작업 수집
-        for pid, phase in self.plan.phases.items():
-            if phase_id and pid != phase_id:
-                continue
-                
-            phase_tasks = list(phase.tasks.values()) if hasattr(phase.tasks, 'values') else phase.tasks
-            for task in phase_tasks:
-                if task.status == TaskStatus.COMPLETED and task.completed_at:
-                    completed_tasks.append(task)
-        
-        # 완료 시간 기준으로 정렬
-        if completed_tasks:
-            completed_tasks.sort(key=lambda t: t.completed_at or datetime.min, reverse=True)
-            return completed_tasks[0]
-        
-        return None
-    
-    def enhance_task_with_context(self, task: Task, previous_task: Optional[Task] = None) -> None:
-        """이전 작업의 content를 바탕으로 다음 작업 설명 보강
-        
-        Args:
-            task: 보강할 작업
-            previous_task: 이전 작업 (없으면 자동으로 찾음)
-        """
-        if not previous_task:
-            previous_task = self.get_last_completed_task(phase_id=task.phase_id)
-        
-        if previous_task and previous_task.content:
-            # 이전 작업 content를 기반으로 context 추가
-            context_info = f"[이전 작업: {previous_task.title}에서 {previous_task.content[:100]}...]"
-            
-            # task의 context_data에 이전 작업 정보 저장
-            if not task.context_data:
-                task.context_data = {}
-            
-            task.context_data['previous_task'] = {
-                'id': previous_task.id,
-                'title': previous_task.title,
-                'content': previous_task.content
-            }
-            
-            # 설명이 비어있거나 짧으면 보강
-            if not task.description or len(task.description) < 50:
-                task.description = f"{context_info} 이를 바탕으로 {task.description or task.title}"
 # Singleton instance
 _workflow_manager_instance = None
 

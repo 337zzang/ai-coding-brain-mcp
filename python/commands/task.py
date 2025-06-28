@@ -95,7 +95,7 @@ def cmd_task(action: str, *args) -> StandardResponse:
                             icon = "✅" if task.status == TaskStatus.COMPLETED else ("🔄" if task.status == TaskStatus.IN_PROGRESS else "⏳")
                             print(f"   {icon} [{task.id}] {task.title}")
                             if task.status == TaskStatus.COMPLETED and hasattr(task, 'content') and task.content:
-                                content_preview = task.content[:60] + '...' if len(task.content) > 60 else task.content
+                                content_preview = task.content
                                 print(f"      └─ 수행 내용: {content_preview}")
                             
                 return StandardResponse(success=True, data=status)

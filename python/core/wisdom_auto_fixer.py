@@ -113,7 +113,7 @@ class WisdomAutoFixer:
     def _show_fix_suggestion(self, detection: Detection, suggested_fix: str):
         """수정 제안 표시"""
         print(f"\n🔧 수정 제안: {detection.pattern.description if detection.pattern else detection.message}")
-        print(f"📍 위치: {detection.filename}:{detection.line_number}")
+        print(f"📍 위치: 라인 {detection.line_number}, 컬럼 {detection.column}")
         print(f"❌ 문제: {detection.matched_text}")
         print(f"✅ 제안: {detection.pattern.fix_hint if detection.pattern and hasattr(detection.pattern, 'fix_hint') else detection.fix_hint}")
         

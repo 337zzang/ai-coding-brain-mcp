@@ -42,23 +42,19 @@ def cmd_next(content: str = None) -> StandardResponse:
                 
                 # MCP 환경에서는 input() 사용 불가
                 # 생성된 content와 함께 확인 요청 반환
-                return StandardResponse(
-                    success=False,
-                    message="작업 완료 내용을 확인해주세요",
-                    data={
+                return StandardResponse.error(ErrorType.VALIDATION, "작업 완료 내용을 확인해주세요", details=str({
                         'action': 'confirm_content',
                         'task_id': current_task_id,
                         'task_title': current_task.title,
                         'generated_content': generated_content,
                         'instruction': '생성된 내용으로 진행하려면 content와 함께 다시 호출하세요'
                     }
-                )
+                ))
             
             # 현재 작업 완료
             complete_result = wm.complete_task(current_task_id, content)
             if not complete_result['success']:
-                return StandardResponse(
-                    success=False,
+                return StandardResponse.error(ErrorType.VALIDATION,
                     message=f"작업 완료 실패: {complete_result.get('message')}",
                     error=complete_result.get('error')
                 )
@@ -78,8 +74,7 @@ def cmd_next(content: str = None) -> StandardResponse:
                 "3. 'flow'로 전체 진행 히스토리 확인"
             ]
             
-            return StandardResponse(
-                success=True,
+            return StandardResponse.success(,
                 message=message,
                 data={
                     'status': 'no_tasks',
@@ -99,8 +94,7 @@ def cmd_next(content: str = None) -> StandardResponse:
                         'waiting_for': deps
                     })
             
-            return StandardResponse(
-                success=True,
+            return StandardResponse.success(,
                 message=message,
                 data={
                     'status': 'blocked',
@@ -128,8 +122,7 @@ def cmd_next(content: str = None) -> StandardResponse:
             # 워크플로우 상태
             status = wm.get_workflow_status()
             
-            return StandardResponse(
-                success=True,
+            return StandardResponse.success(,
                 message=message,
                 data={
                     'status': 'started',
@@ -149,8 +142,7 @@ def cmd_next(content: str = None) -> StandardResponse:
             )
     
     # 실패한 경우
-    return StandardResponse(
-        success=False,
+    return StandardResponse.error(ErrorType.VALIDATION,
         message=result.get('message', '다음 작업 시작 실패'),
         error=result.get('error')
     )

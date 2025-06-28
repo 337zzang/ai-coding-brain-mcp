@@ -34,8 +34,8 @@ export function getPythonPath(): string {
         path.join(process.env['LOCALAPPDATA'] || '', 'Programs', 'Python', 'Python312', 'python.exe'),
         path.join(process.env['LOCALAPPDATA'] || '', 'Programs', 'Python', 'Python311', 'python.exe'),
         path.join(process.env['LOCALAPPDATA'] || '', 'Programs', 'Python', 'Python310', 'python.exe'),
-        'C:os.path.join(os.path.join(", "))Python312os.path.join(os.path.join(", "))python.exe',
-        'C:os.path.join(", ")Python311os.path.join(", ")python.exe',
+        'C:\\Python312\\python.exe',
+        'C:\\Python311\\python.exe',
         'C:\\Python310\\python.exe',
     ];
 

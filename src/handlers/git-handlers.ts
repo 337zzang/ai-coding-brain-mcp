@@ -71,7 +71,6 @@ export async function handleGitStatus(_args: any): Promise<{ content: Array<{ ty
         if (!projectRoot.includes('ai-coding-brain-mcp')) {
             // 알려진 위치에서 찾기
             const possiblePaths = [
-                'C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp',
                 path.join(process.env['USERPROFILE'] || '', 'Desktop', 'ai-coding-brain-mcp'),
                 path.join(process.env['USERPROFILE'] || '', 'Documents', 'ai-coding-brain-mcp')
             ];
@@ -151,7 +150,6 @@ export async function handleGitCommitSmart(args: { message?: string; auto_add?: 
         if (!projectRoot.includes('ai-coding-brain-mcp')) {
             // 알려진 위치에서 찾기
             const possiblePaths = [
-                'C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp',
                 path.join(process.env['USERPROFILE'] || '', 'Desktop', 'ai-coding-brain-mcp'),
                 path.join(process.env['USERPROFILE'] || '', 'Documents', 'ai-coding-brain-mcp')
             ];
@@ -212,7 +210,6 @@ export async function handleGitBranchSmart(args: { branch_name?: string; base_br
         
         if (!projectRoot.includes('ai-coding-brain-mcp')) {
             const possiblePaths = [
-                'C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp',
                 path.join(process.env['USERPROFILE'] || '', 'Desktop', 'ai-coding-brain-mcp'),
                 path.join(process.env['USERPROFILE'] || '', 'Documents', 'ai-coding-brain-mcp')
             ];

@@ -74,18 +74,18 @@ ${generateSaveVars()}
  * 개선된 계획 수립 핸들러 (변수 유지)
  */
 export async function handlePlanProject(params: { plan_name?: string, description?: string, reset?: boolean }): Promise<ToolResponse> {
-    const code = `
+    const code = params.reset 
+        ? `
 ${generateLoadVars()}
 
 # 계획 수립 또는 리셋
-${params.reset ? 'result = helpers.cmd_plan(reset=True)' : 
-`result = helpers.cmd_plan(${params.plan_name ? `"${params.plan_name}"` : 'None'}, ${params.description ? `"${params.description}"` : 'None'})`}
+result = helpers.cmd_plan(reset=True)
 print(result)
 
 ${generateSaveVars()}
-`;
-    return ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
-}
+`
+        : `
+${generateLoadVars()}
 
 # 계획 수립
 result = helpers.cmd_plan(${params.plan_name ? `"${params.plan_name}"` : 'None'}, ${params.description ? `"${params.description}"` : 'None'})
@@ -93,6 +93,9 @@ print(result)
 
 ${generateSaveVars()}
 `;
+    return ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
+}
+
     return ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
 }
 

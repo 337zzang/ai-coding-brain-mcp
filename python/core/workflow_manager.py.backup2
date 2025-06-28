@@ -233,7 +233,7 @@ class WorkflowManager:
             return ErrorHandler.handle_exception(e, ErrorType.TASK_ERROR)
     
     @autosave
-    def complete_task(self, task_id: Optional[str] = None, content: Optional[str] = None) -> StandardResponse:
+    def complete_task(self, task_id: Optional[str] = None) -> StandardResponse:
         """작업 완료"""
         try:
             if not self.plan:

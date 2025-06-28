@@ -62,7 +62,7 @@ class Task(BaseModelWithConfig):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str
     description: str = ""
-    status: TaskStatus = Field(default=TaskStatus.PENDING)
+    status: str = Field(default=TaskStatus.PENDIN.valueG.value)
     priority: str = Field(default='medium', pattern='^(high|medium|low)$')
     phase_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.now)
@@ -465,7 +465,7 @@ class Plan(BaseModelWithConfig):
     def get_current_task(self) -> Optional[Task]:
         """현재 진행 중인 Task 반환"""
         for task in self.get_all_tasks():
-            if task.status == TaskStatus.IN_PROGRESS:
+            if task.status == TaskStatus.IN_PROGRESS.value:
                 return task
         return None
     
@@ -475,14 +475,14 @@ class Plan(BaseModelWithConfig):
         all_tasks = self.get_all_tasks()
         
         for task in all_tasks:
-            if task.status in [TaskStatus.PENDING, TaskStatus.READY]:
+            if task.status in [TaskStatus.PENDING.value, TaskStatus.READY.value]:
                 # 의존성 체크
                 if not task.dependencies:
                     next_tasks.append(task)
                 else:
                     # 모든 의존성이 완료되었는지 확인
                     deps_completed = all(
-                        any(t.id == dep_id and t.status == TaskStatus.COMPLETED 
+                        any(t.id == dep_id and t.status == TaskStatus.COMPLETED.value 
                             for t in all_tasks)
                         for dep_id in task.dependencies
                     )
@@ -500,7 +500,7 @@ class Plan(BaseModelWithConfig):
         for phase in self.phases.values():
             phase_tasks = list(phase.tasks.values())
             phase.total_tasks = len(phase_tasks)
-            phase.completed_tasks = sum(1 for t in phase_tasks if t.status == TaskStatus.COMPLETED)
+            phase.completed_tasks = sum(1 for t in phase_tasks if t.status == TaskStatus.COMPLETED.value)
             phase.progress = (phase.completed_tasks / phase.total_tasks * 100) if phase.total_tasks > 0 else 0.0
             
             total_tasks += phase.total_tasks
@@ -516,7 +516,7 @@ class Plan(BaseModelWithConfig):
                 # Task order에 따라 순서대로 확인
                 for task_id in phase.task_order:
                     task = phase.tasks.get(task_id)
-                    if task and task.status == TaskStatus.PENDING:
+                    if task and task.status == TaskStatus.PENDING.value:
                         return phase_id, task
         return None
         self.overall_progress = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0.0

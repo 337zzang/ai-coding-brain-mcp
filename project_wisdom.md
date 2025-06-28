@@ -20,3 +20,6 @@
 - 올바른 방법: execute_code: helpers.cmd_flow_with_context('project-name')
 
 ## ✅ 베스트 프랙티스
+
+### debugging
+- import 경로 문제 시 sys.path 확인 및 절대 경로 사용

@@ -314,18 +314,15 @@ class Phase(BaseModelWithConfig):
         return self.tasks.get(task_id)
     def add_task(self, title: str, description: str = "") -> Task:
         """새 작업 추가"""
-        task_id = f"{self.id.split('-')[1]}-{len(self.tasks) + 1}"
+        # UUID는 Task 모델에서 자동 생성됨
         task = Task(
-            id=task_id,
             title=title,
             description=description,
             phase_id=self.id
         )
-        self.tasks[task_id] = task
-        self.task_order.append(task_id)  # 순서 기록
+        self.tasks[task.id] = task
+        self.task_order.append(task.id)  # 순서 기록
         return task
-    
-    @property
     def progress(self) -> Dict[str, Any]:
         """진행률 계산"""
         total = len(self.tasks)

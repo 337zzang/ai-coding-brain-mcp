@@ -23,6 +23,7 @@ if python_path not in sys.path:
     sys.path.insert(0, python_path)
 
 from core.models import (
+from pydantic import ValidationError
     ProjectContext, Plan, Phase, Task,
     FileAccessEntry, WorkTracking, 
     validate_context_data
@@ -231,7 +232,14 @@ class UnifiedContextManager:
                 from core.models import Plan
                 context_data['plan'] = Plan(**context_data['plan'])
             
-            return ProjectContext(**context_data)
+            try:
+                return ProjectContext(**context_data)
+            except ValidationError as e:
+                print(f"경고: 기존 Task 데이터가 새 UUID 형식과 맞지 않아 초기화합니다. 오류: {e}")
+                # Task 목록만 비워서 새로 시작
+                if 'tasks' in context_data:
+                    context_data['tasks'] = []
+                return ProjectContext(**context_data)
             
         except Exception as e:
             print(f"⚠️ 캐시 로드 실패: {e}")

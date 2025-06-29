@@ -184,14 +184,19 @@ class WorkflowManager:
         for status in ['pending', 'in_progress', 'completed']:
             status_times = [t.get_time_in_state(status) for t in tasks]
             time_by_status[status] = sum(status_times) / len(status_times) if status_times else 0
-        return {'total_estimated_hours': total_estimated, 'total_actual_hours': total_actual, 'efficiency': total_estimated / total_actual * 100 if total_actual > 0 else None, 'average_time_by_status': time_by_status, 'blocked_tasks': len(self.plan.get_blocked_tasks()), 'ready_tasks': len(self.plan.get_ready_tasks())}
-
+        return {
+            'total_estimated_hours': total_estimated,
+            'total_actual_hours': total_actual,
+            'efficiency': total_estimated / total_actual * 100 if total_actual > 0 else None,
+            'average_time_by_status': time_by_status,
+            'average_completion_time': None  # TODO: 구현 필요
+        }
     def get_bottlenecks(self) -> List[Dict[str, Any]]:
         """병목 현상 분석"""
         if not self.plan:
             return []
         bottlenecks = []
-        blocked_tasks = self.plan.get_blocked_tasks()
+        blocked_tasks = []  # TODO: Plan에 get_blocked_tasks 메서드 추가 필요
         for task in blocked_tasks:
             bottlenecks.append({'type': 'blocked_task', 'task_id': task.id, 'title': task.title, 'reason': task.blocking_reason or '의존성 미충족', 'dependencies': task.check_dependencies()})
         for task in self.plan.get_all_tasks():

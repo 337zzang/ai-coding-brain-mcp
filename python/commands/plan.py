@@ -504,8 +504,8 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                 name=name,
                 description=description if description else f"{name} 계획"
             )
-        else:
             return result
+        else:
             # 현재 계획 표시
             if not wm.plan:
                 return StandardResponse.error("설정된 계획이 없습니다. 'plan \"계획명\"'으로 생성하세요.")
@@ -546,7 +546,7 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                     
             # 분석 정보
             analytics = wm.get_task_analytics()
-            if analytics['average_completion_time']:
+            if analytics and analytics.get('average_completion_time'):
                 print(f"\n📈 평균 작업 완료 시간: {analytics['average_completion_time']}")
                 
             return StandardResponse.success(
@@ -557,7 +557,6 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                 }
             )
             
-    except Exception as e:
     except Exception as e:
         from core.error_handler import ErrorType
         import traceback

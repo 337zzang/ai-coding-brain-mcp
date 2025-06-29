@@ -1,0 +1,131 @@
+{
+  "name": "Task 안정화 테스트",
+  "description": "Task 관리 기능 안정화 검증",
+  "created_at": "2025-06-29 17:00:43.415062",
+  "updated_at": "2025-06-29 17:00:43.415062",
+  "phases": {
+    "phase-1": {
+      "id": "phase-1",
+      "name": "Phase 1: 분석 및 설계",
+      "description": "요구사항 분석 및 설계",
+      "status": "in_progress",
+      "task_order": [
+        "f435e8e5-4d80-49c9-bad0-6f7570ef8c5f",
+        "77f31533-614e-42d6-b7eb-6374f95f0c39"
+      ],
+      "progress": 50.0,
+      "completed_tasks": 1,
+      "total_tasks": 2,
+      "estimated_days": null,
+      "started_at": null,
+      "completed_at": null,
+      "tasks": {
+        "f435e8e5-4d80-49c9-bad0-6f7570ef8c5f": {
+          "id": "f435e8e5-4d80-49c9-bad0-6f7570ef8c5f",
+          "title": "첫 번째 작업",
+          "description": "테스트 작업",
+          "status": "completed",
+          "priority": "medium",
+          "phase_id": "phase-1",
+          "created_at": "2025-06-29 17:00:43.415062",
+          "updated_at": "2025-06-29 17:08:16.889643",
+          "started_at": null,
+          "completed_at": "2025-06-29 17:08:16.890645",
+          "completed": true,
+          "subtasks": [],
+          "work_summary": null,
+          "content": "첫 번째 작업을 성공적으로 완료했습니다. 리팩토링 테스트 중.",
+          "dependencies": [],
+          "related_files": [],
+          "state_history": [
+            {
+              "from": "in_progress",
+              "to": "completed",
+              "timestamp": "2025-06-29 17:08:16.889643",
+              "reason": null
+            }
+          ],
+          "blocking_reason": null,
+          "estimated_hours": null,
+          "actual_hours": null,
+          "blocks": [],
+          "auto_generated": false,
+          "wisdom_hints": [],
+          "context_data": {}
+        },
+        "77f31533-614e-42d6-b7eb-6374f95f0c39": {
+          "id": "77f31533-614e-42d6-b7eb-6374f95f0c39",
+          "title": "리팩토링 테스트 작업 1",
+          "description": "첫 번째 테스트 작업",
+          "status": "pending",
+          "priority": "medium",
+          "phase_id": "phase-1",
+          "created_at": "2025-06-29 17:10:18.933906",
+          "updated_at": null,
+          "started_at": null,
+          "completed_at": null,
+          "completed": false,
+          "subtasks": [],
+          "work_summary": null,
+          "content": null,
+          "dependencies": [],
+          "related_files": [],
+          "state_history": [],
+          "blocking_reason": null,
+          "estimated_hours": null,
+          "actual_hours": null,
+          "blocks": [],
+          "auto_generated": false,
+          "wisdom_hints": [],
+          "context_data": {}
+        }
+      }
+    },
+    "phase-2": {
+      "id": "phase-2",
+      "name": "Phase 2: 핵심 구현",
+      "description": "주요 기능 구현",
+      "status": "pending",
+      "task_order": [],
+      "progress": 0.0,
+      "completed_tasks": 0,
+      "total_tasks": 0,
+      "estimated_days": null,
+      "started_at": null,
+      "completed_at": null,
+      "tasks": {}
+    },
+    "phase-3": {
+      "id": "phase-3",
+      "name": "Phase 3: 테스트 및 문서화",
+      "description": "테스트 및 문서 작성",
+      "status": "pending",
+      "task_order": [],
+      "progress": 0.0,
+      "completed_tasks": 0,
+      "total_tasks": 0,
+      "estimated_days": null,
+      "started_at": null,
+      "completed_at": null,
+      "tasks": {}
+    }
+  },
+  "current_phase": null,
+  "current_task": null,
+  "phase_order": [
+    "phase-1",
+    "phase-2",
+    "phase-3"
+  ],
+  "content": "모든 Task 로직을 WorkflowManager로 중앙화",
+  "content_history": [
+    {
+      "timestamp": "2025-06-29T17:00:43.415062",
+      "content": "모든 Task 로직을 WorkflowManager로 중앙화",
+      "action": "created"
+    }
+  ],
+  "overall_progress": 0.0,
+  "project_insights": {},
+  "wisdom_data": {}
+}

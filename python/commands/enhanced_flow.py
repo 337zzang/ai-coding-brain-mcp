@@ -11,7 +11,7 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 
 # helpers 전역 변수 접근
-helpers = globals().get('helpers', None)
+# helpers = globals().get('helpers', None) # 모듈 로드 시 None으로 설정하지 않음
 
 # 기본 imports
 import sys
@@ -1274,28 +1274,32 @@ USE_PROJECT_ANALYZER = False
 
 def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str, Any]:
     """리팩토링된 flow_project - 자동 백업 및 프로젝트 설정 지원"""
+    global helpers
+    import os
+    import sys
+    from pathlib import Path
     import time
     start_time = time.time()
     
     smart_print(f"🚀 **'{project_name}'** 프로젝트 세션을 시작합니다...")
     
     # helpers를 전역에서 가져오기
-    helpers_obj = None
+    # helpers = None # 제거: helpers를 None으로 설정하지 않음
     
     # 1. global_helpers 확인 (json_repl_session에서 설정)
     if 'global_helpers' in globals():
-        helpers_obj = globals()['global_helpers']
+        helpers = globals()['global_helpers']
     # 2. 직접 전역에서 찾기
     elif 'helpers' in globals():
-        helpers_obj = globals()['helpers']
+        helpers = globals()['helpers']
     # 3. __main__ 모듈에서 찾기
     elif hasattr(sys.modules.get('__main__', None), 'helpers'):
-        helpers_obj = sys.modules.get('__main__').helpers
+        helpers = sys.modules.get('__main__').helpers
     
-    if not helpers_obj:
+    if not helpers:
         # MCP 도구로 직접 호출된 경우, 새로운 AIHelpers 인스턴스 생성
         import sys
-        import os
+        # import os # 중복 제거
         from pathlib import Path
         
         # 프로젝트 루트 경로 확인
@@ -1309,15 +1313,22 @@ def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str,
         if python_path not in sys.path:
             sys.path.insert(0, python_path)
         
-        # AIHelpers 임포트 및 생성
-        try:
-            from core.ai_helpers import AIHelpers
-            helpers_obj = AIHelpers()
-            # 전역에 설정
-            globals()['helpers'] = helpers_obj
-            smart_print("✅ MCP 환경에서 AIHelpers 인스턴스 생성")
-        except ImportError as e:
-            raise RuntimeError(f"AIHelpers를 임포트할 수 없습니다: {e}")
+        # AIHelpers 인스턴스 확인
+        # JSON REPL 환경에서는 이미 helpers가 존재하므로 재사용
+        if 'helpers' in globals():
+            smart_print("✅ 기존 helpers 인스턴스 재사용")
+        else:
+            smart_print("⚠️ helpers 인스턴스가 없습니다 - JSON REPL 환경에서 실행되어야 합니다")
+        # 디버깅: helpers 상태 확인
+        smart_print(f"📌 DEBUG: globals에 helpers 존재? {'helpers' in globals()}")
+        smart_print(f"📌 DEBUG: locals에 helpers 존재? {'helpers' in locals()}")
+        if 'helpers' in globals():
+            smart_print(f"📌 DEBUG: helpers 타입: {type(globals()['helpers'])}")
+            smart_print(f"📌 DEBUG: helpers는 None? {globals()['helpers'] is None}")
+        # 전역 네임스페이스 직접 할당 시도
+        if 'helpers' in globals() and globals()['helpers'] is not None:
+            helpers = globals()['helpers']
+            smart_print("📌 DEBUG: helpers를 로컬 변수로 할당")
     
     result = {
         'success': False,
@@ -1331,7 +1342,7 @@ def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str,
     
     # 이전 컨텍스트 백업
     try:
-        current_context = helpers_obj.get_context()
+        current_context = helpers.get_context()
         if current_context and hasattr(current_context, 'project_name'):
             if current_context.project_name != project_name:
                 backup_path = create_context_backup(current_context.project_name, current_context)
@@ -1363,8 +1374,8 @@ def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str,
             verbose = project_config.get('verbose', True)
         
         # 4. Context 초기화 및 로드
-        helpers_obj.initialize_context(project_path)
-        context = helpers_obj.get_context()
+        helpers.initialize_context(project_path)
+        context = helpers.get_context()
         
         # 컨텍스트가 None이면 빈 딕셔너리로 초기화
         if context is None:
@@ -1442,7 +1453,7 @@ def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str,
             readme_path = os.path.join(project_path, 'README.md')
             if os.path.exists(readme_path):
                 readme_size = os.path.getsize(readme_path)
-                readme_content = helpers_obj.read_file(readme_path)
+                readme_content = helpers.read_file(readme_path)
                 smart_print(f"\n📄 README.md 읽기 완료 ({readme_size:,} bytes)")
                 
                 # 미리보기 (처음 5줄)
@@ -1458,7 +1469,7 @@ def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str,
             context_path = os.path.join(project_path, 'PROJECT_CONTEXT.md')
             if os.path.exists(context_path):
                 context_size = os.path.getsize(context_path)
-                context_content = helpers_obj.read_file(context_path)
+                context_content = helpers.read_file(context_path)
                 smart_print(f"\n📄 PROJECT_CONTEXT.md 읽기 완료 ({context_size:,} bytes)")
                 
                 # 트리 구조 섹션 찾아서 미리보기

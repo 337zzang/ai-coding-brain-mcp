@@ -23,11 +23,12 @@ export class CommandExecutor {
 
   constructor() {
     this.pythonPath = process.platform === 'win32' ? 'python' : 'python3';
-    this.executorPath = path.join(process.cwd(), 'python', 'command_executor_v2.py');
+    // Use unified command_executor.py
+    this.executorPath = path.join(process.cwd(), 'python', 'command_executor.py');
   }
 
   /**
-   * Execute a command through the JSON protocol
+   * Execute a command through the unified JSON protocol
    */
   async execute(request: CommandRequest): Promise<CommandResponse> {
     return new Promise((resolve) => {

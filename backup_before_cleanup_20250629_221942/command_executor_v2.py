@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-Simplified Command Executor - Direct command execution without complex serialization
-Version 2.1 - Improved print handling
+Simplified Command Executor - Version 3.0
+Stable version with better error handling
 """
 
 import sys
 import json
 import os
+import io
+from contextlib import redirect_stdout, redirect_stderr
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,48 +21,26 @@ def execute_command(command_data):
         action = command_data.get('action', '')
         payload = command_data.get('payload', {})
         
-        # Special handling for execute command
-        if command == 'execute':
-            # Execute arbitrary code
-            code = payload.get('code', '')
-            namespace = {}
-            
-            import io
-            from contextlib import redirect_stdout, redirect_stderr
-            
-            stdout_buffer = io.StringIO()
-            stderr_buffer = io.StringIO()
-            
-            # Execute with output capture
-            with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
-                exec(code, namespace)
-            
-            return {
-                "status": "success",
-                "data": {
-                    "stdout": stdout_buffer.getvalue(),
-                    "stderr": stderr_buffer.getvalue()
+        # Capture all output
+        stdout_buffer = io.StringIO()
+        stderr_buffer = io.StringIO()
+        
+        result = None
+        
+        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+            if command == 'execute':
+                # Execute arbitrary code
+                code = payload.get('code', '')
+                namespace = {
+                    'sys': sys,
+                    'os': os,
+                    'json': json,
+                    '__builtins__': __builtins__
                 }
-            }
-            
-        # For other commands, we need to handle print suppression differently
-        import builtins
-        _original_print = builtins.print
-        captured_output = []
-        
-        def capture_print(*args, **kwargs):
-            # Capture the output
-            output = io.StringIO()
-            kwargs['file'] = output
-            _original_print(*args, **kwargs)
-            captured_output.append(output.getvalue())
-        
-        # Temporarily replace print
-        builtins.print = capture_print
-        
-        try:
-            # Import commands as needed
-            if command == 'plan':
+                exec(code, namespace)
+                result = {"executed": True}
+                
+            elif command == 'plan':
                 from commands.plan import cmd_plan
                 if action == 'create':
                     result = cmd_plan('create', payload.get('name', ''), payload.get('description', ''))
@@ -95,27 +75,30 @@ def execute_command(command_data):
                         "message": f"Unknown command: {command}"
                     }
                 }
-            
-            # Handle result
-            data = {}
+        
+        # Get captured output
+        stdout_str = stdout_buffer.getvalue()
+        stderr_str = stderr_buffer.getvalue()
+        
+        # Build response
+        data = {}
+        if command == 'execute':
+            data['stdout'] = stdout_str
+            data['stderr'] = stderr_str
+        else:
+            # For other commands, include result
             if isinstance(result, dict):
                 data = result
-            elif isinstance(result, str):
-                data = {"message": result}
-            elif result is None:
-                data = {"success": True}
+            elif result is not None:
+                data['result'] = str(result)
             else:
-                data = {"result": str(result)}
+                data['success'] = True
             
-            # Add captured output if any
-            if captured_output:
-                data["output"] = ''.join(captured_output)
+            # Add output if any
+            if stdout_str:
+                data['output'] = stdout_str
                 
-            return {"status": "success", "data": data}
-            
-        finally:
-            # Restore original print
-            builtins.print = _original_print
+        return {"status": "success", "data": data}
             
     except Exception as e:
         import traceback
@@ -131,10 +114,6 @@ def execute_command(command_data):
 
 def main():
     """Main entry point"""
-    # Save original print for our use
-    import builtins
-    _final_print = builtins.print
-    
     try:
         # Read JSON from stdin
         input_data = sys.stdin.read()
@@ -143,8 +122,8 @@ def main():
         # Execute command
         result = execute_command(command_data)
         
-        # Return JSON result using original print
-        _final_print(json.dumps(result))
+        # Return JSON result
+        print(json.dumps(result))
         
     except json.JSONDecodeError as e:
         error = {
@@ -154,7 +133,7 @@ def main():
                 "message": f"Invalid JSON: {e}"
             }
         }
-        _final_print(json.dumps(error))
+        print(json.dumps(error))
     except Exception as e:
         error = {
             "status": "error",
@@ -163,7 +142,7 @@ def main():
                 "message": str(e)
             }
         }
-        _final_print(json.dumps(error))
+        print(json.dumps(error))
 
 
 if __name__ == "__main__":

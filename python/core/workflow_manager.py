@@ -47,26 +47,14 @@ class WorkflowManager:
             return ErrorHandler.handle_exception(e, ErrorType.CONTEXT_ERROR)
 
     @autosave
-    def create_plan(self, name: str, description: str, phases: List[Dict[str, Any]]=None, content: str = None) -> StandardResponse:
+    def create_plan(self, name: str, description: str, phases: List[Dict[str, Any]]=None, content: str=None) -> StandardResponse:
         """새 계획 생성"""
         try:
             if not phases:
                 phases = self._get_default_phases()
-            plan = Plan(
-            name=name, 
-            description=description, 
-            phases={phase['id']: Phase(**phase) for phase in phases}, 
-            phase_order=[phase['id'] for phase in phases],
-            content=content
-        )
-        
-        # content가 있으면 content_history에도 추가
-        if content:
-            plan.content_history.append({
-                "timestamp": datetime.now().isoformat(),
-                "content": content,
-                "action": "created"
-            })
+            plan = Plan(name=name, description=description, phases={phase['id']: Phase(**phase) for phase in phases}, phase_order=[phase['id'] for phase in phases], content=content)
+            if content:
+                plan.content_history.append({'timestamp': datetime.now().isoformat(), 'content': content, 'action': 'created'})
             self.context.plan = plan
             self.context.updated_at = datetime.now()
             self._trigger_event('plan_created', plan)
@@ -149,7 +137,6 @@ class WorkflowManager:
             task = self.plan.get_task_by_id(task_id)
             if not task:
                 return StandardResponse.error(ErrorType.TASK_ERROR, f'작업 {task_id}를 찾을 수 없습니다')
-            # 완료 내용 저장
             if content:
                 task.content = content
             if not task.transition_to('completed'):
@@ -178,18 +165,11 @@ class WorkflowManager:
             진행률, 완료/전체 작업 수, 현재 작업 정보
         """
         all_tasks = self.plan.get_all_tasks() if self.plan else []
-        completed = sum(1 for t in all_tasks if t.status == TaskStatus.COMPLETED)
+        completed = sum((1 for t in all_tasks if t.status == TaskStatus.COMPLETED))
         total = len(all_tasks)
-        
-        # 진행률 계산 (0으로 나누기 방지)
-        progress = (completed / total * 100) if total > 0 else 0.0
-        
-        return {
-            "progress": round(progress, 1),
-            "completed_tasks": completed,
-            "total_tasks": total,
-            "current_task": self.context.current_task
-        }
+        progress = completed / total * 100 if total > 0 else 0.0
+        return {'progress': round(progress, 1), 'completed_tasks': completed, 'total_tasks': total, 'current_task': self.context.current_task}
+
     def get_task_analytics(self) -> Dict[str, Any]:
         """작업 분석 데이터"""
         if not self.plan:
@@ -201,19 +181,14 @@ class WorkflowManager:
         for status in ['pending', 'in_progress', 'completed']:
             status_times = [t.get_time_in_state(status) for t in tasks]
             time_by_status[status] = sum(status_times) / len(status_times) if status_times else 0
-        return {
-            'total_estimated_hours': total_estimated,
-            'total_actual_hours': total_actual,
-            'efficiency': total_estimated / total_actual * 100 if total_actual > 0 else None,
-            'average_time_by_status': time_by_status,
-            'average_completion_time': None  # TODO: 구현 필요
-        }
+        return {'total_estimated_hours': total_estimated, 'total_actual_hours': total_actual, 'efficiency': total_estimated / total_actual * 100 if total_actual > 0 else None, 'average_time_by_status': time_by_status, 'average_completion_time': None}
+
     def get_bottlenecks(self) -> List[Dict[str, Any]]:
         """병목 현상 분석"""
         if not self.plan:
             return []
         bottlenecks = []
-        blocked_tasks = []  # TODO: Plan에 get_blocked_tasks 메서드 추가 필요
+        blocked_tasks = []
         for task in blocked_tasks:
             bottlenecks.append({'type': 'blocked_task', 'task_id': task.id, 'title': task.title, 'reason': task.blocking_reason or '의존성 미충족', 'dependencies': task.check_dependencies()})
         for task in self.plan.get_all_tasks():

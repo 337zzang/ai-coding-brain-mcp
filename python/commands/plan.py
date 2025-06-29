@@ -506,6 +506,7 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                 description=description if description else f"{name} 계획",
                 content=content
             )
+            return result
         else:
             # 현재 계획 표시
             if not wm.plan:

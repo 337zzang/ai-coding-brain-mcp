@@ -1259,7 +1259,7 @@ def sync_context_from_plan(context: Any, plan: Any) -> Any:
     return context
 # Helpers 자동 초기화
 try:
-    from claude_code_ai_brain import AIHelpers
+    from json_repl_session import AIHelpers
     if 'helpers' not in globals():
         helpers = AIHelpers()
         import os

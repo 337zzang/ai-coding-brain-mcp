@@ -508,7 +508,7 @@ def get_context_manager():
         
         # helpers 자동 연결
         try:
-            from claude_code_ai_brain import AIHelpers
+            from json_repl_session import AIHelpers
             if not hasattr(_context_manager_instance, 'helpers'):
                 # helpers 인스턴스 생성 및 연결
                 helpers = AIHelpers()

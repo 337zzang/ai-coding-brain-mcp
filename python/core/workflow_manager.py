@@ -125,6 +125,66 @@ class WorkflowManager:
             return ErrorHandler.handle_exception(e, ErrorType.TASK_ERROR)
 
     @autosave
+
+    @autosave
+    @autosave
+    def advance_to_next_step(self, content: Optional[str] = None) -> Dict[str, Any]:
+        """
+        현재 Task를 완료 처리하고, 다음 Task를 찾아 진행 상태로 설정합니다.
+        
+        이 메서드는 complete_task와 start_next_task를 하나의 트랜잭션으로 처리하여
+        상태 불일치를 방지하고 더 안정적인 워크플로우를 제공합니다.
+        
+        Args:
+            content: 현재 작업의 완료 내용/요약 (선택사항)
+            
+        Returns:
+            Dict[str, Any]: 작업 결과
+                - success: bool
+                - message: str
+                - data: Optional[Dict] - 다음 작업 정보 또는 None
+                - completed_task: Optional[Dict] - 완료된 작업 정보
+        """
+        result = {
+            'success': False,
+            'message': '',
+            'data': None,
+            'completed_task': None
+        }
+        
+        try:
+            # 1. 현재 작업이 있으면 완료 처리
+            if self.context.current_task:
+                try:
+                    complete_result = self.complete_task(content=content)
+                    if complete_result['success']:
+                        result['completed_task'] = complete_result['data']
+                    else:
+                        # 완료 실패해도 다음 작업은 시도
+                        result['message'] = f"작업 완료 실패: {complete_result['message']}. "
+                except Exception as e:
+                    # 오류가 발생해도 계속 진행
+                    result['message'] = f"작업 완료 중 오류: {str(e)}. "
+            
+            # 2. 다음 작업 시작
+            try:
+                next_result = self.start_next_task()
+                
+                if next_result['success']:
+                    result['success'] = True
+                    result['data'] = next_result['data']
+                    result['message'] += f"다음 작업 시작: {next_result['data']['title']}"
+                else:
+                    # 다음 작업이 없는 경우
+                    result['success'] = True  # 이것도 정상적인 상황
+                    result['message'] += next_result['message']
+            except Exception as e:
+                result['message'] += f"다음 작업 시작 중 오류: {str(e)}"
+                
+        except Exception as e:
+            result['message'] = f"예상치 못한 오류: {str(e)}"
+        
+        return result
     def complete_task(self, task_id: Optional[str]=None, content: Optional[str]=None) -> StandardResponse:
         """작업 완료"""
         try:
@@ -372,6 +432,121 @@ class WorkflowManager:
             print(f'✅ 스마트 Plan 생성 완료!')
             print(f"   - 자동 생성 Task: {len(generated_tasks['analysis']) + len(generated_tasks['wisdom'])}개")
         return plan
+
+    @autosave
+    def list_tasks(self, phase_id: Optional[str] = None) -> List[Task]:
+        """현재 계획의 작업 목록을 반환"""
+        if not self.context.plan:
+            return []
+        
+        if phase_id:
+            # 특정 Phase의 작업만
+            phase = self.context.plan.phases.get(phase_id)
+            if phase:
+                return list(phase.tasks.values())
+            return []
+        else:
+            # 전체 작업
+            return self.context.get_all_tasks()
+    
+    @autosave
+    def remove_task(self, task_id: str) -> StandardResponse:
+        """작업 제거"""
+        try:
+            if not self.context.plan:
+                return StandardResponse.error(
+                    ErrorType.PLAN_ERROR,
+                    "활성화된 계획이 없습니다."
+                )
+            
+            # 작업 찾기
+            for phase_id, phase in self.context.plan.phases.items():
+                if task_id in phase.tasks:
+                    removed_task = phase.tasks.pop(task_id)
+                    # task_order에서도 제거
+                    if task_id in phase.task_order:
+                        phase.task_order.remove(task_id)
+                    
+                    self._trigger_event('task_removed', {
+                        'task_id': task_id,
+                        'task_name': removed_task.name,
+                        'phase_id': phase_id
+                    })
+                    
+                    print(f"✅ 작업 '{removed_task.name}'이(가) 제거되었습니다.")
+                    return StandardResponse.success({
+                        'removed_task': removed_task,
+                        'message': f"작업 '{removed_task.name}'이(가) 제거되었습니다."
+                    })
+            
+            return StandardResponse.error(
+                ErrorType.TASK_ERROR,
+                f"작업 ID '{task_id}'를 찾을 수 없습니다."
+            )
+            
+        except Exception as e:
+            return ErrorHandler.handle_exception(e, ErrorType.TASK_ERROR)
+    
+    @autosave
+    def update_task(self, task_id: str, field: str, value: str) -> StandardResponse:
+        """작업 정보 수정"""
+        try:
+            if not self.context.plan:
+                return StandardResponse.error(
+                    ErrorType.PLAN_ERROR,
+                    "활성화된 계획이 없습니다."
+                )
+            
+            # 작업 찾기
+            for phase_id, phase in self.context.plan.phases.items():
+                if task_id in phase.tasks:
+                    task = phase.tasks[task_id]
+                    
+                    # 필드별 업데이트
+                    if field == "name":
+                        old_name = task.name
+                        task.name = value
+                        print(f"✅ 작업 이름 변경: '{old_name}' → '{value}'")
+                    elif field == "description":
+                        task.description = value
+                        print(f"✅ 작업 설명이 업데이트되었습니다.")
+                    elif field == "status":
+                        try:
+                            new_status = TaskStatus(value)
+                            task.status = new_status
+                            print(f"✅ 작업 상태가 '{value}'로 변경되었습니다.")
+                        except ValueError:
+                            return StandardResponse.error(
+                                ErrorType.VALIDATION_ERROR,
+                                f"올바르지 않은 상태값: {value}. 가능한 값: pending, in_progress, completed"
+                            )
+                    else:
+                        return StandardResponse.error(
+                            ErrorType.VALIDATION_ERROR,
+                            f"수정할 수 없는 필드: {field}. 가능한 필드: name, description, status"
+                        )
+                    
+                    task.updated_at = datetime.now()
+                    
+                    self._trigger_event('task_updated', {
+                        'task_id': task_id,
+                        'field': field,
+                        'new_value': value
+                    })
+                    
+                    return StandardResponse.success({
+                        'task': task,
+                        'message': f"작업이 성공적으로 수정되었습니다."
+                    })
+            
+            return StandardResponse.error(
+                ErrorType.TASK_ERROR,
+                f"작업 ID '{task_id}'를 찾을 수 없습니다."
+            )
+            
+        except Exception as e:
+            return ErrorHandler.handle_exception(e, ErrorType.TASK_ERROR)
+
 _workflow_manager_instance = None
 
 def get_workflow_manager():

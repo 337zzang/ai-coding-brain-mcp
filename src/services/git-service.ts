@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 /**
  * Git Service for TypeScript
  * Platform-independent Git operations

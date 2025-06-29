@@ -535,9 +535,19 @@ class ProjectContext(BaseModelWithConfig):
     def update_progress(self):
         """진행률 업데이트"""
         if self.plan:
-            progress_info = self.plan.overall_progress
-            self.progress.update(progress_info)
-
+            # Plan의 전체 진행률 업데이트
+            self.plan.update_progress()
+            
+            # Context의 progress 딕셔너리 업데이트
+            all_tasks = self.plan.get_all_tasks()
+            completed = sum(1 for t in all_tasks if t.status == TaskStatus.COMPLETED)
+            total = len(all_tasks)
+            
+            self.progress = {
+                'completed_tasks': completed,
+                'total_tasks': total,
+                'percentage': round(self.plan.overall_progress, 1)
+            }
     @classmethod
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'ProjectContext':

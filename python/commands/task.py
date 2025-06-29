@@ -114,9 +114,10 @@ def cmd_task(action: str, *args) -> Dict[str, Any]:
             )
             
             if result['success']:
-                task = result['data']['task']
-                print(f"✅ 작업 추가됨: [{task.id[:8]}] {task.title}")
-                print(f"   Phase: {phase_id}")
+                # 작업 정보는 result['data']에 직접 포함됨
+                task_title = result['data'].get('title', task_id)
+                print(f"✅ 작업 추가됨: [{result['data']['task_id'][:8]}] {result['data']['title']}")
+                print(f"   Phase: {result['data']['phase']}")
             else:
                 print(f"❌ 작업 추가 실패: {result.get('message', 'Unknown error')}")
                 
@@ -129,6 +130,10 @@ def cmd_task(action: str, *args) -> Dict[str, Any]:
                 
             task_id = args[0]
             
+# 완료 내용 파싱 (args[1:] 부분)
+            content = None
+            if len(args) > 1:
+                content = ' '.join(args[1:])
             # 짧은 ID도 지원 (앞 8자리로 검색)
             if len(task_id) < 36:  # UUID 길이보다 짧으면
                 # 모든 작업에서 검색
@@ -147,11 +152,11 @@ def cmd_task(action: str, *args) -> Dict[str, Any]:
                     print(f"❌ 작업 ID '{task_id}'를 찾을 수 없습니다.")
                     return {"success": False, "message": "Task not found"}
             
-            result = wm.complete_task(task_id)
+            result = wm.complete_task(task_id, content=content)
             
             if result['success']:
                 task = result['data']['task']
-                print(f"✅ 작업 완료: {task.title}")
+                print(f"✅ 작업 완료: {task_title}")
                 
                 # 다음 작업 제안
                 next_tasks = []

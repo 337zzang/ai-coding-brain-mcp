@@ -149,6 +149,9 @@ class WorkflowManager:
             task = self.plan.get_task_by_id(task_id)
             if not task:
                 return StandardResponse.error(ErrorType.TASK_ERROR, f'작업 {task_id}를 찾을 수 없습니다')
+            # 완료 내용 저장
+            if content:
+                task.content = content
             if not task.transition_to('completed'):
                 return StandardResponse.error(ErrorType.TASK_ERROR, f'작업을 완료할 수 없습니다 (현재 상태: {task.status})')
             if task_id == self.context.current_task:

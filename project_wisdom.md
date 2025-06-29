@@ -7,22 +7,13 @@
 
 ## ❌ 자주 하는 실수들
 
-### long_function (20회)
+### hardcoded_path (1회)
 - 올바른 방법: 문서를 참고하세요
 
-### console_usage (10회)
-- 올바른 방법: import { logger } from '../utils/logger'; logger.info('메시지');
-
-### hardcoded_path (8회)
-- 올바른 방법: 문서를 참고하세요
-
-### large_class (4회)
-- 올바른 방법: 문서를 참고하세요
-
-### too_many_parameters (3회)
-- 올바른 방법: 문서를 참고하세요
-
-### too_many_imports (1회)
+### test_mistake (1회)
 - 올바른 방법: 문서를 참고하세요
 
 ## ✅ 베스트 프랙티스
+
+### testing
+- 통합 테스트는 test/ 디렉토리에 작성

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Simplified Command Executor - Direct command execution without complex serialization
+Version 2.1 - Improved print handling
 """
 
 import sys
@@ -18,35 +19,8 @@ def execute_command(command_data):
         action = command_data.get('action', '')
         payload = command_data.get('payload', {})
         
-        # Import commands as needed
-        if command == 'plan':
-            from commands.plan import cmd_plan
-            if action == 'create':
-                result = cmd_plan('create', payload.get('name', ''), payload.get('description', ''))
-            elif action == 'show':
-                result = cmd_plan('show')
-            else:
-                return {"status": "error", "error": {"code": "INVALID_ACTION", "message": f"Invalid action: {action}"}}
-        
-        elif command == 'task':
-            from commands.task import cmd_task
-            if action == 'add':
-                result = cmd_task('add', payload.get('phase'), payload.get('title'), payload.get('description'))
-            elif action == 'list':
-                result = cmd_task('list')
-            elif action == 'done':
-                result = cmd_task('done', payload.get('task_id'))
-            else:
-                return {"status": "error", "error": {"code": "INVALID_ACTION", "message": f"Invalid action: {action}"}}
-        
-        elif command == 'flow':
-            from commands.enhanced_flow import flow_project
-            if action == 'project':
-                result = flow_project(payload.get('project_name', ''))
-            else:
-                return {"status": "error", "error": {"code": "INVALID_ACTION", "message": f"Invalid action: {action}"}}
-        
-        elif command == 'execute':
+        # Special handling for execute command
+        if command == 'execute':
             # Execute arbitrary code
             code = payload.get('code', '')
             namespace = {}
@@ -57,6 +31,7 @@ def execute_command(command_data):
             stdout_buffer = io.StringIO()
             stderr_buffer = io.StringIO()
             
+            # Execute with output capture
             with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
                 exec(code, namespace)
             
@@ -67,25 +42,80 @@ def execute_command(command_data):
                     "stderr": stderr_buffer.getvalue()
                 }
             }
+            
+        # For other commands, we need to handle print suppression differently
+        import builtins
+        _original_print = builtins.print
+        captured_output = []
         
-        else:
-            return {
-                "status": "error",
-                "error": {
-                    "code": "UNKNOWN_COMMAND",
-                    "message": f"Unknown command: {command}"
+        def capture_print(*args, **kwargs):
+            # Capture the output
+            output = io.StringIO()
+            kwargs['file'] = output
+            _original_print(*args, **kwargs)
+            captured_output.append(output.getvalue())
+        
+        # Temporarily replace print
+        builtins.print = capture_print
+        
+        try:
+            # Import commands as needed
+            if command == 'plan':
+                from commands.plan import cmd_plan
+                if action == 'create':
+                    result = cmd_plan('create', payload.get('name', ''), payload.get('description', ''))
+                elif action == 'show':
+                    result = cmd_plan('show')
+                else:
+                    return {"status": "error", "error": {"code": "INVALID_ACTION", "message": f"Invalid action: {action}"}}
+            
+            elif command == 'task':
+                from commands.task import cmd_task
+                if action == 'add':
+                    result = cmd_task('add', payload.get('phase'), payload.get('title'), payload.get('description'))
+                elif action == 'list':
+                    result = cmd_task('list')
+                elif action == 'done':
+                    result = cmd_task('done', payload.get('task_id'))
+                else:
+                    return {"status": "error", "error": {"code": "INVALID_ACTION", "message": f"Invalid action: {action}"}}
+            
+            elif command == 'flow':
+                from commands.enhanced_flow import flow_project
+                if action == 'project':
+                    result = flow_project(payload.get('project_name', ''))
+                else:
+                    return {"status": "error", "error": {"code": "INVALID_ACTION", "message": f"Invalid action: {action}"}}
+            
+            else:
+                return {
+                    "status": "error",
+                    "error": {
+                        "code": "UNKNOWN_COMMAND",
+                        "message": f"Unknown command: {command}"
+                    }
                 }
-            }
-        
-        # Handle result
-        if isinstance(result, dict):
-            return {"status": "success", "data": result}
-        elif isinstance(result, str):
-            return {"status": "success", "data": {"message": result}}
-        elif result is None:
-            return {"status": "success", "data": {"success": True}}
-        else:
-            return {"status": "success", "data": {"result": str(result)}}
+            
+            # Handle result
+            data = {}
+            if isinstance(result, dict):
+                data = result
+            elif isinstance(result, str):
+                data = {"message": result}
+            elif result is None:
+                data = {"success": True}
+            else:
+                data = {"result": str(result)}
+            
+            # Add captured output if any
+            if captured_output:
+                data["output"] = ''.join(captured_output)
+                
+            return {"status": "success", "data": data}
+            
+        finally:
+            # Restore original print
+            builtins.print = _original_print
             
     except Exception as e:
         import traceback
@@ -101,6 +131,10 @@ def execute_command(command_data):
 
 def main():
     """Main entry point"""
+    # Save original print for our use
+    import builtins
+    _final_print = builtins.print
+    
     try:
         # Read JSON from stdin
         input_data = sys.stdin.read()
@@ -109,8 +143,8 @@ def main():
         # Execute command
         result = execute_command(command_data)
         
-        # Return JSON result
-        print(json.dumps(result))
+        # Return JSON result using original print
+        _final_print(json.dumps(result))
         
     except json.JSONDecodeError as e:
         error = {
@@ -120,7 +154,7 @@ def main():
                 "message": f"Invalid JSON: {e}"
             }
         }
-        print(json.dumps(error))
+        _final_print(json.dumps(error))
     except Exception as e:
         error = {
             "status": "error",
@@ -129,21 +163,8 @@ def main():
                 "message": str(e)
             }
         }
-        print(json.dumps(error))
+        _final_print(json.dumps(error))
 
 
 if __name__ == "__main__":
-    # Suppress print output from imported modules
-    import builtins
-    _original_print = builtins.print
-    
-    def silent_print(*args, **kwargs):
-        # Only allow our own JSON output
-        if args and isinstance(args[0], str) and args[0].startswith('{'):
-            _original_print(*args, **kwargs)
-    
-    # Temporarily replace print during imports
-    builtins.print = silent_print
-    
-    # Run main
     main()

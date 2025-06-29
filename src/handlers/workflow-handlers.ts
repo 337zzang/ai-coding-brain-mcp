@@ -1,241 +1,178 @@
+import { getCommandExecutor } from '../services/command-executor';
+import type { CommandRequest, CommandResponse } from '../services/command-executor';
+
+const executor = getCommandExecutor();
+
 /**
- * Workflow Handlers - WorkflowManager 기반
+ * Handle flow project command
  */
-
-import { ExecuteCodeHandler } from './execute-code-handler';
-
-interface McpResponse {
-  content: Array<{
-    type: string;
-    text: string;
-  }>;
+export async function handleFlowProject(args: { project_name: string }) {
+  const response = await executor.execute({
+    command: 'flow',
+    action: 'project',
+    payload: { project_name: args.project_name }
+  });
+  
+  return {
+    success: response.status === 'success',
+    ...response.data,
+    error: response.error?.message
+  };
 }
 
-export async function handleFlowProject(args: any): Promise<McpResponse> {
-  const code = `
-from commands.enhanced_flow import flow_project as cmd_flow
-result = cmd_flow("${args.project_name}")
-
-# Convert result to JSON string for proper MCP response
-import json
-print(json.dumps(result))
-`;
+/**
+ * Handle plan project command
+ */
+export async function handlePlanProject(args: { plan_name?: string; description?: string; reset?: boolean }) {
+  const action = args.plan_name ? 'create' : 'show';
   
-  const execResult = await ExecuteCodeHandler.handleExecuteCode({ code });
-  
-  // Parse the result from stdout if it's a JSON string
-  let resultData;
-  try {
-    if (execResult?.content?.[0]?.text) {
-      const text = execResult.content[0].text;
-      const parsedResult = JSON.parse(text);
-      
-      // Extract stdout and try to parse it as JSON
-      if (parsedResult.stdout) {
-        const stdoutLines = parsedResult.stdout.split('\n');
-        for (let i = stdoutLines.length - 1; i >= 0; i--) {
-          const line = stdoutLines[i].trim();
-          if (line && line.startsWith('{')) {
-            try {
-              resultData = JSON.parse(line);
-              break;
-            } catch (e) {
-              // Continue to previous line
-            }
-          }
-        }
-      }
+  const response = await executor.execute({
+    command: 'plan',
+    action,
+    payload: {
+      name: args.plan_name || '',
+      description: args.description || '',
+      reset: args.reset || false
     }
-  } catch (e) {
-    // If parsing fails, return the raw output
+  });
+  
+  return {
+    success: response.status === 'success',
+    ...response.data,
+    error: response.error?.message
+  };
+}
+
+/**
+ * Handle task management command
+ */
+export async function handleTaskManage(args: { action: string; args?: string[] }) {
+  let payload: Record<string, any> = {};
+  
+  switch (args.action) {
+    case 'add':
+      if (args.args && args.args.length >= 3) {
+        payload = {
+          phase: args.args[0],
+          title: args.args[1],
+          description: args.args[2]
+        };
+      }
+      break;
+    case 'done':
+    case 'remove':
+      if (args.args && args.args.length >= 1) {
+        payload = { task_id: args.args[0] };
+      }
+      break;
   }
   
-  if (resultData) {
+  const response = await executor.execute({
+    command: 'task',
+    action: args.action,
+    payload
+  });
+  
+  return {
+    success: response.status === 'success',
+    ...response.data,
+    error: response.error?.message
+  };
+}
+
+/**
+ * Handle next task command
+ */
+export async function handleNextTask() {
+  const response = await executor.execute({
+    command: 'next',
+    action: 'execute',
+    payload: {}
+  });
+  
+  return {
+    success: response.status === 'success',
+    ...response.data,
+    error: response.error?.message
+  };
+}
+
+/**
+ * Handle wisdom stats command
+ */
+export async function handleWisdomStats() {
+  // Use legacy execute for now
+  const response = await executor.executeCode(`
+from commands.wisdom import cmd_wisdom_stats
+result = cmd_wisdom_stats()
+print(result if isinstance(result, str) else "")
+`);
+  
+  if (response.status === 'success' && response.data) {
     return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(resultData, null, 2)
-        }
-      ]
+      success: true,
+      output: response.data.stdout || '',
+      error: undefined
     };
   }
   
-  return execResult || { content: [{ type: 'text', text: 'No result' }] };
+  return {
+    success: false,
+    output: '',
+    error: response.error?.message || 'Unknown error'
+  };
 }
 
-export async function handlePlanProject(args: any): Promise<McpResponse> {
-  const code = `
-from commands.plan import cmd_plan
-
-# 계획 관리
-plan_name = "${args.plan_name || ''}"
-description = "${args.description || ''}"
-
-if plan_name:
-    # 계획 생성
-    result = cmd_plan("create", plan_name, description)
-else:
-    # 계획 표시
-    result = cmd_plan("show")
-
-# Convert result to JSON string for proper MCP response
-import json
-print(json.dumps(result) if result else '{"success": true}')
-`;
+/**
+ * Handle track mistake command
+ */
+export async function handleTrackMistake(args: { mistake_type: string; context?: string }) {
+  const response = await executor.executeCode(`
+from project_wisdom import get_wisdom_manager
+wisdom = get_wisdom_manager()
+wisdom.track_mistake("${args.mistake_type}", "${args.context || ''}")
+print("Mistake tracked successfully")
+`);
   
-  const execResult = await ExecuteCodeHandler.handleExecuteCode({ code });
-  
-  // Parse the result from stdout if it's a JSON string
-  let resultData;
-  try {
-    if (execResult?.content?.[0]?.text) {
-      const text = execResult.content[0].text;
-      const parsedResult = JSON.parse(text);
-      
-      // Extract stdout and try to parse it as JSON
-      if (parsedResult.stdout) {
-        const stdoutLines = parsedResult.stdout.split('\n');
-        for (let i = stdoutLines.length - 1; i >= 0; i--) {
-          const line = stdoutLines[i].trim();
-          if (line && line.startsWith('{')) {
-            try {
-              resultData = JSON.parse(line);
-              break;
-            } catch (e) {
-              // Continue to previous line
-            }
-          }
-        }
-      }
-    }
-  } catch (e) {
-    // If parsing fails, return the raw output
-  }
-  
-  if (resultData) {
+  if (response.status === 'success' && response.data) {
     return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(resultData, null, 2)
-        }
-      ]
+      success: true,
+      output: response.data.stdout || '',
+      error: undefined
     };
   }
   
-  return execResult || { content: [{ type: 'text', text: 'No result' }] };
+  return {
+    success: false,
+    output: '',
+    error: response.error?.message || 'Unknown error'
+  };
 }
 
-export async function handleTaskManage(args: any): Promise<McpResponse> {
-  const code = `
-from commands.task import cmd_task
-
-# 작업 관리
-action = "${args.action || 'list'}"
-args_list = ${JSON.stringify(args.args || [])}
-result = cmd_task(action, args_list)
-
-# Convert result to JSON string for proper MCP response
-import json
-print(json.dumps(result) if result else '{"success": true}')
-`;
+/**
+ * Handle add best practice command
+ */
+export async function handleAddBestPractice(args: { practice: string; category?: string }) {
+  const response = await executor.executeCode(`
+from project_wisdom import get_wisdom_manager
+wisdom = get_wisdom_manager()
+wisdom.add_best_practice("${args.practice}", "${args.category || 'general'}")
+print("Best practice added successfully")
+`);
   
-  const execResult = await ExecuteCodeHandler.handleExecuteCode({ code });
-  
-  // Parse the result from stdout if it's a JSON string
-  let resultData;
-  try {
-    if (execResult?.content?.[0]?.text) {
-      const text = execResult.content[0].text;
-      const parsedResult = JSON.parse(text);
-      
-      // Extract stdout and try to parse it as JSON
-      if (parsedResult.stdout) {
-        const stdoutLines = parsedResult.stdout.split('\n');
-        for (let i = stdoutLines.length - 1; i >= 0; i--) {
-          const line = stdoutLines[i].trim();
-          if (line && line.startsWith('{')) {
-            try {
-              resultData = JSON.parse(line);
-              break;
-            } catch (e) {
-              // Continue to previous line
-            }
-          }
-        }
-      }
-    }
-  } catch (e) {
-    // If parsing fails, return the raw output
-  }
-  
-  if (resultData) {
+  if (response.status === 'success' && response.data) {
     return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(resultData, null, 2)
-        }
-      ]
+      success: true,
+      output: response.data.stdout || '',
+      error: undefined
     };
   }
   
-  return execResult || { content: [{ type: 'text', text: 'No result' }] };
+  return {
+    success: false,
+    output: '',
+    error: response.error?.message || 'Unknown error'
+  };
 }
 
-export async function handleNextTask(args: any): Promise<McpResponse> {
-  const code = `
-from commands.next import cmd_next
-
-# 다음 작업으로 진행
-content = ${args.content ? `"${args.content.replace(/"/g, '\\"')}"` : 'None'}
-result = cmd_next(content)
-
-# Convert result to JSON string for proper MCP response
-import json
-print(json.dumps(result) if result else '{"success": true}')
-`;
-  
-  const execResult = await ExecuteCodeHandler.handleExecuteCode({ code });
-  
-  // Parse the result from stdout if it's a JSON string
-  let resultData;
-  try {
-    if (execResult?.content?.[0]?.text) {
-      const text = execResult.content[0].text;
-      const parsedResult = JSON.parse(text);
-      
-      // Extract stdout and try to parse it as JSON
-      if (parsedResult.stdout) {
-        const stdoutLines = parsedResult.stdout.split('\n');
-        for (let i = stdoutLines.length - 1; i >= 0; i--) {
-          const line = stdoutLines[i].trim();
-          if (line && line.startsWith('{')) {
-            try {
-              resultData = JSON.parse(line);
-              break;
-            } catch (e) {
-              // Continue to previous line
-            }
-          }
-        }
-      }
-    }
-  } catch (e) {
-    // If parsing fails, return the raw output
-  }
-  
-  if (resultData) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(resultData, null, 2)
-        }
-      ]
-    };
-  }
-  
-  return execResult || { content: [{ type: 'text', text: 'No result' }] };
-}
+// Add other handlers as needed...

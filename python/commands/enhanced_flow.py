@@ -23,7 +23,7 @@ if python_path not in sys.path:
     sys.path.insert(0, python_path)
 
 # 이제 절대 import 사용
-from core.context_manager import get_context_manager, initialize_context
+from core.context_manager import get_context_manager
 from core.config import get_project_path
 from smart_print import smart_print
 from analyzers.project_analyzer import ProjectAnalyzer

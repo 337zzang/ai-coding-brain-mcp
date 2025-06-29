@@ -496,7 +496,7 @@ class UnifiedContextManager:
 
 
 # 싱글톤 인스턴스
-_context_manager = UnifiedContextManager()
+_context_manager_instance = None
 
 
 def get_context_manager():

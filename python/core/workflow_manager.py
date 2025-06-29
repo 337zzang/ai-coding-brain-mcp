@@ -17,7 +17,10 @@ class WorkflowManager:
     
     def __init__(self, project_name: str):
         self.project_name = project_name
-        self.state_file = Path(f"memory/states/{project_name}_workflow.json")
+        # Legacy workflow.json 파일 대신 UnifiedContextManager 사용
+        from core.context_manager import UnifiedContextManager
+        self.ctx_manager = UnifiedContextManager()
+        self.project_name = project_name
         self.state_file.parent.mkdir(parents=True, exist_ok=True)
         
         # 상태 로드 또는 초기화

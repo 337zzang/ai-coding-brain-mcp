@@ -1293,7 +1293,31 @@ def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str,
         helpers_obj = sys.modules.get('__main__').helpers
     
     if not helpers_obj:
-        raise RuntimeError("helpers 객체를 찾을 수 없습니다. execute_code 환경에서 실행하세요.")
+        # MCP 도구로 직접 호출된 경우, 새로운 AIHelpers 인스턴스 생성
+        import sys
+        import os
+        from pathlib import Path
+        
+        # 프로젝트 루트 경로 확인
+        current_dir = Path(__file__).parent.parent.parent
+        if current_dir.name == 'python':
+            current_dir = current_dir.parent
+        os.chdir(str(current_dir))
+        
+        # sys.path에 추가
+        python_path = str(current_dir / 'python')
+        if python_path not in sys.path:
+            sys.path.insert(0, python_path)
+        
+        # AIHelpers 임포트 및 생성
+        try:
+            from core.ai_helpers import AIHelpers
+            helpers_obj = AIHelpers()
+            # 전역에 설정
+            globals()['helpers'] = helpers_obj
+            smart_print("✅ MCP 환경에서 AIHelpers 인스턴스 생성")
+        except ImportError as e:
+            raise RuntimeError(f"AIHelpers를 임포트할 수 없습니다: {e}")
     
     result = {
         'success': False,

@@ -7,46 +7,218 @@ exports.handleFlowProject = handleFlowProject;
 exports.handlePlanProject = handlePlanProject;
 exports.handleTaskManage = handleTaskManage;
 exports.handleNextTask = handleNextTask;
-function handleFlowProject(args) {
+const execute_code_handler_1 = require("./execute-code-handler");
+async function handleFlowProject(args) {
     const code = `
 from commands.enhanced_flow import flow_project as cmd_flow
-cmd_flow("${args.project_name}")
+result = cmd_flow("${args.project_name}")
+
+# Convert result to JSON string for proper MCP response
+import json
+print(json.dumps(result))
 `;
-    return code;
+    const execResult = await execute_code_handler_1.ExecuteCodeHandler.handleExecuteCode({ code });
+    // Parse the result from stdout if it's a JSON string
+    let resultData;
+    try {
+        if (execResult?.content?.[0]?.text) {
+            const text = execResult.content[0].text;
+            const parsedResult = JSON.parse(text);
+            // Extract stdout and try to parse it as JSON
+            if (parsedResult.stdout) {
+                const stdoutLines = parsedResult.stdout.split('\n');
+                for (let i = stdoutLines.length - 1; i >= 0; i--) {
+                    const line = stdoutLines[i].trim();
+                    if (line && line.startsWith('{')) {
+                        try {
+                            resultData = JSON.parse(line);
+                            break;
+                        }
+                        catch (e) {
+                            // Continue to previous line
+                        }
+                    }
+                }
+            }
+        }
+    }
+    catch (e) {
+        // If parsing fails, return the raw output
+    }
+    if (resultData) {
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(resultData, null, 2)
+                }
+            ]
+        };
+    }
+    return execResult || { content: [{ type: 'text', text: 'No result' }] };
 }
-function handlePlanProject(args) {
+async function handlePlanProject(args) {
     const code = `
 from commands.plan import cmd_plan
 
 # 계획 관리
-if "${args.plan_name || ''}":
+plan_name = "${args.plan_name || ''}"
+description = "${args.description || ''}"
+
+if plan_name:
     # 계획 생성
-    cmd_plan("create", "${args.plan_name || ''}", "${args.description || ''}")
+    result = cmd_plan("create", plan_name, description)
 else:
     # 계획 표시
-    cmd_plan("show")
+    result = cmd_plan("show")
+
+# Convert result to JSON string for proper MCP response
+import json
+print(json.dumps(result) if result else '{"success": true}')
 `;
-    return code;
+    const execResult = await execute_code_handler_1.ExecuteCodeHandler.handleExecuteCode({ code });
+    // Parse the result from stdout if it's a JSON string
+    let resultData;
+    try {
+        if (execResult?.content?.[0]?.text) {
+            const text = execResult.content[0].text;
+            const parsedResult = JSON.parse(text);
+            // Extract stdout and try to parse it as JSON
+            if (parsedResult.stdout) {
+                const stdoutLines = parsedResult.stdout.split('\n');
+                for (let i = stdoutLines.length - 1; i >= 0; i--) {
+                    const line = stdoutLines[i].trim();
+                    if (line && line.startsWith('{')) {
+                        try {
+                            resultData = JSON.parse(line);
+                            break;
+                        }
+                        catch (e) {
+                            // Continue to previous line
+                        }
+                    }
+                }
+            }
+        }
+    }
+    catch (e) {
+        // If parsing fails, return the raw output
+    }
+    if (resultData) {
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(resultData, null, 2)
+                }
+            ]
+        };
+    }
+    return execResult || { content: [{ type: 'text', text: 'No result' }] };
 }
-function handleTaskManage(args) {
+async function handleTaskManage(args) {
     const code = `
 from commands.task import cmd_task
 
 # 작업 관리
 action = "${args.action || 'list'}"
 args_list = ${JSON.stringify(args.args || [])}
-cmd_task(action, args_list)
+result = cmd_task(action, args_list)
+
+# Convert result to JSON string for proper MCP response
+import json
+print(json.dumps(result) if result else '{"success": true}')
 `;
-    return code;
+    const execResult = await execute_code_handler_1.ExecuteCodeHandler.handleExecuteCode({ code });
+    // Parse the result from stdout if it's a JSON string
+    let resultData;
+    try {
+        if (execResult?.content?.[0]?.text) {
+            const text = execResult.content[0].text;
+            const parsedResult = JSON.parse(text);
+            // Extract stdout and try to parse it as JSON
+            if (parsedResult.stdout) {
+                const stdoutLines = parsedResult.stdout.split('\n');
+                for (let i = stdoutLines.length - 1; i >= 0; i--) {
+                    const line = stdoutLines[i].trim();
+                    if (line && line.startsWith('{')) {
+                        try {
+                            resultData = JSON.parse(line);
+                            break;
+                        }
+                        catch (e) {
+                            // Continue to previous line
+                        }
+                    }
+                }
+            }
+        }
+    }
+    catch (e) {
+        // If parsing fails, return the raw output
+    }
+    if (resultData) {
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(resultData, null, 2)
+                }
+            ]
+        };
+    }
+    return execResult || { content: [{ type: 'text', text: 'No result' }] };
 }
-function handleNextTask(args) {
+async function handleNextTask(args) {
     const code = `
 from commands.next import cmd_next
 
 # 다음 작업으로 진행
 content = ${args.content ? `"${args.content.replace(/"/g, '\\"')}"` : 'None'}
-cmd_next(content)
+result = cmd_next(content)
+
+# Convert result to JSON string for proper MCP response
+import json
+print(json.dumps(result) if result else '{"success": true}')
 `;
-    return code;
+    const execResult = await execute_code_handler_1.ExecuteCodeHandler.handleExecuteCode({ code });
+    // Parse the result from stdout if it's a JSON string
+    let resultData;
+    try {
+        if (execResult?.content?.[0]?.text) {
+            const text = execResult.content[0].text;
+            const parsedResult = JSON.parse(text);
+            // Extract stdout and try to parse it as JSON
+            if (parsedResult.stdout) {
+                const stdoutLines = parsedResult.stdout.split('\n');
+                for (let i = stdoutLines.length - 1; i >= 0; i--) {
+                    const line = stdoutLines[i].trim();
+                    if (line && line.startsWith('{')) {
+                        try {
+                            resultData = JSON.parse(line);
+                            break;
+                        }
+                        catch (e) {
+                            // Continue to previous line
+                        }
+                    }
+                }
+            }
+        }
+    }
+    catch (e) {
+        // If parsing fails, return the raw output
+    }
+    if (resultData) {
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify(resultData, null, 2)
+                }
+            ]
+        };
+    }
+    return execResult || { content: [{ type: 'text', text: 'No result' }] };
 }
 //# sourceMappingURL=workflow-handlers.js.map

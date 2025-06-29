@@ -25,6 +25,13 @@
 ### architecture
 - 완전한 재구축 시에는 기존 캐시와 context를 모두 정리하고 시작하는 것이 깔끔함
 - 중앙 관리자 패턴(WorkflowManager)은 상태 관리와 비즈니스 로직을 일관되게 처리할 수 있음
+- autosave 데코레이터는 save()와 _save_state() 모두 지원하도록 구현
 
 ### design
 - 데이터 모델을 먼저 명확히 정의하면 전체 시스템 설계가 명확해짐
+
+### integration
+- MCP 도구 연동 시 TypeScript 핸들러와 Python 함수 간 인터페이스 일치 확인 필요
+
+### development
+- TypeScript 변경 후 반드시 npm run build로 재컴파일

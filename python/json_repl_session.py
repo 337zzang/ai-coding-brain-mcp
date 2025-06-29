@@ -724,7 +724,7 @@ def execute_code(code: str) -> Dict[str, Any]:
 
         with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
         # Wisdom Integration 실행 (코드 실행 전 분석 및 자동 수정)
-            if WISDOM_AVAILABLE and hasattr(wisdom_integration, 'pre_execute_check'):
+            if False and WISDOM_AVAILABLE and hasattr(wisdom_integration, 'pre_execute_check'):  # 자동 수정 비활성화
                 try:
                     should_proceed, modified_code, analysis = wisdom_integration.pre_execute_check(
                         code, 

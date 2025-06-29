@@ -224,9 +224,12 @@ class WorkflowManager:
             self._trigger_event('task_started', next_task)
             
             return StandardResponse.success({
-                'task_id': next_task.id,
+                'id': next_task.id,  # next.py에서 기대하는 필드명
+                'task_id': next_task.id,  # 호환성을 위해 유지
                 'title': next_task.title,
-                'phase': phase.name if phase else None,
+                'description': next_task.description,  # 추가
+                'phase': phase_id,
+                'phase_name': phase.name if phase else None,  # next.py에서 필요
                 'estimated_hours': next_task.estimated_hours
             })
         except Exception as e:
@@ -268,7 +271,12 @@ class WorkflowManager:
             # Phase 완료 체크
             phase = self._get_task_phase(task_id)
             if phase and phase.can_complete():
-                phase.status = 'completed'
+                # Phase status도 TaskStatus enum 사용
+                try:
+                    from core.models import TaskStatus
+                    phase.status = TaskStatus.COMPLETED
+                except:
+                    phase.status = 'completed'
             
             # 진행률 업데이트
             self.context_manager.update_progress()
@@ -283,7 +291,7 @@ class WorkflowManager:
                 'task_id': task.id,
                 'title': task.title,
                 'actual_hours': task.actual_hours,
-                'phase_completed': phase.status == 'completed' if phase else False
+                'phase_completed': (phase.status == TaskStatus.COMPLETED if hasattr(phase.status, 'value') else phase.status == 'completed') if phase else False
             })
         except Exception as e:
             return ErrorHandler.handle_exception(e, ErrorType.TASK_ERROR)
@@ -499,6 +507,63 @@ class WorkflowManager:
                 print(f"워크플로우 로드 실패: {e}")
         
         return False
+
+    def sync_plan_to_context(self) -> None:
+        """
+        Plan 객체(SSoT)의 상태를 context.tasks에 동기화
+        - Plan의 모든 Task를 순회하며 상태별로 분류
+        - completed 상태 → tasks['done']
+        - 나머지 상태 → tasks['next'] 
+        - 진행률 정보도 함께 업데이트
+        """
+        if not self.plan:
+            self.context.tasks = {'next': [], 'done': []}
+            return
+        
+        next_tasks = []
+        done_tasks = []
+        
+        # 모든 Phase의 Task를 순회
+        for phase_id in self.plan.phase_order:
+            phase = self.plan.phases.get(phase_id)
+            if not phase:
+                continue
+                
+            for task_id in phase.task_order:
+                task = phase.tasks.get(task_id)
+                if not task:
+                    continue
+                    
+                task_info = {
+                    'id': task.id,
+                    'title': task.title,
+                    'description': task.description,
+                    'phase': phase_id,
+                    'phase_name': phase.name,
+                    'status': task.status.value if hasattr(task.status, 'value') else task.status
+                }
+                
+                # 상태별 분류
+                if task.status == TaskStatus.COMPLETED or task.status == 'completed':
+                    done_tasks.append(task_info)
+                else:
+                    next_tasks.append(task_info)
+        
+        # context 업데이트
+        self.context.tasks['next'] = next_tasks
+        self.context.tasks['done'] = done_tasks
+        
+        # 진행률 정보 업데이트
+        total = len(next_tasks) + len(done_tasks)
+        completed = len(done_tasks)
+        if not hasattr(self.context, 'progress'):
+            self.context.progress = {}
+        
+        self.context.progress.update({
+            'total_tasks': total,
+            'completed_tasks': completed,
+            'percentage': round((completed / total * 100) if total > 0 else 0, 1)
+        })
 
     def analyze_and_generate_tasks(self, project_path: str = ".") -> Dict[str, List[Task]]:
         """ProjectAnalyzer를 사용하여 자동으로 Task 생성"""

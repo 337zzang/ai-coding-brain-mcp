@@ -489,9 +489,9 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                 if existing_tasks > 0:
                     print(f"⚠️  기존 계획 '{wm.plan.name}'에 {existing_tasks}개의 작업이 있습니다.")
                     # 비대화형 모드: 자동으로 저장하고 진행
-                    save_result = wm.save()
-                    if save_result['success']:
-                        print(f"✅ 기존 계획 '{wm.plan.name}'이 저장되었습니다.")
+                    # 비대화형 모드: 자동으로 저장하고 진행
+                    wm.save()  # save는 None을 반환
+                    print(f"✅ 기존 계획 '{wm.plan.name}'이 저장되었습니다.")
                     
                     # 계획 초기화
                     reset_result = wm.reset_plan()
@@ -505,6 +505,7 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                 description=description if description else f"{name} 계획"
             )
         else:
+            return result
             # 현재 계획 표시
             if not wm.plan:
                 return StandardResponse.error("설정된 계획이 없습니다. 'plan \"계획명\"'으로 생성하세요.")
@@ -513,7 +514,7 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
             status = wm.get_workflow_status()
             
             print(f"📋 현재 계획: {plan.name}")
-            print(f"진행률: {status['progress']:.1f}% ({status['completed']}/{status['total']})")
+            print(f"진행률: {status['progress']:.1f}% ({status['completed_tasks']}/{status['total_tasks']})")
             print(f"\n생성일: {plan.created_at}")
             
             # Plan content 표시
@@ -557,7 +558,13 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
             )
             
     except Exception as e:
+    except Exception as e:
         from core.error_handler import ErrorType
+        import traceback
+        print(f"\n❌ 오류 발생 위치:")
+        traceback.print_exc()
+        print(f"\n❌ 오류 발생 위치:")
+        traceback.print_exc()
         return StandardResponse.error(ErrorType.PLAN_ERROR, f"계획 처리 중 오류: {str(e)}")
 if __name__ == "__main__":
     # 명령줄 인자 처리

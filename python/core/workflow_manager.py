@@ -154,16 +154,25 @@ class WorkflowManager:
         except Exception as e:
             return ErrorHandler.handle_exception(e, ErrorType.TASK_ERROR)
 
-    def get_workflow_status(self) -> Dict[str, Any]:
-        """전체 워크플로우 상태"""
-        if not self.plan:
-            return {'status': 'no_plan'}
-        all_tasks = self.plan.get_all_tasks()
-        status_count = {}
-        for task in all_tasks:
-            status_count[task.status] = status_count.get(task.status, 0) + 1
-        return {'plan': self.plan.name, 'total_tasks': len(all_tasks), 'status_breakdown': status_count, 'current_task': self.context.current_task, 'progress': self.plan.overall_progress, 'phases': {phase_id: {'name': phase.name, 'status': phase.status, 'progress': phase.progress} for phase_id, phase in self.plan.phases.items()}}
-
+    def get_workflow_status(self) -> dict:
+        """워크플로우 진행 상태 반환
+        
+        Returns:
+            진행률, 완료/전체 작업 수, 현재 작업 정보
+        """
+        all_tasks = self.plan.get_all_tasks() if self.plan else []
+        completed = sum(1 for t in all_tasks if t.status == TaskStatus.COMPLETED)
+        total = len(all_tasks)
+        
+        # 진행률 계산 (0으로 나누기 방지)
+        progress = (completed / total * 100) if total > 0 else 0.0
+        
+        return {
+            "progress": round(progress, 1),
+            "completed_tasks": completed,
+            "total_tasks": total,
+            "current_task": self.context.current_task
+        }
     def get_task_analytics(self) -> Dict[str, Any]:
         """작업 분석 데이터"""
         if not self.plan:

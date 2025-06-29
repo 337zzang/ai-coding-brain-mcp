@@ -1,179 +1,134 @@
-#!/usr/bin/env python3
 """
-작업(Task) 관리 명령어 - 안정화된 버전
-모든 로직은 WorkflowManager로 위임하는 단순 래퍼
+Command: Task - 작업 관리
+WorkflowManager 중심 아키텍처 버전
 """
-
-import os
-import sys
-from typing import Optional, List
-from pathlib import Path
-
-# 프로젝트 경로 추가
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
+from typing import List, Optional
 from core.workflow_manager import get_workflow_manager
-from core.error_handler import StandardResponse, ErrorType
-from core.models import TaskStatus
 
 
-def cmd_task(action: str, *args) -> StandardResponse:
-    """작업(Task) 관리 - WorkflowManager로 위임하는 단순 래퍼
+def cmd_task(action: str = "list", args: Optional[List[str]] = None) -> None:
+    """
+    작업 관리 명령어 - WorkflowManager에 모든 로직 위임
     
     Args:
-        action: 수행할 작업 (list, add, done, remove, update)
-        *args: action에 따른 추가 인자들
-        
-    Returns:
-        StandardResponse: 표준 응답
+        action: 액션 (add, list, start, complete, phase)
+        args: 액션별 인자
     """
-    try:
-        wm = get_workflow_manager()
-        
-        # 계획이 없으면 오류
-        if not wm.context.plan:
-            return StandardResponse.error(
-                ErrorType.PLAN_ERROR,
-                "설정된 계획이 없습니다. 먼저 계획을 생성하세요."
-            )
-        
-        # action별 처리
-        if action == "list":
-            # 작업 목록 조회
-            phase_id = args[0] if args else None
-            tasks = wm.list_tasks(phase_id)
-            
-            # 출력
-            if phase_id:
-                phase = wm.context.plan.phases.get(phase_id)
-                if phase:
-                    print(f"\n📋 {phase.name}의 작업 목록:")
-                else:
-                    return StandardResponse.error(
-                        ErrorType.VALIDATION_ERROR,
-                        f"Phase '{phase_id}'를 찾을 수 없습니다."
-                    )
-            else:
-                print(f"\n📋 전체 작업 목록:")
-            
-            if not tasks:
-                print("   작업이 없습니다.")
-            else:
-                for task in tasks:
-                    status_icon = "✅" if task.status == TaskStatus.COMPLETED else "⏳"
-                    print(f"   {status_icon} [{task.id}] {task.name}")
-                    if task.description:
-                        print(f"      📝 {task.description}")
-            
-            return StandardResponse.success({
-                'tasks': tasks,
-                'count': len(tasks)
-            })
-        
-        elif action == "add":
-            # 작업 추가
-            if len(args) < 2:
-                return StandardResponse.error(
-                    ErrorType.VALIDATION_ERROR,
-                    "사용법: task add <phase_id> <작업명> [설명]"
-                )
-            
-            phase_id = args[0]
-            name = args[1]
-            description = args[2] if len(args) > 2 else ""
-            
-            # WorkflowManager로 위임
-            task = wm.add_task(phase_id, name, description)
-            
-            if isinstance(task, dict) and task.get('success') is False:
-                return StandardResponse(**task)
-            
-            print(f"✅ 작업이 추가되었습니다: [{task.id}] {task.name}")
-            
-            return StandardResponse.success({
-                'task': task,
-                'message': f"작업 '{task.name}'이(가) 추가되었습니다."
-            })
-        
-        elif action == "done":
-            # 작업 완료
-            if not args:
-                return StandardResponse.error(
-                    ErrorType.VALIDATION_ERROR,
-                    "사용법: task done <task_id>"
-                )
-            
-            task_id = args[0]
-            
-            # WorkflowManager로 위임
-            result = wm.complete_task(task_id)
-            
-            if isinstance(result, dict):
-                return StandardResponse(**result)
-            return result
-        
-        elif action == "remove":
-            # 작업 삭제
-            if not args:
-                return StandardResponse.error(
-                    ErrorType.VALIDATION_ERROR,
-                    "사용법: task remove <task_id>"
-                )
-            
-            task_id = args[0]
-            
-            # WorkflowManager로 위임
-            result = wm.remove_task(task_id)
-            
-            if isinstance(result, dict):
-                return StandardResponse(**result)
-            return result
-        
-        elif action == "update":
-            # 작업 수정
-            if len(args) < 2:
-                return StandardResponse.error(
-                    ErrorType.VALIDATION_ERROR,
-                    "사용법: task update <task_id> <name|description|status> <새 값>"
-                )
-            
-            task_id = args[0]
-            field = args[1]
-            value = args[2] if len(args) > 2 else ""
-            
-            # WorkflowManager로 위임
-            result = wm.update_task(task_id, field, value)
-            
-            if isinstance(result, dict):
-                return StandardResponse(**result)
-            return result
-        
-        else:
-            return StandardResponse.error(
-                ErrorType.VALIDATION_ERROR,
-                f"알 수 없는 action: {action}. 사용 가능: list, add, done, remove, update"
-            )
+    wm = get_workflow_manager()
+    args = args or []
     
-    except Exception as e:
-        return StandardResponse.error(
-            ErrorType.TASK_ERROR,
-            f"작업 처리 중 오류: {str(e)}"
+    if action == "add":
+        # 인자 파싱: phase_name, title, [description]
+        if len(args) < 2:
+            print("❌ 사용법: /task add [phase] [제목] [설명(선택)]")
+            return
+        
+        phase_name = args[0]
+        title = args[1]
+        description = args[2] if len(args) > 2 else None
+        
+        result = wm.add_task(
+            phase_name=phase_name,
+            title=title,
+            description=description
         )
-
-
-# 명령줄 인터페이스
-if __name__ == "__main__":
-    import argparse
+        
+        if result['success']:
+            print(f"✅ {result['message']}")
+            print(f"   📌 Phase: {result['data']['phase_name']}")
+            print(f"   📋 제목: {result['data']['title']}")
+            if result['data']['description']:
+                print(f"   📝 설명: {result['data']['description']}")
+        else:
+            print(f"❌ {result['message']}")
     
-    parser = argparse.ArgumentParser(description="작업 관리")
-    parser.add_argument('action', choices=['list', 'add', 'done', 'remove', 'update'],
-                        help='수행할 작업')
-    parser.add_argument('args', nargs='*', help='action에 따른 추가 인자')
+    elif action == "list":
+        tasks = wm.get_task_list()
+        
+        if not tasks:
+            print("📋 등록된 작업이 없습니다")
+            return
+        
+        print(f"📋 전체 작업 목록 ({len(tasks)}개):")
+        
+        current_phase = None
+        for task in tasks:
+            # Phase 구분
+            if current_phase != task['phase_name']:
+                current_phase = task['phase_name']
+                print(f"\n📂 {current_phase}:")
+            
+            # 상태 아이콘
+            status_icon = "✅" if task['status'] == "completed" else "🔄" if task['status'] == "in_progress" else "⏳"
+            current_mark = " 👈" if task['is_current'] else ""
+            
+            print(f"   {status_icon} [{task['id'][:8]}...] {task['title']}{current_mark}")
+            if task['description']:
+                print(f"      └─ {task['description']}")
     
-    args = parser.parse_args()
+    elif action == "start":
+        if not args:
+            # 다음 작업 자동 시작
+            result = wm.start_next_task()
+        else:
+            # 특정 작업 시작
+            task_id = args[0]
+            result = wm.start_task(task_id)
+        
+        if result['success']:
+            print(f"✅ {result['message']}")
+            task_data = result['data']
+            print(f"   📋 작업: {task_data['title']}")
+            print(f"   🚀 상태: {task_data['status']}")
+        else:
+            print(f"❌ {result['message']}")
     
-    result = cmd_task(args.action, *args.args)
+    elif action == "complete":
+        # 인자 파싱: [task_id], [content]
+        task_id = None
+        content = None
+        
+        if args:
+            # 첫 인자가 UUID 형식이면 task_id, 아니면 content
+            if len(args[0]) > 30 and '-' in args[0]:
+                task_id = args[0]
+                content = args[1] if len(args) > 1 else None
+            else:
+                content = ' '.join(args)
+        
+        result = wm.complete_task(task_id=task_id, content=content)
+        
+        if result['success']:
+            print(f"✅ {result['message']}")
+            task_data = result['data']
+            if task_data['content']:
+                print(f"   📝 완료 내용: {task_data['content']}")
+        else:
+            print(f"❌ {result['message']}")
     
-    if not result.success:
-        print(f"❌ 오류: {result.error}")
-        sys.exit(1)
+    elif action == "phase":
+        # Phase 추가
+        if not args:
+            print("❌ 사용법: /task phase [이름] [설명(선택)]")
+            return
+        
+        name = args[0]
+        description = args[1] if len(args) > 1 else None
+        
+        result = wm.add_phase(name=name, description=description)
+        
+        if result['success']:
+            print(f"✅ {result['message']}")
+            if result['data']['description']:
+                print(f"   📝 설명: {result['data']['description']}")
+        else:
+            print(f"❌ {result['message']}")
+    
+    else:
+        print(f"❌ 알 수 없는 액션: {action}")
+        print("   사용 가능한 액션: add, list, start, complete, phase")
+        
+    # 현재 작업 표시
+    current_task = wm.get_current_task()
+    if current_task:
+        print(f"\n🎯 현재 작업: {current_task.title}")

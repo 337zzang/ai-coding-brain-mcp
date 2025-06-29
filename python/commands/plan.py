@@ -1,84 +1,77 @@
 """
-계획(Plan) 관리 명령어 - 안정화된 버전
-모든 로직은 WorkflowManager로 위임하는 단순 래퍼
+Command: Plan - 계획 관리
+WorkflowManager 중심 아키텍처 버전
 """
-import os
-import sys
 from typing import Optional
-from pathlib import Path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from core.workflow_manager import get_workflow_manager
-from core.error_handler import StandardResponse, ErrorType
-from core.models import TaskStatus
 
-def cmd_plan(name: Optional[str]=None, description: Optional[str]=None, phase_count: int=3, reset: bool=False, content: Optional[str]=None) -> StandardResponse:
-    """프로젝트 계획 수립 또는 조회 - WorkflowManager로 위임하는 단순 래퍼
 
-    Args:
-        name: 계획 이름 (없으면 현재 계획 표시)
-        description: 계획 설명
-        phase_count: Phase 개수 (기본 3개) - WorkflowManager에서 처리
-        reset: True일 경우 계획 초기화
-        content: 계획의 상세 내용 (프로젝트 목표, 전략 등)
-
-    Returns:
-        StandardResponse: 표준 응답
+def cmd_plan(action: str = "show", name: Optional[str] = None, 
+             description: Optional[str] = None) -> None:
     """
-    try:
-        wm = get_workflow_manager()
-        if reset:
-            result = wm.reset_plan()
-            if isinstance(result, dict):
-                return StandardResponse(**result)
-            return result
-        if name:
-            if wm.context.plan:
-                existing_tasks = len(wm.context.get_all_tasks())
-                if existing_tasks > 0:
-                    print(f"⚠️ 기존 계획 '{wm.context.plan.name}'에 {existing_tasks}개의 작업이 있습니다.")
-                    wm.save_context()
-                    print(f'✅ 기존 계획이 저장되었습니다.')
-                    reset_result = wm.reset_plan()
-                    if isinstance(reset_result, dict) and (not reset_result.get('success')):
-                        return StandardResponse(**reset_result)
-                    elif hasattr(reset_result, 'success') and (not reset_result.success):
-                        return reset_result
-            result = wm.create_plan(name=name, description=description or f'{name} 계획', content=content)
-            if isinstance(result, dict):
-                return StandardResponse(**result)
-            return result
+    계획 관리 명령어 - WorkflowManager에 모든 로직 위임
+    
+    Args:
+        action: 액션 (create, update, show)
+        name: 계획 이름
+        description: 계획 설명
+    """
+    wm = get_workflow_manager()
+    
+    if action == "create":
+        if not name:
+            print("❌ 계획 이름을 입력해주세요")
+            return
+        
+        result = wm.create_plan(name=name, description=description)
+        
+        if result['success']:
+            print(f"✅ {result['message']}")
+            print(f"   📋 ID: {result['data']['id']}")
+            print(f"   📌 이름: {result['data']['name']}")
+            if result['data']['description']:
+                print(f"   📝 설명: {result['data']['description']}")
         else:
-            if not wm.context.plan:
-                return StandardResponse.error(ErrorType.PLAN_ERROR, '설정된 계획이 없습니다. plan 명령어로 생성하세요.')
-            plan = wm.context.plan
-            status = wm.get_workflow_status()
-            print(f'📋 현재 계획: {plan.name}')
-            print(f"진행률: {status['progress']:.1f}% ({status['completed_tasks']}/{status['total_tasks']})")
-            if hasattr(plan, 'content') and plan.content:
-                print(f'\n📝 계획 내용:')
-                print(f'   {plan.content}')
-            print('\n📊 Phase별 진행 상황:')
-            for phase_id, phase in plan.phases.items():
-                tasks = list(phase.tasks.values())
-                if tasks:
-                    completed = len([t for t in tasks if t.status == TaskStatus.COMPLETED])
-                    progress = completed / len(tasks) * 100
-                    icon = '✅' if progress == 100 else '🔄' if progress > 0 else '⏳'
-                    print(f'{icon} {phase.name}: {progress:.0f}% ({completed}/{len(tasks)})')
-                else:
-                    print(f'⏳ {phase.name}: 작업 없음')
-            return StandardResponse.success({'plan': plan, 'status': status})
-    except Exception as e:
-        return StandardResponse.error(ErrorType.PLAN_ERROR, f'계획 처리 중 오류: {str(e)}')
-if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser(description='프로젝트 계획 관리')
-    parser.add_argument('name', nargs='?', help='계획 이름')
-    parser.add_argument('-d', '--description', help='계획 설명')
-    parser.add_argument('-c', '--content', help='계획 상세 내용')
-    parser.add_argument('-r', '--reset', action='store_true', help='계획 초기화')
-    args = parser.parse_args()
-    result = cmd_plan(name=args.name, description=args.description, content=args.content, reset=args.reset)
-    if not result.success:
-        print(f'❌ 오류: {result.error}')
-        sys.exit(1)
+            print(f"❌ {result['message']}")
+    
+    elif action == "update":
+        result = wm.update_plan(name=name, description=description)
+        
+        if result['success']:
+            print(f"✅ {result['message']}")
+            print(f"   📌 이름: {result['data']['name']}")
+            if result['data']['description']:
+                print(f"   📝 설명: {result['data']['description']}")
+        else:
+            print(f"❌ {result['message']}")
+    
+    elif action == "show":
+        plan = wm.get_plan()
+        
+        if plan:
+            print(f"📋 현재 계획: {plan.name}")
+            if plan.description:
+                print(f"   📝 설명: {plan.description}")
+            
+            # 통계 정보
+            stats = wm.get_statistics()
+            print(f"\n📊 진행 상황:")
+            print(f"   • Phase: {stats['completed_phases']}/{stats['total_phases']} 완료")
+            print(f"   • 작업: {stats['completed_tasks']}/{stats['total_tasks']} 완료")
+            print(f"   • 진행률: {stats['progress']:.1f}%")
+            
+            # Phase 목록
+            if plan.phases:
+                print(f"\n📂 Phase 목록:")
+                for phase in plan.phases:
+                    status_icon = "✅" if phase.status.value == "completed" else "🔄" if phase.status.value == "in_progress" else "⏳"
+                    print(f"   {status_icon} {phase.name} ({len(phase.tasks)}개 작업)")
+                    if phase.description:
+                        print(f"      └─ {phase.description}")
+        else:
+            print("📋 활성화된 계획이 없습니다")
+            print("   '/plan create [이름]'으로 새 계획을 생성하세요")
+    
+    else:
+        print(f"❌ 알 수 없는 액션: {action}")
+        print("   사용 가능한 액션: create, update, show")

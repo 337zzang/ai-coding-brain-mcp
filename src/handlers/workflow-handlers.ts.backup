@@ -1,0 +1,58 @@
+import { Tool } from '../types/mcp-types.js';
+
+export function getWorkflowCode(tool: Tool, args: any): string {
+  let code = '';
+  
+  switch (tool.name) {
+    case 'plan_project':
+      // 새로운 cmd_plan 함수 호출
+      code = `
+from commands.plan import cmd_plan
+
+# 계획 관리
+if "${args.plan_name || ''}":
+    # 계획 생성
+    cmd_plan("create", "${args.plan_name || ''}", "${args.description || ''}")
+else:
+    # 계획 표시
+    cmd_plan("show")
+`;
+      break;
+      
+    case 'task_manage':
+      // 새로운 cmd_task 함수 호출
+      code = `
+from commands.task import cmd_task
+
+# 작업 관리
+action = "${args.action || 'list'}"
+args_list = ${JSON.stringify(args.args || [])}
+cmd_task(action, args_list)
+`;
+      break;
+      
+    case 'next_task':
+      // 새로운 cmd_next 함수 호출
+      code = `
+from commands.next import cmd_next
+
+# 다음 작업으로 진행
+content = ${args.content ? `"${args.content.replace(/"/g, '\"')}"` : 'None'}
+cmd_next(content)
+`;
+      break;
+      
+    case 'flow_project':
+      code = `
+# 프로젝트 전환은 기존 flow_project 사용
+from commands.enhanced_flow import flow_project as cmd_flow
+cmd_flow("${args.project_name}")
+`;
+      break;
+      
+    default:
+      code = `print("Unknown workflow tool: ${tool.name}")`;
+  }
+  
+  return code;
+}

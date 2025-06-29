@@ -80,3 +80,18 @@ python/vendor/
 
 # Build output
 python/build/
+
+# Windows executables and libraries
+*.exe
+*.dll
+*.pak
+*.dat
+*.bin
+*.json
+snapshot_blob.bin
+icudtl.dat
+Squirrel-UpdateSelf.log
+
+# Directories
+locales/
+resources/

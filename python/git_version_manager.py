@@ -56,6 +56,30 @@ except ImportError:
     WISDOM_AVAILABLE = False
 
 
+# 보안 검증 함수
+def validate_git_input(input_str: str, input_type: str = "general") -> bool:
+    """Git 명령어 입력값 보안 검증"""
+    if not input_str or not isinstance(input_str, str):
+        return False
+    
+    # 위험한 문자 검사
+    dangerous_chars = [';', '&&', '||', '`', '$', '(', ')', '{', '}', '|', '&', '<', '>', '\n', '\r']
+    if any(char in input_str for char in dangerous_chars):
+        logging.warning(f"Dangerous characters detected in {input_type}: {input_str}")
+        return False
+    
+    # 브랜치 이름 검증
+    if input_type == "branch":
+        # Git 브랜치 이름 규칙 검증
+        import re
+        if not re.match(r'^[a-zA-Z0-9/_.-]+$', input_str):
+            logging.warning(f"Invalid branch name: {input_str}")
+            return False
+    
+    return True
+
+
+
 class GitVersionManager:
     """Git 기반 버전 관리 및 백업 시스템"""
     

@@ -500,11 +500,12 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                         return StandardResponse.error(ErrorType.PLAN_ERROR, f"계획 초기화 실패: {reset_result.get('message', '')}")
             
             # 새 계획 생성
+            # 새 계획 생성
             result = wm.create_plan(
                 name=name,
-                description=description if description else f"{name} 계획"
+                description=description if description else f"{name} 계획",
+                content=content
             )
-            return result
         else:
             # 현재 계획 표시
             if not wm.plan:

@@ -47,12 +47,26 @@ class WorkflowManager:
             return ErrorHandler.handle_exception(e, ErrorType.CONTEXT_ERROR)
 
     @autosave
-    def create_plan(self, name: str, description: str, phases: List[Dict[str, Any]]=None) -> StandardResponse:
+    def create_plan(self, name: str, description: str, phases: List[Dict[str, Any]]=None, content: str = None) -> StandardResponse:
         """새 계획 생성"""
         try:
             if not phases:
                 phases = self._get_default_phases()
-            plan = Plan(name=name, description=description, phases={phase['id']: Phase(**phase) for phase in phases}, phase_order=[phase['id'] for phase in phases])
+            plan = Plan(
+            name=name, 
+            description=description, 
+            phases={phase['id']: Phase(**phase) for phase in phases}, 
+            phase_order=[phase['id'] for phase in phases],
+            content=content
+        )
+        
+        # content가 있으면 content_history에도 추가
+        if content:
+            plan.content_history.append({
+                "timestamp": datetime.now().isoformat(),
+                "content": content,
+                "action": "created"
+            })
             self.context.plan = plan
             self.context.updated_at = datetime.now()
             self._trigger_event('plan_created', plan)

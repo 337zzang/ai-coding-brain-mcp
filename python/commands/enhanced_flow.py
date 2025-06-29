@@ -1257,6 +1257,17 @@ def sync_context_from_plan(context: Any, plan: Any) -> Any:
         setattr(context, 'phase_task_counts', phase_task_counts)
     
     return context
+# Helpers 자동 초기화
+try:
+    from claude_code_ai_brain import AIHelpers
+    if 'helpers' not in globals():
+        helpers = AIHelpers()
+        import os
+        helpers.initialize_context(os.getcwd())
+except Exception as e:
+    print(f"⚠️ Helpers 자동 초기화 실패: {e}")
+    helpers = None
+
 
 # ProjectAnalyzer 사용 여부 (오류가 많아서 임시로 비활성화)
 USE_PROJECT_ANALYZER = False

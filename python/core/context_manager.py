@@ -499,12 +499,31 @@ class UnifiedContextManager:
 _context_manager = UnifiedContextManager()
 
 
-def get_context_manager() -> UnifiedContextManager:
-    """Get singleton instance of Context Manager"""
-    return _context_manager
-
-
-def initialize_context(project_path: str, project_name: str = None, 
-                      memory_root: str = None, existing_context: Dict[str, Any] = None) -> ProjectContext:
-    """Initialize context using the singleton Context Manager"""
-    return _context_manager.initialize(project_path, project_name, memory_root, existing_context)
+def get_context_manager():
+    """컨텍스트 매니저 싱글톤 인스턴스 반환 (자동 초기화 포함)"""
+    global _context_manager_instance
+    
+    if _context_manager_instance is None:
+        _context_manager_instance = UnifiedContextManager()
+        
+        # helpers 자동 연결
+        try:
+            from claude_code_ai_brain import AIHelpers
+            if not hasattr(_context_manager_instance, 'helpers'):
+                # helpers 인스턴스 생성 및 연결
+                helpers = AIHelpers()
+                _context_manager_instance.helpers = helpers
+                
+                # 현재 디렉토리로 컨텍스트 초기화
+                import os
+                project_path = os.getcwd()
+                if not _context_manager_instance.context:
+                    helpers.initialize_context(project_path)
+                    _context_manager_instance.context = helpers.get_context()
+                    
+        except ImportError:
+            print("⚠️ AIHelpers를 import할 수 없습니다.")
+        except Exception as e:
+            print(f"⚠️ helpers 자동 초기화 오류: {e}")
+    
+    return _context_manager_instance

@@ -1,344 +1,125 @@
 /**
- * Git Handlers - AI Coding Brain MCP
- * Git 관련 MCP 도구 핸들러
+ * MCP Git Wrapper
+ * MCP 도구에서 Git 서비스를 사용하기 위한 래퍼
  */
+import { getGitService } from '../services/git-service';
+import { McpResponse } from '../types';
 
-import { createLogger } from '../services/logger';
-
-const logger = createLogger('git-handlers');
-
-/**
- * Python 스크립트 실행 헬퍼 함수
- */
-async function executePythonScript(scriptPath: string, args: string[], projectRoot: string): Promise<any> {
-    const { execFile } = require('child_process');
-    const { promisify } = require('util');
-    const execFileAsync = promisify(execFile);
-    const path = require('path');
-    const fs = require('fs');
+export async function handleGitPush(args: { remote?: string; branch?: string }): Promise<McpResponse> {
+  try {
+    const gitService = getGitService();
+    const result = await gitService.push(args.remote, args.branch);
     
-    // 설정 파일에서 Python 경로 읽기
-    const configPath = path.join(projectRoot, '.ai-brain.config.json');
-    let pythonPath = 'python';
-    
-    if (fs.existsSync(configPath)) {
-        try {
-            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-            pythonPath = config.python?.path || 'python';
-        } catch (e) {
-            logger.warn('Failed to read config, using default python path');
-        }
+    if (result.success) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Git push 성공!\n${result.output}`
+          }
+        ]
+      };
+    } else {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Git push 실패:\n${result.error || result.output}`
+          }
+        ]
+      };
     }
-    
-    // Python 실행 환경 설정
-    const env = {
-        ...process.env,
-        PYTHONPATH: path.join(projectRoot, 'python'),
-        PYTHONIOENCODING: 'utf-8',
-        PYTHONDONTWRITEBYTECODE: '1'
+  } catch (error: any) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Git push 오류: ${error.message}`
+        }
+      ]
     };
+  }
+}
+
+export async function handleGitCommit(args: { message: string }): Promise<McpResponse> {
+  try {
+    const gitService = getGitService();
     
-    try {
-        const { stdout, stderr } = await execFileAsync(pythonPath, [scriptPath, ...args], {
-            cwd: projectRoot,
-            env: env,
-            windowsHide: true
-        });
-        
-        if (stderr) {
-            logger.warn(`Python stderr: ${stderr}`);
-        }
-        
-        return JSON.parse(stdout.trim());
-    } catch (error: any) {
-        logger.error('Python execution failed:', error);
-        throw new Error(`Failed to execute Python script: ${error.message}`);
+    // 먼저 모든 파일 추가
+    await gitService.add();
+    
+    // 커밋
+    const result = await gitService.commit(args.message);
+    
+    if (result.success) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Git commit 성공!\n${result.output}`
+          }
+        ]
+      };
+    } else {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Git commit 실패:\n${result.error || result.output}`
+          }
+        ]
+      };
     }
+  } catch (error: any) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Git commit 오류: ${error.message}`
+        }
+      ]
+    };
+  }
 }
 
-/**
- * Git 상태 확인
- */
-export async function handleGitStatus(_args: any): Promise<{ content: Array<{ type: string; text: string }> }> {
-    try {
-        const path = require('path');
-        const fs = require('fs');
-        
-        // 프로젝트 루트 찾기
-        let projectRoot = process.cwd();
-        
-        // ai-coding-brain-mcp 프로젝트 디렉토리 찾기
-        if (!projectRoot.includes('ai-coding-brain-mcp')) {
-            // 알려진 위치에서 찾기
-            const possiblePaths = [
-                path.join(process.env['USERPROFILE'] || '', 'Desktop', 'ai-coding-brain-mcp'),
-                path.join(process.env['USERPROFILE'] || '', 'Documents', 'ai-coding-brain-mcp')
-            ];
-            
-            for (const possiblePath of possiblePaths) {
-                if (fs.existsSync(path.join(possiblePath, '.ai-brain.config.json'))) {
-                    projectRoot = possiblePath;
-                    break;
-                }
-            }
-        }
-        
-        // Python 스크립트 경로 설정
-        const scriptPath = path.join(projectRoot, 'python', 'mcp_git_wrapper.py');
-        
-        if (!fs.existsSync(scriptPath)) {
-            throw new Error(`Python script not found at ${scriptPath}`);
-        }
-        
-        const gitResult = await executePythonScript(scriptPath, ['status'], projectRoot);
-        
-        // git_status는 success 필드가 없을 수 있으므로 branch 필드로 판단
-        if (gitResult.branch !== undefined) {
-            // 상태 메시지 생성
-            let message = `🌿 **Git 상태**\n\n`;
-            message += `• 브랜치: ${gitResult.branch}\n`;
-            message += `• 수정된 파일: ${gitResult.modified?.length || 0}개\n`;
-            message += `• 스테이징된 파일: ${gitResult.staged?.length || 0}개\n`;
-            message += `• 추적되지 않는 파일: ${gitResult.untracked?.length || 0}개\n`;
-            message += `• 상태: ${gitResult.clean ? '✅ 깨끗함' : '⚠️ 변경사항 있음'}`;
-            
-            return {
-                content: [{
-                    type: 'text',
-                    text: message
-                }]
-            };
-        } else if (gitResult.success === false) {
-            return {
-                content: [{
-                    type: 'text',
-                    text: `Git 상태 확인 실패: ${gitResult.message}`
-                }]
-            };
-        } else {
-            // 기타 경우 JSON 그대로 출력
-            return {
-                content: [{
-                    type: 'text',
-                    text: JSON.stringify(gitResult, null, 2)
-                }]
-            };
-        }
-    } catch (error) {
-        logger.error('Git status failed:', error);
-        return {
-            content: [{
-                type: 'text',
-                text: `Git 상태 확인 실패: ${error}`
-            }]
-        };
+export async function handleGitStatus(): Promise<McpResponse> {
+  try {
+    const gitService = getGitService();
+    const status = await gitService.status();
+    
+    let message = `브랜치: ${status.branch}\n`;
+    message += `수정된 파일: ${status.modified.length}개\n`;
+    
+    if (status.modified.length > 0) {
+      message += '\n수정된 파일 목록:\n';
+      status.modified.forEach(file => {
+        message += `  - ${file}\n`;
+      });
     }
-}
-
-/**
- * Git 스마트 커밋
- */
-export async function handleGitCommitSmart(args: { message?: string; auto_add?: boolean }): Promise<{ content: Array<{ type: string; text: string }> }> {
-    try {
-        const path = require('path');
-        const fs = require('fs');
-        
-        // 프로젝트 루트 찾기
-        let projectRoot = process.cwd();
-        
-        // ai-coding-brain-mcp 프로젝트 디렉토리 찾기
-        if (!projectRoot.includes('ai-coding-brain-mcp')) {
-            // 알려진 위치에서 찾기
-            const possiblePaths = [
-                path.join(process.env['USERPROFILE'] || '', 'Desktop', 'ai-coding-brain-mcp'),
-                path.join(process.env['USERPROFILE'] || '', 'Documents', 'ai-coding-brain-mcp')
-            ];
-            
-            for (const possiblePath of possiblePaths) {
-                if (fs.existsSync(path.join(possiblePath, '.ai-brain.config.json'))) {
-                    projectRoot = possiblePath;
-                    break;
-                }
-            }
-        }
-        
-        // Python 스크립트 경로 설정
-        const scriptPath = path.join(projectRoot, 'python', 'mcp_git_wrapper.py');
-        
-        if (!fs.existsSync(scriptPath)) {
-            throw new Error(`Python script not found at ${scriptPath}`);
-        }
-        
-        // 인자 준비
-        const cmdArgs = ['commit'];
-        if (args.message) {
-            cmdArgs.push(args.message);
-        } else {
-            cmdArgs.push('');  // 빈 메시지
-        }
-        cmdArgs.push(args.auto_add !== false ? 'true' : 'false');
-        
-        const commitResult = await executePythonScript(scriptPath, cmdArgs, projectRoot);
-        
-        return {
-            content: [{
-                type: 'text',
-                text: commitResult.message || 'Git 커밋 완료'
-            }]
-        };
-    } catch (error) {
-        logger.error('Git commit failed:', error);
-        return {
-            content: [{
-                type: 'text',
-                text: `Git 커밋 실패: ${error}`
-            }]
-        };
+    
+    if (status.untracked.length > 0) {
+      message += `\n추적되지 않은 파일: ${status.untracked.length}개\n`;
+      status.untracked.forEach(file => {
+        message += `  - ${file}\n`;
+      });
     }
-}
-
-/**
- * Git 스마트 브랜치
- */
-export async function handleGitBranchSmart(args: { branch_name?: string; base_branch?: string }): Promise<{ content: Array<{ type: string; text: string }> }> {
-    try {
-        const path = require('path');
-        const fs = require('fs');
-        
-        // 프로젝트 루트 찾기 (handleGitStatus와 동일한 로직)
-        let projectRoot = process.cwd();
-        
-        if (!projectRoot.includes('ai-coding-brain-mcp')) {
-            const possiblePaths = [
-                path.join(process.env['USERPROFILE'] || '', 'Desktop', 'ai-coding-brain-mcp'),
-                path.join(process.env['USERPROFILE'] || '', 'Documents', 'ai-coding-brain-mcp')
-            ];
-            
-            for (const possiblePath of possiblePaths) {
-                if (fs.existsSync(path.join(possiblePath, '.ai-brain.config.json'))) {
-                    projectRoot = possiblePath;
-                    break;
-                }
-            }
+    
+    return {
+      content: [
+        {
+          type: 'text',
+          text: message
         }
-        
-        // Python 스크립트 경로
-        const scriptPath = path.join(projectRoot, 'python', 'mcp_git_wrapper.py');
-        
-        if (!fs.existsSync(scriptPath)) {
-            throw new Error(`Python script not found at ${scriptPath}`);
+      ]
+    };
+  } catch (error: any) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Git status 오류: ${error.message}`
         }
-        
-        // 인자 준비
-        const pythonArgs = ['branch-smart'];
-        if (args.branch_name) {
-            pythonArgs.push(args.branch_name);
-        }
-        if (args.base_branch) {
-            pythonArgs.push('--base', args.base_branch);
-        }
-        
-        const result = await executePythonScript(scriptPath, pythonArgs, projectRoot);
-        
-        return {
-            content: [{
-                type: 'text',
-                text: result.message || 'Git 브랜치 생성 완료'
-            }]
-        };
-    } catch (error) {
-        logger.error('Git branch failed:', error);
-        return {
-            content: [{
-                type: 'text',
-                text: `Git 브랜치 생성 실패: ${error}`
-            }]
-        };
-    }
-}
-
-/**
- * Git 스마트 롤백
- */
-export async function handleGitRollbackSmart(args: { target?: string; safe_mode?: boolean }): Promise<{ content: Array<{ type: string; text: string }> }> {
-    try {
-        const { execSync } = require('child_process');
-        const target = args.target ? `"${args.target}"` : 'None';
-        const safeMode = args.safe_mode !== false;
-        
-        const pythonCode = `
-from mcp_git_tools import git_rollback_smart
-result = git_rollback_smart(${target}, ${safeMode})
-print(json.dumps(result, ensure_ascii=False))
-`;
-        
-        const result = execSync(
-            `python -c "import json; ${pythonCode.replace(/"/g, '\\"')}"`,
-            { 
-                encoding: 'utf8', 
-                cwd: process.cwd(),
-                shell: true  // Windows 호환성을 위해 추가
-            }
-        );
-        
-        const rollbackResult = JSON.parse(result.trim());
-        
-        return {
-            content: [{
-                type: 'text',
-                text: rollbackResult.message || 'Git 롤백 완료'
-            }]
-        };
-    } catch (error) {
-        logger.error('Git rollback failed:', error);
-        return {
-            content: [{
-                type: 'text',
-                text: `Git 롤백 실패: ${error}`
-            }]
-        };
-    }
-}
-
-/**
- * Git 푸시
- */
-export async function handleGitPush(args: { remote?: string; branch?: string }): Promise<{ content: Array<{ type: string; text: string }> }> {
-    try {
-        const { execSync } = require('child_process');
-        const remote = args.remote || 'origin';
-        const branch = args.branch ? `"${args.branch}"` : 'None';
-        
-        const pythonCode = `
-from mcp_git_tools import git_push
-result = git_push("${remote}", ${branch})
-print(json.dumps(result, ensure_ascii=False))
-`;
-        
-        const result = execSync(
-            `python -c "import json; ${pythonCode.replace(/"/g, '\\"')}"`,
-            { 
-                encoding: 'utf8', 
-                cwd: process.cwd(),
-                shell: true  // Windows 호환성을 위해 추가
-            }
-        );
-        
-        const pushResult = JSON.parse(result.trim());
-        
-        return {
-            content: [{
-                type: 'text',
-                text: pushResult.message || 'Git 푸시 완료'
-            }]
-        };
-    } catch (error) {
-        logger.error('Git push failed:', error);
-        return {
-            content: [{
-                type: 'text',
-                text: `Git 푸시 실패: ${error}`
-            }]
-        };
-    }
+      ]
+    };
+  }
 }

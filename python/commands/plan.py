@@ -14,7 +14,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from core.context_manager import get_context_manager
 from core.workflow_manager import get_workflow_manager
-from core.error_handler import StandardResponse
+from core.error_handler import StandardResponse, ErrorType
 from core.models import TaskStatus
 from analyzers.project_analyzer import ProjectAnalyzer
 
@@ -496,7 +496,7 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
                     # 계획 초기화
                     reset_result = wm.reset_plan()
                     if not reset_result['success']:
-                        from core.error_handler import ErrorType
+
                         return StandardResponse.error(ErrorType.PLAN_ERROR, f"계획 초기화 실패: {reset_result.get('message', '')}")
             
             # 새 계획 생성
@@ -508,7 +508,7 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
         else:
             # 현재 계획 표시
             if not wm.plan:
-                return StandardResponse.error("설정된 계획이 없습니다. 'plan \"계획명\"'으로 생성하세요.")
+                return StandardResponse.error(ErrorType.PLAN_ERROR, "설정된 계획이 없습니다. 'plan \"계획명\"'으로 생성하세요.")
                 
             plan = wm.plan
             status = wm.get_workflow_status()
@@ -558,7 +558,7 @@ def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phas
             )
             
     except Exception as e:
-        from core.error_handler import ErrorType
+
         import traceback
         print(f"\n❌ 오류 발생 위치:")
         traceback.print_exc()

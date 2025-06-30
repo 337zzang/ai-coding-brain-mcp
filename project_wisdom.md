@@ -7,7 +7,7 @@
 
 ## ❌ 자주 하는 실수들
 
-### console_usage (19회)
+### console_usage (18회)
 - 올바른 방법: import { logger } from '../utils/logger'; logger.info('메시지');
 
 ### hardcoded_path (18회)

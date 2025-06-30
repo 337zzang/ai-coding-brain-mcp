@@ -22,8 +22,6 @@ import { handleFlowProject, handlePlanProject, handleTaskManage, handleNextTask 
 import { handleWisdomStats, handleTrackMistake, handleAddBestPractice, handleWisdomAnalyze, handleWisdomAnalyzeFile, handleWisdomReport } from './handlers/wisdom-handlers';
 import { BackupHandler } from './handlers/backup-handler';
 import { handleFileAnalyze } from './handlers/file-analyzer-handler';
-import { handleGitStatus, handleGitCommitSmart, handleGitBranchSmart, handleGitRollbackSmart, handleGitPush } from './handlers/git-handlers';
-import { handleGitignoreAnalyze, handleGitignoreUpdate, handleGitignoreCreate } from './handlers/gitignore-handlers';
 import { handleBuildProjectContext } from './handlers/project-handlers';
 import { apiToggleHandler, listApisHandler } from './handlers/api-toggle-handler';
 

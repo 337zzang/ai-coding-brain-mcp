@@ -1,4 +1,4 @@
-# 🧠 Project Wisdom - ai-coding-brain-mcp
+# 🧠 Project Wisdom - 
 
 ## 📌 프로젝트 비전
 프로젝트 작업 중 축적된 지혜와 교훈을 관리합니다.
@@ -10,10 +10,10 @@
 ### console_usage (18회)
 - 올바른 방법: import { logger } from '../utils/logger'; logger.info('메시지');
 
-### hardcoded_path (18회)
+### hardcoded_path (17회)
 - 올바른 방법: 문서를 참고하세요
 
-### direct_flow (4회)
+### direct_flow (3회)
 - 올바른 방법: execute_code: helpers.cmd_flow_with_context('project-name')
 
 ## ✅ 베스트 프랙티스

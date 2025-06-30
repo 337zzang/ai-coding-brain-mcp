@@ -182,7 +182,7 @@ class AIHelpers:
         try:
             # 파일 작업 및 코드 분석 (auto_tracking_wrapper에서)
             from auto_tracking_wrapper import (
-                create_file, read_file, backup_file, restore_backup,
+                create_file, read_file, 
                 replace_block, insert_block,
                 parse_with_snippets, get_snippet_preview,
                 scan_directory_dict, search_files_advanced, search_code_content
@@ -191,8 +191,8 @@ class AIHelpers:
             # 파일 작업
             self.create_file = create_file
             self.read_file = read_file
-            self.backup_file = backup_file
-            self.restore_backup = restore_backup
+        # 백업 함수 제거 (Git으로 대체)
+        # self.backup_file = backup_file  # 제거됨
             
             # 코드 수정
             self.replace_block = replace_block
@@ -534,6 +534,138 @@ class AIHelpers:
 
 
 
+
+
+    # ===== Git 관련 헬퍼 메서드들 =====
+    def git_status(self):
+        """Git 저장소 상태 확인"""
+        try:
+            from git import Repo
+            repo = Repo('.')
+            
+            # 브랜치 정보
+            branch = repo.active_branch.name
+            
+            # 변경된 파일들
+            modified = [item.a_path for item in repo.index.diff(None)]
+            staged = [item.a_path for item in repo.index.diff('HEAD')]
+            untracked = repo.untracked_files
+            
+            return {
+                'success': True,
+                'branch': branch,
+                'modified': modified,
+                'staged': staged,
+                'untracked': untracked,
+                'clean': len(modified) == 0 and len(staged) == 0 and len(untracked) == 0
+            }
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    
+    def git_add(self, files=None):
+        """파일을 스테이징 영역에 추가"""
+        try:
+            from git import Repo
+            repo = Repo('.')
+            
+            if files is None:
+                repo.git.add(A=True)  # 모든 파일 추가
+            elif isinstance(files, str):
+                repo.index.add([files])
+            elif isinstance(files, list):
+                repo.index.add(files)
+                
+            return {'success': True, 'message': f"파일 추가됨: {files or '모든 파일'}"}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    
+    def git_commit(self, message, auto_add=False):
+        """변경사항 커밋"""
+        try:
+            from git import Repo
+            repo = Repo('.')
+            
+            if auto_add:
+                repo.git.add(A=True)
+                
+            # 커밋할 내용이 있는지 확인
+            if repo.is_dirty() or len(repo.index.diff("HEAD")) > 0:
+                repo.index.commit(message)
+                return {'success': True, 'message': f"커밋 완료: {message}"}
+            else:
+                return {'success': False, 'error': '커밋할 변경사항이 없습니다'}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    
+    def git_branch(self, branch_name=None, create=True):
+        """브랜치 생성 또는 전환"""
+        try:
+            from git import Repo
+            repo = Repo('.')
+            
+            if branch_name is None:
+                # 현재 브랜치 반환
+                return {'success': True, 'branch': repo.active_branch.name}
+            
+            # 브랜치 존재 확인
+            if branch_name in [b.name for b in repo.branches]:
+                repo.git.checkout(branch_name)
+                return {'success': True, 'message': f"브랜치 전환: {branch_name}"}
+            elif create:
+                new_branch = repo.create_head(branch_name)
+                new_branch.checkout()
+                return {'success': True, 'message': f"새 브랜치 생성 및 전환: {branch_name}"}
+            else:
+                return {'success': False, 'error': f"브랜치가 존재하지 않습니다: {branch_name}"}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    
+    def git_stash(self, message=None):
+        """현재 변경사항을 임시 저장"""
+        try:
+            from git import Repo
+            repo = Repo('.')
+            
+            if repo.is_dirty():
+                if message:
+                    repo.git.stash('save', message)
+                else:
+                    repo.git.stash()
+                return {'success': True, 'message': 'Stash 저장 완료'}
+            else:
+                return {'success': False, 'error': '저장할 변경사항이 없습니다'}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    
+    def git_stash_pop(self):
+        """임시 저장한 변경사항 복원"""
+        try:
+            from git import Repo
+            repo = Repo('.')
+            
+            repo.git.stash('pop')
+            return {'success': True, 'message': 'Stash 복원 완료'}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    
+    def git_log(self, n=10):
+        """최근 커밋 히스토리 조회"""
+        try:
+            from git import Repo
+            repo = Repo('.')
+            
+            commits = []
+            for commit in repo.iter_commits(max_count=n):
+                commits.append({
+                    'hash': commit.hexsha[:7],
+                    'author': str(commit.author),
+                    'date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M'),
+                    'message': commit.message.strip()
+                })
+            
+            return {'success': True, 'commits': commits}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
 
 def initialize_repl():
     """REPL 환경 초기화"""

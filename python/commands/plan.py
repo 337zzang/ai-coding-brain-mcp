@@ -17,9 +17,7 @@ from core.error_handler import StandardResponse
 from core.models import TaskStatus
 from analyzers.project_analyzer import ProjectAnalyzer
 
-# Wisdom 시스템 통합
-from project_wisdom import get_wisdom_manager
-from wisdom_hooks import get_wisdom_hooks
+# Wisdom 시스템 통합 (제거됨)
 
 
 
@@ -374,37 +372,6 @@ def interactive_plan_creation(plan_name: str, description: str) -> Dict[str, Any
 
 
 
-def get_wisdom_suggestions(plan_type: str = None) -> Dict[str, Any]:
-    """Wisdom 시스템에서 계획 관련 제안 가져오기"""
-    wisdom = get_wisdom_manager()
-    suggestions = {
-        "common_phases": [],
-        "recommended_tasks": [],
-        "warnings": []
-    }
-    
-    # 베스트 프랙티스에서 계획 관련 내용 추출
-    for practice in wisdom.wisdom_data.get('best_practices', []):
-        if 'plan' in practice.lower() or 'phase' in practice.lower():
-            suggestions['recommended_tasks'].append(practice)
-    
-    # 자주 하는 실수 경고
-    for mistake_type, data in wisdom.wisdom_data.get('common_mistakes', {}).items():
-        if data['count'] > 2:  # 2번 이상 발생한 실수
-            suggestions['warnings'].append(f"주의: {mistake_type} ({data['count']}회 발생)")
-    
-    # 프로젝트 유형별 추천 Phase
-    if plan_type:
-        if plan_type.lower() in ['feature', '기능']:
-            suggestions['common_phases'] = ["분석 및 설계", "구현", "테스트", "문서화"]
-        elif plan_type.lower() in ['bugfix', '버그']:
-            suggestions['common_phases'] = ["원인 분석", "수정", "테스트", "검증"]
-        elif plan_type.lower() in ['refactor', '리팩토링']:
-            suggestions['common_phases'] = ["현재 상태 분석", "개선 계획", "단계별 리팩토링", "테스트"]
-    
-    return suggestions
-
-
 def auto_generate_tasks(phase_name: str, project_analyzer: ProjectAnalyzer = None) -> List[str]:
     """Phase에 맞는 작업 자동 생성"""
     tasks = []
@@ -421,8 +388,6 @@ def auto_generate_tasks(phase_name: str, project_analyzer: ProjectAnalyzer = Non
         pass
     
     # Wisdom 기반 추가 작업
-    wisdom = get_wisdom_manager()
-    hooks = get_wisdom_hooks()
     
     # 최근 오류 패턴 기반 작업 추가
     error_patterns = wisdom.wisdom_data.get('error_patterns', {})
@@ -433,30 +398,6 @@ def auto_generate_tasks(phase_name: str, project_analyzer: ProjectAnalyzer = Non
     
     return tasks
 
-
-def enhance_plan_with_wisdom(plan_data: Dict) -> Dict:
-    """계획에 Wisdom 시스템의 인사이트 추가"""
-    wisdom = get_wisdom_manager()
-    
-    # 계획 메타데이터에 Wisdom 정보 추가
-    plan_data['wisdom_insights'] = {
-        'created_with_wisdom': True,
-        'wisdom_version': getattr(wisdom, 'version', '1.0'),
-        'tracked_mistakes': len(wisdom.wisdom_data.get('common_mistakes', {})),
-        'best_practices_applied': []
-    }
-    
-    # Phase별로 관련 베스트 프랙티스 추가
-    for phase_id, phase in plan_data.get('phases', {}).items():
-        phase['wisdom_tips'] = []
-        
-        # Phase 이름과 관련된 베스트 프랙티스 찾기
-        for practice in wisdom.wisdom_data.get('best_practices', []):
-            if any(keyword in practice.lower() for keyword in phase['name'].lower().split()):
-                phase['wisdom_tips'].append(practice)
-                plan_data['wisdom_insights']['best_practices_applied'].append(practice)
-    
-    return plan_data
 
 def cmd_plan(name: Optional[str] = None, description: Optional[str] = None, phase_count: int = 3, reset: bool = False) -> StandardResponse:
     """프로젝트 계획 수립 또는 조회

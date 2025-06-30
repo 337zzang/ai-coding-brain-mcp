@@ -31,27 +31,13 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
-# Wisdom 시스템 통합
-try:
-    from project_wisdom import get_wisdom_manager
-    from wisdom_hooks import get_wisdom_hooks
-    from core.wisdom_integration import wisdom_integration
-    WISDOM_AVAILABLE = True
-except ImportError:
-    WISDOM_AVAILABLE = False
-    import sys
-    if sys.stdout.encoding.lower() != 'utf-8':
-        print("Warning: Wisdom system is not available.")
-    else:
-        print("⚠️ Wisdom 시스템을 사용할 수 없습니다.")
+# Wisdom 시스템 제거됨 (2025-06-30 리팩토링)
 
 # ============================================================================
 # 🌟 전역 변수 초기화
 # ============================================================================
 repl_globals = {}  # REPL 전역 네임스페이스
 execution_count = 0  # 실행 카운터
-wisdom = None  # Wisdom 매니저
-hooks = None   # Wisdom Hooks
 
 # ============================================================================
 # 🛡️ AIHelpers - 네임스페이스 보호된 헬퍼 함수 모음
@@ -62,74 +48,81 @@ class AIHelpers:
     
     def __init__(self):
         self._load_helpers()
+        self._bind_modular_methods()
         self._enabled_apis = {}  # API 활성화 상태 관리
+    
+    def _bind_modular_methods(self):
+        """모듈화된 메서드들을 바인딩"""
+        # Git 메서드들
+        from ai_helpers import git
+        self.git_status = git.git_status
+        self.git_add = git.git_add
+        self.git_commit = git.git_commit
+        self.git_branch = git.git_branch
+        self.git_stash = git.git_stash
+        self.git_stash_pop = git.git_stash_pop
+        self.git_log = git.git_log
+        
+        # Build 메서드들
+        from ai_helpers import build
+        self.find_executable = build.find_executable
+        self.detect_project_type = build.detect_project_type
+        self.run_command = build.run_command
+        self.build_project = build.build_project
+        self.install_dependencies = build.install_dependencies
+        
+        # Context 메서드들
+        from ai_helpers import context
+        self.get_context = context.get_context
+        self.get_value = context.get_value
+        self.initialize_context = context.initialize_context
+        self.update_cache = context.update_cache
+        
+        # Command 메서드들
+        from ai_helpers import command
+        self.cmd_plan = command.cmd_plan
+        self.cmd_task = command.cmd_task
+        self.cmd_next = command.cmd_next
+        
+        # File 메서드들
+        from ai_helpers import file
+        self.create_file = file.create_file
+        self.read_file = file.read_file
+        self.write_file = file.write_file
+        self.append_to_file = file.append_to_file
+        
+        # Code 메서드들
+        from ai_helpers import code
+        self.replace_block = code.replace_block
+        self.insert_block = code.insert_block
+        self.parse_code = code.parse_code
+        
+        # Search 메서드들
+        from ai_helpers import search
+        self.scan_directory_dict = search.scan_directory_dict
+        self.search_files_advanced = search.search_files_advanced
+        self.search_code_content = search.search_code_content
+        
+        # Utils 메서드들
+        from ai_helpers import utils
+        # list_functions는 self를 인자로 받아야 하므로 래핑
+        self.list_functions = lambda: utils.list_functions(self)
     def _load_helpers(self):
-        """헬퍼 함수들을 로드"""
-        # cmd_flow 초기화
-        self.cmd_flow = None
+        """auto_tracking_wrapper 및 지연 로딩 함수들을 로드"""
+        # context manager 초기화
+        try:
+            from core.context_manager import get_context_manager
+            self._context_manager = get_context_manager()
+        except:
+            self._context_manager = None
         
-        # 지연 로딩을 위한 헬퍼 함수들
-        def lazy_cmd_flow(*args, **kwargs):
-            if not self.cmd_flow:
-                from claude_code_ai_brain import cmd_flow
-                self.cmd_flow = cmd_flow
-            return self.cmd_flow(*args, **kwargs)
-        
-        def lazy_initialize_context(*args, **kwargs):
-            from claude_code_ai_brain import initialize_context
-            return initialize_context(*args, **kwargs)
-        
-        def lazy_save_context(*args, **kwargs):
-            from claude_code_ai_brain import save_context
-            return save_context(*args, **kwargs)
-        
-        def lazy_update_cache(*args, **kwargs):
-            from claude_code_ai_brain import update_cache
-            return update_cache(*args, **kwargs)
-        
-        def lazy_get_value(*args, **kwargs):
-            from claude_code_ai_brain import get_value
-            return get_value(*args, **kwargs)
-        
-        def lazy_track_file_access(*args, **kwargs):
-            from claude_code_ai_brain import track_file_access
-            return track_file_access(*args, **kwargs)
-        
-        def lazy_track_function_edit(*args, **kwargs):
-            from claude_code_ai_brain import track_function_edit
-            return track_function_edit(*args, **kwargs)
-        
-        def lazy_get_work_tracking_summary(*args, **kwargs):
-            from claude_code_ai_brain import get_work_tracking_summary
-            return get_work_tracking_summary(*args, **kwargs)
-        
-        def lazy_cmd_plan(*args, **kwargs):
-            from claude_code_ai_brain import cmd_plan
-            return cmd_plan(*args, **kwargs)
-        
-        def lazy_cmd_task(*args, **kwargs):
-            from claude_code_ai_brain import cmd_task
-            return cmd_task(*args, **kwargs)
-        
-        def lazy_cmd_next(*args, **kwargs):
-            from claude_code_ai_brain import cmd_next
-            return cmd_next(*args, **kwargs)
-        
-        # 지연 로딩 함수들 할당
-        self.cmd_flow = lazy_cmd_flow
-        self.initialize_context = lazy_initialize_context
-        self.save_context = lazy_save_context
-        self.update_cache = lazy_update_cache
-        self.get_value = lazy_get_value
-        self.track_file_access = lazy_track_file_access
-        self.track_function_edit = lazy_track_function_edit
-        self.get_work_tracking_summary = lazy_get_work_tracking_summary
-        self.cmd_plan = lazy_cmd_plan
-        self.cmd_task = lazy_cmd_task
-        self.cmd_next = lazy_cmd_next
-        
-        # context manager는 나중에 필요할 때 로드
-        self._context_manager = None
+        # 지연 로딩 함수들 (claude_code_ai_brain에서)
+        from ai_helpers import command
+        self.cmd_flow = command.cmd_flow
+        self.save_context = lambda *args, **kwargs: command.lazy_import('claude_code_ai_brain', 'save_context')(*args, **kwargs)
+        self.track_file_access = command.track_file_access
+        self.track_function_edit = command.track_function_edit
+        self.get_work_tracking_summary = command.get_work_tracking_summary
         
         try:
             # cmd_flow_with_context 추가 - 더 견고한 방식으로
@@ -180,137 +173,24 @@ class AIHelpers:
             self.cmd_flow_with_context = minimal_flow_project
         
         try:
-            # 파일 작업 및 코드 분석 (auto_tracking_wrapper에서)
-            from auto_tracking_wrapper import (
-                create_file, read_file, 
-                replace_block, insert_block,
-                parse_with_snippets, get_snippet_preview,
-                scan_directory_dict, search_files_advanced, search_code_content
-            )
+            # 파일 작업 및 코드 분석은 이미 _bind_modular_methods에서 처리됨
+            # parse_with_snippets와 get_snippet_preview 추가 바인딩
+            from ai_helpers import code
+            self.parse_with_snippets = code.parse_with_snippets
+            self.get_snippet_preview = code.get_snippet_preview
+        except ImportError as e:
+            print(f"⚠️ ai_helpers code 모듈 로드 실패: {e}")
             
-            # 파일 작업
-            self.create_file = create_file
-            self.read_file = read_file
-        # 백업 함수 제거 (Git으로 대체)
-        # self.backup_file = backup_file  # 제거됨
-            
-            # 코드 수정
-            self.replace_block = replace_block
-            self.insert_block = insert_block
-            
-            # 코드 분석
-            self.parse_with_snippets = parse_with_snippets
-            self.get_snippet_preview = get_snippet_preview
-            
-            # 검색
-            self.scan_directory_dict = scan_directory_dict
-            self.search_files_advanced = search_files_advanced
-            self.search_code_content = search_code_content
-            
-            # 폴더 구조 캐싱 (새로 추가)
+            # 폴더 구조 캐싱 함수들은 search 모듈에서 처리
             try:
-                from auto_tracking_wrapper import (
-                    cache_project_structure, get_project_structure,
-                    search_in_structure, get_directory_tree, get_structure_stats
-                )
-                
-                self.cache_project_structure = cache_project_structure
-                self.get_project_structure = get_project_structure
-                self.search_in_structure = search_in_structure
-                self.get_directory_tree = get_directory_tree
-                self.get_structure_stats = get_structure_stats
-                
-                print("✅ 폴더 구조 캐싱 함수 로드 성공")
+                from ai_helpers import search
+                # cache_project_structure 등은 아직 구현 필요
+                print("✅ ai_helpers 모듈 로드 성공")
             except ImportError as e:
                 print(f"⚠️ 폴더 구조 캐싱 함수 로드 실패: {e}")
         
         except ImportError as e:
             print(f"⚠️ auto_tracking_wrapper 로드 실패: {e}")
-    
-    def get_context(self):
-        """현재 프로젝트 컨텍스트 반환"""
-        if self._context_manager and self._context_manager.context:
-            return self._context_manager.context
-        return None
-    
-    def get_value(self, key, default=None):
-        """캐시에서 값 가져오기 (MCP 워크플로우 지원)"""
-        try:
-            # context에서 먼저 찾기
-            if self._context_manager and self._context_manager.context:
-                if key in self._context_manager.context:
-                    return self._context_manager.context[key]
-            
-            # 캐시 파일에서 찾기
-            cache_file = os.path.join('memory', '.cache', 'cache_core.json')
-            if os.path.exists(cache_file):
-                with open(cache_file, 'r', encoding='utf-8') as f:
-                    cache = json.load(f)
-                    if key in cache:
-                        return cache[key]
-            
-            return default
-        except Exception as e:
-            print(f"⚠️ get_value 오류: {e}")
-            return default
-    
-    def initialize_context(self, project_path=None):
-        """프로젝트 컨텍스트 초기화"""
-        try:
-            from api.public import initialize_context as init_ctx
-            return init_ctx(project_path)
-        except Exception as e:
-            print(f"⚠️ initialize_context 오류: {e}")
-            return None
-    
-    def update_cache(self, *args, **kwargs):
-        """캐시 업데이트"""
-        try:
-            from api.public import update_cache as update
-            # 인자가 2개일 경우 key와 value로 처리
-            if len(args) == 2:
-                return update(key=args[0], value=args[1])
-            # 인자가 1개이고 딕셔너리인 경우
-            elif len(args) == 1 and isinstance(args[0], dict):
-                # 딕셔너리의 key, value를 사용
-                return update(key=args[0].get('key'), value=args[0].get('value'))
-            # 키워드 인자로 호출된 경우
-            elif kwargs:
-                return update(**kwargs)
-            # 인자가 없는 경우 
-            else:
-                print("⚠️ update_cache: 인자가 필요합니다 (key, value)")
-                return None
-        except Exception as e:
-            print(f"⚠️ update_cache 오류: {e}")
-            return None
-    
-    def cmd_plan(self, *args, **kwargs):
-        """plan 명령 래퍼"""
-        try:
-            from commands.plan import cmd_plan
-            return cmd_plan(*args, **kwargs)
-        except Exception as e:
-            print(f"⚠️ cmd_plan 오류: {e}")
-            return None
-    
-    def cmd_task(self, *args, **kwargs):
-        """task 명령 래퍼"""
-        try:
-            from commands.task import cmd_task
-            return cmd_task(*args, **kwargs)
-        except Exception as e:
-            print(f"⚠️ cmd_task 오류: {e}")
-            return None
-    
-    def cmd_next(self, *args, **kwargs):
-        """next 명령 래퍼"""
-        try:
-            from commands.next import cmd_next
-            return cmd_next(*args, **kwargs)
-        except Exception as e:
-            print(f"⚠️ cmd_next 오류: {e}")
-            return None
     
     def list_functions(self):
         """사용 가능한 함수 목록 표시"""
@@ -321,41 +201,10 @@ class AIHelpers:
             print(f"  • helpers.{func}()")
         return funcs
     
-    def get_wisdom_stats(self):
-        """Wisdom 시스템 통계 조회"""
-        if not WISDOM_AVAILABLE or not wisdom:
-            return {"error": "Wisdom 시스템을 사용할 수 없습니다."}
-        
-        return {
-            "common_mistakes": len(wisdom.wisdom_data.get('common_mistakes', {})),
-            "error_patterns": len(wisdom.wisdom_data.get('error_patterns', {})),
-            "best_practices": len(wisdom.wisdom_data.get('best_practices', {})),
-            "top_mistakes": list(wisdom.wisdom_data.get('common_mistakes', {}).items())[:3]
-        }
-    
-    def check_code_patterns(self, code, filename="unknown"):
-        """코드 패턴 검사"""
-        if not WISDOM_AVAILABLE or not hooks:
-            return {}
-        
-        return hooks.check_code_patterns(code, filename)
-    
-    def track_mistake(self, mistake_type, context=""):
-        """실수 추적"""
-        if not WISDOM_AVAILABLE or not wisdom:
-            return False
-        
-        wisdom.track_mistake(mistake_type, context)
-        return True
-    
-    def add_best_practice(self, practice, category="general"):
-        """베스트 프랙티스 추가"""
-        if not WISDOM_AVAILABLE or not wisdom:
-            return False
-        
-        wisdom.add_best_practice(practice, category)
-        return True
-    
+
+
+
+
     # ==================== 이미지 생성 관련 메서드 ====================
     
     def generate_image(self, prompt: str, filename: Optional[str] = None, **kwargs) -> Dict[str, Any]:
@@ -537,395 +386,6 @@ class AIHelpers:
 
 
     # ===== Git 관련 헬퍼 메서드들 =====
-    def git_status(self):
-        """Git 저장소 상태 확인"""
-        try:
-            from git import Repo
-            repo = Repo('.')
-            
-            # 브랜치 정보
-            branch = repo.active_branch.name
-            
-            # 변경된 파일들
-            modified = [item.a_path for item in repo.index.diff(None)]
-            staged = [item.a_path for item in repo.index.diff('HEAD')]
-            untracked = repo.untracked_files
-            
-            return {
-                'success': True,
-                'branch': branch,
-                'modified': modified,
-                'staged': staged,
-                'untracked': untracked,
-                'clean': len(modified) == 0 and len(staged) == 0 and len(untracked) == 0
-            }
-        except Exception as e:
-            return {'success': False, 'error': str(e)}
-    
-    def git_add(self, files=None):
-        """파일을 스테이징 영역에 추가"""
-        try:
-            from git import Repo
-            repo = Repo('.')
-            
-            if files is None:
-                repo.git.add(A=True)  # 모든 파일 추가
-            elif isinstance(files, str):
-                repo.index.add([files])
-            elif isinstance(files, list):
-                repo.index.add(files)
-                
-            return {'success': True, 'message': f"파일 추가됨: {files or '모든 파일'}"}
-        except Exception as e:
-            return {'success': False, 'error': str(e)}
-    
-    def git_commit(self, message, auto_add=False):
-        """변경사항 커밋"""
-        try:
-            from git import Repo
-            repo = Repo('.')
-            
-            if auto_add:
-                repo.git.add(A=True)
-                
-            # 커밋할 내용이 있는지 확인
-            if repo.is_dirty() or len(repo.index.diff("HEAD")) > 0:
-                repo.index.commit(message)
-                return {'success': True, 'message': f"커밋 완료: {message}"}
-            else:
-                return {'success': False, 'error': '커밋할 변경사항이 없습니다'}
-        except Exception as e:
-            return {'success': False, 'error': str(e)}
-    
-    def git_branch(self, branch_name=None, create=True):
-        """브랜치 생성 또는 전환"""
-        try:
-            from git import Repo
-            repo = Repo('.')
-            
-            if branch_name is None:
-                # 현재 브랜치 반환
-                return {'success': True, 'branch': repo.active_branch.name}
-            
-            # 브랜치 존재 확인
-            if branch_name in [b.name for b in repo.branches]:
-                repo.git.checkout(branch_name)
-                return {'success': True, 'message': f"브랜치 전환: {branch_name}"}
-            elif create:
-                new_branch = repo.create_head(branch_name)
-                new_branch.checkout()
-                return {'success': True, 'message': f"새 브랜치 생성 및 전환: {branch_name}"}
-            else:
-                return {'success': False, 'error': f"브랜치가 존재하지 않습니다: {branch_name}"}
-        except Exception as e:
-            return {'success': False, 'error': str(e)}
-    
-    def git_stash(self, message=None):
-        """현재 변경사항을 임시 저장"""
-        try:
-            from git import Repo
-            repo = Repo('.')
-            
-            if repo.is_dirty():
-                if message:
-                    repo.git.stash('save', message)
-                else:
-                    repo.git.stash()
-                return {'success': True, 'message': 'Stash 저장 완료'}
-            else:
-                return {'success': False, 'error': '저장할 변경사항이 없습니다'}
-        except Exception as e:
-            return {'success': False, 'error': str(e)}
-    
-    def git_stash_pop(self):
-        """임시 저장한 변경사항 복원"""
-        try:
-            from git import Repo
-            repo = Repo('.')
-            
-            repo.git.stash('pop')
-            return {'success': True, 'message': 'Stash 복원 완료'}
-        except Exception as e:
-            return {'success': False, 'error': str(e)}
-    
-    def git_log(self, n=10):
-        """최근 커밋 히스토리 조회"""
-        try:
-            from git import Repo
-            repo = Repo('.')
-            
-            commits = []
-            for commit in repo.iter_commits(max_count=n):
-                commits.append({
-                    'hash': commit.hexsha[:7],
-                    'author': str(commit.author),
-                    'date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M'),
-                    'message': commit.message.strip()
-                })
-            
-            return {'success': True, 'commits': commits}
-        except Exception as e:
-            return {'success': False, 'error': str(e)}
-
-
-    # ===== 빌드 관련 헬퍼 메서드들 =====
-    def find_executable(self, names):
-        """환경변수 PATH에서 실행 파일 찾기"""
-        import os
-        import platform
-        
-        # 플랫폼별 실행 파일 확장자
-        if platform.system() == 'Windows':
-            extensions = ['.exe', '.cmd', '.bat', '']
-        else:
-            extensions = ['']
-        
-        # names가 문자열이면 리스트로 변환
-        if isinstance(names, str):
-            names = [names]
-        
-        # PATH 환경변수 검색
-        path_dirs = os.environ.get('PATH', '').split(os.pathsep)
-        
-        # 추가 환경변수 확인
-        extra_paths = []
-        for env_var in ['NODE_HOME', 'NPM_HOME', 'PROGRAMFILES', 'PROGRAMFILES(X86)']:
-            if env_var in os.environ:
-                extra_paths.append(os.environ[env_var])
-                # node_modules/.bin 경로도 추가
-                if 'NODE' in env_var or 'NPM' in env_var:
-                    extra_paths.append(os.path.join(os.environ[env_var], 'node_modules', '.bin'))
-        
-        # 모든 경로에서 검색
-        all_paths = path_dirs + extra_paths
-        
-        for name in names:
-            for path_dir in all_paths:
-                if not path_dir:
-                    continue
-                for ext in extensions:
-                    executable = os.path.join(path_dir, name + ext)
-                    if os.path.isfile(executable) and os.access(executable, os.X_OK):
-                        return executable
-        
-        return None
-    
-    def detect_project_type(self, project_path='.'):
-        """프로젝트 타입 자동 감지"""
-        import os
-        
-        project_types = []
-        
-        # package.json 확인 (Node.js/TypeScript)
-        if os.path.exists(os.path.join(project_path, 'package.json')):
-            project_types.append('node')
-            
-            # TypeScript 확인
-            if os.path.exists(os.path.join(project_path, 'tsconfig.json')):
-                project_types.append('typescript')
-            
-            # 빌드 도구 확인
-            try:
-                with open(os.path.join(project_path, 'package.json'), 'r') as f:
-                    content = f.read()
-                    if 'yarn' in content:
-                        project_types.append('yarn')
-                    elif 'pnpm' in content:
-                        project_types.append('pnpm')
-                    else:
-                        project_types.append('npm')
-            except:
-                project_types.append('npm')
-        
-        # Python 프로젝트 확인
-        if os.path.exists(os.path.join(project_path, 'setup.py')) or            os.path.exists(os.path.join(project_path, 'pyproject.toml')) or            os.path.exists(os.path.join(project_path, 'requirements.txt')):
-            project_types.append('python')
-        
-        # Cargo.toml 확인 (Rust)
-        if os.path.exists(os.path.join(project_path, 'Cargo.toml')):
-            project_types.append('rust')
-        
-        return project_types
-    
-    def run_command(self, command, args=None, cwd=None, env=None):
-        """명령어 실행 (환경변수 포함)"""
-        import subprocess
-        import os
-        
-        # 명령어 경로 찾기
-        executable = self.find_executable(command)
-        if not executable:
-            return {
-                'success': False,
-                'error': f'실행 파일을 찾을 수 없습니다: {command}',
-                'command': command
-            }
-        
-        # 전체 명령어 구성
-        full_command = [executable]
-        if args:
-            if isinstance(args, str):
-                full_command.extend(args.split())
-            else:
-                full_command.extend(args)
-        
-        # 환경변수 설정
-        cmd_env = os.environ.copy()
-        if env:
-            cmd_env.update(env)
-        
-        try:
-            # 명령어 실행
-            result = subprocess.run(
-                full_command,
-                capture_output=True,
-                text=True,
-                cwd=cwd or os.getcwd(),
-                env=cmd_env
-            )
-            
-            return {
-                'success': result.returncode == 0,
-                'stdout': result.stdout,
-                'stderr': result.stderr,
-                'returncode': result.returncode,
-                'command': ' '.join(full_command)
-            }
-        except Exception as e:
-            return {
-                'success': False,
-                'error': str(e),
-                'command': ' '.join(full_command)
-            }
-    
-    def build_project(self, project_path='.', script=None):
-        """프로젝트 자동 빌드"""
-        import os
-        
-        # 프로젝트 타입 감지
-        project_types = self.detect_project_type(project_path)
-        
-        if not project_types:
-            return {
-                'success': False,
-                'error': '프로젝트 타입을 감지할 수 없습니다'
-            }
-        
-        # Node.js/TypeScript 프로젝트
-        if 'node' in project_types or 'typescript' in project_types:
-            # 빌드 도구 선택
-            if 'yarn' in project_types:
-                tool = 'yarn'
-            elif 'pnpm' in project_types:
-                tool = 'pnpm'
-            else:
-                tool = 'npm'
-            
-            # 빌드 스크립트 결정
-            if script:
-                build_script = script
-            else:
-                # package.json에서 빌드 스크립트 확인
-                try:
-                    import json
-                    with open(os.path.join(project_path, 'package.json'), 'r') as f:
-                        pkg = json.load(f)
-                        scripts = pkg.get('scripts', {})
-                        
-                        # 우선순위: build > compile > tsc
-                        if 'build' in scripts:
-                            build_script = 'build'
-                        elif 'compile' in scripts:
-                            build_script = 'compile'
-                        elif 'tsc' in scripts:
-                            build_script = 'tsc'
-                        else:
-                            # TypeScript 직접 실행
-                            if 'typescript' in project_types:
-                                return self.run_command('npx', ['tsc'], cwd=project_path)
-                            else:
-                                return {
-                                    'success': False,
-                                    'error': '빌드 스크립트를 찾을 수 없습니다'
-                                }
-                except:
-                    build_script = 'build'
-            
-            # 빌드 실행
-            return self.run_command(tool, ['run', build_script], cwd=project_path)
-        
-        # Python 프로젝트
-        elif 'python' in project_types:
-            # Python은 일반적으로 빌드가 필요 없지만, setup.py가 있으면 실행
-            if os.path.exists(os.path.join(project_path, 'setup.py')):
-                python_exe = self.find_executable(['python3', 'python'])
-                if python_exe:
-                    return self.run_command(python_exe, ['setup.py', 'build'], cwd=project_path)
-            
-            return {
-                'success': True,
-                'message': 'Python 프로젝트는 빌드가 필요하지 않습니다'
-            }
-        
-        # Rust 프로젝트
-        elif 'rust' in project_types:
-            return self.run_command('cargo', ['build'], cwd=project_path)
-        
-        else:
-            return {
-                'success': False,
-                'error': f'지원하지 않는 프로젝트 타입: {project_types}'
-            }
-    
-    def install_dependencies(self, project_path='.'):
-        """프로젝트 의존성 설치"""
-        import os
-        
-        project_types = self.detect_project_type(project_path)
-        
-        if not project_types:
-            return {
-                'success': False,
-                'error': '프로젝트 타입을 감지할 수 없습니다'
-            }
-        
-        results = []
-        
-        # Node.js 의존성
-        if 'node' in project_types:
-            if 'yarn' in project_types:
-                result = self.run_command('yarn', ['install'], cwd=project_path)
-            elif 'pnpm' in project_types:
-                result = self.run_command('pnpm', ['install'], cwd=project_path)
-            else:
-                result = self.run_command('npm', ['install'], cwd=project_path)
-            results.append(('Node.js', result))
-        
-        # Python 의존성
-        if 'python' in project_types:
-            if os.path.exists(os.path.join(project_path, 'requirements.txt')):
-                python_exe = self.find_executable(['python3', 'python'])
-                if python_exe:
-                    result = self.run_command(
-                        python_exe, 
-                        ['-m', 'pip', 'install', '-r', 'requirements.txt'],
-                        cwd=project_path
-                    )
-                    results.append(('Python', result))
-        
-        # Rust 의존성
-        if 'rust' in project_types:
-            result = self.run_command('cargo', ['fetch'], cwd=project_path)
-            results.append(('Rust', result))
-        
-        # 결과 정리
-        success = all(r[1]['success'] for r in results if r)
-        return {
-            'success': success,
-            'results': results,
-            'project_types': project_types
-        }
-
 def initialize_repl():
     """REPL 환경 초기화"""
     global repl_globals, wisdom, hooks
@@ -1003,37 +463,7 @@ def initialize_repl():
     except Exception as e:
         print(f"⚠️ 프로젝트 자동 초기화 건너뜀: {e}")
     
-    # 6. Wisdom 시스템 초기화
-    if WISDOM_AVAILABLE:
-        try:
-            # 프로젝트별 Wisdom Manager 초기화
-            project_path = os.getcwd()
-            if 'Desktop' in project_path and 'ai-coding-brain-mcp' in project_path:
-                # ai-coding-brain-mcp 프로젝트인 경우
-                project_root = project_path.split('ai-coding-brain-mcp')[0] + 'ai-coding-brain-mcp'
-            else:
-                project_root = project_path
-            
-            from project_wisdom import ProjectWisdomManager
-            wisdom = ProjectWisdomManager(project_root)
-            print(f"✅ Wisdom 시스템 초기화: {project_root}")
-            
-            # get_wisdom_manager와 get_wisdom_hooks 호출
-            wisdom = get_wisdom_manager()
-            hooks = get_wisdom_hooks()
-            print("✅ Wisdom 시스템 초기화 완료")
-            print(f"  - 추적된 실수: {len(wisdom.wisdom_data.get('common_mistakes', {}))}개")
-            print(f"  - 오류 패턴: {len(wisdom.wisdom_data.get('error_patterns', {}))}개")
-            
-            # 전역 변수로 설정
-            repl_globals['wisdom'] = wisdom
-            repl_globals['hooks'] = hooks
-        except Exception as e:
-            print(f"⚠️ Wisdom 초기화 실패: {e}")
-            wisdom = None
-            hooks = None
-    
-    # 7. Git Version Manager 초기화
+    # 6. Git Version Manager 초기화
     try:
         from git_version_manager import GitVersionManager
         git_manager = GitVersionManager()
@@ -1058,7 +488,7 @@ def initialize_repl():
 
 def execute_code(code: str) -> Dict[str, Any]:
     """Python 코드 실행"""
-    global execution_count, WISDOM_AVAILABLE, hooks
+    global execution_count
     
     stdout_capture = io.StringIO()
     stderr_capture = io.StringIO()
@@ -1066,48 +496,6 @@ def execute_code(code: str) -> Dict[str, Any]:
     
     try:
         with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
-            # Wisdom Integration 실행 (코드 실행 전 분석 및 자동 수정)
-            if WISDOM_AVAILABLE and hasattr(wisdom_integration, 'pre_execute_check'):
-                try:
-                    should_proceed, modified_code, analysis = wisdom_integration.pre_execute_check(
-                        code, 
-                        language="python"
-                    )
-                    
-                    # 코드가 수정된 경우
-                    if modified_code and modified_code != code:
-                        print("\n✅ Wisdom System이 코드를 자동 수정했습니다.")
-                        code = modified_code
-                        
-                    # 심각한 문제로 실행 중단이 필요한 경우
-                    if not should_proceed:
-                        print("\n❌ Wisdom System이 심각한 문제를 감지하여 실행을 중단합니다.")
-                        return {
-                            "success": False,
-                            "output": "",
-                            "error": "Code execution blocked by Wisdom System",
-                            "execution_time": time.time() - start_time,
-                            "variable_count": len(repl_globals),
-                            "execution_count": execution_count,
-                            "wisdom_analysis": analysis
-                        }
-                except Exception as e:
-                    print(f"⚠️ Wisdom Integration 오류: {e}")
-            
-            # Wisdom Hooks 실행 (코드 실행 전)
-            if WISDOM_AVAILABLE and hooks:
-                try:
-                    # 코드 패턴 검사
-                    detected = hooks.check_code_patterns(code, "execute_code")
-                    if detected:
-                        print("\n⚠️ Wisdom Hooks 감지:")
-                        # detected는 패턴 이름의 list
-                        for pattern_name in detected:
-                            print(f"  - {pattern_name} 패턴 감지됨")
-                        print()
-                except Exception as e:
-                    print(f"⚠️ Hooks 실행 중 오류: {e}")
-            
             # 코드 실행
             exec(code, repl_globals)
             

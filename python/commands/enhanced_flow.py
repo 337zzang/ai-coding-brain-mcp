@@ -441,53 +441,6 @@ def generate_complete_briefing(context: Any, structure: Dict[str, Any], cache_st
 
     
     # 6. Wisdom 통계 추가
-    try:
-        from project_wisdom import get_wisdom_manager
-        wisdom = get_wisdom_manager()
-        if wisdom and hasattr(wisdom, 'wisdom_data'):
-            mistakes = wisdom.wisdom_data.get('common_mistakes', {})
-            if mistakes:
-                briefing_lines.append(f"\n🧠 **프로젝트 지혜**")
-                briefing_lines.append(f"  • 추적된 실수: {len(mistakes)}종류")
-                # 가장 많이 발생한 실수 1개
-                if mistakes:
-                    top_mistake = max(mistakes.items(), key=lambda x: x[1].get('count', 0))
-                    briefing_lines.append(f"  • 가장 빈번한 실수: {top_mistake[0]} ({top_mistake[1].get('count', 0)}회)")
-    except:
-        pass
-    
-    # 7. 파일 캐시 정보
-    if is_pydantic:
-        file_cache = getattr(context, 'file_cache', {})
-    else:
-        file_cache = context.get('file_cache', {})
-        
-    if file_cache and hasattr(file_cache, 'keys'):
-        briefing_lines.append(f"\n💾 **캐시 정보**")
-        briefing_lines.append(f"  • 캐시된 파일: {len(file_cache)}개")
-        cache_size = sum(len(str(v)) for v in file_cache.values() if v)
-        briefing_lines.append(f"  • 캐시 크기: ~{cache_size // 1024}KB")
-    
-    
-    # 8. 캐시 정보 추가
-    debug_log(f"🐛 캐시 정보 섹션 도달: cache_status = {cache_status}")
-    if cache_status:
-        briefing_lines.append(f"\n💾 **캐시 상태**")
-        briefing_lines.append(f"  • 캐시 로드: {'✅ 성공' if cache_status.get('loaded_from_cache') else '🔄 새로 생성'}")
-        briefing_lines.append(f"  • 캐시 크기: {cache_status.get('cache_size', 0)} bytes")
-        # analyzed_files 개수 계산
-        analyzed_count = 0
-        if is_pydantic and hasattr(context, 'analyzed_files'):
-            analyzed_count = len(context.analyzed_files)
-        elif isinstance(context, dict) and 'analyzed_files' in context:
-            analyzed_count = len(context.get('analyzed_files', {}))
-        else:
-            analyzed_count = cache_status.get('analyzed_files_count', 0)
-        
-        briefing_lines.append(f"  • 분석된 파일: {analyzed_count}개")
-
-    return "\n".join(briefing_lines)
-
 def find_project_root(project_name: str) -> Optional[Path]:
     """프로젝트 루트 디렉토리 찾기"""
     # 현재 작업 디렉토리가 프로젝트면 그대로 사용
@@ -511,38 +464,6 @@ def find_project_root(project_name: str) -> Optional[Path]:
             return child
     
     return None
-
-
-def get_project_wisdom_insights(project_name: str) -> Dict[str, Any]:
-    """프로젝트별 Wisdom 기반 인사이트 제공"""
-    wisdom = get_wisdom_manager()
-    
-    insights = {
-        "recent_mistakes": [],
-        "best_practices": [],
-        "warnings": [],
-        "tips": []
-    }
-    
-    # 최근 실수 확인
-    for mistake_type, data in wisdom.wisdom_data.get('common_mistakes', {}).items():
-        if data['count'] > 0:
-            insights['recent_mistakes'].append({
-                'type': mistake_type,
-                'count': data['count'],
-                'tip': wisdom._get_mistake_tip(mistake_type)
-            })
-    
-    # 프로젝트별 베스트 프랙티스
-    for practice in wisdom.wisdom_data.get('best_practices', []):
-        if project_name.lower() in practice.lower() or 'general' in practice.lower():
-            insights['best_practices'].append(practice)
-    
-    # 경고 사항
-    if len(insights['recent_mistakes']) > 3:
-        insights['warnings'].append("⚠️ 최근 실수가 많습니다. 주의하세요!")
-    
-    return insights
 
 
 def display_project_briefing(context, analyzer_result: Dict, wisdom_insights: Dict, verbose: bool = True):
@@ -589,7 +510,6 @@ def track_flow_performance(func_name: str, duration: float, success: bool):
     if not PERFORMANCE_TRACKING:
         return
     
-    wisdom = get_wisdom_manager()
     perf_data = wisdom.wisdom_data.get('performance_metrics', {})
     
     if func_name not in perf_data:
@@ -877,12 +797,7 @@ def flow_analyze_folder(folder_path: str, save_context: bool = True, verbose: bo
             json.dump(folder_context, f, indent=2, ensure_ascii=False)
         smart_print(f"📁 컨텍스트 파일 저장: {context_file.name}")
     
-    # 5. Wisdom 시스템에 기록
-    wisdom = get_wisdom_manager()
-    wisdom.add_best_practice(
-        f"폴더 '{analysis['name']}' 분석 - {analysis['statistics']['total_files']}개 파일, {analysis['statistics']['total_lines']:,}줄",
-        "folder_analysis"
-    )
+    # 5. Wisdom 시스템에 기록 (제거됨)
     
     return folder_context
 
@@ -1026,109 +941,22 @@ def flow_project(project_name: str, verbose: Optional[bool] = None) -> Dict[str,
         analysis_result = analyzer.analyze_and_update()
         result['analysis'] = analysis_result
         
-        # 6. Wisdom 인사이트 가져오기
-        try:
-            from project_wisdom import get_wisdom_manager
-            wisdom = get_wisdom_manager()
-            
-            # 최근 실수 경고
-            mistakes = wisdom.wisdom_data.get('common_mistakes', {})
-            if mistakes and verbose:
-                smart_print("\n⚠️ 최근 주의사항:")
-                for mistake, data in list(mistakes.items())[:3]:
-                    if data['count'] > 0:
-                        smart_print(f"  - {mistake}: {data['count']}회 발생")
-        except:
-            pass  # Wisdom 로드 실패 시 계속 진행
+        # 6. Wisdom 인사이트 가져오기 (제거됨)
         
-        # 6.5. 프로젝트 문서 자동 읽기 (README.md, PROJECT_CONTEXT.md)
-        try:
-            docs_read = []
-            
-            # README.md 읽기
-            readme_path = os.path.join(project_path, 'README.md')
-            if os.path.exists(readme_path):
-                readme_size = os.path.getsize(readme_path)
-                readme_content = helpers_obj.read_file(readme_path)
-                smart_print(f"\n📄 README.md 읽기 완료 ({readme_size:,} bytes)")
-                
-                # 미리보기 (처음 5줄)
-                preview_lines = readme_content.split('\n')[:5]
-                smart_print("📋 README.md 미리보기:")
-                for line in preview_lines:
-                    smart_print(f"   {line}")
-                if len(readme_content.split('\n')) > 5:
-                    smart_print("   ...")
-                docs_read.append('README.md')
-            
-            # PROJECT_CONTEXT.md 읽기
-            context_path = os.path.join(project_path, 'PROJECT_CONTEXT.md')
-            if os.path.exists(context_path):
-                context_size = os.path.getsize(context_path)
-                context_content = helpers_obj.read_file(context_path)
-                smart_print(f"\n📄 PROJECT_CONTEXT.md 읽기 완료 ({context_size:,} bytes)")
-                
-                # 트리 구조 섹션 찾아서 미리보기
-                lines_doc = context_content.split('\n')
-                tree_section_found = False
-                tree_preview = []
-                
-                for i, line in enumerate(lines_doc):
-                    if "## 📂 디렉토리 트리 구조" in line or "## Project Structure" in line:
-                        tree_section_found = True
-                        tree_preview.append(line)
-                    elif tree_section_found:
-                        tree_preview.append(line)
-                        if len(tree_preview) >= 15:  # 트리 구조 15줄만 미리보기
-                            tree_preview.append("   ...")
-                            break
-                        if line.startswith("## "):  # 다음 섹션 시작
-                            break
-                
-                if tree_preview:
-                    smart_print("📋 디렉토리 트리 구조 미리보기:")
-                    for line in tree_preview[:15]:
-                        smart_print(f"   {line}")
-                        
-                docs_read.append('PROJECT_CONTEXT.md')
-            
-            if docs_read:
-                smart_print(f"\n✅ 프로젝트 문서 {len(docs_read)}개 자동 로드 완료")
-            
-        except Exception as e:
-            debug_log(f"⚠️ 문서 읽기 중 오류: {e}")
-            # 오류가 발생해도 계속 진행
-
-
-        # 7. 브리핑 생성 및 표시
-        briefing = generate_complete_briefing(context, analysis_result)
-        
-        if verbose:
-            smart_print(briefing)
-        else:
-            # 간결 모드 - 핵심 정보만
-            smart_print(f"\n✅ 프로젝트: {clean_name}")
-            smart_print(f"📁 경로: {project_path}")
-            smart_print(f"📊 파일: {len(analysis_result.get('all_files', []))}개")
-            smart_print(f"⚙️ 설정: {config_file.name if (config_file := project_path / '.ai-brain.config.json').exists() else '기본값'}")
-        
-        # 8. Wisdom 활성화
-        smart_print("\n🧠 Wisdom 시스템 활성화")
-        # activate_wisdom_system()  # TODO: 이 함수는 아직 구현되지 않음
-        
+        # 성공적으로 완료됨
         result['success'] = True
         
-        # 성능 추적
-        duration = time.time() - start_time
-        smart_print(f"\n⏱️ 실행 시간: {duration:.2f}초")
-        
-    except Exception as e:
-        result['error'] = str(e)
-        smart_print(f"\n❌ 오류 발생: {e}")
-        import traceback
-        traceback.print_exc()
+        return result
     
-    return result
+    except Exception as e:
+        smart_print(f"❌ 프로젝트 전환 중 오류: {str(e)}")
+        return {
+            'success': False,
+            'error': str(e),
+            'project_name': project_name
+        }
+
+
 def flow_project_legacy(project_name: str) -> Dict[str, Any]:
     """[DEPRECATED] flow_project()를 사용하세요"""
     print("⚠️ flow_project_legacy는 deprecated되었습니다.")

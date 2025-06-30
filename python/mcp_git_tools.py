@@ -14,12 +14,8 @@ from pathlib import Path
 # Git Version Manager import
 from git_version_manager import get_git_manager
 
-# Wisdom 시스템
-try:
-    from project_wisdom import get_wisdom_manager
-    WISDOM_AVAILABLE = True
-except ImportError:
-    WISDOM_AVAILABLE = False
+# Wisdom 시스템 (제거됨)
+WISDOM_AVAILABLE = False
 
 
 def git_status() -> Dict[str, Any]:
@@ -76,12 +72,6 @@ def git_commit_smart(message: Optional[str] = None, auto_add: bool = True) -> Di
         
         if result['success']:
             # Wisdom 시스템에 성공 기록
-            if WISDOM_AVAILABLE:
-                wisdom = get_wisdom_manager()
-                wisdom.add_best_practice(
-                    "Git 커밋으로 작업 백업 완료",
-                    category="backup"
-                )
             
             return {
                 "success": True,
@@ -157,9 +147,6 @@ def git_rollback_smart(target: Optional[str] = None, safe_mode: bool = True) -> 
                 message_parts.append(f"💾 백업 브랜치: {result['backup_branch']}")
             
             # Wisdom에 롤백 기록
-            if WISDOM_AVAILABLE:
-                wisdom = get_wisdom_manager()
-                wisdom.track_mistake("rollback_needed", f"롤백 to {result['rolled_back_to']}")
             
             return {
                 "success": True,

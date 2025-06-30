@@ -19,7 +19,6 @@ import { toolDefinitions } from './tools/tool-definitions';
 // 핸들러 클래스들 import
 import { ExecuteCodeHandler } from './handlers/execute-code-handler';
 import { handleFlowProject, handlePlanProject, handleTaskManage, handleNextTask } from './handlers/workflow-handlers';
-import { handleWisdomStats, handleTrackMistake, handleAddBestPractice, handleWisdomAnalyze, handleWisdomAnalyzeFile, handleWisdomReport } from './handlers/wisdom-handlers';
 import { BackupHandler } from './handlers/backup-handler';
 import { handleFileAnalyze } from './handlers/file-analyzer-handler';
 import { handleBuildProjectContext } from './handlers/project-handlers';
@@ -120,40 +119,29 @@ class AICodingBrainMCP {
           return await handleNextTask(args as {});
         } else if (name === 'file_analyze') {
           return await handleFileAnalyze(args as { file_path: string; update_manifest?: boolean });
-        } else if (name === 'wisdom_stats') {
-          return await handleWisdomStats();
-        } else if (name === 'track_mistake') {
-          return await handleTrackMistake(args as { mistake_type: string; context?: string });
-        } else if (name === 'add_best_practice') {
-          return await handleAddBestPractice(args as { practice: string; category?: string });
         } else if (name === 'git_status') {
-          return await handleGitStatus(args);
+          // Git 도구는 현재 구현되지 않음
+          return { success: false, error: 'Git tools not implemented yet' };
         } else if (name === 'git_commit_smart') {
-          return await handleGitCommitSmart(args as { message?: string; auto_add?: boolean });
+          return { success: false, error: 'Git tools not implemented yet' };
         } else if (name === 'git_branch_smart') {
-          return await handleGitBranchSmart(args as { branch_name?: string; base_branch?: string });
+          return { success: false, error: 'Git tools not implemented yet' };
         } else if (name === 'git_rollback_smart') {
-          return await handleGitRollbackSmart(args as { target?: string; safe_mode?: boolean });
+          return { success: false, error: 'Git tools not implemented yet' };
         } else if (name === 'git_push') {
-          return await handleGitPush(args as { remote?: string; branch?: string });
+          return { success: false, error: 'Git tools not implemented yet' };
         } else if (name === 'gitignore_analyze') {
-          return await handleGitignoreAnalyze();
+          return { success: false, error: 'Git tools not implemented yet' };
         } else if (name === 'gitignore_update') {
-          return await handleGitignoreUpdate(args as { patterns: string[]; category?: string });
+          return { success: false, error: 'Git tools not implemented yet' };
         } else if (name === 'gitignore_create') {
-          return await handleGitignoreCreate(args as { categories?: string[] });
+          return { success: false, error: 'Git tools not implemented yet' };
         } else if (name === 'toggle_api') {
           return await apiToggleHandler.execute(args);
         } else if (name === 'list_apis') {
           return await listApisHandler.execute(args);
         } else if (name === 'build_project_context') {
           return await handleBuildProjectContext(args as any);
-        } else if (name === 'wisdom_analyze') {
-          return await handleWisdomAnalyze(args as any);
-        } else if (name === 'wisdom_analyze_file') {
-          return await handleWisdomAnalyzeFile(args as any);
-        } else if (name === 'wisdom_report') {
-          return await handleWisdomReport(args as any);
         } else {
           // TODO: Implement remaining tools
           throw new McpError(

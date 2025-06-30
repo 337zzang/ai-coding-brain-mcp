@@ -67,11 +67,11 @@ class ErrorHandler:
         logger.error(f"{error_type.value}: {error_message}")
         logger.debug(f"Traceback: {error_details}")
         
-        # Wisdom 시스템에 에러 추적
+        # Wisdom 시스템에 오류 추적 (옵션)
         try:
-            from ..project_wisdom import get_wisdom_manager
+            from project_wisdom import get_wisdom_manager
             wisdom = get_wisdom_manager()
-            wisdom.track_error(type(e).__name__, error_message)
+            wisdom.track_error(error_type.value, error_message)
         except:
             pass  # Wisdom 시스템 접근 실패시 무시
         

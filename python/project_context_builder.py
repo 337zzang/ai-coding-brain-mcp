@@ -172,7 +172,6 @@ class ProjectContextBuilder:
 
 - [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md) - 프로젝트 상세 컨텍스트
 - [file_directory.md](./file_directory.md) - 파일 구조 문서
-- [project_wisdom.md](./project_wisdom.md) - 프로젝트 지혜와 교훈
 
 ## 🤝 기여하기
 
@@ -326,7 +325,6 @@ class ProjectContextBuilder:
 ## 🔍 추가 정보
 
 - 상세한 파일 구조는 [file_directory.md](./file_directory.md) 참조
-- 프로젝트 작업 중 발견한 교훈은 [project_wisdom.md](./project_wisdom.md) 참조
 - API 문서는 [API_REFERENCE.md](./API_REFERENCE.md) 참조 (생성 예정)
 
 ---

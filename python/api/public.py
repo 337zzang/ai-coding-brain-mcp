@@ -57,7 +57,10 @@ def track_task_operation(operation_type: str, details: dict = None):
 def get_current_context() -> Optional[Dict[str, Any]]:
     """현재 context 반환 (auto_tracking_wrapper용)"""
     manager = get_context_manager()
-    return manager.context if manager else None
+    if manager and manager.context:
+        # Pydantic 모델을 dict로 변환하여 반환
+        return manager.context.dict()
+    return None
 
 
 # ===========================================

@@ -105,7 +105,7 @@ class GitVersionManager:
         return True
     
     @_git_command
-    def commit(self, message: str) -> Optional[str]:(self, message: str) -> str:
+    def commit(self, message: str) -> Optional[str]:
         """커밋 생성"""
         if not self._ensure_available():
             return None

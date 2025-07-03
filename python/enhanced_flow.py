@@ -12,9 +12,22 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime
 
-# 로깅 설정
-logging.basicConfig(level=logging.INFO)
+# 로깅 설정 - stderr로 출력하도록 설정
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# 기존 핸들러 제거
+logger.handlers.clear()
+
+# stderr로 출력하는 핸들러 추가
+stderr_handler = logging.StreamHandler(sys.stderr)
+stderr_handler.setLevel(logging.INFO)
+
+# 포맷 설정 (시간 제외, 간단한 형식)
+formatter = logging.Formatter('[%(levelname)s] %(message)s')
+stderr_handler.setFormatter(formatter)
+
+logger.addHandler(stderr_handler)
 
 # 전역 변수
 context = {}
@@ -29,17 +42,17 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
     
     try:
         # 0. 안전 점검 수행
-        print("=" * 60)
-        print(f"🚀 프로젝트 전환: {project_name}")
-        print("=" * 60)
+        logger.info("=" * 60)
+        logger.info(f"🚀 프로젝트 전환: {project_name}")
+        logger.info("=" * 60)
         
         safety_check = _safe_project_check(project_name)
         
         # 오류가 있으면 중단
         if safety_check.get("errors"):
-            print("\n❌ 안전 점검 실패:")
+            logger.error("\n❌ 안전 점검 실패:")
             for error in safety_check["errors"]:
-                print(f"   - {error}")
+                logger.error(f"   - {error}")
             return {
                 "success": False,
                 "error": "안전 점검 실패",
@@ -48,17 +61,17 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
         
         # 경고 표시
         if safety_check.get("warnings"):
-            print("\n⚠️  경고 사항:")
+            logger.warning("\n⚠️  경고 사항:")
             for warning in safety_check["warnings"]:
-                print(f"   - {warning}")
+                logger.warning(f"   - {warning}")
             
             # Git 수정사항이 있으면 확인
             git_info = safety_check["checks"].get("git", {})
             if git_info.get("ok") and git_info.get("modified"):
-                print("\n💡 수정된 파일을 백업하시겠습니까? (권장)")
-                print("   나중에 'git stash' 또는 'git commit'으로 백업 가능합니다.")
+                logger.info("\n💡 수정된 파일을 백업하시겠습니까? (권장)")
+                logger.info("   나중에 'git stash' 또는 'git commit'으로 백업 가능합니다.")
         
-        print("\n✅ 안전 점검 완료! 프로젝트 전환을 계속합니다...\n")
+        logger.info("\n✅ 안전 점검 완료! 프로젝트 전환을 계속합니다...\n")
         
 
         # 1. 프로젝트 경로 확인/생성
@@ -185,14 +198,14 @@ def _print_directory_tree(path: Path, depth: int = 1, max_depth: int = 2):
         for p in (dirs[:5] + files[:5]):
             indent = "│   " * (depth - 1)
             prefix = "└── " if p.is_file() else "📂 "
-            print(f"{indent}{prefix}{p.name}")
+            logger.debug(f"{indent}{prefix}{p.name}")
             
             if p.is_dir() and depth < max_depth:
                 _print_directory_tree(p, depth + 1, max_depth)
                 
         if len(dirs) > 5 or len(files) > 5:
             indent = "│   " * (depth - 1)
-            print(f"{indent}... ({len(dirs)} 디렉터리, {len(files)} 파일)")
+            logger.debug(f"{indent}... ({len(dirs)} 디렉터리, {len(files)} 파일)")
             
     except PermissionError:
         pass
@@ -215,39 +228,39 @@ def _safe_project_check(project_name: str) -> Dict[str, Any]:
         "is_dir": cwd.is_dir()
     }
     
-    print(f"🔍 현재 작업 디렉터리: {cwd}")
+    logger.info(f"🔍 현재 작업 디렉터리: {cwd}")
     
     # 2. 프로젝트 구조 간단히 확인
-    print("\n📂 프로젝트 구조 (최상위 2레벨):")
+    logger.debug("\n📂 프로젝트 구조 (최상위 2레벨):")
     _print_directory_tree(cwd, 1, 2)
     
     # 3. Git 상태 점검
-    print("\n🔍 Git 상태 점검 중...")
+    logger.info("\n🔍 Git 상태 점검 중...")
     git_info = _safe_git_status()
     result["checks"]["git"] = git_info
     
     if git_info.get("ok"):
         if "branch" in git_info:
-            print(f"✅ Git 브랜치: {git_info['branch']}")
-            print(f"   수정된 파일: {len(git_info.get('modified', []))}")
-            print(f"   추적되지 않은 파일: {len(git_info.get('untracked', []))}")
+            logger.info(f"✅ Git 브랜치: {git_info['branch']}")
+            logger.info(f"   수정된 파일: {len(git_info.get('modified', []))}")
+            logger.info(f"   추적되지 않은 파일: {len(git_info.get('untracked', []))}")
             
             # 수정된 파일이 있으면 경고
             if git_info.get('modified'):
                 result["warnings"].append("수정된 파일이 있습니다. 백업을 권장합니다.")
-                print("\n⚠️  수정된 파일 목록:")
+                logger.warning("\n⚠️  수정된 파일 목록:")
                 for f in git_info['modified'][:5]:
-                    print(f"   - {f}")
+                    logger.warning(f"   - {f}")
                 if len(git_info['modified']) > 5:
-                    print(f"   ... 외 {len(git_info['modified']) - 5}개")
+                    logger.warning(f"   ... 외 {len(git_info['modified']) - 5}개")
         else:
-            print("✅ Git 상태 확인 (raw output)")
+            logger.info("✅ Git 상태 확인 (raw output)")
     else:
         result["errors"].append(f"Git 상태 확인 실패: {git_info.get('error')}")
-        print(f"❌ Git 상태 확인 실패: {git_info.get('error')}")
+        logger.error(f"❌ Git 상태 확인 실패: {git_info.get('error')}")
     
     # 4. workflow.json 점검
-    print("\n🔍 워크플로우 상태 점검 중...")
+    logger.info("\n🔍 워크플로우 상태 점검 중...")
     wf_path = Path("memory/workflow.json")
     
     if wf_path.exists():
@@ -263,18 +276,18 @@ def _safe_project_check(project_name: str) -> Dict[str, Any]:
             if current:
                 tasks = current.get("tasks", [])
                 done = sum(1 for t in tasks if t.get("status") == "completed")
-                print(f"✅ 활성 플랜: {current['name']} ({done}/{len(tasks)} 완료)")
+                logger.info(f"✅ 활성 플랜: {current['name']} ({done}/{len(tasks)} 완료)")
             else:
-                print("⚠️  활성 플랜이 없습니다.")
+                logger.warning("⚠️  활성 플랜이 없습니다.")
         else:
             result["warnings"].append(f"workflow.json 로드 실패: {wf_data.get('error')}")
-            print(f"⚠️  workflow.json 로드 실패: {wf_data.get('error')}")
+            logger.warning(f"⚠️  workflow.json 로드 실패: {wf_data.get('error')}")
     else:
-        print("⚠️  workflow.json 파일이 없습니다.")
+        logger.warning("⚠️  workflow.json 파일이 없습니다.")
         result["warnings"].append("workflow.json 파일이 없습니다.")
     
     # 5. helpers 모듈 상태 확인
-    print("\n🔍 helpers 모듈 상태 확인 중...")
+    logger.info("\n🔍 helpers 모듈 상태 확인 중...")
     helpers_ok = False
     
     try:
@@ -285,17 +298,17 @@ def _safe_project_check(project_name: str) -> Dict[str, Any]:
             missing = [m for m in required_methods if not hasattr(helpers, m)]
             
             if not missing:
-                print("✅ helpers 모듈 정상")
+                logger.info("✅ helpers 모듈 정상")
                 helpers_ok = True
             else:
                 result["warnings"].append(f"helpers 메서드 누락: {missing}")
-                print(f"⚠️  helpers 메서드 누락: {missing}")
+                logger.warning(f"⚠️  helpers 메서드 누락: {missing}")
         else:
             result["warnings"].append("helpers 모듈을 찾을 수 없습니다.")
-            print("⚠️  helpers 모듈을 찾을 수 없습니다.")
+            logger.warning("⚠️  helpers 모듈을 찾을 수 없습니다.")
     except Exception as e:
         result["errors"].append(f"helpers 확인 중 오류: {e}")
-        print(f"❌ helpers 확인 중 오류: {e}")
+        logger.error(f"❌ helpers 확인 중 오류: {e}")
     
     result["checks"]["helpers_ok"] = helpers_ok
     
@@ -515,10 +528,10 @@ def _update_file_directory():
 
 def _print_project_briefing(project_name: str, workflow_status: Dict[str, Any]):
     """프로젝트 브리핑 출력"""
-    print("\n" + "=" * 50)
-    print(f"🚀 프로젝트 전환: {project_name}")
-    print("=" * 50)
-    print(f"✅ 작업 디렉토리: {os.getcwd()}")
+    logger.info("\n" + "=" * 50)
+    logger.info(f"🚀 프로젝트 전환: {project_name}")
+    logger.info("=" * 50)
+    logger.info(f"✅ 작업 디렉토리: {os.getcwd()}")
     
     # Git 상태 확인
     try:
@@ -528,57 +541,57 @@ def _print_project_briefing(project_name: str, workflow_status: Dict[str, Any]):
             if git_result.ok:
                 git_data = git_result.data
                 modified_count = len(git_data.get('modified', []))
-                print(f"\n🌿 Git 브랜치: {git_data.get('branch', 'N/A')}")
-                print(f"📝 변경된 파일: {modified_count}개")
+                logger.info(f"\n🌿 Git 브랜치: {git_data.get('branch', 'N/A')}")
+                logger.info(f"📝 변경된 파일: {modified_count}개")
                 
                 if git_data.get('modified'):
-                    print("\n변경된 파일:")
+                    logger.info("\n변경된 파일:")
                     for file in git_data['modified'][:5]:  # 최대 5개
-                        print(f"  - {file}")
+                        logger.info(f"  - {file}")
                     if modified_count > 5:
-                        print(f"  ... 외 {modified_count - 5}개")
+                        logger.info(f"  ... 외 {modified_count - 5}개")
     except Exception as e:
         # Git 상태 실패 시 조용히 넘어감
         pass
     
     # 워크플로우 상태
-    print("\n" + "=" * 50)
+    logger.info("\n" + "=" * 50)
     if workflow_status.get('status') == 'active':
-        print(f"📋 워크플로우: {workflow_status.get('plan_name')}")
-        print(f"📊 진행률: {workflow_status.get('completed_tasks')}/{workflow_status.get('total_tasks')} 완료 ({workflow_status.get('progress_percent', 0):.0f}%)")
+        logger.info(f"📋 워크플로우: {workflow_status.get('plan_name')}")
+        logger.info(f"📊 진행률: {workflow_status.get('completed_tasks')}/{workflow_status.get('total_tasks')} 완료 ({workflow_status.get('progress_percent', 0):.0f}%)")
         
         if workflow_status.get('current_task'):
             task = workflow_status['current_task']
-            print(f"▶️  현재 작업: {task.get('title')}")
-            print("💡 /next로 다음 작업 진행")
+            logger.info(f"▶️  현재 작업: {task.get('title')}")
+            logger.info("💡 /next로 다음 작업 진행")
     else:
-        print("📋 워크플로우: 활성 계획 없음")
-        print("💡 /plan 명령으로 새 계획 생성")
+        logger.info("📋 워크플로우: 활성 계획 없음")
+        logger.info("💡 /plan 명령으로 새 계획 생성")
     
-    print("=" * 50)
-    print("✅ 프로젝트 전환 완료!")
-    print("=" * 50)
+    logger.info("=" * 50)
+    logger.info("✅ 프로젝트 전환 완료!")
+    logger.info("=" * 50)
 
 def show_workflow_status_improved() -> Dict[str, Any]:
     """개선된 워크플로우 상태 표시"""
     workflow_status = _load_and_show_workflow()
     
-    print("\n" + "━" * 50)
+    logger.info("\n" + "━" * 50)
     if workflow_status.get('status') == 'active':
-        print(f"📋 워크플로우: {workflow_status.get('plan_name')}")
-        print(f"📊 진행률: {workflow_status.get('completed_tasks')}/{workflow_status.get('total_tasks')} 완료")
-        print("━" * 50)
+        logger.info(f"📋 워크플로우: {workflow_status.get('plan_name')}")
+        logger.info(f"📊 진행률: {workflow_status.get('completed_tasks')}/{workflow_status.get('total_tasks')} 완료")
+        logger.info("━" * 50)
         
         if workflow_status.get('current_task'):
             task = workflow_status['current_task']
-            print(f"▶️  현재 작업: {task.get('title')}")
-            print(f"   상태: {task.get('status', 'pending')}")
-            print(f"   설명: {task.get('description', 'N/A')}")
-            print("\n💡 /next 명령으로 다음 작업 진행")
+            logger.info(f"▶️  현재 작업: {task.get('title')}")
+            logger.info(f"   상태: {task.get('status', 'pending')}")
+            logger.info(f"   설명: {task.get('description', 'N/A')}")
+            logger.info("\n💡 /next 명령으로 다음 작업 진행")
     else:
-        print("📋 현재 활성 계획이 없습니다.")
-        print("💡 /plan 명령으로 새 계획을 생성하세요.")
-    print("━" * 50)
+        logger.info("📋 현재 활성 계획이 없습니다.")
+        logger.info("💡 /plan 명령으로 새 계획을 생성하세요.")
+    logger.info("━" * 50)
     
     return workflow_status
 

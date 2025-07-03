@@ -1,10 +1,11 @@
 """
 워크플로우 명령어 처리
 """
+import os
+import re
 from typing import Dict, Any, Optional, Tuple
 from workflow.workflow_manager import WorkflowManager
 from workflow.models import ExecutionPlan, TaskStatus
-import re
 
 
 class WorkflowCommands:
@@ -269,6 +270,32 @@ class WorkflowCommands:
             
             # 작업 완료
             task = self.workflow.complete_task(current_task.id, result)
+            
+            # 자동 Git 커밋/푸시 (환경변수 확인)
+            auto_commit = os.getenv('AUTO_GIT_COMMIT', 'false').lower() == 'true'
+            if auto_commit:
+                try:
+                    # Git 커밋
+                    commit_message = f"task: {task.title} - {summary}"
+                    
+                    # git add .
+                    os.system('git add .')
+                    
+                    # git commit
+                    commit_result = os.system(f'git commit -m "{commit_message}"')
+                    
+                    if commit_result == 0:
+                        # git push
+                        push_result = os.system('git push')
+                        if push_result == 0:
+                            print("✅ 자동 Git 커밋/푸시 완료!")
+                        else:
+                            print("⚠️ Git 푸시 실패 (수동으로 실행 필요)")
+                    else:
+                        print("ℹ️ 커밋할 변경사항이 없거나 커밋 실패")
+                        
+                except Exception as e:
+                    print(f"⚠️ 자동 Git 작업 중 오류: {e}")
             
             # 다음 작업 정보
             next_task = self.workflow.current_plan.get_next_task() if self.workflow.current_plan else None

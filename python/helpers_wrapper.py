@@ -255,6 +255,18 @@ class HelpersWrapper:
             return HelperResult.failure(str(e))
     
     @safe_helper
+    def compile_project(self, project_root: Optional[str] = None) -> HelperResult:
+        """프로젝트 전체 Python 파일 구문 검사"""
+        if hasattr(self.helpers, 'compile_project'):
+            return self.helpers.compile_project(project_root)
+        return HelperResult.failure("compile_project not implemented")
+    
+    @safe_helper
+    def check_syntax(self) -> HelperResult:
+        """프로젝트 구문 검사 (compile_project 별칭)"""
+        return self.compile_project()
+    
+    @safe_helper
     def get_project_root(self) -> HelperResult:
         """프로젝트 루트 경로 가져오기"""
         if hasattr(self.helpers, 'get_project_root'):

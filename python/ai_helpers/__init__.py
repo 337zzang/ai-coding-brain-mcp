@@ -30,6 +30,14 @@ except:
     def replace_block(*args, **kwargs):
         return {"success": False, "error": "Not implemented"}
 
+try:
+    from ai_helpers.compile import compile_project, check_syntax
+except:
+    def compile_project(*args, **kwargs):
+        return {"success": False, "error": "compile module not available"}
+    def check_syntax(*args, **kwargs):
+        return {"success": False, "error": "compile module not available"}
+
 # Legacy
 try:
     from ai_helpers.legacy_replacements import cmd_flow
@@ -86,5 +94,6 @@ __all__ = [
     'scan_directory_dict', 'search_code_content', 'search_files_advanced',
     'read_file', 'create_file', 'git_status', 'replace_block',
     'cmd_flow', 'workflow', 'get_project_root', 'get_workflow_status',
-    'track_file_access', 'track_function_edit', 'get_work_tracking_summary'
+    'track_file_access', 'track_function_edit', 'get_work_tracking_summary',
+    'compile_project', 'check_syntax'
 ]

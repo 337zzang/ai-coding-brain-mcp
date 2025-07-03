@@ -12,8 +12,10 @@ interface ToolResponse {
 // 글로벌 변수 저장소 키
 /**
  * 변수 저장 코드 생성
+ * @deprecated 현재 사용하지 않음
  */
-function generateSaveVars(): string {
+/*
+function _generateSaveVars(): string {
     return `
 # 사용자 정의 변수 저장
 _user_vars = {}
@@ -32,11 +34,14 @@ if _user_vars:
     print(f"💾 {len(_user_vars)}개 변수 저장됨")
 `;
 }
+*/
 
 /**
  * 변수 복원 코드 생성
+ * @deprecated 현재 사용하지 않음
  */
-function generateLoadVars(): string {
+/*
+function _generateLoadVars(): string {
     return `
 # 이전 변수 복원
 _saved_vars = helpers.get_value('__mcp_shared_vars__', {})
@@ -46,6 +51,7 @@ if _saved_vars:
     print(f"♻️ {len(_saved_vars)}개 변수 복원됨")
 `;
 }
+*/
 
 /**
  * 개선된 프로젝트 전환 핸들러 (변수 유지)

@@ -10,23 +10,7 @@ from functools import wraps
 from contextlib import contextmanager
 
 # HelperResult import
-try:
-    from helper_result import HelperResult
-except ImportError:
-    # HelperResult가 없는 경우 간단한 대체 클래스 정의
-    class HelperResult:
-        def __init__(self, ok: bool, data: Any = None, error: str = None):
-            self.ok = ok
-            self.data = data
-            self.error = error
-        
-        @classmethod
-        def success(cls, data: Any = None):
-            return cls(ok=True, data=data)
-        
-        @classmethod
-        def failure(cls, error: str):
-            return cls(ok=False, error=error)
+from helper_result import HelperResult
 
 
 def safe_helper(func):
@@ -75,6 +59,16 @@ class HelpersWrapper:
             # 기본 파일 읽기
             if hasattr(self.helpers, 'read_file'):
                 result = self.helpers.read_file(path)
+                
+                # 이미 HelperResult인 경우 처리
+                if isinstance(result, HelperResult):
+                    if result.ok and parse_json and result.data:
+                        try:
+                            parsed = json.loads(result.data)
+                            return HelperResult.success(parsed)
+                        except json.JSONDecodeError as e:
+                            return HelperResult.failure(f"JSON 파싱 오류: {e}")
+                    return result
                 
                 # dict 형태의 결과 처리
                 if isinstance(result, dict) and result.get('success'):
@@ -157,7 +151,12 @@ class HelpersWrapper:
             # 프로젝트 루트 확인
             if hasattr(self.helpers, 'get_project_root'):
                 root_result = self.helpers.get_project_root()
-                if isinstance(root_result, dict) and root_result.get('success'):
+                # get_project_root는 문자열을 반환할 수 있음
+                if isinstance(root_result, str):
+                    project_root = root_result
+                elif isinstance(root_result, HelperResult) and root_result.ok:
+                    project_root = root_result.data
+                elif isinstance(root_result, dict) and root_result.get('success'):
                     project_root = root_result.get('data')
                 else:
                     project_root = os.getcwd()
@@ -185,7 +184,12 @@ class HelpersWrapper:
             # 프로젝트 루트 확인
             if hasattr(self.helpers, 'get_project_root'):
                 root_result = self.helpers.get_project_root()
-                if isinstance(root_result, dict) and root_result.get('success'):
+                # get_project_root는 문자열을 반환할 수 있음
+                if isinstance(root_result, str):
+                    project_root = root_result
+                elif isinstance(root_result, HelperResult) and root_result.ok:
+                    project_root = root_result.data
+                elif isinstance(root_result, dict) and root_result.get('success'):
                     project_root = root_result.get('data')
                 else:
                     project_root = os.getcwd()
@@ -225,7 +229,19 @@ class HelpersWrapper:
     def workflow(self, command: str) -> HelperResult:
         """워크플로우 명령 실행"""
         if hasattr(self.helpers, 'workflow'):
-            return self.helpers.workflow(command)
+            result = self.helpers.workflow(command)
+            # workflow가 JSON 문자열을 반환하는 경우 파싱
+            if isinstance(result, str):
+                try:
+                    # JSON 문자열인지 확인
+                    if result.strip().startswith('{'):
+                        parsed = json.loads(result)
+                        return HelperResult.success(parsed)
+                except:
+                    pass
+                # JSON이 아니면 문자열 그대로 반환
+                return HelperResult.success(result)
+            return result
         # 직접 구현 시도
         try:
             from workflow_commands import handle_workflow_command
@@ -270,7 +286,18 @@ class HelpersWrapper:
     def get_project_root(self) -> HelperResult:
         """프로젝트 루트 경로 가져오기"""
         if hasattr(self.helpers, 'get_project_root'):
-            return self.helpers.get_project_root()
+            result = self.helpers.get_project_root()
+            # 문자열인 경우 그대로 성공으로 반환
+            if isinstance(result, str):
+                return HelperResult.success(result)
+            # 이미 HelperResult인 경우
+            elif isinstance(result, HelperResult):
+                return result
+            # dict 형태인 경우
+            elif isinstance(result, dict) and 'data' in result:
+                return HelperResult.success(result['data'])
+            else:
+                return HelperResult.success(result)
         return HelperResult.success(os.getcwd())
     
     def __getattr__(self, name):

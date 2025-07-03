@@ -1,0 +1,46 @@
+"""Sample module for testing"""
+
+def calculate_sum(a, b):
+    """Enhanced sum calculation with validation"""
+    if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
+        raise TypeError('Arguments must be numbers')
+    result = a + b
+    print(f'[ENHANCED] {a} + {b} = {result}')
+    import logging
+    logging.info(f'Calculated sum: {result}')
+    return result
+
+def calculate_product(a, b):
+    """Version 3 of calculate_product"""
+    result = a * b * 3
+    return result
+
+class Calculator:
+    """Calculator class"""
+
+    def __init__(self):
+        self.history = []
+
+    def add(self, a, b):
+        """Enhanced add method with type checking"""
+        if not all((isinstance(x, (int, float)) for x in [a, b])):
+            raise TypeError('Both arguments must be numbers')
+        result = a + b
+        from datetime import datetime
+        self.history.append({'operation': 'add', 'a': a, 'b': b, 'result': result, 'timestamp': datetime.now().isoformat()})
+        return result
+
+    def multiply(self, a, b):
+        """Multiply two numbers"""
+        result = a * b
+        self.history.append(('multiply', a, b, result))
+        return result
+
+    def get_history(self):
+        """Get calculation history"""
+        return self.history.copy()
+
+async def async_calculate(x, y):
+    """Async calculation"""
+    await asyncio.sleep(0.1)
+    return x + y

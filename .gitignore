@@ -1,0 +1,102 @@
+# Node modules
+node_modules/
+dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Logs
+*.log
+debug_flow.log
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
+*.env
+
+# Backups
+backups/
+memory/
+
+# Test files
+test_*.txt
+
+# Claude App files (DO NOT COMMIT)
+*.exe
+*.dll
+*.pak
+*.bin
+*.dat
+*.ico
+Squirrel-UpdateSelf.log
+squirrel.exe
+chrome_*
+d3dcompiler_*
+ffmpeg.dll
+icudtl.dat
+libEGL.dll
+libGLESv2.dll
+locales/
+resources/
+v8_context_snapshot.bin
+vk_swiftshader*
+vulkan-1.dll
+snapshot_blob.bin
+
+# Batch scripts (temporary)
+gemini_*.bat
+gemini_*.ps1
+run_gemini.bat
+setup_gemini.bat
+
+# LICENSE file (should not be in project)
+LICENSE
+
+# 임시 파일 및 폴더
+*.tmp
+*.temp
+*.cache
+temp/
+tmp/
+
+
+# Documentation
+docs/
+
+# Images
+image/
+
+# Python cache
+**/__pycache__/
+
+# Vendor dependencies
+python/vendor/
+
+# Build output
+python/build/
+
+# Git internal files (should not be tracked)
+.git/
+*.backup
+
+# 리팩토링 백업
+backup_before_refactor_*/
+backup/ 
+  
+# Python 임시 파일 (2025-07-02 추가)  
+*.backup  
+*.backup_*  
+*.indent_backup  
+python/fix_*.py  
+fix_*.py  
+*_original_*.py  
+*_backup_*.py 
+commit_message.txt 
+*.backup2 

@@ -11,11 +11,22 @@ from datetime import datetime
 
 # HelperResult와 safe_helper import
 try:
-from helpers_wrapper import safe_helper
-from helper_result import HelperResult
+    from helpers_wrapper import safe_helper
+    from helper_result import HelperResult
 except ImportError:
     try:
+        from ..helpers_wrapper import safe_helper
+        from ..helper_result import HelperResult
     except ImportError:
+        # Fallback 정의
+        def safe_helper(func):
+            return func
+        
+        class HelperResult:
+            def __init__(self, ok, data=None, error=None):
+                self.ok = ok
+                self.data = data
+                self.error = error
 
 def _safe_import_parse_with_snippets():
     """parse_with_snippets를 안전하게 import"""
@@ -864,7 +875,7 @@ def update_symbol_index(file_path: str, parse_result: dict) -> None:
     """
     try:
         # context 모듈에서 현재 컨텍스트 가져오기
-from ai_helpers. import context
+        from ai_helpers import context
         current_context = context.get_context()
         if not current_context:
             return

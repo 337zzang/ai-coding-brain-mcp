@@ -6,7 +6,7 @@ def initialize_wrapped_helpers():
     """JSON REPL 세션 시작 시 helpers를 자동으로 래핑"""
     try:
         # helpers_wrapper 임포트
-from helpers_wrapper import HelpersWrapper
+        from helpers_wrapper import HelpersWrapper
         
         # 전역 변수에서 helpers 찾기
         if 'helpers' in globals():

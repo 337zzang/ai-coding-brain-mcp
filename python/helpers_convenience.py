@@ -3,7 +3,7 @@
 def init_wrapped_helpers():
     """전역 wrapped_helpers 초기화"""
     import builtins
-from helpers_wrapper import HelpersWrapper
+    from helpers_wrapper import HelpersWrapper
     
     # helpers 찾기
     if 'helpers' in globals():

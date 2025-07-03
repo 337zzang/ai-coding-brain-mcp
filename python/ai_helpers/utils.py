@@ -28,7 +28,7 @@ def track_file_access(file_path: str, operation: str = 'access') -> None:
     """파일 접근 추적"""
     try:
         # WorkTracker가 있으면 사용
-from work_tracking import WorkTracker
+        from work_tracking import WorkTracker
         tracker = WorkTracker()
         if hasattr(tracker, 'track_file_access'):
             tracker.track_file_access(file_path, operation)

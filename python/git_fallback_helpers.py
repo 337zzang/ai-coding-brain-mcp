@@ -8,7 +8,7 @@ import os
 try:
     from helper_result import HelperResult
 except ImportError:
-from helper_result import HelperResult
+    from helper_result import HelperResult
 
 
 class GitFallbackHelpers:

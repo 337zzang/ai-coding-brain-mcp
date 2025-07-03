@@ -95,5 +95,46 @@ __all__ = [
     'read_file', 'create_file', 'git_status', 'replace_block',
     'cmd_flow', 'workflow', 'get_project_root', 'get_workflow_status',
     'track_file_access', 'track_function_edit', 'get_work_tracking_summary',
-    'compile_project', 'check_syntax'
+    'compile_project', 'check_syntax',
+    'AIHelpers',
+    'ai_helpers'  # 인스턴스
 ]
+
+
+# ==================== AIHelpers 호환 레이어 ====================
+class AIHelpers:
+    """
+    레거시 코드 호환성을 위한 어댑터 클래스.
+    기존 코드가 AIHelpers 클래스를 기대하는 경우를 위해 제공.
+    새 코드에서는 함수를 직접 import해서 사용하세요.
+    """
+    # file 관련
+    read_file = staticmethod(read_file)
+    create_file = staticmethod(create_file)
+    
+    # search 관련
+    scan_directory_dict = staticmethod(scan_directory_dict)
+    search_code_content = staticmethod(search_code_content)
+    search_files_advanced = staticmethod(search_files_advanced)
+    
+    # git 관련
+    git_status = staticmethod(git_status)
+    
+    # code 관련
+    replace_block = staticmethod(replace_block)
+    
+    # 추가 메서드들
+    @staticmethod
+    def get_project_root():
+        """프로젝트 루트 경로 반환"""
+        from utils.path_utils import get_project_root
+        return get_project_root()
+    
+    @staticmethod
+    def ensure_dir(path):
+        """디렉토리 생성"""
+        from utils.path_utils import ensure_dir
+        return ensure_dir(path)
+
+# 하위 호환성을 위해 인스턴스도 생성
+ai_helpers = AIHelpers()

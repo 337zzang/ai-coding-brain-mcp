@@ -125,24 +125,24 @@ def safe_io(func):
 # 컨텍스트/워크플로우 전용 헬퍼
 def save_context(context: Dict[str, Any], project_name: Optional[str] = None) -> bool:
     """컨텍스트 저장"""
-    from path_utils import get_memory_path
+    from utils.path_utils import get_memory_path
     filepath = get_memory_path('context.json', project_name)
     return atomic_write(filepath, context)
 
 def load_context(project_name: Optional[str] = None) -> Dict[str, Any]:
     """컨텍스트 로드"""
-    from path_utils import get_memory_path
+    from utils.path_utils import get_memory_path
     filepath = get_memory_path('context.json', project_name)
     return safe_read(filepath, default={})
 
 def save_workflow(workflow_data: Dict[str, Any], project_name: Optional[str] = None) -> bool:
     """워크플로우 저장"""
-    from path_utils import get_memory_path
+    from utils.path_utils import get_memory_path
     filepath = get_memory_path('workflow.json', project_name)
     return atomic_write(filepath, workflow_data)
 
 def load_workflow(project_name: Optional[str] = None) -> Dict[str, Any]:
     """워크플로우 로드"""
-    from path_utils import get_memory_path
+    from utils.path_utils import get_memory_path
     filepath = get_memory_path('workflow.json', project_name)
     return safe_read(filepath, default={'plans': [], 'current_plan_id': None})

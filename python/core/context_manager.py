@@ -9,7 +9,7 @@ import os
 from typing import Dict, Any, Optional
 
 try:
-    from core.path_utils import (
+    from utils.path_utils import (
         get_context_path, 
         get_workflow_path,
         get_project_root,
@@ -19,7 +19,7 @@ except ImportError:
     # 상대 임포트 실패 시 절대 경로로 시도
     import sys
     sys.path.append("python")
-    from core.path_utils import (
+    from utils.path_utils import (
         get_context_path,
         get_workflow_path,
         get_project_root,

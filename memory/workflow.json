@@ -1,0 +1,72 @@
+{
+  "plans": [
+    {
+      "id": "f81b9642-9340-4b38-b8e7-8d711bf0ab87",
+      "name": "MCP_서버_JSON_오류_해결",
+      "description": "stdout 출력 정리 및 JSON 통신 안정성 개선",
+      "tasks": [
+        {
+          "id": "1f2cd326-da87-41ad-bb68-84e6f9e382fd",
+          "title": "디버그_출력_제거",
+          "description": "print 문을 로거로 교체하고 stderr로 리다이렉트",
+          "status": "approved",
+          "approval_status": "approved",
+          "created_at": "2025-07-03T14:07:49.947250",
+          "updated_at": "2025-07-03T14:07:49.947250",
+          "completed_at": null,
+          "started_at": null,
+          "dependencies": [],
+          "assignee": null,
+          "tags": [],
+          "completion_notes": "",
+          "approval_notes": "디버그 출력을 로거로 교체 시작",
+          "execution_plan": null,
+          "result": null
+        },
+        {
+          "id": "3e889ec2-0750-49a6-b14d-9b89fff90fe2",
+          "title": "JSON_응답_표준화",
+          "description": "모든 MCP 응답을 표준 JSON 형식으로 통일",
+          "status": "todo",
+          "approval_status": null,
+          "created_at": "2025-07-03T14:07:49.979140",
+          "updated_at": "2025-07-03T14:07:49.979140",
+          "completed_at": null,
+          "started_at": null,
+          "dependencies": [],
+          "assignee": null,
+          "tags": [],
+          "completion_notes": "",
+          "approval_notes": "",
+          "execution_plan": null,
+          "result": null
+        },
+        {
+          "id": "2b99d553-1525-4341-a845-41c69dbe8c7b",
+          "title": "오류_핸들링_개선",
+          "description": "예외 발생 시에도 유효한 JSON 응답 보장",
+          "status": "todo",
+          "approval_status": null,
+          "created_at": "2025-07-03T14:07:49.997256",
+          "updated_at": "2025-07-03T14:07:49.997256",
+          "completed_at": null,
+          "started_at": null,
+          "dependencies": [],
+          "assignee": null,
+          "tags": [],
+          "completion_notes": "",
+          "approval_notes": "",
+          "execution_plan": null,
+          "result": null
+        }
+      ],
+      "created_at": "2025-07-03T14:07:36.265163",
+      "updated_at": "2025-07-03T14:07:36.265163",
+      "status": "active",
+      "tags": [],
+      "current_task_index": 0
+    }
+  ],
+  "current_plan_id": "f81b9642-9340-4b38-b8e7-8d711bf0ab87",
+  "last_updated": "2025-07-03T14:08:42.520523"
+}

@@ -1,114 +1,87 @@
 """
-Path utilities for project and git directory management
+통합된 경로 유틸리티 모듈
+여러 곳에 분산되어 있던 path_utils를 하나로 통합
 """
 import os
 from pathlib import Path
 from typing import Optional, Union
 
 
-def get_project_root(project_name: Optional[str] = None) -> Path:
-    """
-    프로젝트 루트 디렉토리 경로 반환
+def get_project_root() -> Path:
+    """프로젝트 루트 디렉토리 반환"""
+    current = Path(__file__).resolve()
     
-    Args:
-        project_name: 프로젝트 이름 (None이면 현재 디렉토리)
-        
-    Returns:
-        프로젝트 루트 경로 (절대경로)
-    """
-    if project_name:
-        # 프로젝트 이름이 주어진 경우, 상위 디렉토리에서 찾기
-        base_dir = Path.cwd().parent
-        project_path = base_dir / project_name
-        if project_path.exists():
-            return project_path.resolve()
+    # .git 폴더나 pyproject.toml을 찾아 올라감
+    while current != current.parent:
+        if (current / '.git').exists() or (current / 'pyproject.toml').exists():
+            return current
+        current = current.parent
     
-    # 현재 디렉토리 반환
-    return Path.cwd().resolve()
+    # 못 찾으면 python 폴더의 부모를 반환
+    return Path(__file__).resolve().parent.parent
 
 
-def verify_git_root(path: Union[str, Path]) -> Path:
-    """
-    Git 저장소 루트인지 검증
-    
-    Args:
-        path: 검증할 경로
-        
-    Returns:
-        검증된 절대 경로
-        
-    Raises:
-        ValueError: .git 디렉토리가 없는 경우
-    """
-    path = Path(path).resolve()
-    git_dir = path / '.git'
-    
-    if not git_dir.exists():
-        raise ValueError(f"Not a git repository: {path}")
-    
+def ensure_dir(path: Union[str, Path]) -> Path:
+    """디렉토리가 없으면 생성하고 Path 객체 반환"""
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
     return path
 
 
+def get_memory_dir() -> Path:
+    """memory 디렉토리 경로 반환 (없으면 생성)"""
+    memory_dir = get_project_root() / "memory"
+    return ensure_dir(memory_dir)
+
+
+def get_memory_path(filename: str = "workflow.json") -> Path:
+    """memory 디렉토리 내 파일 경로 반환"""
+    return get_memory_dir() / filename
+
+
+def get_context_path() -> Path:
+    """context.json 파일 경로 반환"""
+    return get_memory_dir() / "context.json"
+
+
+def get_cache_dir() -> Path:
+    """캐시 디렉토리 경로 반환 (없으면 생성)"""
+    cache_dir = get_memory_dir() / "cache"
+    return ensure_dir(cache_dir)
+
+
+def get_file_directory_cache_path() -> Path:
+    """파일 디렉토리 캐시 경로 반환"""
+    return get_cache_dir() / "file_directory.json"
+
+
+def safe_relative_path(path: Union[str, Path], base: Optional[Union[str, Path]] = None) -> str:
+    """안전한 상대 경로 반환"""
+    try:
+        path = Path(path).resolve()
+        base = Path(base).resolve() if base else get_project_root()
+        return str(path.relative_to(base))
+    except (ValueError, RuntimeError):
+        return str(path)
+
+
 def find_git_root(start_path: Optional[Union[str, Path]] = None) -> Optional[Path]:
-    """
-    현재 경로부터 상위로 올라가며 Git 저장소 루트 찾기
-    
-    Args:
-        start_path: 시작 경로 (None이면 현재 디렉토리)
-        
-    Returns:
-        Git 저장소 루트 경로 또는 None
-    """
-    if start_path is None:
-        start_path = Path.cwd()
-    else:
-        start_path = Path(start_path)
-    
-    current = start_path.resolve()
+    """Git 저장소 루트 찾기"""
+    current = Path(start_path or os.getcwd()).resolve()
     
     while current != current.parent:
         if (current / '.git').exists():
             return current
         current = current.parent
     
-    # 루트 디렉토리에도 .git이 있는지 확인
-    if (current / '.git').exists():
-        return current
-    
     return None
 
 
-def ensure_dir(path: Union[str, Path]) -> Path:
-    """
-    디렉토리가 존재하지 않으면 생성
-    
-    Args:
-        path: 디렉토리 경로
-        
-    Returns:
-        생성된 또는 기존 디렉토리 경로
-    """
+def verify_git_root(path: Union[str, Path]) -> bool:
+    """주어진 경로가 Git 저장소 루트인지 확인"""
     path = Path(path)
-    path.mkdir(parents=True, exist_ok=True)
-    return path.resolve()
+    return (path / '.git').exists()
 
 
-def safe_relative_path(path: Union[str, Path], base: Optional[Union[str, Path]] = None) -> str:
-    """
-    안전한 상대 경로 반환
-    
-    Args:
-        path: 대상 경로
-        base: 기준 경로 (None이면 현재 디렉토리)
-        
-    Returns:
-        상대 경로 문자열
-    """
-    path = Path(path).resolve()
-    base = Path(base).resolve() if base else Path.cwd().resolve()
-    
-    try:
-        return str(path.relative_to(base))
-    except ValueError:
-        # 상대 경로로 표현할 수 없는 경우 절대 경로 반환
-        return str(path)
+# Desktop 관련 함수는 프로젝트에 특화되어 있으므로 제외
+# ensure_project_directory는 프로젝트 초기화 관련이므로 별도 모듈로

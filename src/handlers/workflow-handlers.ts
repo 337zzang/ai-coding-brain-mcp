@@ -63,18 +63,23 @@ import sys
 import os
 
 # 프로젝트 경로 설정
-project_root = r"C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp"
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 if os.path.exists(project_root):
     os.chdir(project_root)
     sys.path.insert(0, os.path.join(project_root, 'python'))
 
 # helpers 임포트 및 초기화
 try:
-    # HelpersWrapper 직접 임포트
+    # AIHelpers 먼저 임포트
+    from ai_helpers import AIHelpers
+    ai_helpers_instance = AIHelpers()
+    
+    # HelpersWrapper로 감싸기
     from helpers_wrapper import HelpersWrapper
-    helpers = HelpersWrapper()
+    helpers = HelpersWrapper(ai_helpers_instance)
     print("✅ helpers 초기화 성공")
-except ImportError:
+except ImportError as e:
+    print(f"⚠️ Import 오류: {e}")
     # 대체 방법: enhanced_flow 직접 사용
     try:
         from enhanced_flow import cmd_flow_with_context

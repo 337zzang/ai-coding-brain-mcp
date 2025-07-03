@@ -1,0 +1,11 @@
+{
+  "sessions": [],
+  "total_stats": {
+    "total_operations": 0,
+    "total_errors": 0,
+    "total_duration_seconds": 0,
+    "operation_counts": {},
+    "error_counts": {},
+    "first_tracked": "2025-07-02T07:07:49.585628"
+  }
+}

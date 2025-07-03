@@ -1,0 +1,15 @@
+refactor: helpers → HelpersWrapper 구조 개선
+
+주요 변경사항:
+- HelperResult 통합: 모든 메서드가 일관된 반환 형식 사용
+- safe_helper 데코레이터로 예외 처리 통일
+- workflow, cmd_flow_with_context 등 누락 메서드 추가
+- read_file에 parse_json 옵션 추가
+- 타임아웃 지원 모듈 추가 (timeout_helper.py)
+- 디렉토리 스캔 개선 (scan_improvement.py)
+- Git fallback 헬퍼 추가 (git_fallback_helpers.py)
+- 자동 import 문제 해결 (ensure_helpers_loaded)
+
+중복 파일 제거:
+- auto_wrap_helpers.py 삭제
+- 임시 wrapper 파일들 정리

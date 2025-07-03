@@ -1,4 +1,4 @@
-from workflow_manager import WorkflowManager
+from workflow.workflow_manager import WorkflowManager
 """
 Enhanced Flow - 통합 버전
 기존 시스템과 호환되도록 수정된 v2

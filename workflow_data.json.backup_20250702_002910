@@ -1,0 +1,27 @@
+{
+  "plans": {
+    "plan_20250701_181559": {
+      "id": "plan_20250701_181559",
+      "name": "v30.1 적용",
+      "description": "AI Coding Brain MCP v30.1 유저프롬프트 변경사항 적용",
+      "tasks": [
+        "task_20250701_181559_000"
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-01T18:15:59.952589",
+      "updated_at": "2025-07-01T18:15:59.953556"
+    }
+  },
+  "tasks": {
+    "task_20250701_181559_000": {
+      "id": "task_20250701_181559_000",
+      "title": "오류 보고 시스템 단순화",
+      "description": "복잡한 오류 추적 제거, 즉시 보고 원칙 적용",
+      "status": "todo",
+      "created_at": "2025-07-01T18:15:59.953556",
+      "completed_at": null,
+      "dependencies": []
+    }
+  },
+  "current_plan_id": "plan_20250701_181559"
+}

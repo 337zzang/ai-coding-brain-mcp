@@ -335,9 +335,10 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
                 print(f"   🔀 Git: 초기화 완료 (첫 커밋 생성)")
             print()
 
-        # 2. 이전 컨텍스트 백업
+        # 2. 이전 컨텍스트와 다른 프로젝트인 경우 로그만 남김
         if context and context.get('project_name') != project_name:
-            _backup_context()
+            logger.info(f"프로젝트 전환: {context.get('project_name')} -> {project_name}")
+            # context_backup 로직 제거됨 - 더 이상 필요하지 않음
 
         # 3. 디렉토리 전환
         os.chdir(project_path)
@@ -681,63 +682,6 @@ def _get_project_path(project_name: str) -> Path:
         logger.info(f"[FILE] README.md 생성됨")
 
     return project_path
-def _backup_context():
-    """현재 컨텍스트 및 모든 메모리 파일 백업"""
-    if not context:
-        return
-
-    project_name = context.get('project_name', 'unknown')
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-
-    try:
-        # 백업 디렉토리 생성
-        backup_dir = Path('memory/backup')
-        backup_dir.mkdir(parents=True, exist_ok=True)
-
-        # 1. 현재 컨텍스트 백업
-        backup_file = backup_dir / f"context_{project_name}_{timestamp}.json"
-        backup_file.write_text(
-            json.dumps(context, indent=2, ensure_ascii=False),
-            encoding='utf-8'
-        )
-        logger.info(f"[SAVE] 컨텍스트 백업: {backup_file}")
-
-        # 2. memory 디렉토리의 모든 JSON 파일 백업
-        memory_dir = Path('memory')
-        if memory_dir.exists():
-            json_files = list(memory_dir.glob('*.json'))
-
-            if json_files:
-                # 프로젝트별 백업 디렉토리 생성
-                project_backup_dir = backup_dir / f"{project_name}_{timestamp}"
-                project_backup_dir.mkdir(exist_ok=True)
-
-                for json_file in json_files:
-                    # backup 디렉토리 자체는 제외
-                    if 'backup' not in str(json_file):
-                        backup_path = project_backup_dir / json_file.name
-                        import shutil
-                        shutil.copy2(json_file, backup_path)
-                        logger.info(f"[SAVE] {json_file.name} 백업 완료")
-
-                logger.info(f"[OK] 총 {len(json_files)}개 JSON 파일 백업 완료")
-
-    except Exception as e:
-        logger.error(f"백업 실패: {e}")
-
-        # memory 디렉토리의 모든 json 파일 백업
-        memory_dir = Path('memory')
-        if memory_dir.exists():
-            for json_file in memory_dir.glob('*.json'):
-                if json_file.name != 'context.json':  # context는 이미 백업함
-                    backup_path = backup_dir / f"{json_file.stem}_{timestamp}.json"
-                    import shutil
-                    shutil.copy(json_file, backup_path)
-                    logger.info(f"[SAVE] 추가 백업: {backup_path.name}")
-
-    except Exception as e:
-        logger.warning(f"백업 실패: {e}")
-
 def _load_context(project_name: str) -> Dict[str, Any]:
     """컨텍스트 로드"""
     context_file = Path('memory') / 'context.json'
@@ -940,7 +884,8 @@ def show_workflow_status_improved() -> Dict[str, Any]:
         print("[TIP] /plan 명령으로 새 계획을 생성하세요.")
     print("━" * 50)
 
-    return workflow_status
+    # workflow_status가 None인 경우 기본값 반환
+    return workflow_status or {'status': 'no_workflow', 'message': '워크플로우 없음'}
 
 # 헬퍼 바인딩용 함수
 def flow_project(project_name: str):

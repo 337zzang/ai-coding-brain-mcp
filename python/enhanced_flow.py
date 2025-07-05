@@ -889,7 +889,7 @@ def show_workflow_status_improved() -> Dict[str, Any]:
     print("━" * 50)
 
     # workflow_status가 None인 경우 기본값 반환
-    return workflow_status or {'status': 'no_workflow', 'message': '워크플로우 없음'}
+    return workflow_status or {'status': 'no_workflow', 'message': '워크플로우 없음'} or {'status': 'no_workflow', 'message': '워크플로우 없음'}
 
 # 헬퍼 바인딩용 함수
 def flow_project(project_name: str):

@@ -1,0 +1,6 @@
+fix: helpers module check and JSON parsing improvements
+
+- Fixed helpers module detection in _safe_project_check
+- Improved JSON parsing with better error handling
+- Enhanced extractLastJson to handle protocol tags properly
+- Added debug logging for parse errors

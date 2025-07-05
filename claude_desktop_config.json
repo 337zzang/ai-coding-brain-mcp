@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "ai-coding-brain-mcp": {
+      "command": "node",
+      "args": ["C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\dist\\index.js"],
+      "env": {
+        "GITHUB_USERNAME": "337zzang",
+        "GITHUB_EMAIL": "337zzang@gmail.com",
+        "GITHUB_TOKEN": "YOUR_NEW_TOKEN_HERE",
+        "AUTO_GIT_COMMIT": "true",
+        "GIT_COMMIT_INTERVAL": "5",
+        "DEBUG_GIT": "false"
+      }
+    }
+  }
+}

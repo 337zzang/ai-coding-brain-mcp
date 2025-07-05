@@ -1,0 +1,35 @@
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311']
+skip-string-normalization = true
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | __pycache__
+  | build
+  | dist
+  | node_modules
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+skip_gitignore = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]  # 라인 길이는 Black이 처리
+# 들여쓰기 관련 규칙 활성화
+extend-select = ["E111", "E112", "E113", "E114", "E115", "E116", "E117"]
+
+[tool.ruff.format]
+# Black 호환 설정
+quote-style = "double"
+indent-style = "space"

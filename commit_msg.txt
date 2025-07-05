@@ -1,0 +1,8 @@
+fix: JSON parsing errors and check_git_status function name
+
+- Fixed _check_git_status -> _safe_git_status function name error
+- Added extractLastJson() function for robust JSON parsing
+- Added JSON protocol tags (__JSON_START__, __JSON_END__)
+- Improved logging to stderr separation
+- Disabled print redirection in enhanced_flow.py
+- Auto-inject helpers in enhanced_flow module

@@ -1,0 +1,65 @@
+
+def _create_new_project(proj_root: Path, *, init_git: bool = True) -> Dict[str, Any]:
+    """새 프로젝트 구조 생성 및 초기화
+
+    Args:
+        proj_root: 프로젝트 루트 경로
+        init_git: Git 초기화 여부
+
+    Returns:
+        생성 결과 정보
+    """
+    try:
+        # 1. 디렉터리 구조 생성
+        proj_root.mkdir(parents=True, exist_ok=True)
+
+        # 표준 디렉터리들
+        dirs_to_create = ['src', 'test', 'docs', 'memory']
+        for dir_name in dirs_to_create:
+            (proj_root / dir_name).mkdir(exist_ok=True)
+
+        # 2. 기본 파일들 생성
+        # README.md
+        readme_content = f"""# {proj_root.name}
+
+## 🚀 프로젝트 개요
+{proj_root.name} 프로젝트입니다.
+
+## 📁 디렉터리 구조
+```
+{proj_root.name}/
+├── README.md          # 프로젝트 문서
+├── src/              # 소스 코드
+├── test/             # 테스트 코드
+├── docs/             # 문서
+└── memory/           # 프로젝트 메모리/컨텍스트
+```
+
+## 🛠️ 시작하기
+프로젝트가 초기화되었습니다. 이제 개발을 시작하세요!
+
+생성일: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+"""
+        (proj_root / "README.md").write_text(readme_content, encoding="utf-8")
+
+        # docs/overview.md
+        docs_content = f"""# {proj_root.name} 프로젝트 문서
+
+## 프로젝트 설명
+이 문서는 {proj_root.name} 프로젝트의 기술 문서입니다.
+
+## 주요 기능
+- [ ] 기능 1
+- [ ] 기능 2
+- [ ] 기능 3
+
+## 아키텍처
+프로젝트 아키텍처 설명을 여기에 작성하세요.
+"""
+        (proj_root / "docs" / "overview.md").write_text(docs_content, encoding="utf-8")
+
+        # test/__init__.py
+        (proj_root / "test" / "__init__.py").touch()
+
+        # test/test_smoke.py - 기본 테스트
+        test_content = Smoke test for project initialization

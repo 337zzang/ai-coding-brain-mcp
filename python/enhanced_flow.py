@@ -723,6 +723,10 @@ def _load_and_show_workflow() -> Dict[str, Any]:
     try:
         with open(workflow_file, 'r', encoding='utf-8') as f:
             workflow_data = json.load(f)
+        
+        # JSON 로드 결과 검증 추가
+        if not workflow_data or not isinstance(workflow_data, dict):
+            return {'status': 'no_workflow', 'message': '유효한 워크플로우 데이터 없음'}
 
         # 현재 계획 찾기
         current_plan_id = workflow_data.get('current_plan_id')

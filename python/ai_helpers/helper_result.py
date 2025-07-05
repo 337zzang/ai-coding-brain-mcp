@@ -86,6 +86,69 @@ class HelperResult:
             return func(self.data)
         return self
 
+    # Subscriptable 지원 메서드들 (리스트/딕셔너리처럼 접근 가능)
+    def __getitem__(self, key):
+        """result[key] 또는 result[index] 형태로 접근 가능"""
+        if not self.ok:
+            raise ValueError(f"Cannot access data from failed result: {self.error}")
+        
+        if self.data is None:
+            raise ValueError("Result data is None")
+            
+        # data가 리스트나 딕셔너리인 경우 직접 접근
+        if hasattr(self.data, '__getitem__'):
+            return self.data[key]
+        else:
+            raise TypeError(f"Result data of type {type(self.data).__name__} is not subscriptable")
+    
+    def __contains__(self, key):
+        """'key' in result 형태 지원"""
+        if not self.ok or self.data is None:
+            return False
+        
+        if hasattr(self.data, '__contains__'):
+            return key in self.data
+        return False
+    
+    def keys(self):
+        """딕셔너리처럼 keys() 사용 가능"""
+        if not self.ok:
+            raise ValueError(f"Cannot access keys from failed result: {self.error}")
+            
+        if hasattr(self.data, 'keys'):
+            return self.data.keys()
+        else:
+            raise TypeError(f"Result data of type {type(self.data).__name__} has no keys()")
+    
+    def values(self):
+        """딕셔너리처럼 values() 사용 가능"""
+        if not self.ok:
+            raise ValueError(f"Cannot access values from failed result: {self.error}")
+            
+        if hasattr(self.data, 'values'):
+            return self.data.values()
+        else:
+            raise TypeError(f"Result data of type {type(self.data).__name__} has no values()")
+    
+    def items(self):
+        """딕셔너리처럼 items() 사용 가능"""
+        if not self.ok:
+            raise ValueError(f"Cannot access items from failed result: {self.error}")
+            
+        if hasattr(self.data, 'items'):
+            return self.data.items()
+        else:
+            raise TypeError(f"Result data of type {type(self.data).__name__} has no items()")
+    
+    def __len__(self):
+        """len(result) 지원"""
+        if not self.ok:
+            return 0
+            
+        if hasattr(self.data, '__len__'):
+            return len(self.data)
+        return 0
+
 
 # 타입 별칭
 Result = HelperResult  # 짧은 이름으로도 사용 가능

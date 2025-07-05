@@ -4,6 +4,7 @@ Workflow Helpers - 워크플로우 전용 헬퍼 함수
 """
 import sys
 import os
+import json
 from pathlib import Path
 from typing import Optional, Dict, Any
 from helper_result import HelperResult
@@ -35,6 +36,16 @@ def workflow(command: str = "/status") -> HelperResult:
 
     try:
         result = process_command(command)
+        
+        # JSON 문자열인 경우 파싱 시도
+        if isinstance(result, str):
+            try:
+                parsed = json.loads(result)
+                result = parsed
+            except Exception:
+                # 파싱 실패하면 result 그대로 둠
+                pass
+        
         if isinstance(result, dict):
             if result.get('success', False):
                 return HelperResult.success(result)

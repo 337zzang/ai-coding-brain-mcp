@@ -27,15 +27,6 @@ except ImportError:
                 self.ok = ok
                 self.data = data
                 self.error = error
-
-def _safe_import_parse_with_snippets():
-    """parse_with_snippets를 안전하게 import"""
-    try:
-# parse_with_snippets는 이제 이 모듈에 정의됨
-        return parse_with_snippets
-    except ImportError:
-        return None
-
 import os
 import time
 import threading

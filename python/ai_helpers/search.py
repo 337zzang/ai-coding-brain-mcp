@@ -1,4 +1,5 @@
 """검색 관련 헬퍼 함수들"""
+from ai_helpers.helper_result import HelperResult
 
 import os
 import re
@@ -39,12 +40,12 @@ def scan_directory(path: str = '.', level: int = 1) -> List[str]:
 @track_operation('file', 'scan')
 def scan_directory_dict(directory_path):
     """디렉토리 스캔 - 딕셔너리 반환 버전
-    
+
     Args:
         directory_path: 스캔할 디렉토리 경로
-        
+
     Returns:
-        dict: {
+        HelperResult: 성공 시 data에 {
             'files': [{'name': str, 'path': str, 'size': int}],
             'directories': [{'name': str, 'path': str}],
             'total_size': total_bytes,
@@ -55,67 +56,57 @@ def scan_directory_dict(directory_path):
             }
         }
     """
-    result = {
-        'files': [],
-        'directories': [],
-        'total_size': 0,
-        'stats': {
-            'file_count': 0,
-            'dir_count': 0,
-            'by_extension': {}
-        }
-    }
-    
     try:
-        # 디렉토리 스캔
-        for item in os.listdir(directory_path):
-            item_path = os.path.join(directory_path, item)
-            
-            if os.path.isfile(item_path):
-                # 파일 처리
-                try:
-                    size = os.path.getsize(item_path)
+        result = {
+            'files': [],
+            'directories': [],
+            'total_size': 0,
+            'stats': {
+                'file_count': 0,
+                'dir_count': 0,
+                'by_extension': {}
+            }
+        }
+
+        directory_path = Path(directory_path).resolve()
+
+        if not directory_path.exists():
+            return HelperResult(ok=False, data=None, error=f"디렉토리가 존재하지 않음: {directory_path}")
+
+        if not directory_path.is_dir():
+            return HelperResult(ok=False, data=None, error=f"디렉토리가 아님: {directory_path}")
+
+        for item in directory_path.iterdir():
+            try:
+                if item.is_file():
+                    size = item.stat().st_size
                     result['files'].append({
-                        'name': item,
-                        'path': item_path,
+                        'name': item.name,
+                        'path': str(item),
                         'size': size
                     })
                     result['total_size'] += size
                     result['stats']['file_count'] += 1
-                    
+
                     # 확장자별 통계
-                    if '.' in item:
-                        ext = item[item.rfind('.'):]
+                    ext = item.suffix.lower()
+                    if ext:
                         result['stats']['by_extension'][ext] = result['stats']['by_extension'].get(ext, 0) + 1
-                except:
-                    # 접근 불가 파일은 크기 0으로 처리
-                    result['files'].append({
-                        'name': item,
-                        'path': item_path,
-                        'size': 0
+
+                elif item.is_dir():
+                    result['directories'].append({
+                        'name': item.name,
+                        'path': str(item)
                     })
-                    result['stats']['file_count'] += 1
-                    
-            elif os.path.isdir(item_path):
-                # 디렉토리 처리
-                result['directories'].append({
-                    'name': item,
-                    'path': item_path
-                })
-                result['stats']['dir_count'] += 1
-                
+                    result['stats']['dir_count'] += 1
+
+            except (PermissionError, OSError):
+                continue
+
+        return HelperResult(ok=True, data=result, error=None)
+
     except Exception as e:
-        # 오류 발생 시 부분 결과 반환
-        pass
-    
-    # 추적 업데이트
-    try:
-        track_file_access(directory_path, 'scan_directory_dict')
-    except:
-        pass
-    
-    return result
-@track_operation('search', 'files')
+        return HelperResult(ok=False, data=None, error=f"디렉토리 스캔 실패: {str(e)}")
 
 def _search_files_advanced(path: str, pattern: str, recursive: bool = True,
                             include_hidden: bool = False, max_results: int = 1000,
@@ -682,19 +673,35 @@ def _format_as_grouped_dict(results, group_key='file'):
     return {'results': grouped}
 
 # 새로운 표준 API 함수들
-def list_file_paths(directory, pattern='*', **kwargs):
-    """
-    파일 경로만 반환하는 표준 API (규격 A: Path List)
-    기존 search_files_advanced의 간편 버전
-    """
-    result = search_files_advanced(directory, pattern, **kwargs)
-    if result.get('success'):
-        return {
-            'success': True,
-            'paths': [r['path'] for r in result.get('results', [])]
-        }
-    return result
+def list_file_paths(directory, pattern="*", recursive=True):
+    """파일 경로 목록 반환
 
+    Args:
+        directory: 검색할 디렉토리
+        pattern: 파일 패턴 (기본값: "*")
+        recursive: 재귀 검색 여부 (기본값: True)
+
+    Returns:
+        HelperResult: 성공 시 data에 {'paths': [파일경로들]}
+    """
+    try:
+        from pathlib import Path
+
+        directory = Path(directory).resolve()
+        if not directory.exists():
+            return HelperResult(ok=False, data=None, error=f"디렉토리가 존재하지 않음: {directory}")
+
+        if recursive:
+            files = list(directory.rglob(pattern))
+        else:
+            files = list(directory.glob(pattern))
+
+        paths = [str(f) for f in files if f.is_file()]
+
+        return HelperResult(ok=True, data={'paths': paths}, error=None)
+
+    except Exception as e:
+        return HelperResult(ok=False, data=None, error=f"파일 목록 조회 실패: {str(e)}")
 def grep_code(directory, regex, file_pattern='*', **kwargs):
     """
     코드 내용 검색 표준 API (규격 B: Grouped Dict)

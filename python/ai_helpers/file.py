@@ -13,15 +13,6 @@ from ai_helpers.context import get_project_context
 
 # _atomic_write는 atomic_io 모듈 사용
 from atomic_io import atomic_write as _atomic_write
-def _safe_import_parse_with_snippets():
-    """parse_with_snippets를 안전하게 import"""
-    try:
-        from ai_helpers.code import parse_with_snippets
-        from ai_helpers.code import parse_with_snippets
-        return parse_with_snippets
-    except ImportError:
-        return None
-
 import textwrap
 
 @track_operation('file', 'create')

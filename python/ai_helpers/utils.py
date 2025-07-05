@@ -35,3 +35,11 @@ def track_file_access(file_path: str, operation: str = 'access') -> None:
     except:
         # WorkTracker가 없거나 오류 시 무시
         pass
+
+def _safe_import_parse_with_snippets():
+    """parse_with_snippets를 안전하게 import"""
+    try:
+        from ai_helpers.code import parse_with_snippets
+        return parse_with_snippets
+    except ImportError:
+        return None

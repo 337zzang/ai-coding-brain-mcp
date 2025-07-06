@@ -51,8 +51,8 @@ try:
 
         if flow_result and isinstance(flow_result, dict):
             result["success"] = True
-            result["path"] = flow_result.get("project_path", os.getcwd())
-            result["git_branch"] = flow_result.get("git_branch", "unknown")
+            result["path"] = flow_result.get("context", {}).get("project_path", os.getcwd())
+            result["git_branch"] = flow_result.get("context", {}).get("git", {}).get("branch", "unknown")
             result["workflow_status"] = flow_result.get("workflow_status", {})
             result["details"] = flow_result
         else:
@@ -143,9 +143,10 @@ except Exception as e:
             `📍 경로: ${result.path || 'Unknown'}\n` +
             `🌿 Git 브랜치: ${result.git_branch || 'Unknown'}\n`;
 
-        const workflowInfo = result.workflow_status?.plan ?
-            `\n📋 활성 워크플로우: ${result.workflow_status.plan.name}\n` +
-            `   진행률: ${result.workflow_status.plan.progress || '0/0'}` :
+        // Python의 flat 구조를 처리하도록 수정
+        const workflowInfo = result.workflow_status?.status === 'active' ?
+            `\n📋 활성 워크플로우: ${result.workflow_status.plan_name || 'Unknown'}\n` +
+            `   진행률: ${result.workflow_status.completed_tasks || 0}/${result.workflow_status.total_tasks || 0}` :
             '\n⚠️ 활성 워크플로우 없음';
 
         return {

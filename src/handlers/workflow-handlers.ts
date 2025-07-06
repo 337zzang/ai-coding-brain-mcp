@@ -97,22 +97,24 @@ except Exception as e:
         const { ExecuteCodeHandler } = await import('./execute-code-handler');
         const toolResult = await ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
         
-        // ToolResult를 기존 형식으로 변환
-        const execResult: any = {
-            success: true,
-            stdout: toolResult.content[0]?.text || '',
-            stderr: '',
-            error: null
-        };
-        
-        // 에러 메시지가 있는지 확인
-        if (toolResult.content[0]?.text?.includes('❌') || toolResult.content[0]?.text?.includes('오류')) {
-            execResult.success = false;
-            execResult.error = toolResult.content[0]?.text;
+        // ToolResult에서 실제 결과 추출
+        let execResult: any;
+        try {
+            // toolResult.content[0].text는 JSON 문자열
+            const resultText = toolResult.content[0]?.text || '';
+            execResult = JSON.parse(resultText);
+        } catch (e) {
+            logger.error('Failed to parse ExecuteCodeHandler result:', e);
+            return {
+                content: [{
+                    type: 'text',
+                    text: `❌ 결과 형식 오류\n\n${toolResult.content[0]?.text || ''}`
+                }]
+            };
         }
-
-        // 실행 결과 파싱
-        if (!execResult.success) {
+        
+        // 에러 확인
+        if (!execResult.success || execResult.error) {
             logger.error('Python execution failed:', execResult.error);
             return {
                 content: [{
@@ -125,7 +127,7 @@ except Exception as e:
         // stdout에서 JSON 결과 추출
         let result: FlowProjectResult;
         try {
-            // JSON_RESULT_START와 JSON_RESULT_END 마커로 감싸진 JSON 추출
+            // stdout에서 JSON_RESULT_START와 JSON_RESULT_END 마커로 감싸진 JSON 추출
             const stdout = execResult.stdout || '';
             const jsonMatch = stdout.match(/JSON_RESULT_START(.+?)JSON_RESULT_END/s);
 

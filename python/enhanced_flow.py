@@ -376,21 +376,50 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
         # 10. 결과 출력
         if workflow_status is None:
             workflow_status = {}
-        _print_project_briefing(project_name, workflow_status, context)
+        
+        # DEBUG: 브리핑 함수 호출 전 로깅
+        logger.info(f"[DEBUG] 브리핑 함수 호출 전:")
+        logger.info(f"  - project_name: {project_name}")
+        logger.info(f"  - workflow_status type: {type(workflow_status)}")
+        logger.info(f"  - context keys: {list(context.keys()) if context else 'None'}")
+        
+        # 브리핑 함수 호출 및 반환값 저장
+        briefing_result = _print_project_briefing(project_name, workflow_status, context)
+        
+        # DEBUG: 브리핑 함수 호출 후 로깅
+        logger.info(f"[DEBUG] 브리핑 함수 반환값:")
+        logger.info(f"  - type: {type(briefing_result)}")
+        logger.info(f"  - value: {briefing_result}")
+        
+        # 만약 다른 곳에서 briefing_result를 사용한다면 여기서 처리
+        # 예: global briefing_cache 등
 
         last_loaded_context = project_name
 
-        return {
+        # 반환 직전 로깅 추가
+        return_data = {
             'success': True,
             'project_name': project_name,
-            'context': context,
-            'workflow_status': workflow_status
+            'context': context if context else {},  # None 방지
+            'workflow_status': workflow_status if workflow_status else {}  # None 방지
         }
+        
+        # DEBUG: 반환값 확인
+        logger.info(f"[DEBUG] cmd_flow_with_context 최종 반환값:")
+        logger.info(f"  - success: {return_data['success']}")
+        logger.info(f"  - context type: {type(return_data['context'])}")
+        logger.info(f"  - context is None: {return_data['context'] is None}")
+        logger.info(f"  - context keys: {list(return_data['context'].keys()) if return_data['context'] else 'None/Empty'}")
+        
+        return return_data
 
     except Exception as e:
         logger.error(f"프로젝트 전환 실패: {e}")
         return {
             'success': False,
+            'project_name': project_name,
+            'context': {},  # 빈 dict로 기본값 제공
+            'workflow_status': {},  # 빈 dict로 기본값 제공
             'error': str(e)
         }
 
@@ -866,6 +895,21 @@ def _print_project_briefing(project_name: str, workflow_status: Dict[str, Any], 
     print("=" * 50)
     print("[OK] 프로젝트 전환 완료!")
     print("=" * 50)
+    
+    # 브리핑 정보를 반환하여 재사용 가능하도록 함
+    return_value = {
+        "project_path": os.getcwd(),
+        "git": context.get("git", {}),
+        "workflow_status": workflow_status,
+    }
+    
+    # DEBUG: 반환값 로깅
+    logger.info(f"[DEBUG] _print_project_briefing 반환값:")
+    logger.info(f"  - type: {type(return_value)}")
+    logger.info(f"  - keys: {list(return_value.keys())}")
+    logger.info(f"  - project_path: {return_value.get('project_path')}")
+    
+    return return_value
 
 def show_workflow_status_improved() -> Dict[str, Any]:
     """개선된 워크플로우 상태 표시"""

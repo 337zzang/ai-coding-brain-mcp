@@ -157,10 +157,19 @@ except Exception as e:
             };
         }
 
-        // 성공 응답
-        const successMessage = `✅ 프로젝트 전환 성공: ${result.project_name}\n\n` +
-            `📍 경로: ${result.path || 'Unknown'}\n` +
-            `🌿 Git 브랜치: ${result.git_branch || 'Unknown'}\n`;
+        // 성공 응답 - 실제 데이터를 포함하여 반환
+        const successMessage = `✅ 프로젝트 전환 성공: ${result.project_name}`;
+        
+        // 전체 결과 데이터 구성
+        const responseData = {
+            success: true,
+            project_name: result.project_name,
+            path: result.path || 'Unknown',
+            git_branch: result.git_branch || 'Unknown',
+            context: result.details?.context || {},
+            workflow_status: result.workflow_status || {},
+            message: successMessage
+        };
 
         // Python의 flat 구조를 처리하도록 수정
         const workflowInfo = result.workflow_status?.status === 'active' ?
@@ -171,7 +180,13 @@ except Exception as e:
         return {
             content: [{
                 type: 'text',
-                text: successMessage + workflowInfo
+                text: successMessage + '\n\n' + 
+                      `📍 경로: ${responseData.path}\n` +
+                      `🌿 Git 브랜치: ${responseData.git_branch}` +
+                      workflowInfo
+            }, {
+                type: 'text',
+                text: '```json\n' + JSON.stringify(responseData, null, 2) + '\n```'
             }]
         };
 

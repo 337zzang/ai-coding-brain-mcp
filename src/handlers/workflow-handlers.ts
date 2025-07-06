@@ -1,6 +1,6 @@
-import { ToolResponse } from '../types/tool-interfaces';
+import { ToolResult } from '../types/tool-interfaces';
 import { logger } from '../services/logger';
-import { getActiveReplSession } from './repl-session-manager';
+// import { getActiveReplSession } from './repl-session-manager'; // Not exported
 
 interface FlowProjectResult {
     success: boolean;
@@ -12,7 +12,7 @@ interface FlowProjectResult {
     details?: any;
 }
 
-export async function handleFlowProject(params: { project_name: string }): Promise<ToolResponse> {
+export async function handleFlowProject(params: { project_name: string }): Promise<ToolResult> {
     const code = `
 # 개선된 flow_project 핸들러 - 명시적 에러 처리
 import sys
@@ -76,8 +76,23 @@ except Exception as e:
 `;
 
     try {
-        const session = await getActiveReplSession();
-        const execResult = await session.execute(code, 'python');
+        // ExecuteCodeHandler를 사용하여 Python 코드 실행
+        const { ExecuteCodeHandler } = await import('./execute-code-handler');
+        const toolResult = await ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
+        
+        // ToolResult를 기존 형식으로 변환
+        const execResult: any = {
+            success: true,
+            stdout: toolResult.content[0]?.text || '',
+            stderr: '',
+            error: null
+        };
+        
+        // 에러 메시지가 있는지 확인
+        if (toolResult.content[0]?.text?.includes('❌') || toolResult.content[0]?.text?.includes('오류')) {
+            execResult.success = false;
+            execResult.error = toolResult.content[0]?.text;
+        }
 
         // 실행 결과 파싱
         if (!execResult.success) {
@@ -128,9 +143,9 @@ except Exception as e:
             `📍 경로: ${result.path || 'Unknown'}\n` +
             `🌿 Git 브랜치: ${result.git_branch || 'Unknown'}\n`;
 
-        const workflowInfo = result.workflow_status?.plan ? 
+        const workflowInfo = result.workflow_status?.plan ?
             `\n📋 활성 워크플로우: ${result.workflow_status.plan.name}\n` +
-            `   진행률: ${result.workflow_status.plan.progress || '0/0'}` : 
+            `   진행률: ${result.workflow_status.plan.progress || '0/0'}` :
             '\n⚠️ 활성 워크플로우 없음';
 
         return {

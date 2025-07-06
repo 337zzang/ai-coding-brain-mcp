@@ -29,6 +29,14 @@ result = {
     "details": {}
 }
 
+# 로그 출력을 억제하기 위한 설정
+import logging
+logging.getLogger().setLevel(logging.CRITICAL)
+
+# stdout 캡처를 위한 설정
+from io import StringIO
+captured_output = StringIO()
+
 try:
     # 1. Python 경로 설정
     current_dir = Path.cwd()
@@ -42,11 +50,15 @@ try:
     except ImportError as e:
         result["error"] = f"enhanced_flow 모듈 import 실패: {str(e)}"
         result["details"]["import_error"] = traceback.format_exc()
-        print(json.dumps(result, ensure_ascii=False))
+        print(f"JSON_RESULT_START{json.dumps(result, ensure_ascii=False)}JSON_RESULT_END")
         sys.exit(1)
 
-    # 3. 프로젝트 전환 실행
+    # 3. stdout 리다이렉트
+    original_stdout = sys.stdout
+    sys.stdout = captured_output
+    
     try:
+        # 4. 프로젝트 전환 실행
         flow_result = cmd_flow_with_context(project_name)
 
         if flow_result and isinstance(flow_result, dict):
@@ -63,15 +75,20 @@ try:
         result["error"] = f"프로젝트 전환 중 오류: {str(e)}"
         result["details"]["traceback"] = traceback.format_exc()
         result["details"]["exception_type"] = type(e).__name__
+    finally:
+        # stdout 복원
+        sys.stdout = original_stdout
+        captured_logs = captured_output.getvalue()
+        result["details"]["logs"] = captured_logs
 
-    # 4. 결과 출력
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    # 5. 결과 출력 (JSON만 출력)
+    print(f"JSON_RESULT_START{json.dumps(result, ensure_ascii=False)}JSON_RESULT_END")
 
 except Exception as e:
     # 최상위 예외 처리
     result["error"] = f"치명적 오류: {str(e)}"
     result["details"]["fatal_traceback"] = traceback.format_exc()
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    print(f"JSON_RESULT_START{json.dumps(result, ensure_ascii=False)}JSON_RESULT_END")
     sys.exit(1)
 `;
 
@@ -108,12 +125,12 @@ except Exception as e:
         // stdout에서 JSON 결과 추출
         let result: FlowProjectResult;
         try {
-            // stdout에서 JSON 부분만 추출 (마지막 완전한 JSON 객체)
+            // JSON_RESULT_START와 JSON_RESULT_END 마커로 감싸진 JSON 추출
             const stdout = execResult.stdout || '';
-            const jsonMatch = stdout.match(/\{[^{}]*"success"[\s\S]*\}(?!.*\{[^{}]*"success")/);
+            const jsonMatch = stdout.match(/JSON_RESULT_START(.+?)JSON_RESULT_END/s);
 
-            if (jsonMatch) {
-                result = JSON.parse(jsonMatch[0]);
+            if (jsonMatch && jsonMatch[1]) {
+                result = JSON.parse(jsonMatch[1]);
             } else {
                 throw new Error('No valid JSON found in output');
             }

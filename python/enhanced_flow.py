@@ -167,6 +167,16 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
         # 예: global briefing_cache 등
 
         last_loaded_context = project_name
+# 🔄 기존 프로젝트일 경우 컨텍스트 문서 자동 업데이트
+        logger.info("[BUILD] 프로젝트 컨텍스트 문서 업데이트 시작")
+        try:
+            from python.project_context_builder import ProjectContextBuilder
+            builder = ProjectContextBuilder()  # 현재 작업 디렉터리가 프로젝트 루트
+            builder.build_all(update_readme=True, update_context=True)
+            logger.info("[BUILD] 프로젝트 컨텍스트 문서 업데이트 완료")
+        except Exception as e:
+            logger.error(f"프로젝트 컨텍스트 문서 업데이트 실패: {e}")
+            # 빌드 실패해도 프로젝트 전환은 계속 진행
 
         # 반환 직전 로깅 추가
         return_data = {

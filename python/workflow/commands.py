@@ -5,18 +5,18 @@ import os
 import re
 from datetime import datetime
 from typing import Dict, Any, Optional, Tuple
-from workflow.workflow_manager import WorkflowManager
-from workflow.models import ExecutionPlan, TaskStatus
-from enhanced_flow import start_project
-from core.context_manager import ContextManager
-
+import json
+from python.workflow.workflow_manager import WorkflowManager
+from python.workflow.models import ExecutionPlan, TaskStatus
+from python.enhanced_flow import start_project
+from python.core.context_manager import get_context_manager
 
 class WorkflowCommands:
     """워크플로우 명령어 처리 클래스"""
     
     def __init__(self, workflow_manager: WorkflowManager):
         self.workflow = workflow_manager
-        self.context_manager = ContextManager.get_instance()
+        self.context_manager = get_context_manager()
         self.commands = {
             '/plan': self.handle_plan,
             '/task': self.handle_task,
@@ -193,6 +193,17 @@ class WorkflowCommands:
         )
     
 
+    def _load_workflow_data(self) -> Dict[str, Any]:
+        """워크플로우 데이터 로드"""
+        try:
+            workflow_path = os.path.join("memory", "workflow.json")
+            if os.path.exists(workflow_path):
+                with open(workflow_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            return {}
+        except Exception as e:
+            return {'error': str(e)}
+    
     def handle_list(self, args: str) -> Dict[str, Any]:
         """플랜 목록 조회"""
         try:
@@ -374,11 +385,54 @@ class WorkflowCommands:
     
     def handle_status(self, args: str) -> Dict[str, Any]:
         """상태 확인"""
-        status = self.workflow.get_status()
-        return {
-            'success': True,
-            'status': status
-        }
+        try:
+            # 현재 플랜과 태스크 정보 가져오기
+            current_plan = self.workflow.get_current_plan()
+            current_task = self.workflow.get_current_task()
+
+            # 플랜이 없는 경우
+            if not current_plan:
+                return {
+                    'success': True,
+                    'status': 'no_plan',
+                    'message': '활성 계획 없음'
+                }
+
+            # 완료된 태스크 수 계산
+            completed_tasks = sum(1 for task in current_plan.tasks if task.status == TaskStatus.COMPLETED)
+            total_tasks = len(current_plan.tasks)
+            progress = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+
+            # 상태 정보 구성
+            status = {
+                'plan': {
+                    'id': current_plan.id,
+                    'name': current_plan.name,
+                    'status': current_plan.status,
+                    'progress': progress,
+                    'completed': completed_tasks,
+                    'total': total_tasks
+                }
+            }
+
+            # 현재 태스크 정보 추가
+            if current_task:
+                status['current_task'] = {
+                    'id': current_task.id,
+                    'title': current_task.title,
+                    'status': current_task.status.value,
+                    'index': current_plan.current_task_index
+                }
+
+            return {
+                'success': True,
+                'status': status
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f'상태 조회 중 오류: {str(e)}'
+            }
     
     def handle_history(self, args: str) -> Dict[str, Any]:
         """작업 이력 조회"""

@@ -4,8 +4,9 @@ Task 2: 프로젝트별 인스턴스 관리 구현
 """
 import os
 from typing import Dict, Any, Optional, Tuple
-from workflow.workflow_manager import WorkflowManager
-from workflow.commands import WorkflowCommands
+from python.workflow.workflow_manager import WorkflowManager
+from python.workflow.commands import WorkflowCommands
+from python.core.context_manager import get_context_manager
 
 
 # 프로젝트별 워크플로우 인스턴스 관리
@@ -103,7 +104,7 @@ def process_workflow_command(command: str) -> str:
     """워크플로우 명령 처리"""
     manager, commands = get_workflow_instance()
     result = commands.process_command(command)
-    return str(result)
+    return result
 
 
 def submit_task_plan(task_id: str, plan_content: str) -> Dict[str, Any]:
@@ -145,7 +146,7 @@ def workflow_command(command: str):
     from ai_helpers import HelperResult
     return HelperResult(
         ok=True, 
-        data={'message': process_workflow_command(command)}, 
+        data=process_workflow_command(command), 
         error=None
     )
 

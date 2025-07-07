@@ -84,6 +84,15 @@ class ProjectInitializer:
             
             logger.info(f"프로젝트 생성 완료: {project_name}")
             
+# 🔄 프로젝트 컨텍스트 문서 생성
+            logger.info("[BUILD] 프로젝트 컨텍스트 문서 생성 시작")
+            try:
+                from python.project_context_builder import ProjectContextBuilder
+                builder = ProjectContextBuilder(str(project_path))
+                builder.build_all(update_readme=True, update_context=True)
+                logger.info("[BUILD] 프로젝트 컨텍스트 문서 생성 완료")
+            except Exception as e:
+                logger.error(f"프로젝트 컨텍스트 문서 생성 실패: {e}")
             return HelperResult.success({
                 'project_name': project_name,
                 'project_path': str(project_path),

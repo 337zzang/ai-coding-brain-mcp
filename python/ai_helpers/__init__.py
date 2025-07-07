@@ -96,6 +96,11 @@ try:
     globals()['flow_project'] = flow_project
     logger.info("✅ flow_project 함수 등록 완료")
 
+except ImportError as e:
+    logger.warning(f"⚠️ flow_project 함수 로드 실패: {e}")
+except Exception as e:
+    logger.warning(f"⚠️ enhanced_flow 연동 실패: {e}")
+
 # start_project 함수 래핑
 try:
     from enhanced_flow import start_project as _start_project_func
@@ -114,10 +119,8 @@ try:
 
 except ImportError as e:
     logger.warning(f"⚠️ start_project 함수 로드 실패: {e}")
-
-
 except Exception as e:
-    logger.warning(f"⚠️ enhanced_flow 연동 실패: {e}")
+    logger.warning(f"⚠️ start_project 함수 연동 실패: {e}")
 
 # 4. search_wrappers 통합
 try:

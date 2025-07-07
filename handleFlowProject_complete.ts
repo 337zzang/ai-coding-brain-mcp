@@ -1,17 +1,3 @@
-import { ToolResult } from '../types/tool-interfaces';
-import { logger } from '../services/logger';
-// import { getActiveReplSession } from './repl-session-manager'; // Not exported
-
-interface FlowProjectResult {
-    success: boolean;
-    project_name?: string;
-    path?: string;
-    git_branch?: string;
-    workflow_status?: any;
-    error?: string;
-    details?: any;
-}
-
 export async function handleFlowProject(params: { project_name: string }): Promise<ToolResult> {
     const code = `
 # 개선된 flow_project 핸들러 - 명시적 에러 처리
@@ -56,7 +42,7 @@ try:
     # 3. stdout 리다이렉트
     original_stdout = sys.stdout
     sys.stdout = captured_output
-
+    
     try:
         # 4. 프로젝트 전환 실행
         flow_result = cmd_flow_with_context(project_name)
@@ -96,7 +82,7 @@ except Exception as e:
         // ExecuteCodeHandler를 사용하여 Python 코드 실행
         const { ExecuteCodeHandler } = await import('./execute-code-handler');
         const toolResult = await ExecuteCodeHandler.handleExecuteCode({ code, language: 'python' });
-
+        
         // ToolResult에서 실제 결과 추출
         let execResult: any;
         try {
@@ -112,7 +98,7 @@ except Exception as e:
                 }]
             };
         }
-
+        
         // 에러 확인
         if (!execResult.success || execResult.error) {
             logger.error('Python execution failed:', execResult.error);
@@ -159,7 +145,7 @@ except Exception as e:
 
         // 성공 응답 - 실제 데이터를 포함하여 반환
         const successMessage = `✅ 프로젝트 전환 성공: ${result.project_name}`;
-
+        
         // 전체 결과 데이터 구성
         const responseData = {
             success: true,
@@ -180,10 +166,10 @@ except Exception as e:
         return {
             content: [{
                 type: 'text',
-                text: successMessage + '\n\n' +
-                    `📍 경로: ${responseData.path}\n` +
-                    `🌿 Git 브랜치: ${responseData.git_branch}` +
-                    workflowInfo
+                text: successMessage + '\n\n' + 
+                      `📍 경로: ${responseData.path}\n` +
+                      `🌿 Git 브랜치: ${responseData.git_branch}` +
+                      workflowInfo
             }, {
                 type: 'text',
                 text: '```json\n' + JSON.stringify(responseData, null, 2) + '\n```'

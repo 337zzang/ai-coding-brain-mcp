@@ -134,6 +134,40 @@ restart_json_repl(keep_helpers=False)  # 완전 초기화
         }
     },
     
+
+    {
+        name: 'start_project',
+        description: `새 프로젝트 생성 및 초기화
+
+새로운 프로젝트를 생성하고 기본 구조를 설정합니다.
+기존 프로젝트 전환은 flow_project를 사용하세요.
+
+주요 기능:
+- 프로젝트 디렉토리 생성
+- 기본 폴더 구조 생성 (memory, src, test, docs)
+- 기본 파일 생성 (README.md, context.json 등)
+- Git 저장소 초기화 (선택적)
+- 초기 컨텍스트 설정
+
+사용 예:
+- start_project("new-project")
+- start_project("my-app", init_git=false)`,
+        inputSchema: {
+            type: 'object',
+            properties: {
+                project_name: {
+                    type: 'string',
+                    description: '생성할 프로젝트 이름'
+                },
+                init_git: {
+                    type: 'boolean',
+                    description: 'Git 저장소 초기화 여부',
+                    default: true
+                }
+            },
+            required: ['project_name']
+        }
+    },
     // ========== API 관리 도구 ==========
     {
         name: 'toggle_api',

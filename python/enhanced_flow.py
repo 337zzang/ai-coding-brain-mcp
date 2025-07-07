@@ -49,97 +49,9 @@ if not hasattr(builtins, 'helpers'):
 context = {}
 last_loaded_context = None
 
-# ==================== 새 프로젝트 생성 함수 ====================
-def _create_new_project(proj_root: Path, *, init_git: bool = True):
-    """새 프로젝트 구조 생성"""
-    # 필수 디렉토리 생성
-    (proj_root / "memory").mkdir(parents=True, exist_ok=True)
-    for sub in ("test", "docs", "src"):
-        (proj_root / sub).mkdir(exist_ok=True)
+# ==================== 프로젝트 관리 함수 ====================
 
-    # 기본 파일 생성
-    readme_content = f"""# {proj_root.name}
-
-프로젝트 초기화 완료 - {datetime.now().strftime('%Y-%m-%d %H:%M')}
-
-## 프로젝트 구조
-```
-{proj_root.name}/
-├── memory/         # 프로젝트 메모리 (컨텍스트, 워크플로우)
-├── src/            # 소스 코드
-├── test/           # 테스트 코드
-├── docs/           # 문서
-└── README.md       # 프로젝트 설명
-```
-
-## 시작하기
-```bash
-# 프로젝트로 이동
-flow_project("{proj_root.name}")
-
-# 작업 계획 수립
-/plan 초기설정 | 프로젝트 기본 구조 설정
-```
-"""
-    (proj_root / "README.md").write_text(readme_content, encoding="utf-8")
-
-    # 문서 파일
-    (proj_root / "docs" / "overview.md").write_text(
-        f"# {proj_root.name} 개요\n\n## 프로젝트 설명\n\n*여기에 프로젝트 설명을 작성하세요*",
-        encoding="utf-8"
-    )
-
-    # 테스트 파일
-    (proj_root / "test" / "__init__.py").touch()
-    (proj_root / "test" / "test_smoke.py").write_text(
-        "\"\"\"기본 smoke 테스트\"\"\"\n\ndef test_smoke():\n    \"\"\"프로젝트가 정상적으로 설정되었는지 확인\"\"\"\n    assert True\n",
-        encoding="utf-8"
-    )
-
-    # Git 초기화
-    if init_git and is_git_available():
-        try:
-            subprocess.run(["git", "init"], cwd=proj_root, capture_output=True)
-            write_gitignore(proj_root)
-            subprocess.run(["git", "add", "."], cwd=proj_root, capture_output=True)
-            subprocess.run(
-                ["git", "commit", "-m", f"feat: {proj_root.name} 프로젝트 초기화"],
-                cwd=proj_root,
-                capture_output=True
-            )
-            print(f"[OK] Git 저장소 초기화 완료")
-        except Exception as e:
-            print(f"[WARN]  Git 초기화 실패 (수동으로 진행 가능): {e}")
-    else:
-        if not init_git:
-            print("[INFO]  Git 초기화 건너뜀 (--no-git 옵션)")
-        else:
-            print("[WARN]  Git이 설치되지 않음 (나중에 수동으로 초기화 가능)")
-
-    # 초기 컨텍스트 생성
-    initial_context = {
-        "project_name": proj_root.name,
-        "project_path": str(proj_root),
-        "created_at": datetime.now().isoformat(),
-        "last_updated": datetime.now().isoformat(),
-        "type": "new_project",
-        "status": "initialized"
-    }
-
-    # memory 디렉토리에 저장
-    context_path = proj_root / "memory" / "context.json"
-    context_path.write_text(
-        json.dumps(initial_context, indent=2, ensure_ascii=False),
-        encoding="utf-8"
-    )
-
-    print(f"\n[OK] 새 프로젝트 '{proj_root.name}' 생성 완료!")
-    print(f"   경로: {proj_root}")
-    print(f"   구조: README.md, src/, test/, docs/, memory/")
-    if init_git and is_git_available():
-        print(f"   Git: 초기 커밋 완료")
-
-def _create_new_project(proj_root: Path, *, init_git: bool = True) -> Dict[str, Any]:
+def _old_create_new_project(proj_root: Path, *, init_git: bool = True) -> Dict[str, Any]:
     """새 프로젝트 구조 생성 및 초기화
 
     Args:
@@ -308,33 +220,15 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
         # 1. 프로젝트 경로 확인/생성
         project_path = _get_project_path(project_name)
 
-        # 1-1. 새 프로젝트인 경우 생성
-        is_new_project = not project_path.exists()
-        if is_new_project:
-            logger.info(f"[NEW] 새 프로젝트 생성: {project_name}")
-
-            # Git 초기화 옵션 (환경변수 또는 기본값)
-            init_git = os.environ.get('FLOW_INIT_GIT', 'true').lower() != 'false'
-
-            # 프로젝트 생성
-            creation_result = _create_new_project(project_path, init_git=init_git)
-
-            if not creation_result.get('success'):
-                error_msg = creation_result.get('error', '알 수 없는 오류')
-                logger.error(f"프로젝트 생성 실패: {error_msg}")
-                return {
-                    'status': 'error',
-                    'error': f'프로젝트 생성 실패: {error_msg}'
-                }
-
-            # 생성 결과 출력
-            print(f"\n✅ 새 프로젝트 '{project_name}' 생성 완료!")
-            print(f"   📍 경로: {project_path}")
-            print(f"   📁 생성된 디렉터리: {', '.join(creation_result['created_dirs'])}")
-            print(f"   📄 생성된 파일: {len(creation_result['created_files'])}개")
-            if creation_result.get('git_initialized'):
-                print(f"   🔀 Git: 초기화 완료 (첫 커밋 생성)")
-            print()
+        # 1-1. 프로젝트 존재 여부 확인
+        if not project_path.exists():
+            error_msg = f"프로젝트 '{project_name}'을 찾을 수 없습니다. 먼저 'start_project'로 생성해주세요."
+            logger.error(error_msg)
+            return {
+                'success': False,
+                'error': error_msg,
+                'project_name': project_name
+            }
 
         # 2. 이전 컨텍스트와 다른 프로젝트인 경우 로그만 남김
         if context and context.get('project_name') != project_name:
@@ -670,48 +564,9 @@ def _get_project_path(project_name: str) -> Path:
 
     project_path = Path(base_path) / project_name
 
-    # 프로젝트 디렉토리가 없으면 생성
-    is_new_project = not project_path.exists()
-    if is_new_project:
-        project_path.mkdir(parents=True, exist_ok=True)
-        logger.info(f"[OK] 새 프로젝트 '{project_name}' 생성: {project_path}")
-        # 새 프로젝트 초기화
-        _create_new_project(project_path, init_git=True)
-    else:
-        logger.info(f"[DIR] 기존 프로젝트 '{project_name}' 로드: {project_path}")
-
-    # 필수 서브디렉토리 확인 및 생성 (기존 프로젝트에서도 체크)
-    essential_dirs = ['memory', 'test', 'docs']
-    created_dirs = []
-
-    for subdir in essential_dirs:
-        subdir_path = project_path / subdir
-        if not subdir_path.exists():
-            subdir_path.mkdir(exist_ok=True)
-            created_dirs.append(subdir)
-
-    if created_dirs:
-        logger.info(f"📁 필수 디렉토리 생성: {', '.join(created_dirs)}")
-
-    # README.md 확인 및 생성 (기존 프로젝트에서도 체크)
-    readme_path = project_path / "README.md"
-    if not readme_path.exists():
-        readme_content = f"""# {project_name}
-
-프로젝트 생성일: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-
-## 설명
-{project_name} 프로젝트입니다.
-
-## 구조
-- `memory/` - 프로젝트 메모리 및 컨텍스트
-- `test/` - 테스트 파일
-- `docs/` - 문서
-"""
-        readme_path.write_text(readme_content, encoding='utf-8')
-        logger.info(f"[FILE] README.md 생성됨")
-
+    # 프로젝트 경로만 반환 (자동 생성하지 않음)
     return project_path
+
 def _load_context(project_name: str) -> Dict[str, Any]:
     """컨텍스트 로드"""
     context_file = Path('memory') / 'context.json'
@@ -959,10 +814,8 @@ def start_project(project_name: str, init_git: bool = True) -> Dict[str, Any]:
         logger.info(f"새 프로젝트 생성 시작: {project_name}")
 
         # project_initializer 모듈 사용
-        result = _create_new_project(
-            project_name=project_name,
-            init_git=init_git
-        )
+        from python.project_initializer import create_new_project
+        result = create_new_project(project_name, init_git=init_git)
 
         if result.ok:
             data = result.data
@@ -1001,6 +854,7 @@ def bind_to_helpers(helpers_obj):
     """helpers 객체에 함수 바인딩"""
     helpers_obj.flow_project = flow_project
     helpers_obj.cmd_flow_with_context = cmd_flow_with_context
+    helpers_obj.start_project = start_project
     helpers_obj.show_workflow_status = show_workflow_status_improved
     logger.info("Enhanced Flow 함수들이 helpers에 바인딩되었습니다")
 

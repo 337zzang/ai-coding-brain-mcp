@@ -7,6 +7,7 @@ import { execFile } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs';
+import { ToolResult } from '../types/tool-interfaces';
 
 const execFileAsync = promisify(execFile);
 
@@ -187,3 +188,150 @@ if not results:
     };
   }
 }
+
+
+/**
+ * 새 프로젝트 생성 핸들러
+ */
+export async function handleStartProject(args: {
+    project_name: string;
+    init_git?: boolean;
+}): Promise<ToolResult> {
+    const { project_name, init_git = true } = args;
+
+    try {
+        console.log(`🚀 새 프로젝트 생성 시작: ${project_name}`);
+
+        // Python의 start_project 함수 호출
+        const pythonCode = `
+import sys
+import json
+
+# ai_helpers 임포트
+try:
+    import ai_helpers as helpers
+
+    # start_project 함수 실행
+    result = helpers.start_project("${project_name}", init_git=${init_git ? 'True' : 'False'})
+
+    # 결과 출력
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+except Exception as e:
+    import traceback
+    error_result = {
+        'success': False,
+        'error': str(e),
+        'traceback': traceback.format_exc()
+    }
+    print(json.dumps(error_result, ensure_ascii=False, indent=2))
+`;
+
+        // Python 실행
+        const projectRoot = getProjectRoot();
+        const pythonPath = path.join(projectRoot, 'python');
+        const pythonExe = process.platform === 'win32' ? 'python' : 'python3';
+
+        const env = {
+            ...process.env,
+            PYTHONPATH: pythonPath,
+            PYTHONIOENCODING: 'utf-8'
+        };
+
+        let execResult;
+        try {
+            const { stdout, stderr } = await execFileAsync(
+                pythonExe,
+                ['-c', pythonCode],
+                {
+                    cwd: projectRoot,
+                    env,
+                    maxBuffer: 10 * 1024 * 1024
+                }
+            );
+
+            execResult = {
+                success: true,
+                output: stdout,
+                error: stderr
+            };
+        } catch (error: any) {
+            execResult = {
+                success: false,
+                output: error.stdout || '',
+                error: error.message || 'Unknown error'
+            };
+        }
+
+        if (!execResult.success) {
+            return {
+                content: [{
+                    type: 'text',
+                    text: `❌ 프로젝트 생성 실행 오류: ${execResult.error || '알 수 없는 오류'}`
+                }]
+            };
+        }
+
+        // 결과 파싱
+        let result;
+        try {
+            result = JSON.parse(execResult.output || '{}');
+        } catch (e) {
+            return {
+                content: [{
+                    type: 'text',
+                    text: `❌ 결과 파싱 오류: ${execResult.output}`
+                }]
+            };
+        }
+
+        if (result.success) {
+            // 성공 메시지 구성
+            const messages = [`✅ 프로젝트 생성 성공: ${result.project_name}`];
+
+            if (result.project_path) {
+                messages.push(`📍 경로: ${result.project_path}`);
+            }
+
+            if (result.created) {
+                const { directories = [], files = [] } = result.created;
+                if (directories.length > 0) {
+                    messages.push(`📁 생성된 폴더: ${directories.length}개`);
+                }
+                if (files.length > 0) {
+                    messages.push(`📄 생성된 파일: ${files.length}개`);
+                }
+            }
+
+            if (result.message) {
+                messages.push(`\n${result.message}`);
+            }
+
+            return {
+                content: [{
+                    type: 'text',
+                    text: messages.join('\n')
+                }]
+            };
+        } else {
+            // 실패 메시지
+            const errorMsg = result.error || '알 수 없는 오류';
+            return {
+                content: [{
+                    type: 'text',
+                    text: `❌ 프로젝트 생성 실패: ${errorMsg}`
+                }]
+            };
+        }
+
+    } catch (error) {
+        console.error('프로젝트 생성 오류:', error);
+        return {
+            content: [{
+                type: 'text',
+                text: `❌ 프로젝트 생성 중 오류 발생: ${error instanceof Error ? error.message : String(error)}`
+            }]
+        };
+    }
+}
+

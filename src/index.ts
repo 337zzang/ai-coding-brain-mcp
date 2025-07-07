@@ -20,7 +20,7 @@ import { toolDefinitions } from './tools/tool-definitions';
 import { ExecuteCodeHandler } from './handlers/execute-code-handler';
 import { handleFlowProject } from './handlers/workflow-handlers';
 import { BackupHandler } from './handlers/backup-handler';
-import { handleBuildProjectContext } from './handlers/project-handlers';
+import { handleBuildProjectContext, handleStartProject } from './handlers/project-handlers';
 import { apiToggleHandler, listApisHandler } from './handlers/api-toggle-handler';
 
 // 로거 초기화
@@ -110,6 +110,8 @@ class AICodingBrainMCP {
                     };
                 } else if (name === 'flow_project') {
                     return await handleFlowProject(args as { project_name: string });
+                } else if (name === 'start_project') {
+                    return await handleStartProject(args as { project_name: string; init_git?: boolean });
                 } else if (name === 'git_status') {
                     // Git 도구는 현재 구현되지 않음
                     return { success: false, error: 'Git tools not implemented yet' };

@@ -105,7 +105,7 @@ class WorkflowCommands:
                 'current_task': {
                     'id': current_task.id,
                     'title': current_task.title,
-                    'plan': current_task.plan.to_dict() if current_task.plan else None
+                    'plan': current_task.execution_plan.to_dict() if current_task.execution_plan else None
                 },
                 'request_approval': True
             }

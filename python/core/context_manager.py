@@ -1,3 +1,4 @@
+from python.workflow_integration import switch_project_workflow
 """
 통합된 컨텍스트 관리자
 프로젝트별 상태와 워크플로우 데이터를 관리합니다.
@@ -74,6 +75,9 @@ class ContextManager:
             raise ValueError(f"프로젝트 디렉토리가 없습니다: {project_root}")
             
         # 3. 새 프로젝트 데이터 로드
+        # 워크플로우 인스턴스도 전환 (Task 1 개선)
+        switch_project_workflow(new_project_name)
+        
         self.load_all()
         
         print(f"✅ 프로젝트 '{new_project_name}'로 전환 완료")

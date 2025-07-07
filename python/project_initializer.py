@@ -53,7 +53,7 @@ class ProjectInitializer:
         try:
             # 기본 경로 설정
             if base_path is None:
-                base_path = Path.cwd()
+                base_path = Path.home() / 'Desktop'
             
             project_path = base_path / project_name
             

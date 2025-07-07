@@ -6,6 +6,7 @@ import re
 from typing import Dict, Any, Optional, Tuple
 from workflow.workflow_manager import WorkflowManager
 from workflow.models import ExecutionPlan, TaskStatus
+from project_initializer import start_project
 
 
 class WorkflowCommands:
@@ -22,7 +23,11 @@ class WorkflowCommands:
             '/history': self.handle_history,
             '/build': self.handle_build,
             '/done': self.handle_done,
-            '/complete': self.handle_done  # alias for /done
+            '/complete': self.handle_done,  # alias for /done
+            '/list': self.handle_list,
+            '/start': self.handle_start,
+            '/current': self.handle_current,
+            '/tasks': self.handle_tasks,
         }
     
     def process_command(self, command: str) -> Dict[str, Any]:
@@ -162,6 +167,139 @@ class WorkflowCommands:
             outputs=outputs
         )
     
+
+    def handle_list(self, args: str) -> Dict[str, Any]:
+        """플랜 목록 조회"""
+        try:
+            # workflow.json 읽기
+            workflow_data = self._load_workflow_data()
+
+            if not workflow_data.get('plans'):
+                return {
+                    'status': 'info',
+                    'message': '생성된 플랜이 없습니다.',
+                    'plans': []
+                }
+
+            plans_info = []
+            for plan in workflow_data['plans']:
+                plan_info = {
+                    'name': plan.get('name', 'Unnamed'),
+                    'description': plan.get('description', ''),
+                    'created_at': plan.get('created_at', ''),
+                    'total_tasks': len(plan.get('tasks', [])),
+                    'completed_tasks': plan.get('completed_tasks', 0),
+                    'progress': f"{plan.get('completed_tasks', 0)}/{len(plan.get('tasks', []))}"
+                }
+                plans_info.append(plan_info)
+
+            return {
+                'status': 'success',
+                'message': f'{len(plans_info)}개의 플랜이 있습니다.',
+                'plans': plans_info
+            }
+
+        except Exception as e:
+            return {'error': f'플랜 목록 조회 중 오류: {str(e)}'}
+
+    def handle_current(self, args: str) -> Dict[str, Any]:
+        """현재 태스크 확인"""
+        try:
+            # 워크플로우 데이터 로드
+            workflow_data = self._load_workflow_data()
+
+            # 활성 플랜 찾기
+            active_plan = None
+            for plan in workflow_data.get('plans', []):
+                if plan.get('status') == 'active':
+                    active_plan = plan
+                    break
+
+            if not active_plan:
+                return {
+                    'status': 'info',
+                    'message': '활성 플랜이 없습니다.',
+                    'current_task': None
+                }
+
+            # 현재 태스크 찾기
+            current_index = active_plan.get('current_task_index', 0)
+            tasks = active_plan.get('tasks', [])
+
+            if current_index >= len(tasks):
+                return {
+                    'status': 'info',
+                    'message': '모든 태스크가 완료되었습니다.',
+                    'current_task': None,
+                    'plan': active_plan.get('name')
+                }
+
+            current_task = tasks[current_index]
+
+            return {
+                'status': 'success',
+                'message': '현재 태스크',
+                'plan': active_plan.get('name'),
+                'current_task': {
+                    'index': current_index + 1,
+                    'total': len(tasks),
+                    'title': current_task.get('title', 'Untitled'),
+                    'description': current_task.get('description', ''),
+                    'status': current_task.get('status', 'todo'),
+                    'approval': current_task.get('approval', 'none')
+                }
+            }
+
+        except Exception as e:
+            return {'error': f'현재 태스크 확인 중 오류: {str(e)}'}
+
+    def handle_tasks(self, args: str) -> Dict[str, Any]:
+        """태스크 목록 조회"""
+        try:
+            # 워크플로우 데이터 로드
+            workflow_data = self._load_workflow_data()
+
+            # 활성 플랜 찾기
+            active_plan = None
+            for plan in workflow_data.get('plans', []):
+                if plan.get('status') == 'active':
+                    active_plan = plan
+                    break
+
+            if not active_plan:
+                return {
+                    'status': 'info',
+                    'message': '활성 플랜이 없습니다.',
+                    'tasks': []
+                }
+
+            # 태스크 목록 구성
+            tasks_info = []
+            current_index = active_plan.get('current_task_index', 0)
+
+            for i, task in enumerate(active_plan.get('tasks', [])):
+                task_info = {
+                    'index': i + 1,
+                    'title': task.get('title', 'Untitled'),
+                    'description': task.get('description', ''),
+                    'status': task.get('status', 'todo'),
+                    'is_current': i == current_index,
+                    'completed_at': task.get('completed_at', '')
+                }
+                tasks_info.append(task_info)
+
+            return {
+                'status': 'success',
+                'message': f"{active_plan.get('name')} 플랜의 태스크 목록",
+                'plan': active_plan.get('name'),
+                'total_tasks': len(tasks_info),
+                'completed_tasks': active_plan.get('completed_tasks', 0),
+                'tasks': tasks_info
+            }
+
+        except Exception as e:
+            return {'error': f'태스크 목록 조회 중 오류: {str(e)}'}
+
     def handle_next(self, args: str) -> Dict[str, Any]:
         """다음 작업으로 이동"""
         current_task = self.workflow.get_current_task()
@@ -314,3 +452,39 @@ class WorkflowCommands:
             }
         except ValueError as e:
             return {'error': str(e)}
+
+
+    def handle_start(self, args: str) -> Dict[str, Any]:
+        """
+        새 프로젝트 생성
+        사용법: /start 프로젝트명
+        """
+        if not args.strip():
+            return {
+                'status': 'error',
+                'message': '프로젝트 이름을 입력해주세요. 사용법: /start 프로젝트명'
+            }
+
+        project_name = args.strip()
+
+        try:
+            # start_project 함수 호출
+            result = start_project(project_name)
+
+            if result.ok:
+                return {
+                    'status': 'success',
+                    'message': f'✅ 프로젝트 "{project_name}" 생성 완료!',
+                    'data': result.data
+                }
+            else:
+                return {
+                    'status': 'error',
+                    'message': f'프로젝트 생성 실패: {result.error}'
+                }
+
+        except Exception as e:
+            return {
+                'status': 'error',
+                'message': f'프로젝트 생성 중 오류: {str(e)}'
+            }

@@ -51,29 +51,6 @@ last_loaded_context = None
 
 # ==================== 프로젝트 관리 함수 ====================
 
-def _old_create_new_project(proj_root: Path, *, init_git: bool = True) -> Dict[str, Any]:
-    """새 프로젝트 구조 생성 및 초기화
-
-    Args:
-        proj_root: 프로젝트 루트 경로
-        init_git: Git 초기화 여부
-
-    Returns:
-        생성 결과 정보
-    """
-    try:
-        # 1. 디렉터리 구조 생성
-        proj_root.mkdir(parents=True, exist_ok=True)
-
-        # 표준 디렉터리들
-        dirs_to_create = ['src', 'test', 'docs', 'memory']
-        for dir_name in dirs_to_create:
-            (proj_root / dir_name).mkdir(exist_ok=True)
-
-        # 2. 기본 파일들 생성
-        # README.md
-        readme_content = f"""# {proj_root.name}
-
 ## 🚀 프로젝트 개요
 {proj_root.name} 프로젝트입니다.
 
@@ -116,17 +93,6 @@ def _old_create_new_project(proj_root: Path, *, init_git: bool = True) -> Dict[s
         # test/test_smoke.py - 기본 테스트
         test_content = '''"""Smoke test for project initialization"""
 
-def test_smoke():
-    """프로젝트가 정상적으로 초기화되었는지 확인"""
-    assert True, "Basic smoke test passed"
-
-def test_project_structure():
-    """프로젝트 구조 확인"""
-    import os
-    assert os.path.exists("README.md")
-    assert os.path.exists("src")
-    assert os.path.exists("test")
-    assert os.path.exists("docs")
 '''
         (proj_root / "test" / "test_smoke.py").write_text(test_content, encoding="utf-8")
 

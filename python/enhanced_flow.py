@@ -9,6 +9,7 @@ import json
 import logging
 import subprocess
 from pathlib import Path
+from python.project_initializer import create_new_project as _create_new_project
 from typing import Dict, Any, Optional
 from datetime import datetime
 
@@ -936,6 +937,61 @@ def show_workflow_status_improved() -> Dict[str, Any]:
     return workflow_status or {'status': 'no_workflow', 'message': '워크플로우 없음'} or {'status': 'no_workflow', 'message': '워크플로우 없음'}
 
 # 헬퍼 바인딩용 함수
+
+
+def start_project(project_name: str, init_git: bool = True) -> Dict[str, Any]:
+    """새 프로젝트 생성
+
+    Args:
+        project_name: 생성할 프로젝트 이름
+        init_git: Git 초기화 여부 (기본값: True)
+
+    Returns:
+        Dict[str, Any]: 생성 결과
+            - success: 성공 여부
+            - project_name: 프로젝트 이름
+            - project_path: 프로젝트 경로
+            - created: 생성된 항목들
+            - message: 결과 메시지
+            - error: 오류 메시지 (실패 시)
+    """
+    try:
+        logger.info(f"새 프로젝트 생성 시작: {project_name}")
+
+        # project_initializer 모듈 사용
+        result = _create_new_project(
+            project_name=project_name,
+            init_git=init_git
+        )
+
+        if result.ok:
+            data = result.data
+            logger.info(f"프로젝트 생성 성공: {project_name}")
+
+            # 성공 결과 반환
+            return {
+                'success': True,
+                'project_name': data.get('project_name'),
+                'project_path': data.get('project_path'),
+                'created': data.get('created', {}),
+                'message': data.get('message', f"프로젝트 '{project_name}' 생성 완료")
+            }
+        else:
+            logger.error(f"프로젝트 생성 실패: {result.error}")
+            return {
+                'success': False,
+                'error': result.error,
+                'project_name': project_name
+            }
+
+    except Exception as e:
+        logger.error(f"프로젝트 생성 중 예외 발생: {e}")
+        return {
+            'success': False,
+            'error': f"프로젝트 생성 중 오류 발생: {str(e)}",
+            'project_name': project_name
+        }
+
 def flow_project(project_name: str):
     """helpers.flow_project() 래퍼"""
     return cmd_flow_with_context(project_name)

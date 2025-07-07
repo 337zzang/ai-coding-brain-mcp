@@ -96,6 +96,26 @@ try:
     globals()['flow_project'] = flow_project
     logger.info("✅ flow_project 함수 등록 완료")
 
+# start_project 함수 래핑
+try:
+    from enhanced_flow import start_project as _start_project_func
+
+    def start_project(project_name: str, init_git: bool = True) -> Dict[str, Any]:
+        """새 프로젝트 생성"""
+        try:
+            result = _start_project_func(project_name, init_git)
+            return result
+        except Exception as e:
+            logger.error(f"start_project 실행 실패: {e}")
+            return {'success': False, 'error': f"프로젝트 생성 실패: {str(e)}"}
+
+    globals()['start_project'] = start_project
+    logger.info("✅ start_project 함수 등록 완료")
+
+except ImportError as e:
+    logger.warning(f"⚠️ start_project 함수 로드 실패: {e}")
+
+
 except Exception as e:
     logger.warning(f"⚠️ enhanced_flow 연동 실패: {e}")
 

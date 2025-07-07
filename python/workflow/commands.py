@@ -3,6 +3,7 @@
 """
 import os
 import re
+from datetime import datetime
 from typing import Dict, Any, Optional, Tuple
 from workflow.workflow_manager import WorkflowManager
 from workflow.models import ExecutionPlan, TaskStatus
@@ -413,27 +414,60 @@ class WorkflowCommands:
             auto_commit = os.getenv('AUTO_GIT_COMMIT', 'false').lower() == 'true'
             if auto_commit:
                 try:
-                    # Git 커밋
-                    commit_message = f"task: {task.title} - {summary}"
+                    # Git 유틸리티를 사용한 커밋
+                    from utils.git_utils import git_commit_with_id, git_push
                     
-                    # git add .
-                    os.system('git add .')
+                    # 커밋 메시지 생성 (Task ID 포함)
+                    task_id_short = task.id[:8] if len(task.id) > 8 else task.id
+                    commit_message = f"task({task_id_short}): {task.title}\n\n- Summary: {summary}\n- Status: Completed\n- Time: {datetime.now().isoformat()}"
                     
-                    # git commit
-                    commit_result = os.system(f'git commit -m "{commit_message}"')
+                    # Git 커밋 수행
+                    commit_result = git_commit_with_id(commit_message)
                     
-                    if commit_result == 0:
-                        # git push
-                        push_result = os.system('git push')
-                        if push_result == 0:
-                            print("✅ 자동 Git 커밋/푸시 완료!")
+                    if commit_result['success']:
+                        # Task 결과에 Git 정보 저장
+                        if 'git_info' not in task.result:
+                            task.result['git_info'] = {}
+                        
+                        task.result['git_info'] = {
+                            'commit_id': commit_result['commit_id'],
+                            'commit_id_short': commit_result['commit_id_short'],
+                            'branch': commit_result['branch'],
+                            'author': commit_result['author'],
+                            'email': commit_result['email'],
+                            'timestamp': commit_result['timestamp'],
+                            'files_changed': commit_result['files_changed']
+                        }
+                        
+                        # workflow.json 다시 저장 (Git 정보 포함)
+                        self.workflow.save_data()
+                        
+                        print(f"✅ Git 커밋 성공: {commit_result['commit_id_short']}")
+                        
+                        # 자동 푸시 (환경변수 확인)
+                        auto_push = os.getenv('AUTO_GIT_PUSH', 'false').lower() == 'true'
+                        if auto_push:
+                            push_result = git_push()
+                            if push_result['success']:
+                                print("✅ Git 푸시 성공!")
+                                task.result['git_info']['pushed'] = True
+                            else:
+                                print(f"⚠️ Git 푸시 실패: {push_result.get('error', 'Unknown error')}")
+                                task.result['git_info']['pushed'] = False
                         else:
-                            print("⚠️ Git 푸시 실패 (수동으로 실행 필요)")
+                            task.result['git_info']['pushed'] = False
+                            # workflow.json 한 번 더 저장
+                            self.workflow.save_data()
+                            
                     else:
-                        print("ℹ️ 커밋할 변경사항이 없거나 커밋 실패")
+                        error_msg = commit_result.get('error', 'Unknown error')
+                        if 'No changes to commit' in error_msg:
+                            print("ℹ️ 커밋할 변경사항이 없습니다")
+                        else:
+                            print(f"⚠️ Git 커밋 실패: {error_msg}")
                         
                 except Exception as e:
-                    print(f"⚠️ 자동 Git 작업 중 오류: {e}")
+                    print(f"❌ Git 작업 중 오류: {str(e)}")
             
             # 다음 작업 정보
             next_task = self.workflow.current_plan.get_next_task() if self.workflow.current_plan else None

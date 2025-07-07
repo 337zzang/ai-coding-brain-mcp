@@ -145,9 +145,8 @@ class ContextManager:
         context_to_save['project_name'] = self.current_project_name
         
         try:
-            with open(context_path, 'w', encoding='utf-8') as f:
-                json.dump(context_to_save, f, indent=2, ensure_ascii=False)
-            print(f"  ✓ context.json 저장 (최적화됨)")
+            write_json(context_to_save, Path(context_path))
+            print(f"  ✓ context.json 저장 (원자적 쓰기 적용)")
         except Exception as e:
             print(f"  ❌ context.json 저장 실패: {e}")
             
@@ -155,9 +154,8 @@ class ContextManager:
         if self.workflow_data:
             workflow_path = get_workflow_path(self.current_project_name)
             try:
-                with open(workflow_path, 'w', encoding='utf-8') as f:
-                    json.dump(self.workflow_data, f, indent=2, ensure_ascii=False)
-                print(f"  ✓ workflow.json 저장")
+                write_json(self.workflow_data, Path(workflow_path))
+                print(f"  ✓ workflow.json 저장 (원자적 쓰기 적용)")
             except Exception as e:
                 print(f"  ❌ workflow.json 저장 실패: {e}")
     

@@ -1,4 +1,4 @@
-from python.workflow_integration import switch_project_workflow
+# from python.workflow_integration import switch_project_workflow  # Moved to method to avoid circular import
 """
 통합된 컨텍스트 관리자
 프로젝트별 상태와 워크플로우 데이터를 관리합니다.
@@ -57,6 +57,9 @@ class ContextManager:
     
     def switch_project(self, new_project_name: str):
         """프로젝트를 전환합니다."""
+        # 지연 import로 순환 참조 해결
+        from python.workflow_integration import switch_project_workflow
+
         if self.current_project_name == new_project_name:
             print(f"이미 '{new_project_name}' 프로젝트입니다.")
             return

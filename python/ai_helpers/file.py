@@ -27,7 +27,7 @@ def create_file(file_path: str, content: str = '') -> str:
         str: 성공/실패 메시지
     """
     try:
-        _atomic_write(file_path, content)
+        _atomic_write(file_path, content, mode='text')
         return f'SUCCESS: 파일 생성 완료 - {file_path}'
     except Exception as e:
         return f'ERROR: 파일 생성 실패 - {e}'
@@ -55,7 +55,7 @@ def read_file(file_path: str) -> str:
 def write_file(file_path: str, content: str) -> str:
     """파일에 내용 쓰기 (덮어쓰기)"""
     try:
-        _atomic_write(file_path, content)
+        _atomic_write(file_path, content, mode='text')
         return f'SUCCESS: 파일 쓰기 완료 - {file_path}'
     except Exception as e:
         return f'ERROR: 파일 쓰기 실패 - {e}'
@@ -68,9 +68,9 @@ def append_to_file(file_path: str, content: str) -> str:
         if os.path.exists(file_path):
             with open(file_path, 'r', encoding='utf-8') as f:
                 existing = f.read()
-            _atomic_write(file_path, existing + content)
+            _atomic_write(file_path, existing + content, mode='text')
         else:
-            _atomic_write(file_path, content)
+            _atomic_write(file_path, content, mode='text')
         return f'SUCCESS: 파일 추가 완료 - {file_path}'
     except Exception as e:
         return f'ERROR: 파일 추가 실패 - {e}'

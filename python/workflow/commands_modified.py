@@ -8,15 +8,14 @@ from typing import Dict, Any, Optional, Tuple
 from workflow.workflow_manager import WorkflowManager
 from workflow.models import ExecutionPlan, TaskStatus
 from enhanced_flow import start_project
-from core.context_manager import ContextManager
 
+from core.context_manager import ContextManager
 
 class WorkflowCommands:
     """워크플로우 명령어 처리 클래스"""
     
     def __init__(self, workflow_manager: WorkflowManager):
         self.workflow = workflow_manager
-        self.context_manager = ContextManager.get_instance()
         self.commands = {
             '/plan': self.handle_plan,
             '/task': self.handle_task,
@@ -67,15 +66,6 @@ class WorkflowCommands:
         
         plan = self.workflow.create_plan(name, description, reset)
         
-        # 컨텍스트 업데이트
-        self.context_manager.update_context('current_plan_id', plan.id)
-        self.context_manager.update_context('current_plan_name', name)
-        self.context_manager.update_context('last_workflow_action', {
-            'action': 'plan_created',
-            'timestamp': datetime.now().isoformat(),
-            'plan_name': name
-        })
-        
         return {
             'success': True,
             'message': f'새 계획 생성됨: {name}',
@@ -95,19 +85,6 @@ class WorkflowCommands:
         
         try:
             task = self.workflow.add_task(title, description)
-            
-            # 컨텍스트 업데이트
-            self.context_manager.update_context('last_added_task', {
-                'id': task.id,
-                'title': task.title,
-                'timestamp': datetime.now().isoformat()
-            })
-            self.context_manager.update_context('last_workflow_action', {
-                'action': 'task_added',
-                'timestamp': datetime.now().isoformat(),
-                'task_title': task.title
-            })
-            
             return {
                 'success': True,
                 'message': f'작업 추가됨: {title}',
@@ -335,15 +312,6 @@ class WorkflowCommands:
                 'all_completed': True
             }
         
-        # 컨텍스트 업데이트
-        self.context_manager.update_context('current_task_id', current_task.id)
-        self.context_manager.update_context('current_task_title', current_task.title)
-        self.context_manager.update_context('last_workflow_action', {
-            'action': 'moved_to_next_task',
-            'timestamp': datetime.now().isoformat(),
-            'task_title': current_task.title
-        })
-        
         # 현재 작업이 완료되지 않았다면 결과 요청
         if current_task.status != TaskStatus.COMPLETED:
             return {
@@ -442,32 +410,6 @@ class WorkflowCommands:
             
             # 작업 완료
             task = self.workflow.complete_task(current_task.id, result)
-            
-            # 컨텍스트 업데이트
-            self.context_manager.update_context('last_completed_task', {
-                'id': current_task.id,
-                'title': current_task.title,
-                'summary': summary,
-                'completed_at': datetime.now().isoformat()
-            })
-            
-            # 진행률 업데이트
-            plan = self.workflow.current_plan
-            if plan:
-                progress = plan.get_progress()
-                self.context_manager.update_context('workflow_progress', {
-                    'plan_id': plan.id,
-                    'plan_name': plan.name,
-                    'total_tasks': len(plan.tasks),
-                    'completed_tasks': progress['completed'],
-                    'progress_percent': progress['percentage']
-                })
-            
-            self.context_manager.update_context('last_workflow_action', {
-                'action': 'task_completed',
-                'timestamp': datetime.now().isoformat(),
-                'task_title': current_task.title
-            })
             
             # 자동 Git 커밋/푸시 (환경변수 확인)
             auto_commit = os.getenv('AUTO_GIT_COMMIT', 'false').lower() == 'true'

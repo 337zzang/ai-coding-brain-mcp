@@ -178,3 +178,109 @@ def git_push(branch: Optional[str] = None, project_path: str = ".") -> Dict[str,
             'success': False,
             'error': str(e)
         }
+
+
+def get_git_status_info(project_path: str = ".") -> Dict[str, Any]:
+    """Git 상태 정보 수집
+
+    Returns:
+        {
+            'branch': 'master',
+            'modified': ['file1.py', 'file2.py'],
+            'untracked': ['new_file.txt'],
+            'staged': ['staged_file.py'],
+            'last_commit': 'abc1234 커밋 메시지',
+            'clean': False,
+            'ahead': 0,  # 원격보다 앞선 커밋 수
+            'behind': 0  # 원격보다 뒤쳐진 커밋 수
+        }
+    """
+    try:
+        # 1. 브랜치 정보
+        branch_result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=project_path,
+            capture_output=True,
+            text=True
+        )
+        branch = branch_result.stdout.strip() if branch_result.returncode == 0 else "unknown"
+
+        # 2. 변경 사항 분석
+        status_result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=project_path,
+            capture_output=True,
+            text=True
+        )
+
+        modified = []
+        untracked = []
+        staged = []
+
+        if status_result.returncode == 0:
+            for line in status_result.stdout.splitlines():
+                if not line.strip():
+                    continue
+                status_code = line[:2]
+                filename = line[3:]
+
+                # 서브모듈 제외
+                if filename.startswith('korea/') or filename.startswith('mexico/'):
+                    continue
+
+                if status_code == " M":  # Modified
+                    modified.append(filename)
+                elif status_code == "??":  # Untracked
+                    untracked.append(filename)
+                elif status_code[0] in "MADRC":  # Staged
+                    staged.append(filename)
+                elif status_code == "MM":  # Staged and modified
+                    staged.append(filename)
+                    modified.append(filename)
+
+        # 3. 마지막 커밋 정보
+        last_commit = ""
+        commit_result = subprocess.run(
+            ["git", "log", "-1", "--format=%h %s"],
+            cwd=project_path,
+            capture_output=True,
+            text=True
+        )
+        if commit_result.returncode == 0:
+            last_commit = commit_result.stdout.strip()
+
+        # 4. 원격 저장소와의 차이 확인
+        ahead = behind = 0
+        tracking_result = subprocess.run(
+            ["git", "rev-list", "--left-right", "--count", f"{branch}...origin/{branch}"],
+            cwd=project_path,
+            capture_output=True,
+            text=True
+        )
+        if tracking_result.returncode == 0 and tracking_result.stdout.strip():
+            parts = tracking_result.stdout.strip().split()
+            if len(parts) >= 2:
+                ahead = int(parts[0])
+                behind = int(parts[1])
+
+        return {
+            'success': True,
+            'branch': branch,
+            'modified': modified,
+            'untracked': untracked,
+            'staged': staged,
+            'last_commit': last_commit,
+            'clean': len(modified) == 0 and len(untracked) == 0 and len(staged) == 0,
+            'ahead': ahead,
+            'behind': behind
+        }
+    except Exception as e:
+        return {
+            'success': False,
+            'error': str(e),
+            'branch': 'unknown',
+            'modified': [],
+            'untracked': [],
+            'staged': [],
+            'clean': True
+        }

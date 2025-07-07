@@ -10,6 +10,7 @@ from workflow.models import Plan, Task, TaskStatus, ApprovalStatus, ExecutionPla
 import uuid
 
 from utils.io_helpers import write_json
+from utils.git_utils import get_git_status_info
 
 class WorkflowManager:
     """워크플로우 관리 클래스"""
@@ -177,15 +178,39 @@ class WorkflowManager:
         return None
     
     def get_status(self) -> Dict[str, Any]:
-        """현재 상태 반환"""
+        """현재 상태 반환 (Git 정보 포함)"""
+        # Git 상태 정보 수집
+        git_info = get_git_status_info()
+        
         if not self.current_plan:
             return {
                 'status': 'no_active_plan',
-                'message': '활성 계획이 없습니다. /plan으로 새 계획을 시작하세요.'
+                'message': '활성 계획이 없습니다. /plan으로 새 계획을 시작하세요.',
+                'git': git_info
             }
         
         current_task = self.get_current_task()
         completed_tasks = [t for t in self.current_plan.tasks if t.status == TaskStatus.COMPLETED]
+        remaining_tasks = [t for t in self.current_plan.tasks if t.status not in [TaskStatus.COMPLETED, TaskStatus.CANCELLED]]
+        
+        # 작업 목록 생성 (상태 아이콘 포함)
+        all_tasks = []
+        for i, task in enumerate(self.current_plan.tasks):
+            if task.status == TaskStatus.COMPLETED:
+                status_icon = "✅"
+            elif task.status == TaskStatus.IN_PROGRESS:
+                status_icon = "🔄"
+            elif task.status == TaskStatus.BLOCKED:
+                status_icon = "🚫"
+            elif task.status == TaskStatus.CANCELLED:
+                status_icon = "❌"
+            else:
+                status_icon = "⬜"
+            
+            task_line = f"{status_icon} {task.title}"
+            if task == current_task:
+                task_line = f"👉 {task_line}"
+            all_tasks.append(task_line)
         
         return {
             'plan': {
@@ -193,7 +218,8 @@ class WorkflowManager:
                 'description': self.current_plan.description,
                 'total_tasks': len(self.current_plan.tasks),
                 'completed_tasks': len(completed_tasks),
-                'progress': f"{len(completed_tasks)}/{len(self.current_plan.tasks)}"
+                'progress': f"{len(completed_tasks)}/{len(self.current_plan.tasks)}",
+                'progress_percent': (len(completed_tasks) / len(self.current_plan.tasks) * 100) if self.current_plan.tasks else 0
             },
             'current_task': {
                 'title': current_task.title,
@@ -204,7 +230,10 @@ class WorkflowManager:
             'next_tasks': [
                 {'title': t.title, 'status': t.status.value}
                 for t in self.current_plan.tasks[self.current_plan.current_task_index+1:self.current_plan.current_task_index+3]
-            ]
+            ],
+            'all_tasks': all_tasks,
+            'remaining_tasks': len(remaining_tasks),
+            'git': git_info
         }
     
     def get_history(self, plan_id: Optional[str] = None) -> List[Dict[str, Any]]:

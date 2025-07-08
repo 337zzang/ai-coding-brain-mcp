@@ -10,6 +10,8 @@ from typing import Any, Callable
 from ai_helpers.helper_result import HelperResult
 
 
+from python.workflow.v2.code_integration import WorkflowCodeIntegration
+import os
 def safe_helper(func: Callable) -> Callable:
     """헬퍼 함수를 안전하게 래핑하는 데코레이터"""
     @functools.wraps(func)
@@ -122,14 +124,14 @@ class HelpersWrapper:
         return self.__getattr__('git_commit_smart')(message, **kwargs)
 
 
-    def workflow_v2(self, command: str) -> HelperResult:
+    def workflow(self, command: str) -> HelperResult:
         """v2: 명령어 실행"""
         try:
             from workflow.v2.dispatcher import execute_workflow_command
             return execute_workflow_command(command)
         except Exception as e:
             return HelperResult(False, error=str(e))
-    def workflow_v2_done(self, notes: str = "") -> HelperResult:
+    def workflow_done(self, notes: str = "") -> HelperResult:
         """v2: 태스크 완료"""
         try:
             from workflow.v2 import complete_current_task
@@ -137,7 +139,7 @@ class HelpersWrapper:
         except Exception as e:
             return HelperResult(False, error=str(e))
 
-    def workflow_v2_status(self) -> HelperResult:
+    def workflow_status(self) -> HelperResult:
         """v2: 상태 조회"""
         try:
             from workflow.v2 import get_status
@@ -145,6 +147,10 @@ class HelpersWrapper:
         except Exception as e:
             return HelperResult(False, error=str(e))
 
+
+    def process_workflow_command(self, command: str) -> HelperResult:
+        """V1 호환성을 위한 래퍼"""
+        return self.workflow(command)
 
 # 자동 초기화 헬퍼
 def auto_wrap_helpers():
@@ -174,3 +180,74 @@ def setup_global_wrapper():
 
 
 __all__ = ['HelpersWrapper', 'safe_helper', 'auto_wrap_helpers', 'setup_global_wrapper']
+
+
+
+def execute_code_with_workflow(code: str, auto_progress: bool = False) -> HelperResult:
+    """워크플로우와 연계된 코드 실행
+
+    Args:
+        code: 실행할 코드
+        auto_progress: 성공 시 태스크 자동 완료 여부
+
+    Returns:
+        HelperResult with execution result
+    """
+    try:
+        import time
+
+        # 프로젝트 이름 가져오기
+        project_name = HelpersWrapper('').get_project_name()
+        if not project_name.ok:
+            project_name = 'unknown'
+        else:
+            project_name = project_name.data
+
+        # 워크플로우 통합 객체 생성
+        integration = WorkflowCodeIntegration(project_name)
+
+        # 현재 태스크 확인
+        current_task = integration.get_current_task_context()
+        if current_task:
+            print(f"🎯 현재 태스크: {current_task['task_title']}")
+
+        # 코드 실행
+        start_time = time.time()
+        result = execute_code(code)
+        execution_time = time.time() - start_time
+
+        # 실행 결과 기록
+        if current_task and result.ok:
+            integration.record_code_execution(
+                code, 
+                {'success': result.ok, 'output': str(result.data)}, 
+                execution_time
+            )
+
+            # 자동 진행 확인
+            if auto_progress and result.ok:
+                output_str = str(result.data).lower()
+                if any(kw in output_str for kw in ['완료', 'complete', 'done']):
+                    progress_result = integration.auto_progress_task("코드 실행 성공")
+                    print(f"✅ 태스크 자동 완료")
+
+        return result
+
+    except Exception as e:
+        return HelperResult(False, None, str(e))
+
+
+def get_workflow_context() -> HelperResult:
+    """현재 워크플로우 컨텍스트 조회"""
+    try:
+        project_name = HelpersWrapper('').get_project_name()
+        if not project_name.ok:
+            return HelperResult(False, None, "프로젝트를 찾을 수 없습니다")
+
+        integration = WorkflowCodeIntegration(project_name.data)
+        context = integration.get_current_task_context()
+
+        return HelperResult(True, context)
+
+    except Exception as e:
+        return HelperResult(False, None, str(e))

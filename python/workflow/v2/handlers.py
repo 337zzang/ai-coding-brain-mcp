@@ -132,12 +132,13 @@ def workflow_focus(task_ref: str = "") -> HelperResult:
         return HelperResult(False, error=f"Focus failed: {str(e)}")
 
 
-def workflow_plan(title: str = "", description: str = "") -> HelperResult:
+def workflow_plan(title: str = "", description: str = "", reset: bool = False) -> HelperResult:
     """플랜 관리 (생성/조회/목록)
 
     Args:
         title: 플랜 제목 또는 'list' (비어있으면 현재 플랜 정보)
         description: 플랜 설명
+        reset: 기존 플랜을 아카이브하고 새로 생성할지 여부
     """
     try:
         wm = WorkflowV2Manager.get_instance("ai-coding-brain-mcp")
@@ -168,7 +169,17 @@ def workflow_plan(title: str = "", description: str = "") -> HelperResult:
                 return HelperResult(False, error="No active plan")
 
         # 새 플랜 생성
-        if wm.current_plan:
+        if wm.current_plan and not reset:
+            # reset 플래그가 없고 현재 플랜이 있으면 오류
+            return HelperResult(False, 
+                error="활성 플랜이 이미 존재합니다. --reset 옵션을 사용하여 기존 플랜을 아카이브하세요.",
+                data={
+                    'current_plan': wm.current_plan.name,
+                    'suggestion': f"/plan {title} --reset"
+                })
+        
+        if wm.current_plan and reset:
+            # reset 플래그가 있으면 아카이브
             wm.archive_current_plan()
 
         plan = wm.create_plan(title, description)

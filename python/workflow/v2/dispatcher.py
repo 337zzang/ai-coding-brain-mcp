@@ -124,6 +124,12 @@ class WorkflowDispatcher:
         try:
             # 명령어별 파싱 로직
             if cmd in ['plan', 'task']:
+                # --reset 플래그 확인 (plan 명령어만)
+                reset = False
+                if cmd == 'plan' and '--reset' in args:
+                    reset = True
+                    args = args.replace('--reset', '').strip()
+                
                 # 파이프(|)로 제목과 설명 분리
                 if '|' in args:
                     parts = [p.strip() for p in args.split('|', 1)]
@@ -141,7 +147,11 @@ class WorkflowDispatcher:
                 elif cmd == 'task' and not title:
                     return workflow_tasks()  # /task만 입력시 목록 표시
 
-                return func(title, description)
+                # plan 명령어에 reset 파라미터 전달
+                if cmd == 'plan':
+                    return func(title, description, reset)
+                else:
+                    return func(title, description)
 
             elif cmd == 'status':
                 # /status history 처리

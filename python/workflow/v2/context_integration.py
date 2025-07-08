@@ -34,7 +34,7 @@ class ContextIntegration:
             return {}
 
         return {
-            'project_name': self.context_manager.current_project,
+            'project_name': self.context_manager.current_project_name,
             'context_data': self.context_manager.context,
             'workflow_data': self.context_manager.workflow_data
         }
@@ -106,13 +106,50 @@ class ContextIntegration:
             )
 
             # 저장
-            if hasattr(self.context_manager, 'save_context'):
-                self.context_manager.save_context()
+            if hasattr(self.context_manager, 'save_all'):
+                self.context_manager.save_all()
 
             return HelperResult(True, data={'event_recorded': True})
 
         except Exception as e:
             return HelperResult(False, error=f"Update failed: {str(e)}")
+
+    def record_plan_archive(self, plan_name: str, plan_id: str, archived_at: str) -> HelperResult:
+        """플랜 아카이브 이벤트 기록"""
+        try:
+            if not self.context_manager:
+                return HelperResult(False, error="ContextManager not initialized")
+
+            # 아카이브 이벤트 생성
+            archive_event = {
+                'action': 'plan_archived',
+                'plan_name': plan_name,
+                'plan_id': plan_id,
+                'archived_at': archived_at,
+                'timestamp': archived_at
+            }
+
+            # task_events에 추가
+            if 'task_events' not in self.context_manager.context:
+                self.context_manager.context['task_events'] = []
+
+            self.context_manager.context['task_events'].append(archive_event)
+
+            # 최근 10개만 유지
+            self.context_manager.context['task_events'] = (
+                self.context_manager.context['task_events'][-10:]
+            )
+
+            # 저장
+            if hasattr(self.context_manager, 'save_all'):
+                self.context_manager.save_all()
+
+            print(f"📦 플랜 아카이브 이벤트 기록: {plan_name}")
+
+            return HelperResult(True, data={'event_recorded': True})
+
+        except Exception as e:
+            return HelperResult(False, error=f"Archive event recording failed: {str(e)}")
 
     def switch_project_context(self, project_name: str) -> HelperResult:
         """프로젝트 컨텍스트 전환"""
@@ -130,7 +167,7 @@ class ContextIntegration:
 
             return HelperResult(True, data={
                 'switched_to': project_name,
-                'previous_project': self.context_manager.current_project
+                'previous_project': self.context_manager.current_project_name
             })
 
         except Exception as e:

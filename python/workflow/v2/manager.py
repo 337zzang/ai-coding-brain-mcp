@@ -82,7 +82,10 @@ class WorkflowV2Manager:
         try:
             data = {
                 'current_plan': self.current_plan.to_dict() if self.current_plan else None,
-                'history': [plan.to_dict() for plan in self.history]
+                'history': [
+                    plan.to_dict() if hasattr(plan, 'to_dict') else plan 
+                    for plan in self.history
+                ]
             }
 
             # 원자적 쓰기를 위한 임시 파일 사용
@@ -237,3 +240,53 @@ class WorkflowV2Manager:
             'progress_percent': (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0,
             'current_task': self.get_current_task()
         }
+
+    def archive_current_plan(self) -> bool:
+        """현재 플랜을 아카이브(기록 보관)
+        
+        Returns:
+            bool: 아카이브 성공 여부
+        """
+        if not self.current_plan:
+            return False
+        
+        # history 속성이 없으면 생성
+        if not hasattr(self, 'history') or self.history is None:
+            self.history = []
+        
+        # 현재 플랜을 dict로 변환
+        plan_dict = self.current_plan.to_dict()
+        
+        # 아카이브 정보 추가
+        archived_at = datetime.now().isoformat()
+        plan_dict['archived_at'] = archived_at
+        plan_dict['status'] = 'archived'
+        
+        # history에 추가
+        self.history.append(plan_dict)
+        
+        # 플랜 정보 저장 (context 기록용)
+        plan_name = plan_dict['name']
+        plan_id = plan_dict['id']
+        
+        # 현재 플랜 제거
+        self.current_plan = None
+        
+        # 캐시 무효화
+        if hasattr(self, '_current_task_cache'):
+            self._current_task_cache = None
+        
+        # 변경사항 저장
+        self.save_data()
+        
+        # 컨텍스트에 아카이브 이벤트 기록
+        try:
+            from workflow.v2.context_integration import get_context_integration
+            context_integration = get_context_integration()
+            context_integration.record_plan_archive(plan_name, plan_id, archived_at)
+        except Exception as e:
+            print(f"⚠️ 컨텍스트 이벤트 기록 실패: {e}")
+        
+        print(f"✅ 플랜이 아카이브되었습니다: {plan_name}")
+        
+        return True

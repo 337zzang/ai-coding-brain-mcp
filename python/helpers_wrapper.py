@@ -122,44 +122,26 @@ class HelpersWrapper:
         return self.__getattr__('git_commit_smart')(message, **kwargs)
 
 
-    # ===== Workflow v2 Methods (Testing) =====
     def workflow_v2(self, command: str) -> HelperResult:
-        """워크플로우 v2 명령 실행 (테스트)"""
+        """v2: 명령어 실행"""
         try:
-            from workflow.v2 import execute_workflow_command
+            from workflow.v2.dispatcher import execute_workflow_command
             return execute_workflow_command(command)
         except Exception as e:
             return HelperResult(False, error=str(e))
-
-    def workflow_v2_plan(self, name: str, description: str = "", reset: bool = False) -> HelperResult:
-        """v2: 플랜 생성"""
-        try:
-            from workflow.v2 import workflow_plan
-            return workflow_plan(name, description, reset)
-        except Exception as e:
-            return HelperResult(False, error=str(e))
-
-    def workflow_v2_task(self, title: str, description: str = "") -> HelperResult:
-        """v2: 태스크 추가"""
-        try:
-            from workflow.v2 import workflow_task
-            return workflow_task(title, description)
-        except Exception as e:
-            return HelperResult(False, error=str(e))
-
     def workflow_v2_done(self, notes: str = "") -> HelperResult:
         """v2: 태스크 완료"""
         try:
-            from workflow.v2 import workflow_done
-            return workflow_done(notes)
+            from workflow.v2 import complete_current_task
+            return complete_current_task(notes)
         except Exception as e:
             return HelperResult(False, error=str(e))
 
     def workflow_v2_status(self) -> HelperResult:
         """v2: 상태 조회"""
         try:
-            from workflow.v2 import workflow_status
-            return workflow_status()
+            from workflow.v2 import get_status
+            return get_status()
         except Exception as e:
             return HelperResult(False, error=str(e))
 

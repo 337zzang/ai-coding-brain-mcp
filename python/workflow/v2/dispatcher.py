@@ -5,7 +5,7 @@
 
 from typing import Dict, Callable, Optional, Any
 from python.ai_helpers.helper_result import HelperResult
-from python.workflow.v2.handlers import *
+from .handlers import *
 import re
 
 class WorkflowDispatcher:

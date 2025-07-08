@@ -1,58 +1,46 @@
 """
-워크플로우 시스템 v2 - 함수형 API와 중앙 디스패처 기반
+Workflow v2 시스템
 """
 
-from python.workflow.v2.dispatcher import execute_workflow_command, WorkflowDispatcher
-from python.workflow.v2.handlers import (
-    workflow_start,
-    workflow_focus,
-    workflow_plan,
-    workflow_list_plans,
-    workflow_task,
-    workflow_tasks,
-    workflow_current,
-    workflow_next,
-    workflow_done,
-    workflow_status,
-    workflow_history,
-    workflow_build,
-    workflow_review,
-    with_context_save
+# Models
+from workflow.v2.models import WorkflowPlan, Task, TaskStatus, PlanStatus
+
+# Manager
+from workflow.v2.manager import WorkflowV2Manager
+
+# Handlers - 실제 함수명 사용
+from workflow.v2.handlers import (
+    workflow_start, workflow_focus, workflow_plan, workflow_task,
+    workflow_status, workflow_current, workflow_next, workflow_done,
+    workflow_history, workflow_build, workflow_review
 )
 
-# Version info
-__version__ = "2.0.0"
-__author__ = "AI Coding Brain MCP"
+# Dispatcher
+from workflow.v2.dispatcher import execute_workflow_command
 
-# Export all
+# Aliases for compatibility
+get_status = workflow_status
+create_plan = workflow_plan
+add_task = workflow_task
+complete_current_task = workflow_done
+
 __all__ = [
+    # Models
+    'WorkflowPlan', 'Task', 'TaskStatus', 'PlanStatus',
+
+    # Manager
+    'WorkflowV2Manager',
+
+    # Handlers
+    'workflow_start', 'workflow_focus', 'workflow_plan', 'workflow_task',
+    'workflow_status', 'workflow_current', 'workflow_next', 'workflow_done',
+    'workflow_history', 'workflow_build', 'workflow_review',
+
+    # Aliases
+    'get_status', 'create_plan', 'add_task', 'complete_current_task',
+
     # Dispatcher
     'execute_workflow_command',
-    'WorkflowDispatcher',
-
-    # Project management
-    'workflow_start',
-    'workflow_focus',
-
-    # Plan management
-    'workflow_plan',
-    'workflow_list_plans',
-
-    # Task management
-    'workflow_task',
-    'workflow_tasks',
-    'workflow_current',
-    'workflow_next',
-    'workflow_done',
-
-    # Status and history
-    'workflow_status',
-    'workflow_history',
-
-    # Extended features
-    'workflow_build',
-    'workflow_review',
-
-    # Decorator
-    'with_context_save'
 ]
+
+__version__ = "2.0.0"

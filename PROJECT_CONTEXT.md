@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-08 19:19:34
+> 최종 업데이트: 2025-07-08 20:33:23
 
 ## 🎯 프로젝트 개요
 
@@ -97,22 +97,37 @@ ai-coding-brain-mcp/
 │   ├── context_backup_20250706_163020.json
 │   ├── workflow_backup_20250706_163020.json
 ├── backups/
-│   └── refactoring_20250708/
+│   ├── refactoring_20250708/
+│   └── workflow_refactoring_20250708_192554/
+│       ├── core/
+│       │   ├── context_manager.py
+│       └── workflow/
+│           ├── commands.py
+│           ├── models.py
+│           ├── workflow_manager.py
+│       ├── context.json
+│       ├── helpers_wrapper.py
+│       ├── workflow.json
 ├── docs/
 │   ├── architecture/
 │   │   ├── workflow_context_integration.md
 │   ├── examples/
 │   │   ├── event_bus_example.py
 │   │   ├── workflow_context_bridge_example.py
-│   └── tasks/
-│       ├── import_fix_report.md
-│       ├── task1_atomic_save.md
-│       ├── task1_completion_report.md
-│       └── ... (8 more files)
+│   ├── tasks/
+│   │   ├── import_fix_report.md
+│   │   ├── task1_atomic_save.md
+│   │   ├── task1_completion_report.md
+│   │   └── ... (8 more files)
+│   └── workflow_v2/
+│       ├── API_REFERENCE.md
+│       ├── DEPLOYMENT_CHECKLIST.md
+│       ├── MIGRATION_GUIDE.md
+│       └── ... (2 more files)
 │   ├── circular_dependency_analysis.md
 │   ├── circular_dependency_fix_report.md
 │   ├── double_wrapping_fix_20250708.md
-│   └── ... (24 more files)
+│   └── ... (28 more files)
 ├── memory/
 │   ├── backup/
 │   │   ├── ai-coding-brain-mcp_20250704_195124/
@@ -126,11 +141,14 @@ ai-coding-brain-mcp/
 │   │   ├── context_ai-coding-brain-mcp_20250705_120052.json
 │   ├── cache/
 │   │   ├── file_directory.json
-│   └── context/
+│   ├── context/
+│   └── workflow_v2/
+│       ├── ai-coding-brain-mcp_workflow.json
+│       ├── final_test_workflow.json
 │   ├── context.json
 │   ├── context_backup_20250701_145124_before_optimization.json
 │   ├── context_backup_ai-coding-brain-mcp_20250703_153224.json
-│   └── ... (22 more files)
+│   └── ... (23 more files)
 ├── python/
 │   ├── ai_helpers/
 │   │   └── api/
@@ -173,6 +191,11 @@ ai-coding-brain-mcp/
 │   │   └── tree-sitter-typescript/
 │   │       └── bindings/
 │   └── workflow/
+│       └── v2/
+│           ├── __init__.py
+│           ├── context_integration.py
+│           ├── dispatcher.py
+│           └── ... (3 more files)
 │       ├── __init__.py
 │       ├── commands.py
 │       ├── commands_modified.py
@@ -215,7 +238,7 @@ ai-coding-brain-mcp/
 ├── .ai-brain.config.json
 ├── .eslintrc.json
 ├── check_syntax.py
-└── ... (34 more files)
+└── ... (35 more files)
 ```
 - `.ai-brain.config.json`: AI Coding Brain 설정
 - `package.json`: Node.js 프로젝트 설정
@@ -226,14 +249,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 415개
-- **디렉토리 수**: 65개
+- **전체 파일 수**: 446개
+- **디렉토리 수**: 72개
 - **파일 타입 분포**:
-  - `.py`: 124개 (29.9%)
-  - `.ts`: 63개 (15.2%)
-  - `.map`: 60개 (14.5%)
-  - `.md`: 58개 (14.0%)
-  - `.json`: 46개 (11.1%)
+  - `.py`: 139개 (31.2%)
+  - `.md`: 68개 (15.2%)
+  - `.ts`: 63개 (14.1%)
+  - `.map`: 60개 (13.5%)
+  - `.json`: 51개 (11.4%)
 
 ## 🚀 빠른 시작
 

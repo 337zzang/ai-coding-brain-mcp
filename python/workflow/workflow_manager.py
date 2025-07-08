@@ -1,4 +1,4 @@
-from python.core.context_manager import get_context_manager
+from core.context_manager import get_context_manager
 """
 개선된 워크플로우 매니저
 - 단일 플랜 관리

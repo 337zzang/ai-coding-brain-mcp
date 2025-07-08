@@ -1,5 +1,5 @@
 """검색 관련 헬퍼 함수들"""
-from ai_helpers.helper_result import HelperResult
+from .helper_result import HelperResult
 
 import os
 import re
@@ -110,8 +110,42 @@ def scan_directory_dict(directory_path):
 
 def _search_files_advanced(path: str, pattern: str, recursive: bool = True,
                             include_hidden: bool = False, max_results: int = 1000,
-                            include_dirs: bool = False) -> dict:
-    """파일 검색 내부 구현"""
+                            include_dirs: bool = False, return_details: bool = False) -> HelperResult:
+    """
+    파일 검색 내부 구현 - 개선된 버전
+    
+    Args:
+        path: 검색 시작 경로
+        pattern: 파일명 패턴 (fnmatch 형식, 대소문자 무시)
+        recursive: 하위 디렉토리 재귀 검색 여부
+        include_hidden: 숨김 파일/디렉토리 포함 여부
+        max_results: 최대 결과 수
+        include_dirs: 디렉토리 포함 여부 (현재 미사용)
+        return_details: 상세 정보 반환 여부
+    
+    Returns:
+        HelperResult with data as:
+        - list of file paths (strings) if return_details=False
+          ['path/to/file1.py', 'path/to/file2.py', ...]
+        - list of file info dicts if return_details=True
+          [
+            {
+              'file_path': str,    # 전체 경로
+              'file_name': str,    # 파일명만
+              'size': int,         # 바이트 단위 크기
+              'modified': float    # 수정 시간 timestamp
+            },
+            ...
+          ]
+        
+        metadata 속성:
+        - searched_count: 검사한 총 파일 수
+        - execution_time: 실행 시간 (초)
+    
+    Note:
+        - 패턴 매칭은 파일명에 대해서만 수행 (경로 제외)
+        - os.stat() 실패 시 return_details=True여도 기본 정보만 반환
+    """
     import fnmatch
     import time
     
@@ -133,18 +167,25 @@ def _search_files_advanced(path: str, pattern: str, recursive: bool = True,
                     searched_count += 1
                     if fnmatch.fnmatch(filename.lower(), pattern.lower()):
                         file_path = os.path.join(root, filename)
-                        try:
-                            stat = os.stat(file_path)
-                            results.append({
-                                'path': file_path,
-                                'name': filename,
-                                'size': stat.st_size,
-                                'modified': stat.st_mtime
-                            })
-                            if len(results) >= max_results:
-                                break
-                        except:
-                            pass
+                        
+                        if return_details:
+                            try:
+                                stat = os.stat(file_path)
+                                results.append({
+                                    'file_path': file_path,
+                                    'file_name': filename,
+                                    'size': stat.st_size,
+                                    'modified': stat.st_mtime
+                                })
+                            except:
+                                # 상세 정보를 가져올 수 없으면 경로만 추가
+                                results.append({'file_path': file_path, 'file_name': filename})
+                        else:
+                            # 기본: 경로만 반환
+                            results.append(file_path)
+                            
+                        if len(results) >= max_results:
+                            break
                             
                 if len(results) >= max_results:
                     break
@@ -158,36 +199,75 @@ def _search_files_advanced(path: str, pattern: str, recursive: bool = True,
                         
                     searched_count += 1
                     if fnmatch.fnmatch(filename.lower(), pattern.lower()):
-                        try:
-                            stat = os.stat(file_path)
-                            results.append({
-                                'path': file_path,
-                                'name': filename,
-                                'size': stat.st_size,
-                                'modified': stat.st_mtime
-                            })
-                        except:
-                            pass
+                        if return_details:
+                            try:
+                                stat = os.stat(file_path)
+                                results.append({
+                                    'file_path': file_path,
+                                    'file_name': filename,
+                                    'size': stat.st_size,
+                                    'modified': stat.st_mtime
+                                })
+                            except:
+                                results.append({'file_path': file_path, 'file_name': filename})
+                        else:
+                            results.append(file_path)
                             
     except Exception as e:
-        return {
-            'success': False,
-            'error': str(e),
-            'results': []
-        }
+        return HelperResult.fail(f'File search failed: {str(e)}')
     
-    return {
-        'success': True,
-        'results': results,
+    # 성공 시 결과 반환
+    result = HelperResult.success(results)
+    
+    # 메타데이터 추가
+    result.metadata = {
         'searched_count': searched_count,
         'execution_time': time.time() - start_time
     }
+    
+    return result
 
 
 def _search_code_content(path: str, pattern: str, file_pattern: str = "*",
                         case_sensitive: bool = False, whole_word: bool = False,
-                        max_results: int = 100, context_lines: int = 2) -> dict:
-    """코드 내용 검색 내부 구현"""
+                        max_results: int = 100, context_lines: int = 2, 
+                        include_context: bool = False) -> HelperResult:
+    """
+    코드 내용 검색 내부 구현 - 개선된 버전
+    
+    Args:
+        path: 검색 시작 경로
+        pattern: 정규식 패턴
+        file_pattern: 파일명 패턴 (fnmatch 형식)
+        case_sensitive: 대소문자 구분 여부
+        whole_word: 단어 경계 매칭 여부
+        max_results: 최대 결과 수
+        context_lines: 컨텍스트 라인 수
+        include_context: 컨텍스트 포함 여부
+    
+    Returns:
+        HelperResult with data as list of matches:
+        [
+            {
+                'line_number': int,      # 1-based 라인 번호
+                'code_line': str,        # 매칭된 라인 (rstrip 적용)
+                'matched_text': str,     # 정규식에 매칭된 실제 텍스트
+                'file_path': str,        # 절대 경로
+                'context': list,         # 선택: 주변 라인들
+                'context_start_line': int # 선택: 컨텍스트 시작 라인
+            },
+            ...
+        ]
+        
+        metadata 속성:
+        - searched_files: 검색한 파일 수
+        - execution_time: 실행 시간 (초)
+    
+    Note:
+        - 숨김 디렉토리 (.)는 자동으로 제외됨
+        - 읽을 수 없는 파일은 무시됨
+        - UTF-8 인코딩 가정
+    """
     import fnmatch
     import time
     import re
@@ -206,11 +286,7 @@ def _search_code_content(path: str, pattern: str, file_pattern: str = "*",
     try:
         regex = re.compile(pattern, flags)
     except re.error as e:
-        return {
-            'success': False,
-            'error': f'Invalid regex pattern: {e}',
-            'results': []
-        }
+        return HelperResult.fail(f'Invalid regex pattern: {e}')
     
     try:
         for root, dirs, files in os.walk(path):
@@ -227,19 +303,27 @@ def _search_code_content(path: str, pattern: str, file_pattern: str = "*",
                             lines = f.readlines()
                             
                         for i, line in enumerate(lines):
-                            if regex.search(line):
-                                # 컨텍스트 라인 추출
-                                start = max(0, i - context_lines)
-                                end = min(len(lines), i + context_lines + 1)
-                                context = lines[start:end]
+                            match = regex.search(line)
+                            if match:
+                                # 매칭된 텍스트 추출
+                                matched_text = match.group(0)
                                 
-                                results.append({
-                                    'file': file_path,
+                                result_entry = {
                                     'line_number': i + 1,
-                                    'line': line.rstrip(),
-                                    'context': [l.rstrip() for l in context],
-                                    'context_start_line': start + 1
-                                })
+                                    'code_line': line.rstrip(),
+                                    'matched_text': matched_text,
+                                    'file_path': file_path
+                                }
+                                
+                                # 컨텍스트가 필요한 경우에만 추가
+                                if include_context:
+                                    start = max(0, i - context_lines)
+                                    end = min(len(lines), i + context_lines + 1)
+                                    context = [l.rstrip() for l in lines[start:end]]
+                                    result_entry['context'] = context
+                                    result_entry['context_start_line'] = start + 1
+                                
+                                results.append(result_entry)
                                 
                                 if len(results) >= max_results:
                                     break
@@ -254,25 +338,25 @@ def _search_code_content(path: str, pattern: str, file_pattern: str = "*",
                 break
                 
     except Exception as e:
-        return {
-            'success': False,
-            'error': str(e),
-            'results': []
-        }
+        return HelperResult.fail(f'Code search failed: {str(e)}')
     
-    return {
-        'success': True,
-        'results': results,
+    # 성공 시 결과 리스트 직접 반환
+    result = HelperResult.success(results)
+    
+    # 메타데이터는 별도 속성으로 추가 (선택적)
+    result.metadata = {
         'searched_files': searched_files,
         'execution_time': time.time() - start_time
     }
+    
+    return result
 
 
 def search_files_advanced(directory, pattern='*', file_extensions=None, exclude_patterns=None, 
                            case_sensitive=False, recursive=True, max_results=100, 
-                           timeout_ms=30000):
+                           timeout_ms=30000, return_details=False):
     """
-    고급 파일 검색 (추적 포함)
+    고급 파일 검색 (추적 포함) - 개선된 버전
     
     Args:
         directory: 검색할 디렉토리
@@ -282,11 +366,38 @@ def search_files_advanced(directory, pattern='*', file_extensions=None, exclude_
         case_sensitive: 대소문자 구분 (미사용, 호환성 유지)
         recursive: 하위 디렉토리 포함 (기본: True)
         max_results: 최대 결과 수 (기본: 100)
-        include_dirs: 디렉토리 포함 여부 (기본: False)
         timeout_ms: 타임아웃 (기본: 30000ms)
+        return_details: 파일 상세 정보 포함 여부 (기본: False)
         
     Returns:
-        dict: 검색 결과
+        HelperResult: 파일 검색 결과
+            - ok=True일 때:
+              - return_details=False: data는 파일 경로 문자열의 리스트
+                ['path/to/file1.py', 'path/to/file2.py', ...]
+              - return_details=True: data는 파일 정보 딕셔너리의 리스트
+                [
+                  {
+                    'file_path': str,  # 파일 경로
+                    'file_name': str,  # 파일명
+                    'size': int,       # 파일 크기 (bytes)
+                    'modified': float  # 수정 시간 (timestamp)
+                  },
+                  ...
+                ]
+            - metadata 속성에 추가 정보:
+              - searched_count: 검색한 항목 수
+              - execution_time: 실행 시간
+    
+    Example:
+        >>> # 간단한 파일 경로 리스트
+        >>> files = search_files_advanced(".", "*.py")
+        >>> for path in files.data[:10]:
+        ...     print(path)
+        
+        >>> # 상세 정보 포함
+        >>> files = search_files_advanced(".", "*.py", return_details=True)
+        >>> for info in files.data:
+        ...     print(f"{info['file_name']} - {info['size']} bytes")
     """
     # 파일 확장자 처리 (호환성 유지)
     if file_extensions:
@@ -307,7 +418,8 @@ def search_files_advanced(directory, pattern='*', file_extensions=None, exclude_
         path=directory, 
         pattern=pattern, 
         recursive=recursive, 
-        max_results=max_results
+        max_results=max_results,
+        return_details=return_details
     )
     
     # 작업 추적
@@ -321,8 +433,9 @@ def search_files_advanced(directory, pattern='*', file_extensions=None, exclude_
 @track_operation('search', 'code')
 def search_code_content(path: str = '.', pattern: str = '', 
                        file_pattern: str = '*', max_results: int = 50,
-                       case_sensitive: bool = False, whole_word: bool = False):
-    """코드 내용 검색 (추적 포함) - 원본과 동일한 시그니처
+                       case_sensitive: bool = False, whole_word: bool = False,
+                       include_context: bool = False):
+    """코드 내용 검색 (추적 포함) - 개선된 버전
     
     Args:
         path: 검색할 경로
@@ -331,29 +444,50 @@ def search_code_content(path: str = '.', pattern: str = '',
         max_results: 최대 결과 수
         case_sensitive: 대소문자 구분
         whole_word: 단어 단위 검색
+        include_context: 컨텍스트 포함 여부 (기본: False)
     
     Returns:
-        SearchHelper.search_code 결과
+        HelperResult: 검색 결과
+            - ok=True일 때 data는 매칭된 라인들의 리스트:
+              [
+                {
+                  'line_number': int,      # 라인 번호
+                  'code_line': str,        # 코드 라인 내용
+                  'matched_text': str,     # 매칭된 텍스트
+                  'file_path': str,        # 파일 경로
+                  'context': list (선택)   # include_context=True일 때만
+                },
+                ...
+              ]
+            - metadata 속성에 추가 정보:
+              - searched_files: 검색한 파일 수
+              - execution_time: 실행 시간
+    
+    Example:
+        >>> result = search_code_content(".", "def.*test", "*.py")
+        >>> if result.ok:
+        ...     for match in result.data:
+        ...         print(f"{match['file_path']}:{match['line_number']} - {match['matched_text']}")
     """
     # ----- (1) 추적 -----
     track_file_access('search_code', path)
     
     # ----- (2) SearchHelper 호출 -----
-    # _search_code_content는 search_helpers.search_code_content
     result = _search_code_content(
         path=path,
         pattern=pattern,
         file_pattern=file_pattern,
         max_results=max_results,
         case_sensitive=case_sensitive,
-        whole_word=whole_word
+        whole_word=whole_word,
+        include_context=include_context
     )
     
     # ----- (3) 결과에 추적 정보 추가 -----
-    if result and 'results' in result:
-        for file_result in result['results']:
-            if 'file' in file_result:
-                track_file_access('search_code', file_result['file'])
+    if result.ok and result.data:
+        for file_result in result.data:
+            if 'file_path' in file_result:
+                track_file_access('search_code', file_result['file_path'])
     
     return result
 

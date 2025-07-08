@@ -65,7 +65,10 @@ def track_operation(operation_type: str, action: str):
                     _track_code_operation(context, action, args, kwargs)
                 
                 # HelperResult로 래핑하여 반환
-                from helper_result import HelperResult
+                from .helper_result import HelperResult
+                # 이미 HelperResult인 경우 그대로 반환
+                if isinstance(result, HelperResult):
+                    return result
                 return HelperResult(ok=True, data=result)
                 
             except Exception as e:
@@ -78,7 +81,7 @@ def track_operation(operation_type: str, action: str):
                 _track_error(context, operation_type, action, e, args, kwargs, execution_time)
                 
                 # HelperResult로 에러 반환
-                from helper_result import HelperResult
+                from .helper_result import HelperResult
                 return HelperResult(ok=False, error=str(e))
         
         return wrapper

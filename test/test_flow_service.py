@@ -9,7 +9,7 @@ from pathlib import Path
 from flow_service import FlowService, ProjectStatus
 from path_utils import get_project_root, ensure_project_directory
 from atomic_io import atomic_write, safe_read
-from helper_result import HelperResult
+from python.ai_helpers.helper_result import HelperResult
 
 class TestFlowService:
     """FlowService 테스트"""

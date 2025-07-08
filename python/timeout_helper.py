@@ -24,13 +24,13 @@ def with_timeout(timeout_seconds: float = 30.0):
                     future.cancel()
                     # HelperResult 형식으로 반환
                     try:
-                        from helper_result import HelperResult
+                        from ai_helpers.helper_result import HelperResult
                         return HelperResult.failure(f"작업 타임아웃 ({timeout_ms}ms)")
                     except ImportError:
                         return {"success": False, "error": f"작업 타임아웃 ({timeout_ms}ms)"}
                 except Exception as e:
                     try:
-                        from helper_result import HelperResult
+                        from ai_helpers.helper_result import HelperResult
                         return HelperResult.failure(str(e))
                     except ImportError:
                         return {"success": False, "error": str(e)}

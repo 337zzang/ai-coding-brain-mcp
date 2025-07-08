@@ -7,7 +7,7 @@ from workflow.workflow_manager import WorkflowManager
 from workflow.models import Plan, Task, TaskStatus
 import json
 from typing import Dict, Any, Optional
-from helper_result import HelperResult
+from ai_helpers.helper_result import HelperResult
 
 # 전역 WorkflowManager 인스턴스
 workflow_manager = WorkflowManager()

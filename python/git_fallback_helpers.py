@@ -6,9 +6,9 @@ import subprocess
 import os
 
 try:
-    from helper_result import HelperResult
+    from ai_helpers.helper_result import HelperResult
 except ImportError:
-    from helper_result import HelperResult
+    from ai_helpers.helper_result import HelperResult
 
 
 class GitFallbackHelpers:

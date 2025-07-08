@@ -1,5 +1,5 @@
 """공통 데코레이터 모듈 - 향상된 버전"""
-from helper_result import HelperResult
+from .helper_result import HelperResult
 
 import os
 import functools

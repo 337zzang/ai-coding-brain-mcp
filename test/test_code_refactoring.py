@@ -8,7 +8,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'python'))
 
 from ai_helpers.code import replace_block, insert_block, parse_code, parse_with_snippets
-from helper_result import HelperResult
+from python.ai_helpers.helper_result import HelperResult
 from helpers_wrapper import HelpersWrapper
 import tempfile
 import unittest

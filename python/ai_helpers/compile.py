@@ -5,7 +5,7 @@ import traceback
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 from utils.io_helpers import safe_print
-from helper_result import HelperResult
+from .helper_result import HelperResult
 
 
 class ProjectCompiler:

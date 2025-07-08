@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'python'))
 # 직접 import
 from ai_helpers.code import replace_block, insert_block
 from helpers_wrapper import HelpersWrapper, safe_helper
-from helper_result import HelperResult
+from python.ai_helpers.helper_result import HelperResult
 
 # 테스트용 파일 생성
 test_content = """

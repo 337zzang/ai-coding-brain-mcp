@@ -12,7 +12,7 @@ import textwrap
 
 # HelperResult import만 수행 (safe_helper는 import하지 않음)
 try:
-    from helper_result import HelperResult
+    from .helper_result import HelperResult
 except ImportError:
     try:
         from ..helper_result import HelperResult

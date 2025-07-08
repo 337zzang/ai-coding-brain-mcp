@@ -3,7 +3,7 @@
 """
 import os
 from typing import Dict, List
-from helper_result import HelperResult
+from ai_helpers.helper_result import HelperResult
 
 
 def improved_scan_directory(path: str, include_hidden: bool = False) -> HelperResult:

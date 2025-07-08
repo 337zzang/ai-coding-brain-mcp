@@ -210,6 +210,13 @@ class WorkflowV2Manager:
 
         return None
 
+    def complete_current_task(self, notes: str = "") -> Optional[Task]:
+        """현재 태스크 완료 처리"""
+        current = self.get_current_task()
+        if current:
+            return self.complete_task(current.id, notes)
+        return None
+
     def get_status(self) -> Dict[str, Any]:
         """현재 워크플로우 상태 반환"""
         if not self.current_plan:

@@ -166,7 +166,7 @@ def handle_workflow_command(command: str) -> HelperResult:
         # 명령어 파싱
         parts = command.strip().split(None, 1)
         if not parts:
-            return HelperResult.failure("명령어가 비어있습니다")
+            return HelperResult(False, error="명령어가 비어있습니다")
         
         cmd = parts[0].lower()
         args = parts[1] if len(parts) > 1 else ""
@@ -182,10 +182,10 @@ def handle_workflow_command(command: str) -> HelperResult:
             description = parts[1].strip() if len(parts) > 1 else ""
             
             if not name:
-                return HelperResult.failure("계획 이름이 필요합니다")
+                return HelperResult(False, error="계획 이름이 필요합니다")
             
             result = handle_plan(name, description, reset)
-            return HelperResult.success({"message": result})
+            return HelperResult(True, data={"message": result})
         
         elif cmd in ["/task", "task"]:
             # /task title | description
@@ -194,18 +194,18 @@ def handle_workflow_command(command: str) -> HelperResult:
             description = parts[1].strip() if len(parts) > 1 else ""
             
             if not title:
-                return HelperResult.failure("작업 제목이 필요합니다")
+                return HelperResult(False, error="작업 제목이 필요합니다")
             
             result = handle_task(title, description)
-            return HelperResult.success({"message": result})
+            return HelperResult(True, data={"message": result})
         
         elif cmd in ["/status", "status"]:
             result = handle_status()
-            return HelperResult.success({"message": result})
+            return HelperResult(True, data={"message": result})
         
         elif cmd in ["/next", "next"]:
             result = handle_next(args)
-            return HelperResult.success({"message": result})
+            return HelperResult(True, data={"message": result})
         
         elif cmd in ["/approve", "approve"]:
             # /approve [yes|no] [메모]
@@ -214,25 +214,25 @@ def handle_workflow_command(command: str) -> HelperResult:
             notes = parts[1] if len(parts) > 1 else ""
             
             result = handle_approve(decision, notes)
-            return HelperResult.success({"message": result})
+            return HelperResult(True, data={"message": result})
         
         elif cmd in ["/done", "/complete", "done", "complete"]:
             result = handle_done(args)
-            return HelperResult.success({"message": result})
+            return HelperResult(True, data={"message": result})
         
         elif cmd in ["/history", "history"]:
             result = handle_history()
-            return HelperResult.success({"message": result})
+            return HelperResult(True, data={"message": result})
         
         elif cmd in ["/build", "build"]:
             result = handle_build()
-            return HelperResult.success({"message": result})
+            return HelperResult(True, data={"message": result})
         
         else:
-            return HelperResult.failure(f"알 수 없는 명령어: {cmd}")
+            return HelperResult(False, error=f"알 수 없는 명령어: {cmd}")
             
     except Exception as e:
-        return HelperResult.failure(f"명령어 처리 중 오류: {str(e)}")
+        return HelperResult(False, error=f"명령어 처리 중 오류: {str(e)}")
 
 # workflow_manager 인스턴스 export (다른 모듈에서 사용하기 위해)
 __all__ = ['workflow_manager', 'handle_workflow_command']

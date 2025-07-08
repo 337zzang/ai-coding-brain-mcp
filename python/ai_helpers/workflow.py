@@ -22,9 +22,9 @@ def workflow(command: str = "/status") -> HelperResult:
         from workflow.v2 import execute_workflow_command
         return execute_workflow_command(command)
     except ImportError as e:
-        return HelperResult.failure(f"V2 워크플로우 모듈 import 실패: {e}")
+        return HelperResult(False, error=f"V2 워크플로우 모듈 import 실패: {e}")
     except Exception as e:
-        return HelperResult.failure(f"워크플로우 명령 실행 실패: {e}")
+        return HelperResult(False, error=f"워크플로우 명령 실행 실패: {e}")
 
 
 # 특화된 헬퍼 함수들

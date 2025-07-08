@@ -57,7 +57,7 @@ def improved_scan_directory(path: str, include_hidden: bool = False) -> HelperRe
             }
         }
         
-        return HelperResult.success(result)
+        return HelperResult(True, data=result)
         
     except Exception as e:
-        return HelperResult.failure(f"스캔 실패: {str(e)}")
+        return HelperResult(False, error=f"스캔 실패: {str(e)}")

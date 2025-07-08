@@ -21,7 +21,7 @@ class GitFallbackHelpers:
     def _run_git_command(self, args: list) -> HelperResult:
         """Git 명령 실행"""
         if self._disabled:
-            return HelperResult.failure("Git helpers disabled")
+            return HelperResult(False, error="Git helpers disabled")
             
         try:
             result = subprocess.run(
@@ -33,15 +33,15 @@ class GitFallbackHelpers:
             )
             
             if result.returncode == 0:
-                return HelperResult.success(result.stdout.strip())
+                return HelperResult(True, data=result.stdout.strip())
             else:
-                return HelperResult.failure(result.stderr.strip())
+                return HelperResult(False, error=result.stderr.strip())
                 
         except FileNotFoundError:
             self._disabled = True
-            return HelperResult.failure("Git not found in PATH")
+            return HelperResult(False, error="Git not found in PATH")
         except Exception as e:
-            return HelperResult.failure(f"Git command error: {str(e)}")
+            return HelperResult(False, error=f"Git command error: {str(e)}")
     
     def git_status(self) -> HelperResult:
         """Git 상태 확인"""
@@ -62,7 +62,7 @@ class GitFallbackHelpers:
                 elif line.startswith('??'):
                     untracked.append(line[3:])
         
-        return HelperResult.success({
+        return HelperResult(True, data={
             'branch': branch_result.data if branch_result.ok else 'unknown',
             'modified': modified,
             'untracked': untracked,

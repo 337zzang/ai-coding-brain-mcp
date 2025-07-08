@@ -1,46 +1,24 @@
-"""
-Workflow v2 시스템
-"""
+"""Workflow V2 - 통합 명령어 시스템"""
 
-# Models
-from workflow.v2.models import WorkflowPlan, Task, TaskStatus, PlanStatus
+from .dispatcher import WorkflowDispatcher
+from .handlers import *
 
-# Manager
-from workflow.v2.manager import WorkflowV2Manager
+# 외부에서 사용할 주요 함수
+def execute_workflow_command(command: str) -> dict:
+    """워크플로우 명령어 실행 - 통합 인터페이스"""
+    dispatcher = WorkflowDispatcher()
+    return dispatcher.execute(command)
 
-# Handlers - 실제 함수명 사용
-from workflow.v2.handlers import (
-    workflow_start, workflow_focus, workflow_plan, workflow_task,
-    workflow_status, workflow_current, workflow_next, workflow_done,
-    workflow_history, workflow_build, workflow_review
-)
-
-# Dispatcher
-from workflow.v2.dispatcher import execute_workflow_command
-
-# Aliases for compatibility
-get_status = workflow_status
-create_plan = workflow_plan
-add_task = workflow_task
-complete_current_task = workflow_done
-
+# 하위 호환성을 위한 export
 __all__ = [
-    # Models
-    'WorkflowPlan', 'Task', 'TaskStatus', 'PlanStatus',
-
-    # Manager
-    'WorkflowV2Manager',
-
-    # Handlers
-    'workflow_start', 'workflow_focus', 'workflow_plan', 'workflow_task',
-    'workflow_status', 'workflow_current', 'workflow_next', 'workflow_done',
-    'workflow_history', 'workflow_build', 'workflow_review',
-
-    # Aliases
-    'get_status', 'create_plan', 'add_task', 'complete_current_task',
-
-    # Dispatcher
+    'WorkflowDispatcher',
     'execute_workflow_command',
+    # handlers
+    'workflow_start',
+    'workflow_focus', 
+    'workflow_plan',
+    'workflow_task',
+    'workflow_next',
+    'workflow_build',
+    'workflow_status',
 ]
-
-__version__ = "2.0.0"

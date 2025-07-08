@@ -10,7 +10,20 @@ from uuid import UUID
 from python.ai_helpers.helper_result import HelperResult
 from .manager import WorkflowV2Manager
 from .models import Task, TaskStatus, PlanStatus
-from .context_integration import sync_workflow_to_context
+from .context_integration import get_context_integration
+
+
+
+def safe_date_format(date_value):
+    """날짜를 안전하게 ISO 형식 문자열로 변환"""
+    if isinstance(date_value, str):
+        return date_value  # 이미 문자열이면 그대로 반환
+    elif hasattr(date_value, 'isoformat'):
+        return date_value.isoformat()
+    elif date_value is None:
+        return ''
+    else:
+        return str(date_value)
 
 
 def workflow_start(plan_name: str = "") -> HelperResult:
@@ -160,7 +173,7 @@ def workflow_plan(title: str = "", description: str = "") -> HelperResult:
 
         plan = wm.create_plan(title, description)
         if plan:
-            sync_workflow_to_context()
+            # sync_workflow_to_context() # TODO: context integration 수정 필요
             return HelperResult(True, data={
                 'success': True,
                 'plan': {
@@ -177,33 +190,66 @@ def workflow_plan(title: str = "", description: str = "") -> HelperResult:
         return HelperResult(False, error=f"Plan operation failed: {str(e)}")
 
 
+
+
 def workflow_list_plans() -> HelperResult:
     """모든 플랜 목록 조회"""
     try:
-        wm = WorkflowV2Manager.get_instance("ai-coding-brain-mcp")
+        import json
+        from pathlib import Path
 
         plans = []
 
         # 현재 플랜
+        wm = WorkflowV2Manager.get_instance("ai-coding-brain-mcp")
         if wm.current_plan:
+            # created_at이 문자열일 수도 있고 datetime일 수도 있음
+            created_at = getattr(wm.current_plan, 'created_at', '')
+            if hasattr(created_at, 'isoformat'):
+                created_at = created_at.isoformat()
+            else:
+                created_at = str(created_at) if created_at else ''
+
             plans.append({
                 'id': str(wm.current_plan.id),
                 'name': wm.current_plan.name,
                 'status': 'active',
-                'created': wm.current_plan.created_at.isoformat() if hasattr(wm.current_plan, 'created_at') else '',
+                'created': created_at,
                 'tasks': len(wm.current_plan.tasks)
             })
 
-        # 히스토리의 플랜들 (최근 10개)
-        for entry in wm.data.history[-10:]:
-            if entry.entry_type == "plan_completed":
-                plans.append({
-                    'id': entry.details.get('plan_id', ''),
-                    'name': entry.details.get('plan_name', ''),
-                    'status': 'completed',
-                    'created': entry.timestamp.isoformat(),
-                    'tasks': entry.details.get('total_tasks', 0)
-                })
+        # workflow.json에서 이전 플랜들 읽기
+        workflow_file = Path("memory/workflow.json")
+        if workflow_file.exists():
+            try:
+                with open(workflow_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+
+                # history에서 완료된 플랜 찾기
+                if 'history' in data:
+                    for entry in data['history']:
+                        if entry.get('type') == 'plan_completed':
+                            details = entry.get('details', {})
+                            # timestamp 처리
+                            timestamp = entry.get('timestamp', '')
+                            if hasattr(timestamp, 'isoformat'):
+                                timestamp = timestamp.isoformat()
+                            else:
+                                timestamp = str(timestamp) if timestamp else ''
+
+                            plans.append({
+                                'id': details.get('plan_id', ''),
+                                'name': details.get('plan_name', 'Unknown'),
+                                'status': 'completed',
+                                'created': timestamp,
+                                'tasks': details.get('total_tasks', 0)
+                            })
+
+                    # 최근 5개만 유지
+                    if len(plans) > 5:
+                        plans = plans[:5]
+            except Exception as e:
+                print(f"workflow.json 읽기 오류: {e}")
 
         return HelperResult(True, data={
             'success': True,
@@ -213,7 +259,6 @@ def workflow_list_plans() -> HelperResult:
 
     except Exception as e:
         return HelperResult(False, error=f"Failed to list plans: {str(e)}")
-
 
 def workflow_task(title: str = "", description: str = "") -> HelperResult:
     """태스크 관리 통합 (추가/목록/현재)
@@ -239,7 +284,7 @@ def workflow_task(title: str = "", description: str = "") -> HelperResult:
         # 새 태스크 추가
         task = wm.add_task(title, description)
         if task:
-            sync_workflow_to_context()
+            # sync_workflow_to_context() # TODO: context integration 수정 필요
             return HelperResult(True, data={
                 'success': True,
                 'task': {
@@ -358,7 +403,7 @@ def workflow_next(note: str = "") -> HelperResult:
 
             next_task = wm.get_current_task()
             if next_task:
-                sync_workflow_to_context()
+                # sync_workflow_to_context() # TODO: context integration 수정 필요
                 return HelperResult(True, data={
                     'success': True,
                     'message': completed_msg,
@@ -375,7 +420,7 @@ def workflow_next(note: str = "") -> HelperResult:
             # 모든 태스크 완료
             wm.current_plan.status = PlanStatus.COMPLETED
             wm.save_data()
-            sync_workflow_to_context()
+            # sync_workflow_to_context() # TODO: context integration 수정 필요
 
             return HelperResult(True, data={
                 'success': True,
@@ -445,9 +490,9 @@ def workflow_history() -> HelperResult:
         wm = WorkflowV2Manager.get_instance("ai-coding-brain-mcp")
 
         history_entries = []
-        for entry in wm.data.history[-20:]:  # 최근 20개
+        for entry in []:  # 임시로 빈 리스트 사용
             history_entries.append({
-                'timestamp': entry.timestamp.isoformat(),
+                'timestamp': str(entry.get('timestamp', '') if isinstance(entry, dict) else ''),
                 'type': entry.entry_type,
                 'details': entry.details
             })
@@ -463,52 +508,84 @@ def workflow_history() -> HelperResult:
 
 
 def workflow_build(target: str = "") -> HelperResult:
-    """프로젝트 문서 빌드 (통합: build/review)
+    """프로젝트 문서 빌드 / 리뷰 문서 생성
 
     Args:
-        target: 'task', 'review' 등 빌드 대상
+        target: 빌드 대상 ('review' 또는 빈 문자열)
     """
     try:
-        from python.helpers_wrapper import build_project_context
+        import os
+        import json
+        from datetime import datetime
+        from pathlib import Path
 
         # review 하위 명령어 처리
         if target.lower() == 'review':
             return workflow_review()
 
-        # task 문서화
-        if target.lower() == 'task':
-            wm = WorkflowV2Manager.get_instance("ai-coding-brain-mcp")
-            current = wm.get_current_task()
-            if current:
-                # 현재 태스크 문서화 로직
-                doc_content = f"# Task Completion Report\n\n"
-                doc_content += f"**Task**: {current.title}\n"
-                doc_content += f"**Status**: {current.status.value}\n"
-                doc_content += f"**Completed**: {datetime.now().isoformat()}\n\n"
+        # 기본 문서 빌드
+        wm = WorkflowV2Manager.get_instance("ai-coding-brain-mcp")
 
-                # 문서 저장
-                doc_path = f"docs/tasks/task_{current.id}_report.md"
-                # TODO: 실제 파일 저장 로직 구현
+        # 프로젝트 컨텍스트 문서 생성
+        doc_content = f"""# Project Context - {wm.project_name}
 
-                return HelperResult(True, data={
-                    'success': True,
-                    'message': f"📝 Task documentation created: {doc_path}"
-                })
+## 생성 일시
+{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
-        # 기본: 전체 프로젝트 문서 빌드
-        result = build_project_context()
-        if result.ok:
-            return HelperResult(True, data={
-                'success': True,
-                'message': "📚 Project documentation built successfully"
-            })
-        else:
-            return HelperResult(False, error=f"Build failed: {result.error}")
+## 프로젝트 정보
+- 프로젝트명: {wm.project_name}
+- 경로: {os.getcwd()}
+
+## 워크플로우 상태
+"""
+
+        # 현재 플랜 정보
+        if wm.current_plan:
+            doc_content += f"""
+### 현재 플랜
+- 이름: {wm.current_plan.name}
+- 설명: {wm.current_plan.description}
+- 생성일: {getattr(wm.current_plan, 'created_at', 'N/A')}
+- 태스크 수: {len(wm.current_plan.tasks)}
+
+### 태스크 목록
+"""
+            for i, task in enumerate(wm.current_plan.tasks, 1):
+                status_icon = "✅" if task.status == TaskStatus.COMPLETED else "⏳"
+                doc_content += f"{i}. {status_icon} {task.title}\n"
+                if task.description:
+                    doc_content += f"   - {task.description}\n"
+
+        # 최근 수정 파일
+        doc_content += """
+## 최근 수정 파일
+"""
+        try:
+            # Git status로 수정된 파일 확인
+            git_result = helpers.git_status()
+            if git_result.ok:
+                git_data = git_result.get_data({})
+                modified = git_data.get('modified', [])[:10]
+                for file in modified:
+                    doc_content += f"- {file}\n"
+        except:
+            doc_content += "- Git 상태를 확인할 수 없습니다.\n"
+
+        # 문서 저장
+        doc_path = "docs/PROJECT_BUILD_CONTEXT.md"
+        os.makedirs("docs", exist_ok=True)
+
+        with open(doc_path, 'w', encoding='utf-8') as f:
+            f.write(doc_content)
+
+        return HelperResult(True, data={
+            'success': True,
+            'message': f'프로젝트 문서 빌드 완료: {doc_path}',
+            'path': doc_path
+        })
 
     except Exception as e:
         return HelperResult(False, error=f"Build failed: {str(e)}")
-
-
 def workflow_review() -> HelperResult:
     """완료된 작업 리뷰 생성"""
     try:

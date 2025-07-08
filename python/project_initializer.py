@@ -93,7 +93,7 @@ class ProjectInitializer:
                 logger.info("[BUILD] 프로젝트 컨텍스트 문서 생성 완료")
             except Exception as e:
                 logger.error(f"프로젝트 컨텍스트 문서 생성 실패: {e}")
-            return HelperResult.success({
+            return HelperResult(True, data={
                 'project_name': project_name,
                 'project_path': str(project_path),
                 'created': self.created_items,

@@ -146,3 +146,14 @@ def get_context_integration() -> ContextIntegration:
     if _context_integration is None:
         _context_integration = ContextIntegration()
     return _context_integration
+
+
+def sync_workflow_to_context():
+    """워크플로우를 컨텍스트에 동기화 (wrapper 함수)"""
+    try:
+        integration = get_context_integration()
+        # 현재 워크플로우 플랜 가져오기 - 일단 None으로 처리
+        return integration.sync_workflow_to_context(None)
+    except Exception as e:
+        from python.ai_helpers.helper_result import HelperResult
+        return HelperResult(False, error=str(e))

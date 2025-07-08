@@ -70,6 +70,41 @@ class HelperResult:
     def unwrap_or(self, default: Any) -> Any:
         """성공 시 data, 실패 시 default 반환"""
         return self.data if self.ok else default
+    
+    def get_data(self, default: Any = None) -> Any:
+        """
+        안전하게 데이터 가져오기 (v43 스타일)
+        - 성공 시: data 반환
+        - 실패 시: default 반환
+        - 이중 래핑 자동 해제
+        """
+        if not self.ok:
+            return default
+            
+        # 이중 래핑 확인 및 해제
+        current = self.data
+        unwrap_count = 0
+        
+        while unwrap_count < 5:  # 무한 루프 방지
+            if hasattr(current, 'ok') and hasattr(current, 'data'):
+                # HelperResult로 래핑된 경우
+                current = current.data
+                unwrap_count += 1
+            else:
+                # 더 이상 HelperResult가 아님
+                break
+                
+        return current if current is not None else default
+    
+    def is_nested(self) -> bool:
+        """data가 또 다른 HelperResult인지 확인"""
+        return hasattr(self.data, 'ok') and hasattr(self.data, 'data')
+    
+    def unwrap_nested(self) -> 'HelperResult':
+        """이중 래핑된 경우 한 단계 풀어서 반환"""
+        if self.is_nested():
+            return self.data
+        return self
 
     def map(self, func) -> 'HelperResult':
         """성공인 경우 data에 함수 적용"""

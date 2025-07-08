@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-08 16:55:10
+> 최종 업데이트: 2025-07-08 19:19:34
 
 ## 🎯 프로젝트 개요
 
@@ -111,8 +111,8 @@ ai-coding-brain-mcp/
 │       └── ... (8 more files)
 │   ├── circular_dependency_analysis.md
 │   ├── circular_dependency_fix_report.md
-│   ├── event_integration_guide.md
-│   └── ... (22 more files)
+│   ├── double_wrapping_fix_20250708.md
+│   └── ... (24 more files)
 ├── memory/
 │   ├── backup/
 │   │   ├── ai-coding-brain-mcp_20250704_195124/
@@ -180,7 +180,7 @@ ai-coding-brain-mcp/
 │   ├── __init__.py
 │   ├── api_manager.py
 │   ├── atomic_io.py
-│   └── ... (19 more files)
+│   └── ... (18 more files)
 ├── scripts/
 │   ├── git_helper.py
 │   ├── migrate_search_api.py
@@ -215,7 +215,7 @@ ai-coding-brain-mcp/
 ├── .ai-brain.config.json
 ├── .eslintrc.json
 ├── check_syntax.py
-└── ... (38 more files)
+└── ... (34 more files)
 ```
 - `.ai-brain.config.json`: AI Coding Brain 설정
 - `package.json`: Node.js 프로젝트 설정
@@ -226,14 +226,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 446개
+- **전체 파일 수**: 415개
 - **디렉토리 수**: 65개
 - **파일 타입 분포**:
-  - `.py`: 129개 (28.9%)
-  - `.ts`: 63개 (14.1%)
-  - `.map`: 60개 (13.5%)
-  - `.md`: 56개 (12.6%)
-  - `.json`: 46개 (10.3%)
+  - `.py`: 124개 (29.9%)
+  - `.ts`: 63개 (15.2%)
+  - `.map`: 60개 (14.5%)
+  - `.md`: 58개 (14.0%)
+  - `.json`: 46개 (11.1%)
 
 ## 🚀 빠른 시작
 

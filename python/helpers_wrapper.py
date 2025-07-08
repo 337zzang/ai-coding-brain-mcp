@@ -19,6 +19,10 @@ def safe_helper(func: Callable) -> Callable:
 
             # 이미 HelperResult인 경우
             if isinstance(result, HelperResult):
+                # 이중 래핑 방지: data가 또 다른 HelperResult인지 확인
+                if hasattr(result.data, 'ok') and hasattr(result.data, 'data'):
+                    # 이미 이중 래핑된 경우 그대로 반환
+                    return result
                 return result
 
             # dict 형태의 결과 처리
@@ -73,11 +77,25 @@ class HelpersWrapper:
         except AttributeError:
             raise AttributeError(f"'{self._helpers.__class__.__name__}' has no attribute '{name}'")
 
-        # 함수인 경우 safe_helper로 래핑
+        # 함수인 경우
         if callable(attr):
-            wrapped = safe_helper(attr)
-            self._cache[name] = wrapped
-            return wrapped
+            # 이미 HelperResult를 반환하는 메서드들은 추가 래핑하지 않음
+            no_wrap_methods = {
+                'workflow', 'scan_directory_dict', 'run_command',
+                'git_status', 'git_add', 'git_commit', 'git_push',
+                'read_file', 'create_file', 'edit_block', 'replace_block',
+                'search_files', 'search_code', 'parse_with_snippets'
+            }
+            
+            if name in no_wrap_methods:
+                # 이미 HelperResult를 반환하는 메서드는 그대로 사용
+                self._cache[name] = attr
+                return attr
+            else:
+                # 그 외의 메서드는 safe_helper로 래핑
+                wrapped = safe_helper(attr)
+                self._cache[name] = wrapped
+                return wrapped
 
         # 함수가 아닌 경우 그대로 반환
         return attr

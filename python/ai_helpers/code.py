@@ -7,21 +7,17 @@ import difflib
 import shutil
 import warnings
 from datetime import datetime
+import textwrap
 
 
-# HelperResult와 safe_helper import
+# HelperResult import만 수행 (safe_helper는 import하지 않음)
 try:
-    from helpers_wrapper import safe_helper
     from helper_result import HelperResult
 except ImportError:
     try:
-        from ..helpers_wrapper import safe_helper
         from ..helper_result import HelperResult
     except ImportError:
         # Fallback 정의
-        def safe_helper(func):
-            return func
-        
         class HelperResult:
             def __init__(self, ok, data=None, error=None):
                 self.ok = ok
@@ -48,10 +44,10 @@ def get_verbose() -> bool:
     """상세 출력 모드 확인"""
     return _verbose_mode
 
-def _log(message: str) -> None:
+def _log(message: str, level: str = 'INFO') -> None:
     """상세 로그 출력"""
     if _verbose_mode:
-        print(f"[AST Parser] {message}")
+        print(f"[AST Parser] [{level}] {message}")
 
 
 
@@ -343,6 +339,63 @@ class BlockInsertTransformer(ast.NodeTransformer):
         return self.current_path == target_full_path
 
 
+class TreeSitterManager:
+    """Tree-sitter 파서 관리자"""
+    
+    def __init__(self):
+        self.parsers = {}
+        self.languages = {}
+        
+    def get_parser(self, language: str):
+        """언어별 파서 반환"""
+        if language in self.parsers:
+            return self.parsers[language]
+            
+        if not _lazy_import_tree_sitter():
+            return None
+            
+        try:
+            tree_sitter = _tree_sitter_modules.get('tree_sitter')
+            if not tree_sitter:
+                return None
+                
+            # 파서 생성
+            parser = tree_sitter.Parser()
+            
+            # 언어별 문법 로드
+            if language == 'python' and 'python' in _tree_sitter_modules:
+                python_module = _tree_sitter_modules['python']
+                # Tree-sitter Python 바인딩에서는 Language.build_library를 사용하거나
+                # 이미 빌드된 언어 객체를 사용합니다
+                if hasattr(python_module, 'language'):
+                    parser.set_language(python_module.language())
+                elif hasattr(python_module, 'LANGUAGE'):
+                    parser.set_language(python_module.LANGUAGE)
+                else:
+                    _log(f'Unable to get language object from tree_sitter_python')
+                    return None
+                self.parsers[language] = parser
+                return parser
+            elif language in ('javascript', 'typescript') and 'javascript' in _tree_sitter_modules:
+                js_module = _tree_sitter_modules['javascript']
+                if hasattr(js_module, 'language'):
+                    parser.set_language(js_module.language())
+                elif hasattr(js_module, 'LANGUAGE'):
+                    parser.set_language(js_module.LANGUAGE)
+                else:
+                    _log(f'Unable to get language object from tree_sitter_javascript')
+                    return None
+                self.parsers[language] = parser
+                return parser
+            else:
+                _log(f'Tree-sitter grammar not available for {language}')
+                return None
+                
+        except Exception as e:
+            _log(f'Failed to create Tree-sitter parser for {language}: {e}')
+            return None
+
+
 class ASTParser:
     """통합 AST 파서"""
 
@@ -522,17 +575,13 @@ def _get_parser() -> 'ASTParser':
 
 
 @track_operation('code', 'replace_block')
-@safe_helper
-def replace_block(file_path: str, target_block: str, new_code: str,
-                  block_type: str = 'auto', preserve_indent: bool = True) -> str:
+def replace_block(file_path: str, target_block: str, new_code: str) -> str:
     """코드 블록을 새로운 코드로 교체 - AST 기반 구현
     
     Args:
         file_path: 수정할 파일 경로
-        target_block: 찾을 블록 이름 (함수명, 클래스명 등)
+        target_block: 찾을 블록 이름 (함수명, 클래스명, ClassName.method 형식 지원)
         new_code: 교체할 새 코드
-        block_type: 블록 타입 ('function', 'class', 'method', 'auto')
-        preserve_indent: 원본 들여쓰기 유지 여부
         
     Returns:
         str: 성공/실패 메시지
@@ -546,14 +595,14 @@ def replace_block(file_path: str, target_block: str, new_code: str,
         try:
             tree = ast.parse(content)
         except SyntaxError as e:
-            return f"ERROR: 파일 파싱 실패 - {e}"
+            raise RuntimeError(f"파일 파싱 실패 - {e}")
         
         # 3. 새 코드 검증
         try:
             # 새 코드가 유효한지 확인
             ast.parse(new_code)
         except SyntaxError as e:
-            return f"ERROR: 새 코드가 유효하지 않음 - {e}"
+            raise ValueError(f"새 코드가 유효하지 않음 - {e}")
         
         # 4. EnhancedFunctionReplacer 사용
         replacer = EnhancedFunctionReplacer(target_block, new_code)
@@ -562,7 +611,7 @@ def replace_block(file_path: str, target_block: str, new_code: str,
         # 교체가 성공했는지 확인
         if not replacer.found_and_replaced:
             # 함수/클래스를 찾지 못한 경우, BlockInsertTransformer로 시도해볼 수도 있음
-            return f"ERROR: {target_block}를 찾을 수 없습니다"
+            raise ValueError(f"{target_block}를 찾을 수 없습니다")
         
         # 5. 수정된 AST를 코드로 변환
         try:
@@ -585,7 +634,7 @@ def replace_block(file_path: str, target_block: str, new_code: str,
         return f"SUCCESS: {target_block} 교체 완료"
         
     except Exception as e:
-        return f"ERROR: {type(e).__name__} - {e}"
+        raise RuntimeError(f"{type(e).__name__} - {e}")
 
 
 def _fallback_replace(file_path: str, target_block: str, new_code: str, content: str) -> str:
@@ -619,7 +668,7 @@ def _fallback_replace(file_path: str, target_block: str, new_code: str, content:
                         break
         
         if target_line == -1:
-            return f"ERROR: {target_block}를 찾을 수 없습니다"
+            raise ValueError(f"{target_block}를 찾을 수 없습니다")
         
         # 블록의 끝 찾기
         end_line = target_line + 1
@@ -667,19 +716,16 @@ def _fallback_replace(file_path: str, target_block: str, new_code: str, content:
         return f"SUCCESS: {target_block} 교체 완료 (폴백 방식)"
         
     except Exception as e:
-        return f"ERROR: 폴백 교체 실패 - {e}"
+        raise RuntimeError(f"폴백 교체 실패 - {e}")
 @track_operation('code', 'insert_block')
-@safe_helper
-def insert_block(file_path: str, target: str, position: str, new_code: str,
-                 target_type: str = 'auto') -> str:
+def insert_block(file_path: str, target: str, position: str, new_code: str) -> str:
     """코드 블록을 특정 위치에 삽입 - AST 기반 구현
     
     Args:
         file_path: 수정할 파일 경로
-        target: 기준이 되는 블록 이름
+        target: 기준이 되는 블록 이름 (함수명, 클래스명, ClassName.method 형식 지원)
         position: 삽입 위치 ('before', 'after', 'start', 'end')
         new_code: 삽입할 코드
-        target_type: 타겟 타입 ('function', 'class', 'method', 'auto')
         
     Returns:
         str: 성공/실패 메시지
@@ -693,25 +739,25 @@ def insert_block(file_path: str, target: str, position: str, new_code: str,
         try:
             tree = ast.parse(content)
         except SyntaxError as e:
-            return f"ERROR: 파일 파싱 실패 - {e}"
+            raise RuntimeError(f"파일 파싱 실패 - {e}")
         
         # 새 코드 검증
         try:
             ast.parse(new_code)
         except SyntaxError as e:
-            return f"ERROR: 삽입할 코드가 유효하지 않음 - {e}"
+            raise ValueError(f"삽입할 코드가 유효하지 않음 - {e}")
         
         # position 유효성 검증
         valid_positions = ['before', 'after', 'start', 'end']
         if position not in valid_positions:
-            return f"ERROR: 잘못된 position '{position}'. 사용 가능: {valid_positions}"
+            raise ValueError(f"잘못된 position '{position}'. 사용 가능: {valid_positions}")
         
         # BlockInsertTransformer 사용
         try:
             inserter = BlockInsertTransformer(target, position, new_code)
             modified_tree = inserter.visit(tree)
         except Exception as e:
-            return f"ERROR: 코드 삽입 중 오류 - {e}"
+            raise RuntimeError(f"코드 삽입 중 오류 - {e}")
         
         # 수정된 AST를 코드로 변환
         try:
@@ -730,7 +776,7 @@ def insert_block(file_path: str, target: str, position: str, new_code: str,
         return f"SUCCESS: {target} {position}에 코드 삽입 완료"
         
     except Exception as e:
-        return f"ERROR: {type(e).__name__} - {e}"
+        raise RuntimeError(f"{type(e).__name__} - {e}")
 
 
 def _simple_text_insert(file_path: str, target: str, position: str, new_code: str, content: str) -> str:
@@ -745,7 +791,7 @@ def _simple_text_insert(file_path: str, target: str, position: str, new_code: st
             break
     
     if target_line == -1:
-        return f"ERROR: {target}를 찾을 수 없습니다"
+        raise ValueError(f"{target}를 찾을 수 없습니다")
     
     # 삽입
     new_lines = new_code.split('\n')
@@ -784,32 +830,68 @@ def _simple_text_insert(file_path: str, target: str, position: str, new_code: st
     return f"SUCCESS: {target} {position}에 코드 삽입 완료 (텍스트 방식)"
 
 @track_operation('code', 'parse')
-@safe_helper
 def parse_code(file_path: str) -> dict:
     """코드 파일을 파싱하여 AST 정보 반환"""
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        ast.parse(content)
-        return {'parsing_success': True, 'file_path': file_path}
-    except Exception as e:
-        return {'parsing_success': False, 'error': str(e)}
+    parser = _get_parser()
+    lang = parser._detect_language(file_path)
+    
+    if lang == 'python':
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            ast.parse(content)
+            return {'parsing_success': True, 'file_path': file_path, 'language': lang}
+        except Exception as e:
+            return {'parsing_success': False, 'error': str(e), 'language': lang}
+    elif lang in ('javascript', 'typescript'):
+        # Tree-sitter를 사용한 구문 검사
+        ts_parser = parser.ts_manager.get_parser(lang)
+        if ts_parser:
+            try:
+                with open(file_path, 'rb') as f:
+                    content = f.read()
+                tree = ts_parser.parse(content)
+                # 파싱 성공 여부는 tree가 None이 아닌지로 판단
+                return {'parsing_success': tree is not None, 'file_path': file_path, 'language': lang}
+            except Exception as e:
+                return {'parsing_success': False, 'error': str(e), 'language': lang}
+        else:
+            return {'parsing_success': False, 'error': 'Tree-sitter not available', 'language': lang}
+    else:
+        return {'parsing_success': False, 'error': f'Unsupported language: {lang}', 'language': lang}
 
 
 @track_operation('code', 'parse_snippets')
-@safe_helper
 def parse_with_snippets(file_path: str, language: str = 'auto', 
                        include_snippets: bool = True) -> dict:
     """파일을 파싱하여 구조화된 정보와 코드 스니펫 추출"""
-    # 임시 구현
-    result = parse_code(file_path)
-    if result['parsing_success']:
-        result.update({
-            'language': 'python',
-            'functions': [],
-            'classes': [],
-            'imports': []
-        })
+    parser = _get_parser()
+    lang = parser._detect_language(file_path, language)
+    
+    if lang == 'python':
+        result = parser.parse_python(file_path, include_snippets=include_snippets)
+    elif lang in ('javascript', 'typescript'):
+        result = parser.parse_javascript(file_path, language=lang, include_snippets=include_snippets)
+    else:
+        result = {
+            'parsing_success': False,
+            'language': lang,
+            'error': f"Unsupported language: {lang}",
+            'file_path': file_path
+        }
+    
+    # 결과에 file_path와 total_lines 추가 (없는 경우)
+    if 'file_path' not in result:
+        result['file_path'] = file_path
+    
+    if 'total_lines' not in result and result.get('parsing_success', False):
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            result['total_lines'] = len(content.splitlines())
+        except:
+            pass
+    
     return result
 
 
@@ -828,7 +910,7 @@ def get_snippet_preview(file_path: str, element_name: str,
             # 0-based index로 변환
             return parser._get_snippet(lines, start_line - 1, end_line - 1, max_lines)
         except Exception as e:
-            return f"Error reading file: {str(e)}"
+            raise RuntimeError(f"Error reading file: {str(e)}")
     
     # element_name으로 찾기
     try:
@@ -858,7 +940,7 @@ def get_snippet_preview(file_path: str, element_name: str,
         return f"Element '{element_name}' of type '{element_type}' not found"
         
     except Exception as e:
-        return f"Error: {str(e)}"
+        raise RuntimeError(f"Error: {str(e)}")
 
 def update_symbol_index(file_path: str, parse_result: dict) -> None:
     """

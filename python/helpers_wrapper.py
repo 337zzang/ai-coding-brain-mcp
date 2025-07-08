@@ -7,7 +7,7 @@ HelpersWrapper - 모든 헬퍼 함수를 HelperResult로 래핑
 """
 import functools
 from typing import Any, Callable
-from helper_result import HelperResult
+from ai_helpers.helper_result import HelperResult
 
 
 def safe_helper(func: Callable) -> Callable:

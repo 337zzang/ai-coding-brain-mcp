@@ -288,7 +288,7 @@ class WorkflowCommands:
             # 완료된 태스크 수 계산 - Enum 비교로 수정
             completed_count = 0
             for task in current_plan.tasks:
-                if hasattr(task, 'status') and task.status == TaskStatus.COMPLETED:
+                if hasattr(task, 'status') and (task.status == TaskStatus.COMPLETED or task.status == 'completed'):
                     completed_count += 1
 
             total_tasks = len(current_plan.tasks)

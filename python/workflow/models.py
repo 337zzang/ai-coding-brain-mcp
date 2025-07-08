@@ -248,7 +248,7 @@ class Plan:
         """태스크 완료 처리"""
         for task in self.tasks:
             if task.id == task_id:
-                task.status = 'completed'
+                task.status = TaskStatus.COMPLETED
                 task.completed_at = datetime.now().isoformat()
                 task.completion_notes = notes
                 return True

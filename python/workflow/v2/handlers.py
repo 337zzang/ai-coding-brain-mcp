@@ -323,7 +323,7 @@ def workflow_status() -> HelperResult:
     except Exception as e:
         return HelperResult(False, error=str(e))
 
-def workflow_history() -> HelperResult:
+def workflow_history(limit: int = 10) -> HelperResult:
     """완료된 작업 이력"""
     try:
         wm = WorkflowV2Manager.get_instance("ai-coding-brain-mcp")
@@ -351,6 +351,10 @@ def workflow_history() -> HelperResult:
 
         # 시간순 정렬
         history.sort(key=lambda x: x.get('completed_at', ''), reverse=True)
+        
+        # limit 적용
+        if limit > 0:
+            history = history[:limit]
 
         return HelperResult(True, data={
             'success': True,

@@ -180,6 +180,12 @@ class WorkflowV2Manager:
 
         return self._current_task_cache
 
+    def get_tasks(self) -> List[Task]:
+        """현재 플랜의 모든 태스크 반환"""
+        if not self.current_plan:
+            return []
+        return self.current_plan.tasks
+
     def complete_task(self, task_id: str, notes: str = "") -> Optional[Task]:
         """태스크 완료 처리"""
         if not self.current_plan:

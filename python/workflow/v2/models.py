@@ -75,6 +75,7 @@ class WorkflowPlan:
     description: str = ""
     status: PlanStatus = PlanStatus.DRAFT
     tasks: List[Task] = field(default_factory=list)
+    current_task_index: int = 0  # 현재 작업 중인 태스크 인덱스
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -87,6 +88,7 @@ class WorkflowPlan:
             'description': self.description,
             'status': self.status.value,
             'tasks': [task.to_dict() for task in self.tasks],
+            'current_task_index': self.current_task_index,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
             'metadata': self.metadata
@@ -103,6 +105,7 @@ class WorkflowPlan:
             description=data.get('description', ''),
             status=PlanStatus(data.get('status', 'draft')),
             tasks=tasks,
+            current_task_index=data.get('current_task_index', 0),
             created_at=data.get('created_at', datetime.now().isoformat()),
             updated_at=data.get('updated_at', datetime.now().isoformat()),
             metadata=data.get('metadata', {})

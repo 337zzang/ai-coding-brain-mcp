@@ -154,6 +154,18 @@ class WorkflowDispatcher:
                 update_readme = '--no-readme' not in args
                 return func(update_readme=update_readme)
 
+            elif cmd == 'history':
+                # limit 인자 처리
+                if args:
+                    try:
+                        limit = int(args.strip())
+                        return func(limit=limit)
+                    except ValueError:
+                        return HelperResult(False, 
+                            error=f"Invalid limit for /history: {args}",
+                            data={"usage": "/history [limit]"})
+                return func()
+
             else:
                 # 인자 없는 명령어들
                 if args:
@@ -185,7 +197,7 @@ class WorkflowDispatcher:
             'current': "/current",
             'tasks': "/tasks",
             'status': "/status",
-            'history': "/history",
+            'history': "/history [limit]",
             'list': "/list"
         }
         return usage_map.get(cmd, f"/{cmd}")

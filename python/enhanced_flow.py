@@ -500,19 +500,10 @@ def _load_and_show_workflow() -> Dict[str, Any]:
         if not workflow_data or not isinstance(workflow_data, dict):
             return {'status': 'no_workflow', 'message': '유효한 워크플로우 데이터 없음'}
 
-        # 현재 계획 찾기
-        current_plan_id = workflow_data.get('current_plan_id')
-        if not current_plan_id:
-            return {'status': 'no_plan', 'message': '활성 계획 없음'}
-
-        current_plan = None
-        for plan in workflow_data.get('plans', []):
-            if plan.get('id') == current_plan_id:
-                current_plan = plan
-                break
-
+        # 현재 계획 찾기 - 수정된 구조에 맞게
+        current_plan = workflow_data.get('current_plan')
         if not current_plan:
-            return {'status': 'no_plan', 'message': '계획을 찾을 수 없음'}
+            return {'status': 'no_plan', 'message': '활성 계획 없음'}
 
         # 상태 계산
         tasks = current_plan.get('tasks', [])

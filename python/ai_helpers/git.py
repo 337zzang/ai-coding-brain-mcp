@@ -159,13 +159,42 @@ def git_commit(message: str, files: Optional[List[str]] = None) -> HelperResult:
     return _run_git_command(['commit', '-m', message])
 
 def git_push(remote: str = "origin", branch: Optional[str] = None) -> HelperResult:
-    """원격 저장소에 푸시"""
+    """원격 저장소에 푸시 (자동 upstream 설정 포함)
+
+    Args:
+        remote: 원격 저장소 이름 (기본: origin)
+        branch: 브랜치 이름 (기본: 현재 브랜치)
+
+    Returns:
+        HelperResult: 성공 시 ok=True, 실패 시 에러 메시지 포함
+    """
+    # 첫 번째 시도: 일반 푸시
     args = ['push', remote]
     if branch:
         args.append(branch)
 
-    return _run_git_command(args)
+    result = _run_git_command(args)
 
+    # upstream 설정이 필요한 경우 자동 처리
+    if not result.ok and result.error and "no upstream branch" in result.error:
+        # 현재 브랜치 확인
+        if not branch:
+            branch_result = git_branch()
+            if branch_result.ok:
+                branch = branch_result.data.get('current', 'master')
+
+        # --set-upstream으로 재시도
+        print(f"🔄 Upstream 미설정 감지. 자동으로 설정 중...")
+        args = ['push', '--set-upstream', remote, branch or 'master']
+        result = _run_git_command(args)
+
+        if result.ok:
+            # 성공 메시지 추가
+            if isinstance(result.data, dict):
+                result.data['message'] = f"Pushed and set upstream to {remote}/{branch or 'master'}"
+                result.data['upstream_set'] = True
+
+    return result
 def git_pull(remote: str = "origin", branch: Optional[str] = None) -> HelperResult:
     """원격 저장소에서 풀"""
     args = ['pull', remote]

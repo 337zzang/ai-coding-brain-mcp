@@ -237,3 +237,32 @@ class Plan:
             'percentage': round((completed / total * 100) if total > 0 else 0, 1),
             'remaining': total - completed
         }
+
+    def add_task(self, title: str, description: str = "") -> 'Task':
+        """태스크 추가"""
+        task = Task(title=title, description=description)
+        self.tasks.append(task)
+        return task
+
+    def complete_task(self, task_id: str, notes: str = "") -> bool:
+        """태스크 완료 처리"""
+        for task in self.tasks:
+            if task.id == task_id:
+                task.status = 'completed'
+                task.completed_at = datetime.now().isoformat()
+                task.completion_notes = notes
+                return True
+        return False
+
+    def get_task_by_index(self, index: int) -> Optional['Task']:
+        """인덱스로 태스크 가져오기"""
+        if 0 <= index < len(self.tasks):
+            return self.tasks[index]
+        return None
+
+    def move_to_next_task(self) -> bool:
+        """다음 태스크로 이동"""
+        if self.current_task_index < len(self.tasks) - 1:
+            self.current_task_index += 1
+            return True
+        return False

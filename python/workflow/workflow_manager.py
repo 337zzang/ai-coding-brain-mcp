@@ -130,8 +130,11 @@ class WorkflowManager:
             with open(self.data_file, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
 
-    def create_plan(self, name: str, description: str = "") -> Plan:
+    def create_plan(self, name: str, description: str = "", reset: bool = False) -> Plan:
         """새 플랜 생성"""
+        # reset이 True면 기존 플랜 강제 교체
+        if reset and self.current_plan:
+            print(f"🔄 --reset 옵션: 기존 플랜 '{self.current_plan.name}' 강제 교체")
         # 현재 플랜이 있으면 히스토리로 이동
         if self.current_plan:
             self.history.append({
@@ -165,7 +168,12 @@ class WorkflowManager:
             print("❌ 활성 플랜이 없습니다.")
             return None
 
-        task = self.current_plan.add_task(title, description)
+        # Plan 객체에 직접 태스크 추가
+        task = Task(title=title, description=description)
+        if not hasattr(self.current_plan, 'tasks'):
+            self.current_plan.tasks = []
+        self.current_plan.tasks.append(task)
+        task = task
         self.save_data()
         return task
 
@@ -216,11 +224,12 @@ class WorkflowManager:
         # 현재 플랜의 완료된 작업들
         if self.current_plan:
             for task in self.current_plan.tasks:
-                if task.completed:
+                # task.completed 대신 status를 확인
+                if task.status == TaskStatus.COMPLETED:
                     history.append({
                         'title': task.title,
-                        'completed_at': task.completed_at,
-                        'notes': task.result.get('notes', '')
+                        'completed_at': task.completed_at or task.updated_at,
+                        'notes': task.result.get('notes', '') if task.result else task.completion_notes
                     })
 
         # 히스토리의 플랜들

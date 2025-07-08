@@ -157,240 +157,117 @@ class WorkflowCommands:
         }
     
     def handle_done(self, args: str) -> Dict[str, Any]:
-        """
-        현재 작업 완료 처리
-        사용법: /done 요약 | 세부내용1;세부내용2 | 산출물경로
-        """
-        current_task = self.workflow.get_current_task()
-        if not current_task:
-            return {'error': '현재 작업이 없습니다.'}
-        
-        # 승인되지 않은 작업은 완료할 수 없음
-        if current_task.status != TaskStatus.APPROVED:
-            return {'error': f'작업이 승인되지 않았습니다. 현재 상태: {current_task.status.value}'}
-        
-        # 인자 파싱
-        parts = [p.strip() for p in args.split('|')] + [''] * 3
-        summary = parts[0] or "작업 완료"
-        details_raw = parts[1]
-        outputs_raw = parts[2]
-        
-        # 세부사항 파싱
-        details = []
-        if details_raw:
-            details = [d.strip() for d in details_raw.split(';') if d.strip()]
-        
-        # 산출물 파싱
-        outputs = {}
-        if outputs_raw:
-            outputs = {'paths': [p.strip() for p in outputs_raw.split(',') if p.strip()]}
-        
-        # 작업 완료 처리
-        return self.complete_current_task(
-            summary=summary,
-            details=details,
-            outputs=outputs
-        )
-    
-
-    def _load_workflow_data(self) -> Dict[str, Any]:
-        """워크플로우 데이터 로드"""
+        """현재 작업 완료 처리"""
         try:
-            workflow_path = os.path.join("memory", "workflow.json")
-            if os.path.exists(workflow_path):
-                with open(workflow_path, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            return {}
-        except Exception as e:
-            return {'error': str(e)}
-    
-    def handle_list(self, args: str) -> Dict[str, Any]:
-        """플랜 목록 조회"""
-        try:
-            # workflow.json 읽기
-            workflow_data = self._load_workflow_data()
+            current_task = self.workflow.get_current_task()
+            if not current_task:
+                return {'error': '현재 작업이 없습니다.'}
 
-            if not workflow_data.get('plans'):
+            notes = args.strip() if args else "작업 완료"
+            success = self.workflow.complete_task(current_task.id, notes)
+
+            if success:
+                # 다음 태스크로 이동
+                self.workflow.current_plan.move_to_next_task()
+                self.workflow.save_data()
+
                 return {
-                    'status': 'info',
-                    'message': '생성된 플랜이 없습니다.',
-                    'plans': []
+                    'success': True,
+                    'message': f'✅ 작업 완료: {current_task.title}',
+                    'notes': notes
                 }
+            return {'error': '작업 완료 처리 실패'}
+        except Exception as e:
+            return {'error': f'오류: {str(e)}'}
 
-            plans_info = []
-            for plan in workflow_data['plans']:
-                plan_info = {
-                    'name': plan.get('name', 'Unnamed'),
-                    'description': plan.get('description', ''),
-                    'created_at': plan.get('created_at', ''),
-                    'total_tasks': len(plan.get('tasks', [])),
-                    'completed_tasks': plan.get('completed_tasks', 0),
-                    'progress': f"{plan.get('completed_tasks', 0)}/{len(plan.get('tasks', []))}"
+    def handle_next(self, args: str) -> Dict[str, Any]:
+        """다음 작업으로 이동"""
+        try:
+            current_task = self.workflow.get_current_task()
+            if not current_task:
+                return {
+                    'success': True,
+                    'message': '모든 작업이 완료되었습니다!',
+                    'all_completed': True
                 }
-                plans_info.append(plan_info)
 
             return {
-                'status': 'success',
-                'message': f'{len(plans_info)}개의 플랜이 있습니다.',
-                'plans': plans_info
-            }
-
-        except Exception as e:
-            return {'error': f'플랜 목록 조회 중 오류: {str(e)}'}
-
-    def handle_current(self, args: str) -> Dict[str, Any]:
-        """현재 태스크 확인"""
-        try:
-            # 워크플로우 데이터 로드
-            workflow_data = self._load_workflow_data()
-
-            # 활성 플랜 찾기
-            active_plan = None
-            for plan in workflow_data.get('plans', []):
-                if plan.get('status') == 'active':
-                    active_plan = plan
-                    break
-
-            if not active_plan:
-                return {
-                    'status': 'info',
-                    'message': '활성 플랜이 없습니다.',
-                    'current_task': None
-                }
-
-            # 현재 태스크 찾기
-            current_index = active_plan.get('current_task_index', 0)
-            tasks = active_plan.get('tasks', [])
-
-            if current_index >= len(tasks):
-                return {
-                    'status': 'info',
-                    'message': '모든 태스크가 완료되었습니다.',
-                    'current_task': None,
-                    'plan': active_plan.get('name')
-                }
-
-            current_task = tasks[current_index]
-
-            return {
-                'status': 'success',
-                'message': '현재 태스크',
-                'plan': active_plan.get('name'),
+                'success': True,
                 'current_task': {
-                    'index': current_index + 1,
-                    'total': len(tasks),
-                    'title': current_task.get('title', 'Untitled'),
-                    'description': current_task.get('description', ''),
-                    'status': current_task.get('status', 'todo'),
-                    'approval': current_task.get('approval', 'none')
+                    'title': current_task.title,
+                    'description': current_task.description,
+                    'index': self.workflow.current_plan.current_task_index + 1,
+                    'total': len(self.workflow.current_plan.tasks)
                 }
             }
-
         except Exception as e:
-            return {'error': f'현재 태스크 확인 중 오류: {str(e)}'}
+            return {'error': f'오류: {str(e)}'}
+
 
     def handle_tasks(self, args: str) -> Dict[str, Any]:
         """태스크 목록 조회"""
         try:
-            # 워크플로우 데이터 로드
-            workflow_data = self._load_workflow_data()
+            if not self.workflow.current_plan:
+                return {'error': '활성 플랜이 없습니다.'}
 
-            # 활성 플랜 찾기
-            active_plan = None
-            for plan in workflow_data.get('plans', []):
-                if plan.get('status') == 'active':
-                    active_plan = plan
-                    break
-
-            if not active_plan:
-                return {
-                    'status': 'info',
-                    'message': '활성 플랜이 없습니다.',
-                    'tasks': []
-                }
-
-            # 태스크 목록 구성
+            plan = self.workflow.current_plan
             tasks_info = []
-            current_index = active_plan.get('current_task_index', 0)
 
-            for i, task in enumerate(active_plan.get('tasks', [])):
-                task_info = {
+            for i, task in enumerate(plan.tasks):
+                tasks_info.append({
                     'index': i + 1,
-                    'title': task.get('title', 'Untitled'),
-                    'description': task.get('description', ''),
-                    'status': task.get('status', 'todo'),
-                    'is_current': i == current_index,
-                    'completed_at': task.get('completed_at', '')
-                }
-                tasks_info.append(task_info)
+                    'title': task.title,
+                    'description': task.description,
+                    'status': getattr(task, 'status', 'todo'),
+                    'is_current': i == plan.current_task_index
+                })
 
-            return {
-                'status': 'success',
-                'message': f"{active_plan.get('name')} 플랜의 태스크 목록",
-                'plan': active_plan.get('name'),
-                'total_tasks': len(tasks_info),
-                'completed_tasks': active_plan.get('completed_tasks', 0),
-                'tasks': tasks_info
-            }
-
-        except Exception as e:
-            return {'error': f'태스크 목록 조회 중 오류: {str(e)}'}
-
-    def handle_next(self, args: str) -> Dict[str, Any]:
-        """다음 작업으로 이동"""
-        current_task = self.workflow.get_current_task()
-        if not current_task:
             return {
                 'success': True,
-                'message': '모든 작업이 완료되었습니다!',
-                'all_completed': True
+                'plan': plan.name,
+                'total_tasks': len(tasks_info),
+                'current_index': plan.current_task_index + 1,
+                'tasks': tasks_info
             }
-        
-        # 컨텍스트 업데이트
-        self.context_manager.update_context('current_task_id', current_task.id)
-        self.context_manager.update_context('current_task_title', current_task.title)
-        self.context_manager.update_context('last_workflow_action', {
-            'action': 'moved_to_next_task',
-            'timestamp': datetime.now().isoformat(),
-            'task_title': current_task.title
-        })
-        
-        # 현재 작업이 완료되지 않았다면 결과 요청
-        if current_task.status != TaskStatus.COMPLETED:
+        except Exception as e:
+            return {'error': f'오류: {str(e)}'}
+
+
+    def handle_current(self, args: str) -> Dict[str, Any]:
+        """현재 태스크 확인"""
+        try:
+            if not self.workflow.current_plan:
+                return {'error': '활성 플랜이 없습니다.'}
+
+            current_task = self.workflow.get_current_task()
+            if not current_task:
+                return {
+                    'success': True,
+                    'message': '모든 태스크가 완료되었습니다.',
+                    'plan': self.workflow.current_plan.name
+                }
+
             return {
+                'success': True,
+                'plan': self.workflow.current_plan.name,
                 'current_task': {
-                    'id': current_task.id,
+                    'index': self.workflow.current_plan.current_task_index + 1,
+                    'total': len(self.workflow.current_plan.tasks),
                     'title': current_task.title,
-                    'status': current_task.status.value
-                },
-                'request_result': True,
-                'completion_note': args.strip() if args else None
+                    'description': current_task.description,
+                    'status': getattr(current_task, 'status', 'todo')
+                }
             }
-        
-        # 다음 작업 정보 반환
-        next_task = self.workflow.current_plan.get_next_task() if self.workflow.current_plan else None
-        
-        return {
-            'success': True,
-            'message': '다음 작업으로 이동',
-            'completed_task': {
-                'title': current_task.title,
-                'summary': current_task.result.summary if current_task.result else ''
-            },
-            'next_task': {
-                'title': next_task.title,
-                'description': next_task.description
-            } if next_task else None
-        }
-    
+        except Exception as e:
+            return {'error': f'오류: {str(e)}'}
+
+
     def handle_status(self, args: str) -> Dict[str, Any]:
         """상태 확인"""
         try:
-            # 현재 플랜과 태스크 정보 가져오기
             current_plan = self.workflow.get_current_plan()
             current_task = self.workflow.get_current_task()
 
-            # 플랜이 없는 경우
             if not current_plan:
                 return {
                     'success': True,
@@ -399,28 +276,30 @@ class WorkflowCommands:
                 }
 
             # 완료된 태스크 수 계산
-            completed_tasks = sum(1 for task in current_plan.tasks if task.status == TaskStatus.COMPLETED)
-            total_tasks = len(current_plan.tasks)
-            progress = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+            completed_count = 0
+            for task in current_plan.tasks:
+                if hasattr(task, 'status') and task.status == 'completed':
+                    completed_count += 1
 
-            # 상태 정보 구성
+            total_tasks = len(current_plan.tasks)
+            progress = (completed_count / total_tasks * 100) if total_tasks > 0 else 0
+
             status = {
                 'plan': {
                     'id': current_plan.id,
                     'name': current_plan.name,
-                    'status': current_plan.status,
+                    'status': getattr(current_plan, 'status', 'active'),
                     'progress': progress,
-                    'completed': completed_tasks,
+                    'completed': completed_count,
                     'total': total_tasks
                 }
             }
 
-            # 현재 태스크 정보 추가
             if current_task:
                 status['current_task'] = {
                     'id': current_task.id,
                     'title': current_task.title,
-                    'status': current_task.status.value,
+                    'status': getattr(current_task, 'status', 'todo'),
                     'index': current_plan.current_task_index
                 }
 
@@ -429,20 +308,20 @@ class WorkflowCommands:
                 'status': status
             }
         except Exception as e:
-            return {
-                'success': False,
-                'error': f'상태 조회 중 오류: {str(e)}'
-            }
-    
+            return {'error': f'상태 조회 중 오류: {str(e)}'}
+
     def handle_history(self, args: str) -> Dict[str, Any]:
         """작업 이력 조회"""
-        history = self.workflow.get_history()
-        return {
-            'success': True,
-            'history': history,
-            'count': len(history)
-        }
-    
+        try:
+            history = self.workflow.get_history()
+            return {
+                'success': True,
+                'history': history,
+                'count': len(history)
+            }
+        except Exception as e:
+            return {'error': f'이력 조회 중 오류: {str(e)}'}
+
     def handle_build(self, args: str) -> Dict[str, Any]:
         """프로젝트 문서 빌드"""
         return {
@@ -450,188 +329,72 @@ class WorkflowCommands:
             'request_build': True,
             'message': '프로젝트 문서 빌드를 요청합니다.'
         }
-    
-    def create_task_plan(self, task_id: str, steps: list, estimated_time: str = None,
-                        tools: list = None, risks: list = None, criteria: list = None) -> Dict[str, Any]:
-        """작업 계획 생성"""
-        plan = ExecutionPlan(
-            steps=steps,
-            estimated_time=estimated_time,
-            tools=tools or [],
-            risks=risks or [],
-            success_criteria=criteria or []
-        )
-        
-        try:
-            task = self.workflow.create_task_plan(task_id, plan)
-            return {
-                'success': True,
-                'message': f'작업 계획 수립됨: {task.title}',
-                'task_id': task.id,
-                'plan': plan.to_dict()
-            }
-        except ValueError as e:
-            return {'error': str(e)}
-    
-    def complete_current_task(self, summary: str, details: list = None, 
-                            outputs: dict = None, issues: list = None, 
-                            next_steps: list = None) -> Dict[str, Any]:
-        """현재 작업 완료"""
-        current_task = self.workflow.get_current_task()
-        if not current_task:
-            return {'error': '현재 작업이 없습니다.'}
-        
-        result = dict(
-            summary=summary,
-            details=details or [],
-            outputs=outputs or {},
-            issues=issues or [],
-            next_steps=next_steps or []
-        )
-        
-        try:
-            # 작업이 진행 중이 아니면 시작
-            if current_task.status != TaskStatus.IN_PROGRESS:
-                self.workflow.start_task(current_task.id)
-            
-            # 작업 완료
-            task = self.workflow.complete_task(current_task.id, result)
-            
-            # 컨텍스트 업데이트
-            self.context_manager.update_context('last_completed_task', {
-                'id': current_task.id,
-                'title': current_task.title,
-                'summary': summary,
-                'completed_at': datetime.now().isoformat()
-            })
-            
-            # 진행률 업데이트
-            plan = self.workflow.current_plan
-            if plan:
-                progress = plan.get_progress()
-                self.context_manager.update_context('workflow_progress', {
-                    'plan_id': plan.id,
-                    'plan_name': plan.name,
-                    'total_tasks': len(plan.tasks),
-                    'completed_tasks': progress['completed'],
-                    'progress_percent': progress['percentage']
-                })
-            
-            self.context_manager.update_context('last_workflow_action', {
-                'action': 'task_completed',
-                'timestamp': datetime.now().isoformat(),
-                'task_title': current_task.title
-            })
-            
-            # 자동 Git 커밋/푸시 (환경변수 확인)
-            auto_commit = os.getenv('AUTO_GIT_COMMIT', 'false').lower() == 'true'
-            if auto_commit:
-                try:
-                    # Git 유틸리티를 사용한 커밋
-                    from utils.git_utils import git_commit_with_id, git_push
-                    
-                    # 커밋 메시지 생성 (Task ID 포함)
-                    task_id_short = task.id[:8] if len(task.id) > 8 else task.id
-                    commit_message = f"task({task_id_short}): {task.title}\n\n- Summary: {summary}\n- Status: Completed\n- Time: {datetime.now().isoformat()}"
-                    
-                    # Git 커밋 수행
-                    commit_result = git_commit_with_id(commit_message)
-                    
-                    if commit_result['success']:
-                        # Task 결과에 Git 정보 저장
-                        if 'git_info' not in task.result:
-                            task.result['git_info'] = {}
-                        
-                        task.result['git_info'] = {
-                            'commit_id': commit_result['commit_id'],
-                            'commit_id_short': commit_result['commit_id_short'],
-                            'branch': commit_result['branch'],
-                            'author': commit_result['author'],
-                            'email': commit_result['email'],
-                            'timestamp': commit_result['timestamp'],
-                            'files_changed': commit_result['files_changed']
-                        }
-                        
-                        # workflow.json 다시 저장 (Git 정보 포함)
-                        self.workflow.save_data()
-                        
-                        print(f"✅ Git 커밋 성공: {commit_result['commit_id_short']}")
-                        
-                        # 자동 푸시 (환경변수 확인)
-                        auto_push = os.getenv('AUTO_GIT_PUSH', 'false').lower() == 'true'
-                        if auto_push:
-                            push_result = git_push()
-                            if push_result['success']:
-                                print("✅ Git 푸시 성공!")
-                                task.result['git_info']['pushed'] = True
-                            else:
-                                print(f"⚠️ Git 푸시 실패: {push_result.get('error', 'Unknown error')}")
-                                task.result['git_info']['pushed'] = False
-                        else:
-                            task.result['git_info']['pushed'] = False
-                            # workflow.json 한 번 더 저장
-                            self.workflow.save_data()
-                            
-                    else:
-                        error_msg = commit_result.get('error', 'Unknown error')
-                        if 'No changes to commit' in error_msg:
-                            print("ℹ️ 커밋할 변경사항이 없습니다")
-                        else:
-                            print(f"⚠️ Git 커밋 실패: {error_msg}")
-                        
-                except Exception as e:
-                    print(f"❌ Git 작업 중 오류: {str(e)}")
-            
-            # 다음 작업 정보
-            next_task = self.workflow.current_plan.get_next_task() if self.workflow.current_plan else None
-            
-            return {
-                'success': True,
-                'message': f'작업 완료: {task.title}',
-                'completed_task': {
-                    'title': task.title,
-                    'summary': summary
-                },
-                'next_task': {
-                    'title': next_task.title,
-                    'description': next_task.description
-                } if next_task else None
-            }
-        except ValueError as e:
-            return {'error': str(e)}
 
+    def handle_list(self, args: str) -> Dict[str, Any]:
+        """플랜 목록 조회"""
+        try:
+            # workflow.json에서 히스토리 확인
+            import json
+            import os
+            workflow_path = os.path.join("memory", "workflow.json")
+
+            if os.path.exists(workflow_path):
+                with open(workflow_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+
+                plans = []
+                # 현재 플랜
+                if 'current_plan' in data:
+                    current = data['current_plan']
+                    plans.append({
+                        'name': current.get('name'),
+                        'status': 'active',
+                        'created_at': current.get('created_at', ''),
+                        'tasks': len(current.get('tasks', []))
+                    })
+
+                # 히스토리
+                for hist in data.get('history', []):
+                    if 'plan' in hist:
+                        plan = hist['plan']
+                        plans.append({
+                            'name': plan.get('name'),
+                            'status': 'archived',
+                            'created_at': plan.get('created_at', ''),
+                            'archived_at': hist.get('archived_at', ''),
+                            'tasks': len(plan.get('tasks', []))
+                        })
+
+                return {
+                    'success': True,
+                    'plans': plans,
+                    'count': len(plans)
+                }
+            else:
+                return {'success': True, 'plans': [], 'count': 0}
+
+        except Exception as e:
+            return {'error': f'플랜 목록 조회 중 오류: {str(e)}'}
 
     def handle_start(self, args: str) -> Dict[str, Any]:
-        """
-        새 프로젝트 생성
-        사용법: /start 프로젝트명
-        """
+        """새 프로젝트 생성"""
         if not args.strip():
-            return {
-                'status': 'error',
-                'message': '프로젝트 이름을 입력해주세요. 사용법: /start 프로젝트명'
-            }
+            return {'error': '프로젝트 이름을 입력해주세요. 사용법: /start 프로젝트명'}
 
         project_name = args.strip()
 
         try:
-            # start_project 함수 호출
+            # start_project 함수 호출 (ai_helpers에서)
             result = start_project(project_name)
 
             if result.ok:
                 return {
-                    'status': 'success',
+                    'success': True,
                     'message': f'✅ 프로젝트 "{project_name}" 생성 완료!',
                     'data': result.data
                 }
             else:
-                return {
-                    'status': 'error',
-                    'message': f'프로젝트 생성 실패: {result.error}'
-                }
+                return {'error': f'프로젝트 생성 실패: {result.error}'}
 
         except Exception as e:
-            return {
-                'status': 'error',
-                'message': f'프로젝트 생성 중 오류: {str(e)}'
-            }
+            return {'error': f'프로젝트 생성 중 오류: {str(e)}'}

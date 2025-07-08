@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-08 20:33:23
+> 최종 업데이트: 2025-07-08 23:23:21
 
 ## 🎯 프로젝트 개요
 
@@ -98,16 +98,19 @@ ai-coding-brain-mcp/
 │   ├── workflow_backup_20250706_163020.json
 ├── backups/
 │   ├── refactoring_20250708/
-│   └── workflow_refactoring_20250708_192554/
-│       ├── core/
-│       │   ├── context_manager.py
-│       └── workflow/
-│           ├── commands.py
-│           ├── models.py
-│           ├── workflow_manager.py
-│       ├── context.json
-│       ├── helpers_wrapper.py
-│       ├── workflow.json
+│   ├── workflow_refactoring_20250708_192554/
+│   │   ├── core/
+│   │   │   ├── context_manager.py
+│   │   └── workflow/
+│   │       ├── commands.py
+│   │       ├── models.py
+│   │       ├── workflow_manager.py
+│   │   ├── context.json
+│   │   ├── helpers_wrapper.py
+│   │   ├── workflow.json
+│   └── workflow_v3_simplification_20250708_231537/
+│       ├── dispatcher.py
+│       ├── handlers.py
 ├── docs/
 │   ├── architecture/
 │   │   ├── workflow_context_integration.md
@@ -127,7 +130,7 @@ ai-coding-brain-mcp/
 │   ├── circular_dependency_analysis.md
 │   ├── circular_dependency_fix_report.md
 │   ├── double_wrapping_fix_20250708.md
-│   └── ... (28 more files)
+│   └── ... (29 more files)
 ├── memory/
 │   ├── backup/
 │   │   ├── ai-coding-brain-mcp_20250704_195124/
@@ -197,13 +200,10 @@ ai-coding-brain-mcp/
 │           ├── dispatcher.py
 │           └── ... (3 more files)
 │       ├── __init__.py
-│       ├── commands.py
-│       ├── commands_modified.py
-│       └── ... (6 more files)
 │   ├── __init__.py
 │   ├── api_manager.py
 │   ├── atomic_io.py
-│   └── ... (18 more files)
+│   └── ... (17 more files)
 ├── scripts/
 │   ├── git_helper.py
 │   ├── migrate_search_api.py
@@ -249,14 +249,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 446개
-- **디렉토리 수**: 72개
+- **전체 파일 수**: 443개
+- **디렉토리 수**: 73개
 - **파일 타입 분포**:
-  - `.py`: 139개 (31.2%)
-  - `.md`: 68개 (15.2%)
-  - `.ts`: 63개 (14.1%)
+  - `.py`: 132개 (29.8%)
+  - `.md`: 69개 (15.6%)
+  - `.ts`: 63개 (14.2%)
   - `.map`: 60개 (13.5%)
-  - `.json`: 51개 (11.4%)
+  - `.json`: 51개 (11.5%)
 
 ## 🚀 빠른 시작
 

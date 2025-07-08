@@ -526,7 +526,7 @@ def initialize_repl():
         # print("✅ Git Version Manager 초기화 완료")  # MCP JSON 응답 오염 방지
         
         # Git 상태 확인
-        status = git_manager.git_status()
+        status = git_manager.status()
         # print(f"  - 브랜치: {status.get('branch', 'unknown')}")  # MCP JSON 응답 오염 방지
         # print(f"  - 수정된 파일: {len(status.get('modified', []))}개")  # MCP JSON 응답 오염 방지
     except Exception as e:

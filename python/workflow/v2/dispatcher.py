@@ -1,33 +1,48 @@
 """
-워크플로우 명령어 중앙 디스패처
+워크플로우 명령어 중앙 디스패처 v3
 문자열 명령어를 파싱하여 적절한 핸들러 함수로 라우팅
+간소화된 7개 핵심 명령어 체계
 """
 
-from typing import Dict, Callable, Optional, Any
+from typing import Dict, Callable, Optional, Any, Tuple
 from python.ai_helpers.helper_result import HelperResult
 from .handlers import *
 import re
 
 class WorkflowDispatcher:
-    """워크플로우 명령어 중앙 처리기"""
+    """워크플로우 명령어 중앙 처리기 v3"""
 
     def __init__(self):
-        # 명령어 -> 함수 매핑
+        # 7개 핵심 명령어로 간소화
         self.command_map: Dict[str, Callable] = {
-            'plan': workflow_plan,
-            'task': workflow_task,
-            'done': workflow_done,
-            'complete': workflow_done,  # alias
-            'next': workflow_next,
-            'current': workflow_current,
-            'tasks': workflow_tasks,
-            'status': workflow_status,
-            'history': workflow_history,
             'start': workflow_start,
-            'focus': workflow_focus,
-            'list': workflow_list_plans,
-            'build': workflow_build,
-            'review': workflow_review,
+            'focus': workflow_focus,  
+            'plan': workflow_plan,      # list 기능 통합
+            'task': workflow_task,      # tasks, current 기능 통합  
+            'next': workflow_next,      # done, complete 기능 통합
+            'build': workflow_build,    # review 기능 통합
+            'status': workflow_status,  # history 기능 통합
+        }
+
+        # 짧은 별칭 지원
+        self.aliases = {
+            's': 'start',
+            'f': 'focus', 
+            'p': 'plan',
+            't': 'task',
+            'n': 'next',
+            'b': 'build',
+        }
+
+        # 레거시 명령어 -> 새 명령어 매핑 (하위 호환성)
+        self.legacy_map = {
+            'list': ('plan', 'list'),
+            'current': ('focus', ''),
+            'tasks': ('task', ''),
+            'done': ('next', ''),
+            'complete': ('next', ''),
+            'history': ('status', 'history'),
+            'review': ('build', 'review'),
         }
 
     def execute(self, command: str) -> HelperResult:
@@ -59,6 +74,17 @@ class WorkflowDispatcher:
 
             cmd = parts[0].lower()
             args = parts[1] if len(parts) > 1 else ""
+
+            # 별칭 처리
+            if cmd in self.aliases:
+                cmd = self.aliases[cmd]
+
+            # 레거시 명령어 처리
+            if cmd in self.legacy_map:
+                new_cmd, extra_args = self.legacy_map[cmd]
+                cmd = new_cmd
+                if extra_args:
+                    args = f"{extra_args} {args}".strip()
 
             # 함수 찾기
             func = self.command_map.get(cmd)
@@ -98,123 +124,72 @@ class WorkflowDispatcher:
         try:
             # 명령어별 파싱 로직
             if cmd in ['plan', 'task']:
-                # "제목 | 설명" 형식 파싱
+                # 파이프(|)로 제목과 설명 분리
                 if '|' in args:
-                    parts = args.split('|', 1)
-                    title = parts[0].strip()
-                    desc = parts[1].strip()
+                    parts = [p.strip() for p in args.split('|', 1)]
+                    title = parts[0]
+                    description = parts[1] if len(parts) > 1 else ""
                 else:
                     title = args.strip()
-                    desc = ""
+                    description = ""
 
-                if not title:
-                    return HelperResult(False, error=f"/{cmd} requires a title")
+                # 하위 명령어 처리 (예: /plan list, /task current)
+                if cmd == 'plan' and title.lower() == 'list':
+                    return workflow_list_plans()
+                elif cmd == 'task' and title.lower() == 'current':
+                    return workflow_current()
+                elif cmd == 'task' and not title:
+                    return workflow_tasks()  # /task만 입력시 목록 표시
 
-                if cmd == 'plan':
-                    # --reset 옵션 체크
-                    reset = '--reset' in args
-                    if reset:
-                        title = title.replace('--reset', '').strip()
-                    return func(title, desc, reset=reset)
-                else:
-                    return func(title, desc)
+                return func(title, description)
 
-            elif cmd in ['done', 'complete']:
-                # 완료 메모
-                notes = args.strip()
-                return func(notes=notes)
-
-            elif cmd in ['start']:
-                # "프로젝트명 | 설명" 형식
-                if '|' in args:
-                    parts = args.split('|', 1)
-                    name = parts[0].strip()
-                    desc = parts[1].strip()
-                    return func(name, desc)
-                else:
-                    name = args.strip()
-                    if not name:
-                        return HelperResult(False, error="/start requires a project name")
-                    return func(name)
-
-            elif cmd in ['focus']:
-                # 프로젝트명만
-                project = args.strip()
-                if not project:
-                    return HelperResult(False, error="/focus requires a project name")
-                return func(project)
-
-            elif cmd == 'review':
-                # scope 옵션
-                scope = args.strip() if args else "current"
-                return func(scope=scope)
+            elif cmd == 'status':
+                # /status history 처리
+                if args.lower().strip() == 'history':
+                    return workflow_history()
+                return func()
 
             elif cmd == 'build':
-                # --no-readme 옵션
-                update_readme = '--no-readme' not in args
-                return func(update_readme=update_readme)
-
-            elif cmd == 'history':
-                # limit 인자 처리
-                if args:
-                    try:
-                        limit = int(args.strip())
-                        return func(limit=limit)
-                    except ValueError:
-                        return HelperResult(False, 
-                            error=f"Invalid limit for /history: {args}",
-                            data={"usage": "/history [limit]"})
+                # /build review 처리
+                if args.lower().strip() == 'review':
+                    return workflow_review()
+                elif args.lower().strip() == 'task':
+                    # 현재 태스크 문서화
+                    return func('task')
                 return func()
+
+            elif cmd in ['done', 'complete', 'next']:
+                # 완료 메모와 함께
+                note = args.strip() if args else ""
+                return func(note)
+
+            elif cmd == 'focus':
+                # 태스크 번호 또는 빈 값
+                return func(args.strip() if args else "")
+
+            elif cmd == 'start':
+                # 새 플랜 이름 또는 빈 값
+                return func(args.strip() if args else "")
 
             else:
-                # 인자 없는 명령어들
-                if args:
-                    return HelperResult(False, 
-                        error=f"/{cmd} does not accept arguments",
-                        data={"provided_args": args})
-                return func()
+                # 기본: 전체 인자를 그대로 전달
+                return func(args) if args else func()
 
         except TypeError as e:
             # 함수 시그니처 불일치
             return HelperResult(False,
                 error=f"Invalid arguments for /{cmd}: {str(e)}",
                 data={"usage": self._get_command_usage(cmd)})
-        except Exception as e:
-            return HelperResult(False, error=str(e))
 
     def _get_command_usage(self, cmd: str) -> str:
-        """명령어 사용법 반환"""
+        """명령어별 사용법 안내"""
         usage_map = {
-            'plan': "/plan <name> | <description> [--reset]",
-            'task': "/task <title> | <description>",
-            'done': "/done [notes]",
-            'complete': "/complete [notes]",
-            'start': "/start <project_name> [| description]",
-            'focus': "/focus <project_name>",
-            'review': "/review [scope]",
-            'build': "/build [--no-readme]",
-            'next': "/next",
-            'current': "/current",
-            'tasks': "/tasks",
-            'status': "/status",
-            'history': "/history [limit]",
-            'list': "/list"
+            'start': "/start [플랜명] - 새 플랜 시작 또는 재개",
+            'focus': "/focus [태스크번호] - 특정 태스크 선택",
+            'plan': "/plan [이름 | 설명] 또는 /plan list",
+            'task': "/task [제목 | 설명] 또는 /task (목록)",
+            'next': "/next [완료메모] - 완료 후 다음으로",
+            'build': "/build 또는 /build task 또는 /build review",
+            'status': "/status 또는 /status history"
         }
-        return usage_map.get(cmd, f"/{cmd}")
-
-# 글로벌 디스패처 인스턴스
-_dispatcher = WorkflowDispatcher()
-
-def execute_workflow_command(command: str) -> HelperResult:
-    """워크플로우 명령어 실행 (외부 인터페이스)
-
-    Args:
-        command: 실행할 명령어 (예: "/plan My Project")
-
-    Returns:
-        HelperResult: 실행 결과
-    """
-    return _dispatcher.execute(command)
-
-# Export
-__all__ = ['WorkflowDispatcher', 'execute_workflow_command']
+        return usage_map.get(cmd, f"/{cmd} [arguments]")

@@ -1,4 +1,3 @@
-from workflow_manager import WorkflowManager
 """
 Enhanced Flow - 통합 버전
 기존 시스템과 호환되도록 수정된 v2
@@ -9,10 +8,9 @@ import json
 import logging
 import subprocess
 from pathlib import Path
-from python.project_initializer import create_new_project as _create_new_project
+from project_initializer import create_new_project as _create_new_project
 from typing import Dict, Any, Optional
 from datetime import datetime
-from python.workflow.safety_utils import safe_get, safe_json
 
 # path_utils에서 필요한 함수들 import
 from utils.path_utils import write_gitignore, is_git_available
@@ -605,7 +603,7 @@ def _print_project_briefing(project_name: str, workflow_status: Dict[str, Any], 
 
             if git_info.get('modified'):
                 print("\n변경된 파일:")
-                modified_files = safe_get(git_info, 'modified', [])
+                modified_files = git_info.get('modified', [])
                 for file in modified_files[:5]:  # 최대 5개
                     print(f"  - {file}")
                 if modified_count > 5:
@@ -621,7 +619,7 @@ def _print_project_briefing(project_name: str, workflow_status: Dict[str, Any], 
         print(f"[STAT] 진행률: {workflow_status.get('completed_tasks') if workflow_status else 0}/{workflow_status.get('total_tasks') if workflow_status else 0} 완료 ({workflow_status.get('progress_percent', 0):.0f}%)")
 
         if workflow_status and workflow_status.get('current_task'):
-            task = safe_get(workflow_status, 'current_task', {})
+            task = workflow_status.get('current_task', {})
             print(f"▶️  현재 작업: {task.get('title')}")
             print("[TIP] /next로 다음 작업 진행")
     else:
@@ -658,7 +656,7 @@ def show_workflow_status_improved() -> Dict[str, Any]:
         print("━" * 50)
 
         if workflow_status and workflow_status.get('current_task'):
-            task = safe_get(workflow_status, 'current_task', {})
+            task = workflow_status.get('current_task', {})
             print(f"▶️  현재 작업: {task.get('title')}")
             print(f"   상태: {task.get('status', 'pending')}")
             print(f"   설명: {task.get('description', 'N/A')}")

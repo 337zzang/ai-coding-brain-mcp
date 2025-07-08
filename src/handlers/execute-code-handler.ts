@@ -128,7 +128,9 @@ export class ExecuteCodeHandler {
 
       const cleanup = () => {
         if (timeout) clearTimeout(timeout);
-        this.replProcess!.stdout!.removeAllListeners('data');
+        if (this.replProcess && this.replProcess.stdout) {
+          this.replProcess.stdout.removeAllListeners('data');
+        }
       };
 
       // JSON 프레이밍 응답 파싱 (프로토콜 태그 우선, 그 다음 가장 마지막 {...} 블록)

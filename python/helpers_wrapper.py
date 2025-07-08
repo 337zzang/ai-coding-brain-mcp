@@ -30,30 +30,30 @@ def safe_helper(func: Callable) -> Callable:
                 if 'success' in result and 'error' in result:
                     # 기존 형식 변환
                     if result['success']:
-                        return HelperResult.success(result.get('data', result))
+                        return HelperResult(True, data=result.get('data', result))
                     else:
-                        return HelperResult.failure(result.get('error', 'Unknown error'))
+                        return HelperResult(False, error=result.get('error', 'Unknown error'))
                 else:
                     # 일반 dict는 성공으로 처리
-                    return HelperResult.success(result)
+                    return HelperResult(True, data=result)
 
             # bool 결과 처리
             elif isinstance(result, bool):
                 if result:
-                    return HelperResult.success(True)
+                    return HelperResult(True, data=True)
                 else:
-                    return HelperResult.failure('Operation failed')
+                    return HelperResult(False, error='Operation failed')
 
             # None 처리
             elif result is None:
-                return HelperResult.success(None)
+                return HelperResult(True, data=None)
 
             # 기타 모든 결과는 성공으로 처리
             else:
-                return HelperResult.success(result)
+                return HelperResult(True, data=result)
 
         except Exception as e:
-            return HelperResult.failure(str(e))
+            return HelperResult(False, error=str(e))
 
     return wrapper
 

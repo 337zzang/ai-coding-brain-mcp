@@ -4,8 +4,13 @@ import py_compile
 import traceback
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
-from utils.io_helpers import safe_print
 from .helper_result import HelperResult
+
+# safe_print 정의
+def safe_print(*args, **kwargs):
+    """안전한 print - stderr로 출력"""
+    import sys
+    print(*args, file=sys.stderr, **kwargs)
 
 
 class ProjectCompiler:

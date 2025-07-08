@@ -12,6 +12,7 @@ from typing import Optional, List, Dict, Any
 from pathlib import Path
 
 from .models import Plan, Task, TaskStatus
+from .safety_utils import safe_get, safe_json
 from python.utils.io_helpers import write_json, read_json
 
 
@@ -103,9 +104,10 @@ class WorkflowManager:
             self.plans = [self.current_plan]
             print(f"  ✓ 첫 번째 플랜을 현재 플랜으로 설정: {self.current_plan.name}")
 
-        # 기존 history 병합
-        if 'history' in data:
-            self.history.extend(data['history'])
+        # 기존 history 병합 - 안전한 접근
+        history_data = safe_get(data, 'history', [])
+        if history_data:
+            self.history.extend(history_data)
 
         # 즉시 새 형식으로 저장
         self.save_data()
@@ -126,9 +128,9 @@ class WorkflowManager:
             print(f"💾 워크플로우 저장 완료 (원자적 쓰기)")
         except Exception as e:
             print(f"❌ 워크플로우 저장 실패: {e}")
-            # fallback to direct write
+            # fallback to direct write with safe_json
             with open(self.data_file, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
+                f.write(safe_json(data))
 
     def create_plan(self, name: str, description: str = "", reset: bool = False) -> Plan:
         """새 플랜 생성"""
@@ -229,7 +231,7 @@ class WorkflowManager:
                     history.append({
                         'title': task.title,
                         'completed_at': task.completed_at or task.updated_at,
-                        'notes': task.result.get('notes', '') if task.result else task.completion_notes
+                        'notes': safe_get(task.result, 'notes', '') if task.result else getattr(task, 'completion_notes', '')
                     })
 
         # 히스토리의 플랜들

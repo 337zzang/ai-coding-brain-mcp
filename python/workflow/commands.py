@@ -10,6 +10,7 @@ from python.workflow.workflow_manager import WorkflowManager
 from python.workflow.models import ExecutionPlan, TaskStatus
 from python.enhanced_flow import start_project
 from python.core.context_manager import get_context_manager
+from python.workflow.safety_utils import safe_get, safe_json, CommandParser
 
 class WorkflowCommands:
     """워크플로우 명령어 처리 클래스"""
@@ -52,48 +53,55 @@ class WorkflowCommands:
             return {'error': f'알 수 없는 명령어: {cmd}'}
     
     def handle_plan(self, args: str) -> Dict[str, Any]:
-        """계획 생성 처리"""
-        # /plan 이름 | 설명 [--reset]
-        reset = '--reset' in args
-        if reset:
-            args = args.replace('--reset', '').strip()
+        """계획 생성 처리 - 안전성 강화"""
+        try:
+            # --reset 옵션 처리
+            reset = '--reset' in args
+            if reset:
+                args = args.replace('--reset', '').strip()
+            
+            # CommandParser 사용으로 안전한 파싱
+            parsed = CommandParser.parse_plan_command(args)
+            name = parsed['name']
+            description = parsed['description']
+            
+            if not name:
+                return {'error': '계획 이름은 필수입니다'}
         
-        parts = args.split('|', 1)
-        if len(parts) != 2:
-            return {'error': '형식: /plan 계획이름 | 설명 [--reset]'}
+            plan = self.workflow.create_plan(name, description, reset)
         
-        name = parts[0].strip()
-        description = parts[1].strip()
-        
-        plan = self.workflow.create_plan(name, description, reset)
-        
-        # 컨텍스트 업데이트
-        self.context_manager.update_context('current_plan_id', plan.id)
-        self.context_manager.update_context('current_plan_name', name)
-        self.context_manager.update_context('last_workflow_action', {
-            'action': 'plan_created',
-            'timestamp': datetime.now().isoformat(),
-            'plan_name': name
-        })
-        
-        return {
-            'success': True,
-            'message': f'새 계획 생성됨: {name}',
-            'plan_id': plan.id,
-            'reset': reset
-        }
+            # 컨텍스트 업데이트
+            self.context_manager.update_context('current_plan_id', plan.id)
+            self.context_manager.update_context('current_plan_name', name)
+            self.context_manager.update_context('last_workflow_action', {
+                'action': 'plan_created',
+                'timestamp': datetime.now().isoformat(),
+                'plan_name': name
+            })
+            
+            return {
+                'success': True,
+                'message': f'새 계획 생성됨: {name}',
+                'plan_id': plan.id,
+                'reset': reset
+            }
+            
+        except ValueError as e:
+            return {'error': str(e)}
+        except Exception as e:
+            return {'error': f'계획 생성 중 오류: {str(e)}'}
     
     def handle_task(self, args: str) -> Dict[str, Any]:
-        """작업 추가 처리"""
-        # /task 제목 | 설명
-        parts = args.split('|', 1)
-        if len(parts) != 2:
-            return {'error': '형식: /task 작업제목 | 설명'}
-        
-        title = parts[0].strip()
-        description = parts[1].strip()
-        
+        """작업 추가 처리 - 안전성 강화"""
         try:
+            # CommandParser 사용으로 안전한 파싱
+            parsed = CommandParser.parse_task_command(args)
+            title = parsed['title']
+            description = parsed['description']
+            
+            if not title:
+                return {'error': '작업 제목은 필수입니다'}
+        
             task = self.workflow.add_task(title, description)
             
             # 컨텍스트 업데이트
@@ -121,6 +129,8 @@ class WorkflowCommands:
             }
         except ValueError as e:
             return {'error': str(e)}
+        except Exception as e:
+            return {'error': f'작업 추가 중 오류: {str(e)}'}
     
     def handle_approve(self, args: str) -> Dict[str, Any]:
         """작업 승인 처리"""
@@ -275,10 +285,10 @@ class WorkflowCommands:
                     'message': '활성 계획 없음'
                 }
 
-            # 완료된 태스크 수 계산
+            # 완료된 태스크 수 계산 - Enum 비교로 수정
             completed_count = 0
             for task in current_plan.tasks:
-                if hasattr(task, 'status') and task.status == 'completed':
+                if hasattr(task, 'status') and task.status == TaskStatus.COMPLETED:
                     completed_count += 1
 
             total_tasks = len(current_plan.tasks)
@@ -343,9 +353,9 @@ class WorkflowCommands:
                     data = json.load(f)
 
                 plans = []
-                # 현재 플랜
-                if 'current_plan' in data:
-                    current = data['current_plan']
+                # 현재 플랜 - 안전한 접근
+                current = safe_get(data, 'current_plan')
+                if current:
                     plans.append({
                         'name': current.get('name'),
                         'status': 'active',
@@ -355,8 +365,8 @@ class WorkflowCommands:
 
                 # 히스토리
                 for hist in data.get('history', []):
-                    if 'plan' in hist:
-                        plan = hist['plan']
+                    plan = safe_get(hist, 'plan')
+                    if plan:
                         plans.append({
                             'name': plan.get('name'),
                             'status': 'archived',

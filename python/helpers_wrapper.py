@@ -103,11 +103,6 @@ class HelpersWrapper:
         """스마트 커밋 - HelperResult 반환"""
         return self.__getattr__('git_commit_smart')(message, **kwargs)
 
-    def workflow(self, command: str, **kwargs) -> HelperResult:
-        """워크플로우 명령 - HelperResult 반환"""
-        return self.__getattr__('workflow')(command, **kwargs)
-
-
 # 자동 초기화 헬퍼
 def auto_wrap_helpers():
     """builtins의 helpers를 자동으로 래핑"""

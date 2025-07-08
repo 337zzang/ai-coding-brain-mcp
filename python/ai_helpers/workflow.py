@@ -7,7 +7,7 @@ import os
 import json
 from pathlib import Path
 from typing import Optional, Dict, Any
-from helper_result import HelperResult
+from .helper_result import HelperResult
 
 # 프로젝트 루트를 sys.path에 추가
 project_root = Path(__file__).parent.parent.parent

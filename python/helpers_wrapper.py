@@ -10,7 +10,7 @@ from typing import Any, Callable
 from ai_helpers.helper_result import HelperResult
 
 
-from python.workflow.v2.code_integration import WorkflowCodeIntegration
+from python.workflow.v3.code_integration import WorkflowCodeIntegration
 import os
 def safe_helper(func: Callable) -> Callable:
     """헬퍼 함수를 안전하게 래핑하는 데코레이터"""
@@ -183,7 +183,7 @@ class HelpersWrapper:
     def workflow(self, command: str) -> HelperResult:
         """v2: 명령어 실행"""
         try:
-            from python.workflow.v2.dispatcher import execute_workflow_command
+            from python.workflow.v3.dispatcher import execute_workflow_command
             return execute_workflow_command(command)
         except ImportError as e:
             return HelperResult(False, error=f"Workflow 모듈 import 실패: {str(e)}")

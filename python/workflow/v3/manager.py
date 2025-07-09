@@ -622,11 +622,20 @@ class WorkflowManager:
             
         current = self.get_current_task()
         if not current:
-            return HelperResult(True, data={
-                'success': True,
-                'message': "모든 태스크가 완료되었습니다",
-                'completed': True
-            })
+            # 태스크가 하나도 없는 경우와 모든 태스크가 완료된 경우 구분
+            if not self.state.current_plan.tasks:
+                return HelperResult(True, data={
+                    'success': True,
+                    'message': "플랜에 태스크가 없습니다. /task [태스크명]으로 추가하세요",
+                    'completed': False
+                })
+            else:
+                # 모든 태스크가 실제로 완료된 경우
+                return HelperResult(True, data={
+                    'success': True,
+                    'message': "모든 태스크가 완료되었습니다",
+                    'completed': True
+                })
             
         # 현재 태스크 완료
         note = parsed.args.get('note', parsed.title)

@@ -333,9 +333,26 @@ def execute_code_with_workflow(code: str, auto_progress: bool = False) -> Helper
             # 자동 진행 확인
             if auto_progress and result.ok:
                 output_str = str(result.data).lower()
-                if any(kw in output_str for kw in ['완료', 'complete', 'done']):
-                    progress_result = integration.auto_progress_task("코드 실행 성공")
-                    print(f"✅ 태스크 자동 완료")
+                # 더 정교한 키워드 매칭
+                # 1. 명시적 마커 체크 (최우선)
+                if "task_complete:" in output_str or "task_done:" in output_str:
+                    progress_result = integration.auto_progress_task("코드 실행으로 자동 완료")
+                    print(f"✅ 태스크 자동 완료 (명시적 마커)")
+                # 2. 독립된 단어로 존재하는 경우만 체크
+                else:
+                    import re
+                    # 단어 경계를 확인하는 정규식
+                    complete_pattern = r'\b(완료됨?|completed?|done|finished?)\b'
+                    if re.search(complete_pattern, output_str):
+                        # 추가 컨텍스트 확인 (false positive 방지)
+                        negative_patterns = [
+                            r'not\s+(completed?|done|finished?)',
+                            r'(completed?|done|finished?)\s+\w+\.(txt|json|py)',  # 파일명
+                            r'(error|failed|unable)'
+                        ]
+                        if not any(re.search(pat, output_str) for pat in negative_patterns):
+                            progress_result = integration.auto_progress_task("코드 실행 성공")
+                            print(f"✅ 태스크 자동 완료")
 
         return result
 

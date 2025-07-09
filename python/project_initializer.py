@@ -245,7 +245,27 @@ __author__ = "AI Coding Brain MCP"
         logger.debug(f"파일 생성: {file_path}")
     
     def _initialize_context(self, project_path: Path, project_name: str):
-        """프로젝트 컨텍스트 초기화"""
+        """프로젝트 컨텍스트 초기화 - 깨끗한 memory 폴더 보장"""
+        # memory 폴더가 이미 있다면 정리
+        memory_path = project_path / "memory"
+        if memory_path.exists():
+            # 기존 파일들 확인
+            existing_files = list(memory_path.iterdir())
+            if existing_files:
+                logger.warning(f"memory 폴더에 기존 파일 {len(existing_files)}개 발견")
+                # backup 폴더로 이동
+                backup_path = memory_path / "backup" / f"pre_init_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                backup_path.mkdir(parents=True, exist_ok=True)
+                
+                for file in existing_files:
+                    if file.is_file() and not file.name.startswith('.'):
+                        try:
+                            file.rename(backup_path / file.name)
+                            logger.info(f"기존 파일 백업: {file.name}")
+                        except Exception as e:
+                            logger.warning(f"파일 백업 실패 {file.name}: {e}")
+        
+        # 새로운 context 생성
         context_data = {
             "project_name": project_name,
             "created_at": datetime.now().isoformat(),

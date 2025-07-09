@@ -114,6 +114,34 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
         # 3. 디렉토리 전환
         os.chdir(project_path)
         logger.info(f"[OK] 작업 디렉토리 변경: {project_path}")
+        
+        # 3-1. memory 폴더 체크 및 정리
+        memory_path = project_path / 'memory'
+        if not memory_path.exists():
+            # memory 폴더가 없으면 생성
+            memory_path.mkdir(exist_ok=True)
+            logger.info("[OK] memory 폴더 생성")
+        else:
+            # 기존 memory 폴더가 있는 경우, context.json 확인
+            old_context_file = memory_path / 'context.json'
+            if old_context_file.exists():
+                try:
+                    with open(old_context_file, 'r', encoding='utf-8') as f:
+                        old_context = json.load(f)
+                        old_project = old_context.get('project_name')
+                        
+                    # 다른 프로젝트의 context인 경우 백업 후 정리
+                    if old_project and old_project != project_name:
+                        logger.warning(f"[WARN] 다른 프로젝트({old_project})의 memory 발견. 정리 중...")
+                        
+                        # 기존 context만 백업 (다른 파일들은 그대로 유지)
+                        backup_name = f'context_backup_{old_project}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
+                        backup_path = memory_path / backup_name
+                        old_context_file.rename(backup_path)
+                        logger.info(f"[OK] 이전 프로젝트 context 백업: {backup_name}")
+                        
+                except Exception as e:
+                    logger.warning(f"기존 context 확인 중 오류: {e}")
 
         # 4. sys.path 업데이트
         if str(project_path) not in sys.path:
@@ -462,22 +490,31 @@ def _get_project_path(project_name: str) -> Path:
     return project_path
 
 def _load_context(project_name: str) -> Dict[str, Any]:
-    """컨텍스트 로드"""
+    """컨텍스트 로드 - 프로젝트별 독립적 로드"""
     context_file = Path('memory') / 'context.json'
 
     if context_file.exists():
         try:
             with open(context_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                loaded_context = json.load(f)
+                
+                # 중요: 로드된 context의 project_name이 현재 프로젝트와 일치하는지 확인
+                if loaded_context.get('project_name') == project_name:
+                    return loaded_context
+                else:
+                    # 다른 프로젝트의 context인 경우 새로 생성
+                    logger.warning(f"기존 context가 다른 프로젝트({loaded_context.get('project_name')})의 것임. 새 context 생성.")
+                    
         except Exception as e:
             logger.warning(f"컨텍스트 로드 실패: {e}")
 
-    # 기본 컨텍스트
+    # 기본 컨텍스트 생성
     return {
         'project_name': project_name,
         'created_at': datetime.now().isoformat(),
         'description': f'{project_name} 프로젝트',
-        'version': '1.0.0'
+        'version': '1.0.0',
+        'last_modified': datetime.now().isoformat()
     }
 
 def _save_context(ctx: Dict[str, Any]):
@@ -493,14 +530,26 @@ def _save_context(ctx: Dict[str, Any]):
         logger.error(f"컨텍스트 저장 실패: {e}")
 
 def _load_and_show_workflow() -> Dict[str, Any]:
-    """워크플로우 로드 및 상태 반환"""
+    """워크플로우 로드 및 상태 반환 - 프로젝트별 독립적 관리"""
     try:
-        # V3 워크플로우 시스템의 default_workflow.json 확인
+        # 현재 프로젝트명 가져오기
+        current_project = os.path.basename(os.getcwd())
+        
+        # V3 워크플로우 시스템의 프로젝트별 워크플로우 파일 확인
+        v3_project_file = Path(f'memory/workflow_v3/{current_project}_workflow.json')
         v3_default_file = Path('memory/workflow_v3/default_workflow.json')
         
-        if v3_default_file.exists():
-            with open(v3_default_file, 'r', encoding='utf-8') as f:
+        # 프로젝트별 워크플로우 파일 우선 확인
+        workflow_file = v3_project_file if v3_project_file.exists() else v3_default_file
+        
+        if workflow_file.exists():
+            with open(workflow_file, 'r', encoding='utf-8') as f:
                 v3_data = json.load(f)
+            
+            # 워크플로우의 project_name 확인
+            if v3_data.get('project_name') and v3_data.get('project_name') != current_project:
+                logger.warning(f"워크플로우 파일이 다른 프로젝트({v3_data.get('project_name')})의 것임")
+                return {'status': 'no_plan', 'message': '활성 계획 없음'}
             
             # current_plan 확인
             current_plan = v3_data.get('current_plan')
@@ -524,10 +573,10 @@ def _load_and_show_workflow() -> Dict[str, Any]:
                     'current_task': current_task
                 }
         
-        # V3 파일이 없으면 기존 workflow.json 확인
-        workflow_file = Path('memory') / 'workflow.json'
-        if workflow_file.exists():
-            with open(workflow_file, 'r', encoding='utf-8') as f:
+        # V3 파일이 없으면 기존 workflow.json 확인 (하위 호환성)
+        old_workflow_file = Path('memory') / 'workflow.json'
+        if old_workflow_file.exists():
+            with open(old_workflow_file, 'r', encoding='utf-8') as f:
                 workflow_data = json.load(f)
             
             # 구버전 구조 확인

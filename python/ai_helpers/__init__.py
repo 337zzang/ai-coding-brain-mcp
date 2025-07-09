@@ -81,7 +81,7 @@ for module in REQUIRED_MODULES:
             def workflow(command: str):
                 """워크플로우 명령어 실행"""
                 try:
-                    from workflow.v2 import execute_workflow_command
+                    from workflow.v3 import execute_workflow_command
                     return execute_workflow_command(command)
                 except Exception as e:
                     from .helper_result import HelperResult

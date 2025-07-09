@@ -9,7 +9,6 @@ from datetime import datetime
 
 from .manager import WorkflowManager
 from .parser import CommandParser
-from .storage import FileStorage
 from .models import EventType
 
 
@@ -19,8 +18,7 @@ class WorkflowCodeIntegration:
     def __init__(self, project_name: str):
         self.project_name = project_name
         self.storage_path = os.path.join('memory', 'workflow_v3')
-        self.storage = FileStorage(self.storage_path)
-        self.manager = WorkflowManager(storage=self.storage)
+        self.manager = WorkflowManager(project_name)
         self.parser = CommandParser()
         
     def get_current_task_context(self) -> Optional[Dict[str, Any]]:

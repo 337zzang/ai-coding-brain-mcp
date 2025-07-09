@@ -7,29 +7,26 @@ import os
 
 from .manager import WorkflowManager
 from .parser import CommandParser
-from .storage import FileStorage
+from .storage import WorkflowStorage
 from .errors import WorkflowError
 
 
 class WorkflowDispatcher:
     """워크플로우 명령어 디스패처"""
     
-    def __init__(self, storage_path: str = None):
+    def __init__(self, project_name: str = "default", storage_path: str = None):
         if storage_path is None:
             storage_path = os.path.join('memory', 'workflow_v3')
         
-        self.storage = FileStorage(storage_path)
-        self.manager = WorkflowManager(storage=self.storage)
+        self.project_name = project_name
+        self.manager = WorkflowManager(project_name)
         self.parser = CommandParser()
         
     def execute(self, command: str) -> Dict[str, Any]:
         """명령어 실행"""
         try:
-            # 명령어 파싱
-            parsed = self.parser.parse(command)
-            
             # 매니저로 실행
-            result = self.manager.execute(parsed)
+            result = self.manager.execute_command(command)
             
             return result
             

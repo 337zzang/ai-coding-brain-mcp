@@ -1,4 +1,4 @@
 
 
-# V2 Workflow System
-from .workflow.v2 import WorkflowDispatcher, WorkflowV2Manager
+# V3 Workflow System
+from .workflow.v3 import WorkflowDispatcher, WorkflowManager

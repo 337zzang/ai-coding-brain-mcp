@@ -240,16 +240,21 @@ class HelpersWrapper:
     def workflow_done(self, notes: str = "") -> HelperResult:
         """v2: 태스크 완료"""
         try:
-            from workflow.v2 import complete_current_task
-            return complete_current_task(notes)
+            from workflow.v3 import WorkflowManager
+            # V2 complete_current_task는 V3에서 다르게 처리됨
+            manager = WorkflowManager("default")
+            return manager.execute_command(f"/next {notes}")
         except Exception as e:
             return HelperResult(False, error=str(e))
 
     def workflow_status(self) -> HelperResult:
         """v2: 상태 조회"""
         try:
-            from workflow.v2 import get_status
-            return get_status()
+            from workflow.v3 import WorkflowManager
+            # V2 get_status는 V3에서 다르게 처리됨
+            manager = WorkflowManager("default")
+            result = manager.execute_command("/status")
+            return HelperResult(True, result)
         except Exception as e:
             return HelperResult(False, error=str(e))
 

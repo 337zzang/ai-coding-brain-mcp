@@ -209,23 +209,14 @@ class WorkflowDispatcher:
 
 
 # 외부 인터페이스 함수 (순환 참조 방지)
-def execute_workflow_command(command: str) -> dict:
+def execute_workflow_command(command: str) -> HelperResult:
     """워크플로우 명령어 실행 - 통합 인터페이스
 
     Args:
         command: 실행할 워크플로우 명령어 (예: '/status', '/plan list')
 
     Returns:
-        dict: 실행 결과 {'success': bool, 'data': Any, 'error': str}
+        HelperResult: 실행 결과
     """
     dispatcher = WorkflowDispatcher()
-    result = dispatcher.execute(command)
-
-    # HelperResult를 dict로 변환
-    if hasattr(result, 'ok'):
-        return {
-            'success': result.ok,
-            'data': result.data if result.ok else None,
-            'error': result.error if not result.ok else None
-        }
-    return result
+    return dispatcher.execute(command)

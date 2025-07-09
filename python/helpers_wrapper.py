@@ -183,10 +183,12 @@ class HelpersWrapper:
     def workflow(self, command: str) -> HelperResult:
         """v2: 명령어 실행"""
         try:
-            from workflow.v2.dispatcher import execute_workflow_command
+            from python.workflow.v2.dispatcher import execute_workflow_command
             return execute_workflow_command(command)
+        except ImportError as e:
+            return HelperResult(False, error=f"Workflow 모듈 import 실패: {str(e)}")
         except Exception as e:
-            return HelperResult(False, error=str(e))
+            return HelperResult(False, error=f"Workflow 실행 오류: {str(e)}")
 
     def list_functions(self) -> HelperResult:
         """사용 가능한 함수 목록 조회 (v44 개선)"""

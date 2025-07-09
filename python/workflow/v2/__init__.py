@@ -4,7 +4,7 @@ from .dispatcher import WorkflowDispatcher
 from .handlers import *
 
 # 외부에서 사용할 주요 함수
-def execute_workflow_command(command: str) -> dict:
+def execute_workflow_command(command: str):
     """워크플로우 명령어 실행 - 통합 인터페이스"""
     dispatcher = WorkflowDispatcher()
     return dispatcher.execute(command)

@@ -166,6 +166,50 @@ class WorkflowManager:
             logger.error(f"Failed to add task: {e}")
             return None
             
+    def add_task_note(self, note: str, task_id: str = None) -> Optional[Task]:
+        """현재 태스크 또는 지정된 태스크에 노트 추가"""
+        if not self.state.current_plan:
+            logger.warning("No active plan for adding note")
+            return None
+            
+        # 태스크 찾기
+        if task_id:
+            # 특정 태스크 ID로 찾기
+            task = None
+            for t in self.state.current_plan.tasks:
+                if t.id == task_id:
+                    task = t
+                    break
+            if not task:
+                logger.warning(f"Task not found: {task_id}")
+                return None
+        else:
+            # 현재 태스크 사용
+            task = self.get_current_task()
+            if not task:
+                logger.warning("No current task to add note")
+                return None
+                
+        # 노트 추가
+        task.notes.append(note)
+        task.updated_at = datetime.now(timezone.utc)
+        
+        # 이벤트 기록
+        event = WorkflowEvent(
+            type=EventType.NOTE_ADDED,
+            plan_id=self.state.current_plan.id,
+            task_id=task.id,
+            details={'note': note}
+        )
+        self.state.add_event(event)
+        self.event_store.add(event)
+        
+        # 저장
+        self._save_data()
+        
+        logger.info(f"Note added to task {task.title}: {note[:50]}...")
+        return task
+            
     def complete_task(self, task_id: str, note: str = "") -> bool:
         """태스크 완료 처리"""
         if not self.state.current_plan:
@@ -450,6 +494,9 @@ class WorkflowManager:
                     self.state.current_plan.current_task_index = i
                     break
                     
+            # 변경사항 저장
+            self._save_data()
+            
             return HelperResult(True, data={
                 'success': True,
                 'focused_task': {
@@ -513,6 +560,26 @@ class WorkflowManager:
         if parsed.subcommand == 'current':
             # 현재 태스크
             return self._handle_focus(parsed)
+            
+        elif parsed.subcommand == 'note':
+            # 현재 태스크에 노트 추가
+            note = parsed.args.get('note', parsed.title)
+            if not note:
+                return HelperResult(False, error="노트 내용을 입력해주세요")
+                
+            task = self.add_task_note(note)
+            if task:
+                return HelperResult(True, data={
+                    'success': True,
+                    'task': {
+                        'id': task.id,
+                        'title': task.title,
+                        'notes': task.notes
+                    },
+                    'message': f"✅ 노트 추가: {note[:50]}..."
+                })
+            else:
+                return HelperResult(False, error="노트 추가 실패")
             
         elif parsed.title:
             # 새 태스크 추가

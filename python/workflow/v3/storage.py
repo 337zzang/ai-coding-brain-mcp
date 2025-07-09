@@ -49,15 +49,10 @@ class WorkflowStorage:
                 self._create_backup()
                 
             # JSON 직렬화
-            # JSON 직렬화
             json_data = json.dumps(data, indent=2, ensure_ascii=False)
 
             # 원자적 쓰기 (text 모드로 저장)
             atomic_write(str(self.main_file), json_data, mode='text')
-            # 원자적 쓰기
-            # 디버그: 데이터 타입 확인
-            print(f"[DEBUG] Saving data type: {type(data)}")
-            print(f"[DEBUG] Data sample: {str(data)[:100]}")
             
             logger.info(f"Saved workflow data for {self.project_name}")
             return True

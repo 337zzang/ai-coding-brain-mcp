@@ -208,6 +208,21 @@ class CommandParser:
             parsed.subcommand = 'current'
             return
             
+        # note 서브커맨드 확인
+        if args_lower.startswith('note '):
+            parsed.subcommand = 'note'
+            note_text = args[5:].strip()  # 'note ' 제거
+            # 따옴표 제거
+            if note_text.startswith('"') and note_text.endswith('"'):
+                note_text = note_text[1:-1]
+            elif note_text.startswith("'") and note_text.endswith("'"):
+                note_text = note_text[1:-1]
+            if not note_text:
+                raise ValueError("노트 내용을 입력해주세요")
+            parsed.title = note_text  # 노트 내용을 title에 저장
+            parsed.args['note'] = note_text
+            return
+            
         # add 키워드 제거
         if args_lower.startswith('add '):
             args = args[4:].strip()

@@ -9,6 +9,9 @@ from typing import List, Dict, Any, Optional
 import uuid
 import json
 
+# 통합 이벤트 타입 import
+from events.unified_event_types import EventType
+
 # v3에서 추가된 에러 처리 import
 try:
     from .errors import InputValidator, WorkflowError
@@ -32,25 +35,6 @@ class PlanStatus(str, Enum):
     ACTIVE = "active"
     COMPLETED = "completed"
     ARCHIVED = "archived"
-
-
-class EventType(str, Enum):
-    """워크플로우 이벤트 타입"""
-    # 플랜 관련
-    PLAN_CREATED = "plan_created"
-    PLAN_STARTED = "plan_started"
-    PLAN_COMPLETED = "plan_completed"
-    PLAN_ARCHIVED = "plan_archived"
-    
-    # 태스크 관련
-    TASK_ADDED = "task_added"
-    TASK_STARTED = "task_started"
-    TASK_COMPLETED = "task_completed"
-    TASK_CANCELLED = "task_cancelled"
-    TASK_UPDATED = "task_updated"
-    
-    # 기타
-    NOTE_ADDED = "note_added"
 
 
 @dataclass
@@ -100,6 +84,49 @@ class WorkflowEvent:
             details=data.get('details', {}),
             metadata=data.get('metadata', {})
         )
+    
+    @classmethod
+    def create_plan_event(cls, event_type: EventType, plan: 'WorkflowPlan', **kwargs) -> 'WorkflowEvent':
+        """플랜 관련 이벤트 생성 헬퍼"""
+        details = {
+            "plan_id": plan.id,
+            "plan_name": plan.name,
+            "plan_status": plan.status.value,
+            **kwargs
+        }
+        return cls(type=event_type, plan_id=plan.id, details=details)
+    
+    @classmethod
+    def create_task_event(cls, event_type: EventType, task: 'WorkflowTask', plan_id: str, **kwargs) -> 'WorkflowEvent':
+        """태스크 관련 이벤트 생성 헬퍼"""
+        details = {
+            "task_id": task.id,
+            "task_title": task.title,
+            "task_status": task.status.value,
+            **kwargs
+        }
+        return cls(type=event_type, plan_id=plan_id, task_id=task.id, details=details)
+    
+    @classmethod
+    def create_note_event(cls, event_type: EventType, task_id: str, plan_id: str, note: str, **kwargs) -> 'WorkflowEvent':
+        """노트 관련 이벤트 생성 헬퍼"""
+        details = {
+            "task_id": task_id,
+            "note": note,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            **kwargs
+        }
+        return cls(type=event_type, plan_id=plan_id, task_id=task_id, details=details)
+    
+    @classmethod
+    def create_system_event(cls, event_type: EventType, message: str, plan_id: str = "", **kwargs) -> 'WorkflowEvent':
+        """시스템 관련 이벤트 생성 헬퍼"""
+        details = {
+            "message": message,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            **kwargs
+        }
+        return cls(type=event_type, plan_id=plan_id, details=details)
 
 
 @dataclass
@@ -268,10 +295,20 @@ class WorkflowPlan:
         
     def get_current_task(self) -> Optional[Task]:
         """현재 작업 중인 태스크 반환"""
-        # 첫 번째 미완료 태스크 찾기
-        for task in self.tasks:
+        # current_task_index가 유효하면 해당 태스크 반환
+        if 0 <= self.current_task_index < len(self.tasks):
+            task = self.tasks[self.current_task_index]
+            # 완료되지 않은 태스크만 반환
             if task.status in [TaskStatus.TODO, TaskStatus.IN_PROGRESS]:
                 return task
+        
+        # 폴백: 첫 번째 미완료 태스크 찾기
+        for i, task in enumerate(self.tasks):
+            if task.status in [TaskStatus.TODO, TaskStatus.IN_PROGRESS]:
+                # current_task_index 자동 업데이트
+                self.current_task_index = i
+                return task
+        
         return None
 
         

@@ -62,10 +62,21 @@ class WorkflowManager:
         if data:
             try:
                 self.state = WorkflowState.from_dict(data)
-                self.event_store.from_list(self.state.events)
-                logger.info(f"Loaded workflow data for {self.project_name}")
+                logger.info(f"Loaded workflow state for {self.project_name}")
+                
+                # events 로드는 별도로 처리 (실패해도 state는 유지)
+                try:
+                    if hasattr(self.state, 'events') and self.state.events:
+                        self.event_store.from_list(self.state.events)
+                        logger.info(f"Loaded {len(self.state.events)} events")
+                except Exception as e:
+                    logger.warning(f"Failed to load events: {e}")
+                    self.event_store = EventStore()
+                    
             except Exception as e:
                 logger.error(f"Failed to parse workflow data: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
                 # 파싱 실패 시 새로운 상태로 시작
                 self.state = WorkflowState()
                 self.event_store = EventStore()

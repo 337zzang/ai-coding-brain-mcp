@@ -146,9 +146,20 @@ class WorkflowDispatcher:
                     return workflow_current()
                 elif cmd == 'task' and not title:
                     return workflow_tasks()  # /task만 입력시 목록 표시
+                # task add 명령어 처리 - 'add' 키워드 제거
+                elif cmd == 'task' and (title.lower().startswith('add ') or title.lower() == 'add'):
+                    if title.lower() == 'add':
+                        # /task add만 입력한 경우
+                        return HelperResult(False, error="태스크 이름을 입력해주세요. 예: /task add 데이터베이스 설계")
+                    title = title[4:].strip()  # 'add ' 제거
+                    if not title:  # 빈 제목 체크
+                        return HelperResult(False, error="태스크 이름을 입력해주세요. 예: /task add 데이터베이스 설계")
+                    return func(title, description)
 
                 # plan 명령어에 reset 파라미터 전달
                 if cmd == 'plan':
+                    if not title:  # 빈 제목 체크
+                        return HelperResult(False, error="플랜 이름을 입력해주세요. 예: /plan 새 프로젝트")
                     return func(title, description, reset)
                 else:
                     return func(title, description)
@@ -178,8 +189,11 @@ class WorkflowDispatcher:
                 return func(args.strip() if args else "")
 
             elif cmd == 'start':
-                # 새 플랜 이름 또는 빈 값
-                return func(args.strip() if args else "")
+                # 새 플랜 이름 필수
+                plan_name = args.strip() if args else ""
+                if not plan_name:
+                    return HelperResult(False, error="플랜 이름을 입력해주세요. 예: /start 새 프로젝트")
+                return func(plan_name)
 
             else:
                 # 기본: 전체 인자를 그대로 전달

@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-09 10:56:11
+> 최종 업데이트: 2025-07-09 11:30:45
 
 ## 🎯 프로젝트 개요
 
@@ -147,6 +147,8 @@ ai-coding-brain-mcp/
 │   │   │   ├── workflow.py
 │   │   │   ├── workflow_commands.py
 │   │   │   └── ... (4 more files)
+│   │   ├── workflow_v2_20250709/
+│   │   │   └── v2/
 │   │   └── workflow_v3_migration_20250709_101958/
 │   │       ├── v2/
 │   │       └── workflow_v2/
@@ -157,9 +159,16 @@ ai-coding-brain-mcp/
 │   ├── cache/
 │   │   ├── file_directory.json
 │   ├── context/
-│   └── workflow_v2/
-│       ├── ai-coding-brain-mcp_workflow.json
-│       ├── final_test_workflow.json
+│   ├── workflow_v2/
+│   │   ├── ai-coding-brain-mcp_workflow.json
+│   │   ├── final_test_workflow.json
+│   └── workflow_v3/
+│       └── backups/
+│           ├── ai-coding-brain-mcp/
+│           ├── default/
+│           └── test_project/
+│       ├── default_workflow.json
+│       ├── test_project_workflow.json
 │   ├── context.json
 │   ├── context_backup_20250701_145124_before_optimization.json
 │   ├── context_backup_ai-coding-brain-mcp_20250703_153224.json
@@ -206,16 +215,11 @@ ai-coding-brain-mcp/
 │   │   └── tree-sitter-typescript/
 │   │       └── bindings/
 │   └── workflow/
-│       ├── v2/
-│       │   ├── __init__.py
-│       │   ├── code_integration.py
-│       │   ├── context_integration.py
-│       │   └── ... (4 more files)
 │       └── v3/
 │           ├── __init__.py
+│           ├── code_integration.py
 │           ├── context_integration.py
-│           ├── errors.py
-│           └── ... (7 more files)
+│           └── ... (9 more files)
 │       ├── __init__.py
 │   ├── __init__.py
 │   ├── api_manager.py
@@ -255,7 +259,7 @@ ai-coding-brain-mcp/
 ├── .ai-brain.config.json
 ├── .eslintrc.json
 ├── check_syntax.py
-└── ... (37 more files)
+└── ... (38 more files)
 ```
 - `.ai-brain.config.json`: AI Coding Brain 설정
 - `package.json`: Node.js 프로젝트 설정
@@ -266,14 +270,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 472개
-- **디렉토리 수**: 80개
+- **전체 파일 수**: 482개
+- **디렉토리 수**: 86개
 - **파일 타입 분포**:
-  - `.py`: 153개 (32.4%)
-  - `.md`: 75개 (15.9%)
-  - `.ts`: 63개 (13.3%)
-  - `.map`: 60개 (12.7%)
-  - `.json`: 56개 (11.9%)
+  - `.py`: 159개 (33.0%)
+  - `.md`: 76개 (15.8%)
+  - `.ts`: 63개 (13.1%)
+  - `.map`: 60개 (12.4%)
+  - `.json`: 59개 (12.2%)
 
 ## 🚀 빠른 시작
 

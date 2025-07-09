@@ -181,7 +181,7 @@ class HelpersWrapper:
 
 
     def workflow(self, command: str) -> HelperResult:
-        """v2: 명령어 실행"""
+        """v3: 명령어 실행"""
         try:
             from python.workflow.v3.dispatcher import execute_workflow_command
             return execute_workflow_command(command)
@@ -238,7 +238,7 @@ class HelpersWrapper:
                 'message': '함수 목록을 가져올 수 없지만 helpers는 정상 작동합니다'
             })
     def workflow_done(self, notes: str = "") -> HelperResult:
-        """v2: 태스크 완료"""
+        """v3: 태스크 완료"""
         try:
             from workflow.v3 import WorkflowManager
             # V2 complete_current_task는 V3에서 다르게 처리됨
@@ -248,7 +248,7 @@ class HelpersWrapper:
             return HelperResult(False, error=str(e))
 
     def workflow_status(self) -> HelperResult:
-        """v2: 상태 조회"""
+        """v3: 상태 조회"""
         try:
             from workflow.v3 import WorkflowManager
             # V2 get_status는 V3에서 다르게 처리됨
@@ -259,11 +259,6 @@ class HelpersWrapper:
             return HelperResult(False, error=str(e))
 
 
-    def process_workflow_command(self, command: str) -> HelperResult:
-        """V1 호환성을 위한 래퍼"""
-        return self.workflow(command)
-
-# 자동 초기화 헬퍼
 def auto_wrap_helpers():
     """builtins의 helpers를 자동으로 래핑"""
     import builtins

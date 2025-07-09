@@ -51,6 +51,34 @@ class HelperResult:
         else:
             return f"HelperResult(ok=False, error={repr(self.error)})"
 
+    def __str__(self) -> str:
+        """문자열 변환 시 data 반환 (v44 개선)"""
+        if self.ok and self.data is not None:
+            return str(self.data)
+        elif not self.ok and self.error:
+            return f"Error: {self.error}"
+        else:
+            return ""
+
+    def get_data(self, default=None):
+        """안전한 데이터 접근 (v44 신규)"""
+        if self.ok:
+            # 이중 래핑 체크
+            if isinstance(self.data, HelperResult):
+                return self.data.get_data(default)
+            return self.data if self.data is not None else default
+        return default
+
+    def is_nested(self) -> bool:
+        """이중 래핑 체크 (v44 신규)"""
+        return isinstance(self.data, HelperResult)
+
+    def unwrap_nested(self) -> 'HelperResult':
+        """이중 래핑 해제 (v44 신규)"""
+        if self.is_nested():
+            return self.data
+        return self
+
     def __bool__(self) -> bool:
         """if result: 형태로 사용 가능"""
         return self.ok

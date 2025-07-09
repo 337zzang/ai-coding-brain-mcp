@@ -67,8 +67,30 @@ class HelpersWrapper:
         self._helpers = helpers_instance
         self._cache = {}
 
+        # v44: 특정 메서드들을 명시적으로 바인딩 (캐시 우선순위 문제 해결)
+        self._bind_override_methods()
+
+    def _bind_override_methods(self):
+        """클래스에 정의된 메서드들을 명시적으로 바인딩"""
+        # 이 메서드들은 HelpersWrapper에서 오버라이드되었으므로
+        # __getattr__를 거치지 않고 직접 사용되어야 함
+        override_methods = ['list_functions', 'workflow', 'read_file']
+        for method_name in override_methods:
+            if hasattr(self.__class__, method_name):
+                # 클래스 메서드를 인스턴스에 바인딩
+                method = getattr(self.__class__, method_name)
+                if callable(method):
+                    # 바운드 메서드로 설정
+                    setattr(self, method_name, method.__get__(self, self.__class__))
+
     def __getattr__(self, name: str) -> Any:
         """동적으로 helpers 메서드를 래핑"""
+        # v44: 오버라이드된 메서드는 클래스에서 직접 가져오기
+        if name in ['list_functions', 'workflow', 'read_file']:
+            if hasattr(self.__class__, name):
+                method = getattr(self.__class__, name)
+                return method.__get__(self, self.__class__)
+
         # 캐시 확인
         if name in self._cache:
             return self._cache[name]
@@ -108,8 +130,37 @@ class HelpersWrapper:
 
     # 자주 사용하는 메서드들에 대한 타입 힌트와 문서화
     def read_file(self, path: str, **kwargs) -> HelperResult:
-        """파일 읽기 - HelperResult 반환"""
-        return self.__getattr__('read_file')(path, **kwargs)
+        """파일 읽기 - offset/length 파라미터 지원 (v44 개선)"""
+        try:
+            # Desktop Commander의 read_file 파라미터 매핑
+            dc_params = {}
+
+            # offset과 length는 Desktop Commander에서 지원
+            if 'offset' in kwargs:
+                dc_params['offset'] = kwargs['offset']
+            if 'length' in kwargs:
+                dc_params['length'] = kwargs['length']
+            if 'isUrl' in kwargs:
+                dc_params['isUrl'] = kwargs['isUrl']
+
+            # Desktop Commander의 read_file 호출
+            if hasattr(self._dc, 'read_file'):
+                # Desktop Commander 사용
+                result = self._dc.read_file(path=path, **dc_params)
+                if hasattr(result, 'data'):
+                    return HelperResult(True, result.data)
+                else:
+                    return HelperResult(True, result)
+            else:
+                # AI Helpers fallback
+                result = self._helpers.read_file(path)
+                if hasattr(result, 'ok'):
+                    return result
+                else:
+                    return HelperResult(True, result)
+
+        except Exception as e:
+            return HelperResult(False, error=f"read_file 오류: {str(e)}")
 
     def create_file(self, path: str, content: str, **kwargs) -> HelperResult:
         """파일 생성/쓰기 - HelperResult 반환"""
@@ -131,6 +182,54 @@ class HelpersWrapper:
             return execute_workflow_command(command)
         except Exception as e:
             return HelperResult(False, error=str(e))
+
+    def list_functions(self) -> HelperResult:
+        """사용 가능한 함수 목록 조회 (v44 개선)"""
+        try:
+            # 직접 구현 - utils 모듈 의존성 제거
+            funcs = {}
+            modules = {}
+            suggestions = {}
+
+            # helpers의 모든 public 메서드 수집
+            for attr in dir(self._helpers):
+                if not attr.startswith('_'):
+                    obj = getattr(self._helpers, attr, None)
+                    if callable(obj):
+                        funcs[attr] = obj
+                        # 모듈별 분류
+                        module = getattr(obj, '__module__', 'unknown')
+                        if module not in modules:
+                            modules[module] = []
+                        modules[module].append(attr)
+
+            # 자주 착각하는 함수명 제안
+            suggestions = {
+                'get_project_name': 'flow_project 또는 execute_code에서 os.getcwd()',
+                'list_functions': 'helpers.list_functions() - 이제 사용 가능!',
+                'read_file_lines': 'read_file() 사용',
+                'write_file_lines': 'write_file() 또는 create_file() 사용'
+            }
+
+            # 사용법 안내
+            usage = "helpers.함수명() 형태로 사용하세요"
+
+            result = {
+                'total_count': len(funcs),
+                'functions': modules,
+                'suggestions': suggestions,
+                'usage': usage
+            }
+
+            return HelperResult(True, result)
+
+        except Exception as e:
+            # 오류 시에도 기본 정보 제공
+            return HelperResult(True, {
+                'total_count': 0,
+                'error': str(e),
+                'message': '함수 목록을 가져올 수 없지만 helpers는 정상 작동합니다'
+            })
     def workflow_done(self, notes: str = "") -> HelperResult:
         """v2: 태스크 완료"""
         try:

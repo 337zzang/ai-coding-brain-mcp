@@ -66,8 +66,37 @@ def _try_import_module(module_name: str, required: bool = False) -> Optional[Any
 # 1. 필수 모듈 로드 (실패 시 ImportError 발생)
 logger.info("=== AI Helpers 초기화 시작 ===")
 
+# workflow는 특별 처리 필요
 for module in REQUIRED_MODULES:
-    _try_import_module(module, required=True)
+    if module == "workflow":
+        # workflow는 python 폴더 아래에 있으므로 별도 처리
+        try:
+            import sys
+            import os
+            parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            if parent_dir not in sys.path:
+                sys.path.insert(0, parent_dir)
+            
+            # workflow 함수 정의
+            def workflow(command: str):
+                """워크플로우 명령어 실행"""
+                try:
+                    from workflow.v2 import execute_workflow_command
+                    return execute_workflow_command(command)
+                except Exception as e:
+                    from .helper_result import HelperResult
+                    return HelperResult(False, error=str(e))
+            
+            globals()['workflow'] = workflow
+            logger.info("✅ workflow 함수 로드 성공")
+            _load_status['workflow'] = {"status": "loaded", "function": workflow}
+        except Exception as e:
+            logger.error(f"❌ 필수 모듈 workflow 로드 실패: {e}")
+            _load_status['workflow'] = {"status": "failed", "error": str(e)}
+            _failed_modules.append('workflow')
+            raise
+    else:
+        _try_import_module(module, required=True)
 
 # 2. 선택적 모듈 로드 (실패해도 계속 진행)
 for module in OPTIONAL_MODULES:

@@ -486,45 +486,61 @@ def _save_context(ctx: Dict[str, Any]):
 
 def _load_and_show_workflow() -> Dict[str, Any]:
     """워크플로우 로드 및 상태 반환"""
-    workflow_file = Path('memory') / 'workflow.json'
-
-    if not workflow_file.exists():
-        return {'status': 'no_workflow', 'message': '워크플로우 없음'}
-
     try:
-        with open(workflow_file, 'r', encoding='utf-8') as f:
-            workflow_data = json.load(f)
+        # V3 워크플로우 시스템의 default_workflow.json 확인
+        v3_default_file = Path('memory/workflow_v3/default_workflow.json')
         
-        # JSON 로드 결과 검증 추가
-        if not workflow_data or not isinstance(workflow_data, dict):
-            return {'status': 'no_workflow', 'message': '유효한 워크플로우 데이터 없음'}
-
-        # 현재 계획 찾기 - 수정된 구조에 맞게
-        current_plan = workflow_data.get('current_plan')
-        if not current_plan:
-            return {'status': 'no_plan', 'message': '활성 계획 없음'}
-
-        # 상태 계산
-        tasks = current_plan.get('tasks', [])
-        completed = sum(1 for t in tasks if t.get('status') == 'completed')
-
-        # 현재 작업 찾기
-        current_task = None
-        for task in tasks:
-            if task.get('status') in ['pending', 'in_progress']:
-                current_task = task
-                break
-
-        return {
-            'status': 'active',
-            'plan_name': current_plan.get('name'),
-            'description': current_plan.get('description'),
-            'total_tasks': len(tasks),
-            'completed_tasks': completed,
-            'progress_percent': (completed / len(tasks) * 100) if tasks else 0,
-            'current_task': current_task
-        }
-
+        if v3_default_file.exists():
+            with open(v3_default_file, 'r', encoding='utf-8') as f:
+                v3_data = json.load(f)
+            
+            # current_plan 확인
+            current_plan = v3_data.get('current_plan')
+            if current_plan:
+                tasks = current_plan.get('tasks', [])
+                completed = sum(1 for t in tasks if t.get('status') == 'completed')
+                
+                # 현재 작업 찾기
+                current_task = None
+                current_index = current_plan.get('current_task_index', 0)
+                if 0 <= current_index < len(tasks):
+                    current_task = tasks[current_index]
+                
+                return {
+                    'status': 'active',
+                    'plan_name': current_plan.get('name', '이름 없음'),
+                    'description': current_plan.get('description', ''),
+                    'total_tasks': len(tasks),
+                    'completed_tasks': completed,
+                    'progress_percent': (completed / len(tasks) * 100) if tasks else 0,
+                    'current_task': current_task
+                }
+        
+        # V3 파일이 없으면 기존 workflow.json 확인
+        workflow_file = Path('memory') / 'workflow.json'
+        if workflow_file.exists():
+            with open(workflow_file, 'r', encoding='utf-8') as f:
+                workflow_data = json.load(f)
+            
+            # 구버전 구조 확인
+            current_plan = workflow_data.get('current_plan')
+            if current_plan:
+                tasks = current_plan.get('tasks', [])
+                completed = sum(1 for t in tasks if t.get('status') == 'completed')
+                current_task = next((t for t in tasks if t.get('status') in ['pending', 'in_progress']), None)
+                
+                return {
+                    'status': 'active',
+                    'plan_name': current_plan.get('name'),
+                    'description': current_plan.get('description'),
+                    'total_tasks': len(tasks),
+                    'completed_tasks': completed,
+                    'progress_percent': (completed / len(tasks) * 100) if tasks else 0,
+                    'current_task': current_task
+                }
+        
+        return {'status': 'no_plan', 'message': '활성 계획 없음'}
+        
     except Exception as e:
         logger.error(f"워크플로우 로드 실패: {e}")
         return {'status': 'error', 'message': str(e)}

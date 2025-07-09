@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-09 11:30:45
+> 최종 업데이트: 2025-07-09 12:38:20
 
 ## 🎯 프로젝트 개요
 
@@ -97,6 +97,13 @@ ai-coding-brain-mcp/
 │   ├── context_backup_20250706_163020.json
 │   ├── workflow_backup_20250706_163020.json
 ├── backups/
+│   ├── legacy_cleanup_20250709_120454/
+│   │   └── workflow_v2_data/
+│   │       ├── ai-coding-brain-mcp_workflow.json
+│   │       ├── final_test_workflow.json
+│   │   ├── context_manager_backup.py
+│   │   ├── helpers_wrapper_backup.py
+│   │   ├── storage_backup.py
 │   ├── refactoring_20250708/
 │   ├── workflow_refactoring_20250708_192554/
 │   │   ├── core/
@@ -132,7 +139,7 @@ ai-coding-brain-mcp/
 │   ├── circular_dependency_analysis.md
 │   ├── circular_dependency_fix_report.md
 │   ├── double_wrapping_fix_20250708.md
-│   └── ... (34 more files)
+│   └── ... (35 more files)
 ├── memory/
 │   ├── backup/
 │   │   ├── ai-coding-brain-mcp_20250704_195124/
@@ -156,23 +163,22 @@ ai-coding-brain-mcp/
 │   │       ├── workflow_v2.json
 │   │   ├── context_ai-coding-brain-mcp_20250704_195124.json
 │   │   ├── context_ai-coding-brain-mcp_20250705_120052.json
+│   │   ├── workflow_v2_backup_20250709_113840.json
 │   ├── cache/
 │   │   ├── file_directory.json
 │   ├── context/
-│   ├── workflow_v2/
-│   │   ├── ai-coding-brain-mcp_workflow.json
-│   │   ├── final_test_workflow.json
 │   └── workflow_v3/
 │       └── backups/
 │           ├── ai-coding-brain-mcp/
 │           ├── default/
 │           └── test_project/
 │       ├── default_workflow.json
+│       ├── default_workflow_backup_20250709_114306.json
 │       ├── test_project_workflow.json
 │   ├── context.json
 │   ├── context_backup_20250701_145124_before_optimization.json
 │   ├── context_backup_ai-coding-brain-mcp_20250703_153224.json
-│   └── ... (22 more files)
+│   └── ... (24 more files)
 ├── python/
 │   ├── ai_helpers/
 │   │   └── api/
@@ -259,7 +265,7 @@ ai-coding-brain-mcp/
 ├── .ai-brain.config.json
 ├── .eslintrc.json
 ├── check_syntax.py
-└── ... (38 more files)
+└── ... (40 more files)
 ```
 - `.ai-brain.config.json`: AI Coding Brain 설정
 - `package.json`: Node.js 프로젝트 설정
@@ -270,14 +276,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 482개
-- **디렉토리 수**: 86개
+- **전체 파일 수**: 500개
+- **디렉토리 수**: 87개
 - **파일 타입 분포**:
-  - `.py`: 159개 (33.0%)
-  - `.md`: 76개 (15.8%)
-  - `.ts`: 63개 (13.1%)
-  - `.map`: 60개 (12.4%)
-  - `.json`: 59개 (12.2%)
+  - `.py`: 165개 (33.0%)
+  - `.md`: 79개 (15.8%)
+  - `.json`: 68개 (13.6%)
+  - `.ts`: 63개 (12.6%)
+  - `.map`: 60개 (12.0%)
 
 ## 🚀 빠른 시작
 

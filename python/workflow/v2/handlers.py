@@ -501,17 +501,46 @@ def workflow_history() -> HelperResult:
         wm = WorkflowV2Manager.get_instance("ai-coding-brain-mcp")
 
         history_entries = []
-        for entry in []:  # 임시로 빈 리스트 사용
-            history_entries.append({
-                'timestamp': str(entry.get('timestamp', '') if isinstance(entry, dict) else ''),
-                'type': entry.entry_type,
-                'details': entry.details
-            })
+        
+        # 실제 히스토리 데이터 사용 (최근 5개만)
+        if hasattr(wm, 'history') and wm.history:
+            recent_plans = wm.history[-5:]  # 최근 5개 플랜
+            for plan in reversed(recent_plans):  # 최신순으로 표시
+                # WorkflowPlan 객체인 경우 dict로 변환
+                if hasattr(plan, 'to_dict'):
+                    plan_dict = plan.to_dict()
+                    # archived_at이 없으면 추가
+                    if 'archived_at' not in plan_dict:
+                        plan_dict['archived_at'] = plan_dict.get('updated_at', 'Unknown')
+                elif isinstance(plan, dict):
+                    plan_dict = plan
+                else:
+                    continue  # 처리할 수 없는 타입은 건너뛰기
+                
+                # 완료된 태스크 수 계산
+                tasks = plan_dict.get('tasks', [])
+                completed_tasks = len([t for t in tasks if t.get('status') == 'completed'])
+                total_tasks = len(tasks)
+                
+                # 아카이브 시간 처리
+                archived_at = plan_dict.get('archived_at', plan_dict.get('updated_at', 'Unknown'))
+                if archived_at != 'Unknown':
+                    archived_at = archived_at[:19]  # YYYY-MM-DDTHH:MM:SS 형식
+                
+                history_entries.append({
+                    'timestamp': archived_at,
+                    'action': 'plan_archived',
+                    'message': f"{plan_dict.get('name', 'Unknown')} 완료 ({completed_tasks}/{total_tasks} 태스크)",
+                    'plan_name': plan_dict.get('name', 'Unknown'),
+                    'plan_id': str(plan_dict.get('id', 'Unknown'))[:12] + '...' if plan_dict.get('id') else 'Unknown',
+                    'completed_tasks': completed_tasks,
+                    'total_tasks': total_tasks
+                })
 
         return HelperResult(True, data={
             'success': True,
             'history': history_entries,
-            'total': len(history_entries)
+            'total': len(wm.history) if hasattr(wm, 'history') else 0
         })
 
     except Exception as e:

@@ -47,11 +47,30 @@ class WorkflowDispatcher:
 _dispatcher = None
 
 
+def get_current_project_name() -> str:
+    """현재 프로젝트 이름 가져오기"""
+    # 1. 환경 변수에서 확인
+    project_name = os.environ.get('CURRENT_PROJECT')
+    if project_name:
+        return project_name
+    
+    # 2. 현재 작업 디렉토리에서 추정
+    cwd = os.getcwd()
+    project_name = os.path.basename(cwd)
+    
+    # 3. 기본값
+    if not project_name or project_name == 'Desktop':
+        project_name = 'default'
+    
+    return project_name
+
+
 def get_dispatcher() -> WorkflowDispatcher:
     """전역 디스패처 인스턴스 가져오기"""
     global _dispatcher
     if _dispatcher is None:
-        _dispatcher = WorkflowDispatcher()
+        project_name = get_current_project_name()
+        _dispatcher = WorkflowDispatcher(project_name)
     return _dispatcher
 
 
@@ -59,3 +78,10 @@ def execute_workflow_command(command: str) -> Dict[str, Any]:
     """워크플로우 명령어 실행 (공개 API)"""
     dispatcher = get_dispatcher()
     return dispatcher.execute(command)
+
+
+def update_dispatcher_project(project_name: str) -> None:
+    """디스패처의 프로젝트 업데이트"""
+    global _dispatcher
+    if _dispatcher is None or _dispatcher.project_name != project_name:
+        _dispatcher = WorkflowDispatcher(project_name)

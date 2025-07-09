@@ -185,6 +185,14 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
             'workflow_status': workflow_status if workflow_status else {}  # None 방지
         }
         
+        # Workflow V3 dispatcher 업데이트
+        try:
+            from python.workflow.v3.dispatcher import update_dispatcher_project
+            update_dispatcher_project(project_name)
+            logger.info(f"[WORKFLOW] V3 dispatcher를 '{project_name}' 프로젝트로 업데이트")
+        except Exception as e:
+            logger.warning(f"[WORKFLOW] V3 dispatcher 업데이트 실패: {e}")
+        
         # DEBUG: 반환값 확인
         logger.info(f"[DEBUG] cmd_flow_with_context 최종 반환값:")
         logger.info(f"  - success: {return_data['success']}")

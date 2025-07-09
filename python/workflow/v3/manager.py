@@ -41,6 +41,17 @@ class WorkflowManager:
         self.storage = WorkflowStorage(project_name)
         self.context = ContextIntegration(project_name)
         
+        # 명령어 핸들러 매핑
+        self.command_handlers = {
+            'start': self._handle_start,
+            'focus': self._handle_focus,
+            'plan': self._handle_plan,
+            'task': self._handle_task,
+            'next': self._handle_next,
+            'build': self._handle_build,
+            'status': self._handle_status,
+        }
+        
         # 기존 데이터 로드
         self._load_data()
         
@@ -394,21 +405,10 @@ class WorkflowManager:
             # 명령어 파싱
             parsed = self.parser.parse(command_str)
             
-            # 명령어별 처리
-            if parsed.command == 'start':
-                return self._handle_start(parsed)
-            elif parsed.command == 'focus':
-                return self._handle_focus(parsed)
-            elif parsed.command == 'plan':
-                return self._handle_plan(parsed)
-            elif parsed.command == 'task':
-                return self._handle_task(parsed)
-            elif parsed.command == 'next':
-                return self._handle_next(parsed)
-            elif parsed.command == 'build':
-                return self._handle_build(parsed)
-            elif parsed.command == 'status':
-                return self._handle_status(parsed)
+            # 명령어 핸들러 찾기
+            handler = self.command_handlers.get(parsed.command)
+            if handler:
+                return handler(parsed)
             else:
                 raise WorkflowError(
                     ErrorCode.INVALID_COMMAND,
@@ -470,10 +470,16 @@ class WorkflowManager:
                     }
                 })
             else:
+                # 태스크가 없는지 확인
+                if not self.state.current_plan.tasks:
+                    message = "플랜에 태스크가 없습니다. /task [태스크명]으로 추가하세요"
+                else:
+                    message = "모든 태스크가 완료되었습니다"
+                    
                 return HelperResult(True, data={
                     'success': True,
                     'current_task': None,
-                    'message': "모든 태스크가 완료되었습니다"
+                    'message': message
                 })
                 
         # 특정 태스크로 포커스

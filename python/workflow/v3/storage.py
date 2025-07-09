@@ -23,8 +23,8 @@ class WorkflowStorage:
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
         
-        # 파일 경로들
-        self.main_file = self.base_dir / f"{project_name}_workflow.json"
+        # 파일 경로들 - 모든 프로젝트가 동일한 파일 사용
+        self.main_file = self.base_dir / "default_workflow.json"
         self.backup_dir = self.base_dir / "backups" / project_name
         self.backup_dir.mkdir(parents=True, exist_ok=True)
         

@@ -18,7 +18,7 @@ class WorkflowCodeIntegration:
     def __init__(self, project_name: str):
         self.project_name = project_name
         self.storage_path = os.path.join('memory', 'workflow_v3')
-        self.manager = WorkflowManager(project_name)
+        self.manager = WorkflowManager.get_instance(project_name)
         self.parser = CommandParser()
         
     def get_current_task_context(self) -> Optional[Dict[str, Any]]:
@@ -59,7 +59,7 @@ class WorkflowCodeIntegration:
             )
             
             # 상태 저장
-            self.manager._save_state()
+            self.manager._save_data()
             return True
             
         except Exception:
@@ -69,8 +69,7 @@ class WorkflowCodeIntegration:
         """태스크 자동 진행"""
         try:
             # /next 명령 실행
-            parsed = self.parser.parse(f"/next {completion_note}")
-            return self.manager.execute(parsed)
+            return self.manager.execute_command(f"/next {completion_note}")
         except Exception as e:
             return {
                 'success': False,
@@ -80,8 +79,7 @@ class WorkflowCodeIntegration:
     def get_workflow_status(self) -> Dict[str, Any]:
         """워크플로우 상태 조회"""
         try:
-            parsed = self.parser.parse("/status")
-            return self.manager.execute(parsed)
+            return self.manager.execute_command("/status")
         except Exception as e:
             return {
                 'success': False,

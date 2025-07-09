@@ -299,6 +299,58 @@ class ContextManager:
         
         self.context['function_edits'].append(edit_info)
 
+
+    # ===== 워크플로우 V3 통합 메서드 =====
+
+    def update_workflow_summary(self, summary: Dict[str, Any]) -> None:
+        """워크플로우 요약 정보 업데이트"""
+        if not hasattr(self, 'workflow_data'):
+            self.workflow_data = {}
+
+        self.workflow_data['summary'] = {
+            'current_plan': summary.get('current_plan'),
+            'progress': summary.get('progress', 0),
+            'total_tasks': summary.get('total_tasks', 0),
+            'completed_tasks': summary.get('completed_tasks', 0),
+            'updated_at': datetime.now().isoformat()
+        }
+        self.save()  # _mark_dirty 대신 save 사용
+
+    def add_workflow_event(self, event: Dict[str, Any]) -> None:
+        """워크플로우 이벤트 추가 (중요 이벤트만)"""
+        if not hasattr(self, 'workflow_data'):
+            self.workflow_data = {}
+
+        if 'events' not in self.workflow_data:
+            self.workflow_data['events'] = []
+
+        # 최대 50개 이벤트만 유지
+        self.workflow_data['events'].append(event)
+        if len(self.workflow_data['events']) > 50:
+            self.workflow_data['events'] = self.workflow_data['events'][-50:]
+
+        self.save()
+
+    def get_task_context(self, task_id: str) -> Optional[Dict[str, Any]]:
+        """특정 태스크의 컨텍스트 조회"""
+        # 태스크별 컨텍스트는 workflow_v3에서 관리하므로
+        # 여기서는 간단한 참조만 반환
+        if hasattr(self, 'workflow_data') and 'tasks' in self.workflow_data:
+            return self.workflow_data['tasks'].get(task_id)
+        return None
+
+    def clear_workflow_data(self) -> None:
+        """워크플로우 데이터 초기화"""
+        if hasattr(self, 'workflow_data'):
+            self.workflow_data = {}
+            self.save()
+
+    def get_recent_workflow_events(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """최근 워크플로우 이벤트 조회"""
+        if hasattr(self, 'workflow_data') and 'events' in self.workflow_data:
+            return self.workflow_data['events'][-limit:]
+        return []
+
 # 싱글톤 인스턴스
 _context_manager_instance = None
 

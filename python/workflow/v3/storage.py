@@ -49,10 +49,10 @@ class WorkflowStorage:
                 self._create_backup()
                 
             # JSON 직렬화
-            json_data = json.dumps(data, indent=2, ensure_ascii=False)
+            # JSON 직렬화는 atomic_write에서 처리
             
             # 원자적 쓰기
-            atomic_write(str(self.main_file), json_data)
+            atomic_write(str(self.main_file), data)
             
             logger.info(f"Saved workflow data for {self.project_name}")
             return True

@@ -80,16 +80,21 @@ class HelpersWrapper:
                 # 클래스 메서드를 인스턴스에 바인딩
                 method = getattr(self.__class__, method_name)
                 if callable(method):
-                    # 바운드 메서드로 설정
-                    setattr(self, method_name, method.__get__(self, self.__class__))
+                    # 바운드 메서드로 인스턴스의 __dict__에 직접 설정
+                    # 이렇게 하면 __getattr__보다 우선순위가 높음
+                    self.__dict__[method_name] = method.__get__(self, self.__class__)
 
     def __getattr__(self, name: str) -> Any:
         """동적으로 helpers 메서드를 래핑"""
-        # v44: 오버라이드된 메서드는 클래스에서 직접 가져오기
-        if name in ['list_functions', 'workflow', 'read_file']:
-            if hasattr(self.__class__, name):
-                method = getattr(self.__class__, name)
-                return method.__get__(self, self.__class__)
+        # v44 개선: 오버라이드된 메서드는 __dict__에 있으므로 여기로 오지 않음
+        # 하지만 안전을 위해 추가 체크
+        override_methods = ['list_functions', 'workflow', 'read_file']
+        if name in override_methods and hasattr(self.__class__, name):
+            method = getattr(self.__class__, name)
+            bound_method = method.__get__(self, self.__class__)
+            # 캐시에 저장하여 다음 접근 시 빠르게 반환
+            self.__dict__[name] = bound_method
+            return bound_method
 
         # 캐시 확인
         if name in self._cache:

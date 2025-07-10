@@ -1,6 +1,7 @@
 """
 Workflow v3 파일 저장 시스템
 원자적 쓰기, 백업, 버전 관리
+통합 workflow.json 사용
 """
 import json
 import os
@@ -10,27 +11,29 @@ from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List
 import logging
 
-from python.atomic_io import atomic_write
+from python.utils.io_helpers import write_json
+from python.path_utils import get_workflow_v3_dir
+from .unified_storage import UnifiedWorkflowStorage
 
 logger = logging.getLogger(__name__)
 
 
 class WorkflowStorage:
-    """워크플로우 데이터 저장 관리자"""
+    """워크플로우 데이터 저장 관리자 - 프로젝트별 독립 workflow.json 사용"""
     
-    def __init__(self, project_name: str, base_dir: str = "memory/workflow_v3"):
+    def __init__(self, project_name: str, base_dir: str = None):
         self.project_name = project_name
-        self.base_dir = Path(base_dir)
-        self.base_dir.mkdir(parents=True, exist_ok=True)
+        # 싱글톤 제거 - 프로젝트마다 새 인스턴스 생성
+        self.storage = UnifiedWorkflowStorage()
         
-        # 파일 경로들 - 각 프로젝트별 독립적인 파일
-        self.main_file = self.base_dir / f"{project_name}_workflow.json"
-        self.backup_dir = self.base_dir / "backups" / project_name
-        self.backup_dir.mkdir(parents=True, exist_ok=True)
+        # 호환성을 위한 속성들 (기존 코드가 참조할 수 있음)
+        self.base_dir = Path(base_dir) if base_dir else get_workflow_v3_dir()
+        self.main_file = self.storage.workflow_file  # 실제로는 통합 파일
+        self.backup_dir = self.storage.backup_dir
         
         # 설정
-        self.max_backups = 10  # 최대 백업 파일 수
-        self.auto_backup_interval = 3600  # 1시간마다 자동 백업
+        self.max_backups = self.storage.max_backups
+        self.auto_backup_interval = self.storage.auto_backup_interval
         self.last_backup_time = None
         
     def save(self, data: Dict[str, Any], create_backup: bool = True) -> bool:
@@ -43,237 +46,131 @@ class WorkflowStorage:
         Returns:
             성공 여부
         """
-        try:
-            # 백업 생성 (필요시)
-            if create_backup and self.main_file.exists():
-                self._create_backup()
-                
-            # JSON 직렬화
-            json_data = json.dumps(data, indent=2, ensure_ascii=False)
-
-            # 원자적 쓰기 (text 모드로 저장)
-            atomic_write(str(self.main_file), json_data, mode='text')
-            
-            logger.info(f"Saved workflow data for {self.project_name}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Failed to save workflow data: {e}")
-            return False
-
-            
+        return self.storage.save_project_data(
+            self.project_name, 
+            data, 
+            create_backup=create_backup
+        )
+    
     def load(self) -> Optional[Dict[str, Any]]:
         """데이터 로드
         
         Returns:
             로드된 데이터 또는 None
         """
-        if not self.main_file.exists():
-            logger.info(f"No workflow file found for {self.project_name}")
-            return None
-            
-        try:
-            with open(self.main_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                
-            logger.info(f"Loaded workflow data for {self.project_name}")
-            return data
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Invalid JSON in workflow file: {e}")
-            # 손상된 파일은 백업으로 이동
-            self._move_corrupted_file()
-            return None
-            
-        except Exception as e:
-            logger.error(f"Failed to load workflow data: {e}")
-            return None
-            
-    def _create_backup(self) -> Optional[Path]:
-        """백업 파일 생성
+        return self.storage.get_project_data(self.project_name)
+    
+    def exists(self) -> bool:
+        """워크플로우 파일 존재 여부 확인"""
+        return self.project_name in self.storage.list_projects()
+    
+    def delete(self) -> bool:
+        """워크플로우 데이터 삭제"""
+        return self.storage.delete_project(self.project_name)
+    
+    def create_backup(self, suffix: str = "") -> bool:
+        """백업 생성
         
+        Args:
+            suffix: 백업 파일명 suffix (무시됨 - 통합 백업 사용)
+            
         Returns:
-            백업 파일 경로 또는 None
+            성공 여부
         """
-        try:
-            # 타임스탬프 생성
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            backup_file = self.backup_dir / f"{self.project_name}_backup_{timestamp}.json"
-            
-            # 파일 복사
-            shutil.copy2(self.main_file, backup_file)
-            
-            logger.info(f"Created backup: {backup_file.name}")
-            
-            # 오래된 백업 정리
-            self._cleanup_old_backups()
-            
-            self.last_backup_time = datetime.now(timezone.utc)
-            return backup_file
-            
-        except Exception as e:
-            logger.error(f"Failed to create backup: {e}")
-            return None
-
-            
-    def _cleanup_old_backups(self) -> None:
-        """오래된 백업 파일 정리"""
-        try:
-            # 백업 파일 목록 가져오기
-            backup_files = sorted(
-                self.backup_dir.glob(f"{self.project_name}_backup_*.json"),
-                key=lambda p: p.stat().st_mtime,
-                reverse=True
-            )
-            
-            # 최대 개수 초과분 삭제
-            if len(backup_files) > self.max_backups:
-                for old_backup in backup_files[self.max_backups:]:
-                    old_backup.unlink()
-                    logger.info(f"Deleted old backup: {old_backup.name}")
-                    
-        except Exception as e:
-            logger.error(f"Failed to cleanup backups: {e}")
-            
-    def _move_corrupted_file(self) -> None:
-        """손상된 파일을 백업 디렉토리로 이동"""
-        try:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            corrupted_file = self.backup_dir / f"{self.project_name}_corrupted_{timestamp}.json"
-            
-            shutil.move(str(self.main_file), str(corrupted_file))
-            logger.warning(f"Moved corrupted file to: {corrupted_file.name}")
-            
-        except Exception as e:
-            logger.error(f"Failed to move corrupted file: {e}")
-            
-    def get_backups(self) -> List[Dict[str, Any]]:
+        self.storage._create_backup()
+        self.last_backup_time = datetime.now(timezone.utc)
+        return True
+    
+    def list_backups(self) -> List[Path]:
         """백업 파일 목록 조회
         
         Returns:
-            백업 파일 정보 목록
+            백업 파일 경로 리스트
         """
-        backups = []
-        
-        try:
-            backup_files = sorted(
-                self.backup_dir.glob(f"{self.project_name}_backup_*.json"),
-                key=lambda p: p.stat().st_mtime,
-                reverse=True
-            )
-            
-            for backup_file in backup_files:
-                stat = backup_file.stat()
-                backups.append({
-                    'filename': backup_file.name,
-                    'path': str(backup_file),
-                    'size': stat.st_size,
-                    'modified': datetime.fromtimestamp(stat.st_mtime).isoformat(),
-                    'age_hours': (datetime.now() - datetime.fromtimestamp(stat.st_mtime)).total_seconds() / 3600
-                })
-                
-        except Exception as e:
-            logger.error(f"Failed to get backups: {e}")
-            
-        return backups
-
-            
-    def restore_backup(self, backup_filename: str) -> bool:
-        """백업 파일 복원
+        return sorted(self.storage.backup_dir.glob("workflow_backup_*.json"))
+    
+    def restore_from_backup(self, backup_path: Path) -> bool:
+        """백업에서 복구
         
         Args:
-            backup_filename: 백업 파일명
+            backup_path: 백업 파일 경로
             
         Returns:
             성공 여부
-        """
-        backup_path = self.backup_dir / backup_filename
-        
-        if not backup_path.exists():
-            logger.error(f"Backup file not found: {backup_filename}")
-            return False
             
-        try:
-            # 현재 파일 백업 (있는 경우)
-            if self.main_file.exists():
-                self._create_backup()
-                
-            # 백업 파일 복원
-            shutil.copy2(backup_path, self.main_file)
-            
-            logger.info(f"Restored backup: {backup_filename}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Failed to restore backup: {e}")
-            return False
-            
-    def should_auto_backup(self) -> bool:
-        """자동 백업이 필요한지 확인
-        
-        Returns:
-            백업 필요 여부
-        """
-        if not self.last_backup_time:
-            return True
-            
-        elapsed = (datetime.now(timezone.utc) - self.last_backup_time).total_seconds()
-        return elapsed >= self.auto_backup_interval
-        
-    def export_to_file(self, data: Dict[str, Any], export_path: str) -> bool:
-        """데이터를 특정 파일로 내보내기
-        
-        Args:
-            data: 내보낼 데이터
-            export_path: 내보낼 파일 경로
-            
-        Returns:
-            성공 여부
+        Note:
+            현재는 전체 workflow.json 복구만 지원
+            추후 프로젝트별 복구 구현 예정
         """
         try:
-            export_file = Path(export_path)
-            export_file.parent.mkdir(parents=True, exist_ok=True)
+            # 백업 파일 읽기
+            with open(backup_path, 'r', encoding='utf-8') as f:
+                backup_data = json.load(f)
             
-            json_data = json.dumps(data, indent=2, ensure_ascii=False)
-            atomic_write(str(export_file), json_data)
-            
-            logger.info(f"Exported data to: {export_path}")
-            return True
-            
+            # 프로젝트 데이터 확인
+            if self.project_name in backup_data.get("projects", {}):
+                project_data = backup_data["projects"][self.project_name]
+                return self.save(project_data)
+            else:
+                logger.error(f"Project {self.project_name} not found in backup")
+                return False
+                
         except Exception as e:
-            logger.error(f"Failed to export data: {e}")
+            logger.error(f"Failed to restore from backup: {e}")
             return False
-            
-    def get_storage_info(self) -> Dict[str, Any]:
-        """저장소 정보 조회
+    
+    def get_file_info(self) -> Dict[str, Any]:
+        """파일 정보 조회
         
         Returns:
-            저장소 상태 정보
+            파일 정보 딕셔너리
         """
-        info = {
-            'project_name': self.project_name,
-            'main_file': str(self.main_file),
-            'file_exists': self.main_file.exists(),
-            'file_size': 0,
-            'backup_count': 0,
-            'total_backup_size': 0,
-            'last_backup': None
-        }
+        file_path = self.storage.workflow_file
         
-        try:
-            # 메인 파일 정보
-            if self.main_file.exists():
-                info['file_size'] = self.main_file.stat().st_size
-                
-            # 백업 정보
-            backups = self.get_backups()
-            info['backup_count'] = len(backups)
-            info['total_backup_size'] = sum(b['size'] for b in backups)
-            
-            if backups:
-                info['last_backup'] = backups[0]['modified']
-                
-        except Exception as e:
-            logger.error(f"Failed to get storage info: {e}")
-            
-        return info
+        if file_path.exists():
+            stat = file_path.stat()
+            return {
+                "path": str(file_path),
+                "size": stat.st_size,
+                "modified": datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat(),
+                "exists": True
+            }
+        else:
+            return {
+                "path": str(file_path),
+                "size": 0,
+                "modified": None,
+                "exists": False
+            }
+    
+    # === 클래스 메서드 (추가 기능) ===
+    
+    @classmethod
+    def migrate_all_v3_files(cls) -> Dict[str, bool]:
+        """모든 V3 파일을 통합 스토리지로 마이그레이션"""
+        storage = cls._get_unified_storage()
+        return storage.migrate_from_v3_files()
+    
+    @classmethod
+    def get_all_projects(cls) -> List[str]:
+        """모든 프로젝트 목록"""
+        storage = cls._get_unified_storage()
+        return storage.list_projects()
+    
+    @classmethod
+    def get_statistics(cls) -> Dict[str, Any]:
+        """전체 통계"""
+        storage = cls._get_unified_storage()
+        return storage.get_statistics()
+    
+    @classmethod
+    def get_active_project(cls) -> Optional[str]:
+        """현재 활성 프로젝트"""
+        storage = cls._get_unified_storage()
+        return storage.get_active_project()
+    
+    @classmethod
+    def set_active_project(cls, project_name: str) -> bool:
+        """활성 프로젝트 설정"""
+        storage = cls._get_unified_storage()
+        return storage.set_active_project(project_name)

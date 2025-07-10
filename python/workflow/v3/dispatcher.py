@@ -66,11 +66,14 @@ def get_current_project_name() -> str:
 
 
 def get_dispatcher() -> WorkflowDispatcher:
-    """전역 디스패처 인스턴스 가져오기"""
+    """전역 디스패처 인스턴스 가져오기 - 프로젝트별로 관리"""
     global _dispatcher
-    if _dispatcher is None:
-        project_name = get_current_project_name()
-        _dispatcher = WorkflowDispatcher(project_name)
+    current_project = get_current_project_name()
+    
+    # 프로젝트가 변경되었으면 새 디스패처 생성
+    if _dispatcher is None or _dispatcher.project_name != current_project:
+        _dispatcher = WorkflowDispatcher(current_project)
+    
     return _dispatcher
 
 

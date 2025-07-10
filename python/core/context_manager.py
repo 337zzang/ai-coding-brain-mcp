@@ -7,7 +7,8 @@ import json
 from pathlib import Path
 from datetime import datetime
 import os
-from typing import Dict, Any, Optional
+import logging
+from typing import Dict, Any, Optional, List
 
 try:
     from core.path_utils import (
@@ -27,6 +28,84 @@ except ImportError:
         get_cache_dir
     )
 from utils.io_helpers import atomic_write, write_json, read_json
+from core.cache_manager import get_cache_manager
+
+logger = logging.getLogger(__name__)
+
+class CacheAPI:
+    """ContextManager를 통한 일관된 캐시 접근 인터페이스"""
+
+    def __init__(self, cache_manager):
+        """
+        Args:
+            cache_manager: CacheManager 인스턴스 또는 None
+        """
+        self._manager = cache_manager
+        self._fallback_cache = {}  # CacheManager가 없을 때 사용할 폴백
+
+    def get(self, key: str, default=None):
+        """캐시에서 값 조회"""
+        if self._manager:
+            value = self._manager.get(key)
+            return value if value is not None else default
+        else:
+            return self._fallback_cache.get(key, default)
+
+    def set(self, key: str, value: Any, ttl: int = None, dependencies: List[str] = None):
+        """캐시에 값 저장"""
+        if self._manager:
+            # Path 객체 리스트로 변환
+            dep_paths = [Path(d) for d in dependencies] if dependencies else []
+            self._manager.set(key, value, ttl=ttl, dependencies=dep_paths)
+        else:
+            self._fallback_cache[key] = value
+
+    def invalidate(self, key: str):
+        """특정 키 무효화"""
+        if self._manager:
+            self._manager.invalidate(key)
+        else:
+            self._fallback_cache.pop(key, None)
+
+    def invalidate_by_file(self, filepath: str) -> List[str]:
+        """파일 변경에 따른 무효화"""
+        if self._manager:
+            return self._manager.invalidate_by_file(Path(filepath))
+        else:
+            # 폴백 모드에서는 전체 캐시 클리어
+            keys = list(self._fallback_cache.keys())
+            self._fallback_cache.clear()
+            return keys
+
+    def clear(self):
+        """전체 캐시 클리어"""
+        if self._manager:
+            self._manager.clear_all()
+        self._fallback_cache.clear()
+
+    def exists(self, key: str) -> bool:
+        """키 존재 여부 확인"""
+        if self._manager:
+            return self._manager.get(key) is not None
+        else:
+            return key in self._fallback_cache
+
+    def get_stats(self) -> Dict[str, Any]:
+        """캐시 통계"""
+        if self._manager:
+            return self._manager.get_statistics()
+        else:
+            return {
+                'mode': 'fallback',
+                'items': len(self._fallback_cache),
+                'cache_manager_available': False
+            }
+
+    def set_with_file_dependency(self, key: str, value: Any, filepath: str):
+        """파일 의존성과 함께 캐시 설정 (편의 메서드)"""
+        self.set(key, value, dependencies=[filepath])
+
+
 
 class ContextManager:
     """프로젝트별 컨텍스트를 관리하는 클래스"""
@@ -35,25 +114,63 @@ class ContextManager:
         self.context = {}
         self.workflow_data = {}
         self.current_project_name = None
-        self.cache = {}  # 메모리 캐시
+        # self.cache = {}  # [REMOVED] 레거시 캐시 제거됨 - cache property 사용
+        self._cache_api = None  # CacheAPI 인스턴스 (나중에 초기화)
+        self._cache_manager = None  # 새로운 캐시 매니저
         
     def get_current_project_name(self) -> str:
         """현재 프로젝트 이름을 반환합니다."""
         if self.current_project_name:
             return self.current_project_name
-        
-        # 현재 디렉토리 기반으로 프로젝트 이름 추론
-        current = Path.cwd()
-        return current.name
+    
+    @property
+    def cache(self):
+        """레거시 호환성을 위한 캐시 접근자"""
+        if not hasattr(self, '_cache_api') or self._cache_api is None:
+            # 초기화되지 않은 경우 폴백
+            if not hasattr(self, '_fallback_cache'):
+                self._fallback_cache = {}
+            return self._fallback_cache
+        return self._cache_api
     
     def initialize(self, project_name: str = None):
         """컨텍스트 매니저를 초기화합니다."""
+        self.current_project_name = project_name or self.get_current_project_name()
+        
+        # 캐시 매니저 초기화 - 지연 초기화로 변경
+        self._cache_manager = None  # 초기화하지 않음
+        self._cache_dir = None  # 나중에 사용할 캐시 디렉토리 저장
+        
+        # CacheAPI는 즉시 초기화 (캐시 매니저 없이도 작동)
+        self._cache_api = CacheAPI(None)  # None으로 초기화하면 폴백 모드
+        
         if not project_name:
             project_name = self.get_current_project_name()
             
         self.current_project_name = project_name
         self.load_all()
-        print(f"✅ ContextManager 초기화: {project_name}")
+        # print(f"ContextManager initialized: {project_name}")
+    
+    def _ensure_cache_manager(self):
+        """캐시 매니저를 지연 초기화합니다 (필요할 때만)"""
+        if self._cache_manager is None and self.current_project_name:
+            try:
+                # 캐시 디렉토리 설정
+                if self._cache_dir is None:
+                    self._cache_dir = get_cache_dir(self.current_project_name)
+                
+                # 캐시 매니저 초기화
+                self._cache_manager = get_cache_manager(self._cache_dir)
+                
+                # CacheAPI에 캐시 매니저 연결
+                if hasattr(self, '_cache_api') and self._cache_api:
+                    self._cache_api._manager = self._cache_manager
+                    
+                logger.debug(f"Cache manager initialized for project: {self.current_project_name}")
+                
+            except Exception as e:
+                logger.warning(f"Failed to initialize cache manager: {e}")
+                self._cache_manager = None
     
     def switch_project(self, new_project_name: str):
         """프로젝트를 전환합니다."""
@@ -83,7 +200,7 @@ class ContextManager:
         
         self.load_all()
         
-        print(f"✅ 프로젝트 '{new_project_name}'로 전환 완료")
+        # print(f"프로젝트 '{new_project_name}'로 전환 완료")
         
     def load_all(self):
         """모든 데이터를 로드합니다."""
@@ -94,8 +211,7 @@ class ContextManager:
         context_path = get_context_path(self.current_project_name)
         if context_path.exists():
             try:
-                with open(context_path, 'r', encoding='utf-8') as f:
-                    self.context = json.load(f)
+                self.context = read_json(context_path, default={})
                 print(f"  ✓ context.json 로드 ({len(self.context)} keys)")
             except Exception as e:
                 print(f"  ❌ context.json 로드 실패: {e}")
@@ -108,8 +224,7 @@ class ContextManager:
         workflow_path = get_workflow_path(self.current_project_name)
         if workflow_path.exists():
             try:
-                with open(workflow_path, 'r', encoding='utf-8') as f:
-                    self.workflow_data = json.load(f)
+                self.workflow_data = read_json(workflow_path, default={})
                 print(f"  ✓ workflow.json 로드")
             except Exception as e:
                 print(f"  ❌ workflow.json 로드 실패: {e}")
@@ -205,7 +320,7 @@ class ContextManager:
             except:
                 pass
                 
-        print("  ✅ 캐시 마이그레이션 완료")
+        # print("  캐시 마이그레이션 완료")
         
     def _migrate_old_workflow(self):
         """기존 워크플로우 데이터를 마이그레이션합니다."""
@@ -237,10 +352,30 @@ class ContextManager:
         if args and len(args) == 2:
             key, value = args
             self.context[key] = value
-            self.cache[key] = value  # 메모리 캐시에도 저장
+            # self.cache[key] = value  # [DEPRECATED]
+            if hasattr(self, "_cache_api") and self._cache_api:
+                self._cache_api.set(key, value)
+            
+            # 새로운 캐시 매니저에도 저장
+            if self._cache_manager:
+                # 현재 작업 디렉토리의 파일들을 의존성으로 추가
+                dependencies = []
+                if 'current_file' in self.context:
+                    dependencies.append(Path(self.context['current_file']))
+                
+                self._cache_manager.set(f"context_{key}", value, dependencies=dependencies)
+                
         elif kwargs:
             self.context.update(kwargs)
-            self.cache.update(kwargs)
+            # self.cache.update(kwargs)  # [DEPRECATED]
+            if hasattr(self, "_cache_api") and self._cache_api:
+                for k, v in kwargs.items():
+                    self._cache_api.set(k, v)
+            
+            # 새로운 캐시 매니저에도 저장
+            if self._cache_manager:
+                for k, v in kwargs.items():
+                    self._cache_manager.set(f"context_{k}", v)
     
     def update_cache(self, *args, **kwargs):
         """update_context의 별칭 (기존 코드 호환성)"""
@@ -248,12 +383,22 @@ class ContextManager:
             
     def get_value(self, key: str, default=None):
         """컨텍스트에서 값을 가져옵니다."""
-        # 먼저 메모리 캐시 확인
-        if key in self.cache:
-            return self.cache[key]
-        # 다음 컨텍스트 확인
-        return self.context.get(key, default)
+        # 캐시 API 사용
+        if hasattr(self, "_cache_api") and self._cache_api:
+            cache_key = "context_" + str(key)
+            cached_value = self._cache_api.get(cache_key)
+            if cached_value is not None:
+                return cached_value
         
+        # 컨텍스트에서 조회
+        value = self.context.get(key, default)
+        
+        # 캐시에 저장
+        if value is not None and hasattr(self, "_cache_api") and self._cache_api:
+            cache_key = "context_" + str(key)
+            self._cache_api.set(cache_key, value)
+        
+        return value
     def get_context(self) -> dict:
         """전체 컨텍스트를 반환합니다 (최적화된 버전)."""
         # __mcp_shared_vars__ 등 불필요한 키 제외
@@ -284,6 +429,13 @@ class ContextManager:
         paths = [f['path'] for f in self.context['accessed_files']]
         if filepath not in paths:
             self.context['accessed_files'].append(access_info)
+            
+        # 캐시 매니저에 파일 변경 감지 요청
+        if self._cache_manager:
+            # 이 파일에 의존하는 캐시들을 무효화
+            invalidated = self._cache_manager.invalidate_by_file(Path(filepath))
+            if invalidated:
+                print(f"[Cache] Invalidated {len(invalidated)} cache entries due to file access: {filepath}")
             
     def track_function_edit(self, file: str, function: str, changes: str):
         """함수 수정을 추적합니다."""
@@ -350,6 +502,79 @@ class ContextManager:
         if hasattr(self, 'workflow_data') and 'events' in self.workflow_data:
             return self.workflow_data['events'][-limit:]
         return []
+    
+    # ===== 캐시 무효화 메서드 =====
+    
+    def invalidate_cache(self, key: str):
+        """특정 캐시 항목 무효화"""
+        # CacheAPI를 통한 무효화
+        if hasattr(self, '_cache_api') and self._cache_api is not None:
+            self._cache_api.invalidate(key)
+        elif hasattr(self, '_fallback_cache'):
+            self._fallback_cache.pop(key, None)
+        
+        # 새로운 캐시 매니저 (지연 초기화)
+        self._ensure_cache_manager()
+        if self._cache_manager:
+            self._cache_manager.invalidate(f"context_{key}")
+    
+    def invalidate_cache_by_file(self, filepath: str) -> List[str]:
+        """파일 변경에 따른 캐시 무효화"""
+        invalidated = []
+        
+        # 지연 초기화
+        self._ensure_cache_manager()
+        
+        if self._cache_manager:
+            invalidated = self._cache_manager.invalidate_by_file(Path(filepath))
+            
+            # 레거시 메모리 캐시도 클리어 (안전을 위해)
+            if invalidated:
+                if hasattr(self, '_cache_api') and self._cache_api is not None:
+                    self._cache_api.clear()
+                elif hasattr(self, '_fallback_cache'):
+                    self._fallback_cache.clear()
+                
+        return invalidated
+    
+    def get_cache_statistics(self) -> Dict[str, Any]:
+        """캐시 통계 조회"""
+        stats = {}
+        
+        # CacheAPI가 초기화된 경우에만 get_stats() 호출
+        if hasattr(self, '_cache_api') and self._cache_api is not None:
+            stats = self._cache_api.get_stats()
+        else:
+            # 폴백 모드
+            stats = {
+                'mode': 'fallback',
+                'items': len(getattr(self, '_fallback_cache', {})),
+                'cache_manager_available': False
+            }
+        
+        # 추가 정보
+        stats['cache_manager_available'] = self._cache_manager is not None
+        
+        # 캐시 매니저 통계 (지연 초기화)
+        if stats['cache_manager_available']:
+            self._ensure_cache_manager()
+            if self._cache_manager:
+                manager_stats = self._cache_manager.get_statistics()
+                stats.update(manager_stats)
+            
+        return stats
+    
+    def set_cache_with_dependencies(self, key: str, value: Any, dependencies: List[str]):
+        """의존성이 있는 캐시 항목 설정"""
+        # CacheAPI를 통한 캐시 설정
+        if hasattr(self, "_cache_api") and self._cache_api:
+            self._cache_api.set_with_file_dependency(key, value, dependencies[0] if dependencies else None)
+        else:
+            # 폴백 - CacheManager 직접 사용 (지연 초기화)
+            self._ensure_cache_manager()
+            if self._cache_manager:
+                dep_paths = [Path(d) for d in dependencies]
+                self._cache_manager.set(f"context_{key}", value, dependencies=dep_paths)
 
 # 싱글톤 인스턴스
 _context_manager_instance = None

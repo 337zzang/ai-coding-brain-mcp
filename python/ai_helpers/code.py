@@ -8,6 +8,7 @@ import shutil
 import warnings
 from datetime import datetime
 import textwrap
+import tempfile  # 원자적 저장을 위해 추가
 
 
 # HelperResult import만 수행 (safe_helper는 import하지 않음)
@@ -591,6 +592,11 @@ def replace_block(file_path: str, target_block: str, new_code: str) -> str:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
         
+        # 1-1. 백업 생성 (안전성 확보)
+        backup_path = f"{file_path}.{datetime.now():%Y%m%d%H%M%S}.bak"
+        shutil.copy2(file_path, backup_path)
+        _log(f"백업 생성: {backup_path}")
+        
         # 2. AST 파싱
         try:
             tree = ast.parse(content)
@@ -607,6 +613,9 @@ def replace_block(file_path: str, target_block: str, new_code: str) -> str:
         # 4. EnhancedFunctionReplacer 사용
         replacer = EnhancedFunctionReplacer(target_block, new_code)
         modified_tree = replacer.visit(tree)
+        
+        # 4-1. AST 위치 정보 수정 (안정성 확보)
+        ast.fix_missing_locations(modified_tree)
         
         # 교체가 성공했는지 확인
         if not replacer.found_and_replaced:
@@ -627,14 +636,36 @@ def replace_block(file_path: str, target_block: str, new_code: str) -> str:
                 # 원본 코드에서 직접 교체하는 방식으로 폴백
                 return _fallback_replace(file_path, target_block, new_code, content)
         
-        # 6. 파일 저장
-        with open(file_path, 'w', encoding='utf-8') as f:
-            f.write(modified_code)
-        
-        return f"SUCCESS: {target_block} 교체 완료"
+        # 6. 파일 저장 (원자적 저장)
+        try:
+            # 임시 파일에 먼저 저장
+            with tempfile.NamedTemporaryFile('w', delete=False, 
+                                             dir=os.path.dirname(file_path),
+                                             encoding='utf-8') as tmp:
+                tmp.write(modified_code)
+                tmp_path = tmp.name
+            
+            # 원자적으로 파일 교체
+            os.replace(tmp_path, file_path)
+            
+            # 6-1. 캐시 무효화 (동기화 보장)
+            _cache_manager = CacheManager()
+            _cache_manager.set_cached_ast(file_path, None)  # 특정 파일 캐시만 제거
+            
+            return f"SUCCESS: {target_block} 교체 완료 (백업: {backup_path})"
+            
+        except Exception as save_error:
+            # 저장 실패 시 임시 파일 제거
+            if 'tmp_path' in locals() and os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            raise RuntimeError(f"파일 저장 실패: {save_error}")
         
     except Exception as e:
-        raise RuntimeError(f"{type(e).__name__} - {e}")
+        # 백업 경로 정보를 포함한 에러 메시지
+        if 'backup_path' in locals():
+            raise RuntimeError(f"{type(e).__name__} - {e}\n백업 파일: {backup_path}")
+        else:
+            raise RuntimeError(f"{type(e).__name__} - {e}")
 
 
 def _fallback_replace(file_path: str, target_block: str, new_code: str, content: str) -> str:

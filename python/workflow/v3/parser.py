@@ -198,8 +198,8 @@ class CommandParser:
     def _parse_task(self, args: str, parsed: ParsedCommand) -> None:
         """task 명령어 파싱"""
         if not args:
-            # 인자 없으면 태스크 목록
-            return
+            # 인자 없으면 오류 발생
+            raise ValueError("태스크 제목을 입력해주세요. 예: /task 새로운 작업")
             
         args_lower = args.lower()
         

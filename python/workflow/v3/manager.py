@@ -598,8 +598,12 @@ class WorkflowManager:
             else:
                 return HelperResult(False, error="노트 추가 실패")
             
-        elif parsed.title:
-            # 새 태스크 추가
+        elif parsed.title and parsed.subcommand != 'note':
+            # 새 태스크 추가 (note 서브커맨드가 아닐 때만)
+            # 빈 제목 검증
+            if not parsed.title.strip():
+                return HelperResult(False, error="태스크 제목을 입력해주세요")
+            
             task = self.add_task(parsed.title, parsed.description)
             if task:
                 task_count = len(self.state.current_plan.tasks)

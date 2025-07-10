@@ -30,6 +30,17 @@ import time
 import threading
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Union, Tuple, cast
+# 플랫폼별 파일 락 import
+if os.name != 'nt':
+    try:
+        import fcntl
+    except ImportError:
+        fcntl = None
+else:
+    try:
+        import msvcrt
+    except ImportError:
+        msvcrt = None
 
 # 전역 변수
 _cache_manager = None
@@ -51,6 +62,66 @@ def _log(message: str, level: str = 'INFO') -> None:
     if _verbose_mode:
         print(f"[AST Parser] [{level}] {message}")
 
+
+
+class FileLock:
+    """크로스 플랫폼 파일 락 구현"""
+    
+    def __init__(self, file_path: str, timeout: float = 10.0):
+        self.file_path = file_path
+        self.timeout = timeout
+        self.lock_file = f"{file_path}.lock"
+        self.handle = None
+        self.is_locked = False
+        
+    def __enter__(self):
+        self.acquire()
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.release()
+        
+    def acquire(self):
+        """파일 락 획득"""
+        start_time = time.time()
+        
+        while True:
+            try:
+                if os.name == 'nt':  # Windows
+                    # 락 파일 생성 시도
+                    self.handle = open(self.lock_file, 'w')
+                    if 'msvcrt' in globals() and msvcrt:
+                        msvcrt.locking(self.handle.fileno(), msvcrt.LK_NBLCK, 1)
+                    self.is_locked = True
+                    break
+                else:  # Unix/Linux
+                    self.handle = open(self.lock_file, 'w')
+                    if 'fcntl' in globals() and fcntl:
+                        fcntl.flock(self.handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    self.is_locked = True
+                    break
+            except (IOError, OSError) as e:
+                if time.time() - start_time > self.timeout:
+                    raise TimeoutError(f"파일 락 획득 실패 (타임아웃 {self.timeout}초): {self.file_path}")
+                time.sleep(0.1)
+                
+    def release(self):
+        """파일 락 해제"""
+        if self.is_locked and self.handle:
+            try:
+                if os.name == 'nt' and 'msvcrt' in globals() and msvcrt:
+                    msvcrt.locking(self.handle.fileno(), msvcrt.LK_UNLCK, 1)
+                elif os.name != 'nt' and 'fcntl' in globals() and fcntl:
+                    fcntl.flock(self.handle.fileno(), fcntl.LOCK_UN)
+                self.handle.close()
+                # 락 파일 제거
+                if os.path.exists(self.lock_file):
+                    os.unlink(self.lock_file)
+            except Exception as e:
+                _log(f"파일 락 해제 오류: {e}")
+            finally:
+                self.is_locked = False
+                self.handle = None
 
 
 class CacheManager:
@@ -599,7 +670,7 @@ def _apply_indentation(code: str, indent_level: int) -> str:
 
 
 @track_operation('code', 'replace_block')
-def replace_block(file_path: str, target_block: str, new_code: str, preserve_format: bool = False) -> str:
+def replace_block(file_path: str, target_block: str, new_code: str, preserve_format: bool = False) -> HelperResult:
     """코드 블록을 새로운 코드로 교체 - AST 기반 구현
     
     Args:
@@ -609,17 +680,19 @@ def replace_block(file_path: str, target_block: str, new_code: str, preserve_for
         preserve_format: True면 포맷 보존 시도 (현재는 경고만 표시)
         
     Returns:
-        str: 성공/실패 메시지
+        HelperResult: 성공/실패 정보와 상세 데이터
     """
     try:
-        # 포맷 보존 옵션 확인
-        if preserve_format:
-            _log("⚠️ preserve_format=True: AST 변환은 주석과 포맷을 보존하지 못합니다.")
-            _log("향후 LibCST 등의 도구를 사용한 포맷 보존 기능이 추가될 예정입니다.")
-        
-        # 1. 파일 읽기
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
+        # 파일 락 획득
+        with FileLock(file_path) as lock:
+            # 포맷 보존 옵션 확인
+            if preserve_format:
+                _log("⚠️ preserve_format=True: AST 변환은 주석과 포맷을 보존하지 못합니다.")
+                _log("향후 LibCST 등의 도구를 사용한 포맷 보존 기능이 추가될 예정입니다.")
+            
+            # 1. 파일 읽기
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
         
         # 1-1. 백업 생성 (안전성 확보)
         backup_path = f"{file_path}.{datetime.now():%Y%m%d%H%M%S}.bak"
@@ -697,7 +770,15 @@ def replace_block(file_path: str, target_block: str, new_code: str, preserve_for
             _cache_manager = CacheManager()
             _cache_manager.set_cached_ast(file_path, None)  # 특정 파일 캐시만 제거
             
-            return f"SUCCESS: {target_block} 교체 완료 (백업: {backup_path})"
+            return HelperResult(
+                ok=True,
+                data={
+                    'message': f"{target_block} 교체 완료",
+                    'backup_path': backup_path,
+                    'file_path': file_path,
+                    'method': 'AST'
+                }
+            )
             
         except Exception as save_error:
             # 저장 실패 시 임시 파일 제거
@@ -707,13 +788,18 @@ def replace_block(file_path: str, target_block: str, new_code: str, preserve_for
         
     except Exception as e:
         # 백업 경로 정보를 포함한 에러 메시지
+        error_msg = f"{type(e).__name__} - {e}"
         if 'backup_path' in locals():
-            raise RuntimeError(f"{type(e).__name__} - {e}\n백업 파일: {backup_path}")
-        else:
-            raise RuntimeError(f"{type(e).__name__} - {e}")
+            error_msg += f"\n백업 파일: {backup_path}"
+        
+        return HelperResult(
+            ok=False,
+            error=error_msg,
+            data={'file_path': file_path, 'target_block': target_block}
+        )
 
 
-def _fallback_replace(file_path: str, target_block: str, new_code: str, content: str) -> str:
+def _fallback_replace(file_path: str, target_block: str, new_code: str, content: str) -> HelperResult:
     """AST 기반 교체가 실패한 경우의 폴백 함수 - 개선된 버전"""
     try:
         lines = content.split('\n')
@@ -805,7 +891,15 @@ def _fallback_replace(file_path: str, target_block: str, new_code: str, content:
             error_msg = f"{target_block}를 찾을 수 없습니다."
             if candidates:
                 error_msg += f"\n\n유사한 항목들:\n" + "\n".join(candidates)
-            raise ValueError(error_msg)
+            return HelperResult(
+                ok=False,
+                error=error_msg,
+                data={
+                    'file_path': file_path,
+                    'target_block': target_block,
+                    'candidates': candidates
+                }
+            )
         
         # 블록의 끝 찾기 - 개선된 버전
         end_line = target_line + 1
@@ -862,10 +956,24 @@ def _fallback_replace(file_path: str, target_block: str, new_code: str, content:
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write('\n'.join(lines))
         
-        return f"SUCCESS: {target_block} 교체 완료 (폴백 방식, 백업: {backup_path})"
+        return HelperResult(
+            ok=True,
+            data={
+                'message': f"{target_block} 교체 완료 (폴백 방식)",
+                'backup_path': backup_path,
+                'file_path': file_path,
+                'method': 'fallback',
+                'target_line': target_line + 1,  # 1-based line number
+                'replaced_lines': end_line - target_line
+            }
+        )
         
     except Exception as e:
-        raise RuntimeError(f"폴백 교체 실패 - {e}")
+        return HelperResult(
+            ok=False,
+            error=f"폴백 교체 실패 - {e}",
+            data={'file_path': file_path, 'target_block': target_block}
+        )
 @track_operation('code', 'insert_block')
 def insert_block(file_path: str, target: str, position: str, new_code: str) -> str:
     """코드 블록을 특정 위치에 삽입 - AST 기반 구현

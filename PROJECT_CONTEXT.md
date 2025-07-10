@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-09 15:05:22
+> 최종 업데이트: 2025-07-10 09:48:13
 
 ## 🎯 프로젝트 개요
 
@@ -138,8 +138,8 @@ ai-coding-brain-mcp/
 │       └── ... (2 more files)
 │   ├── circular_dependency_analysis.md
 │   ├── circular_dependency_fix_report.md
-│   ├── double_wrapping_fix_20250708.md
-│   └── ... (35 more files)
+│   ├── data_ownership_policy.md
+│   └── ... (39 more files)
 ├── memory/
 │   ├── backup/
 │   │   ├── ai-coding-brain-mcp_20250704_195124/
@@ -199,8 +199,8 @@ ai-coding-brain-mcp/
 │   ├── core/
 │   │   ├── __init__.py
 │   │   ├── context_manager.py
-│   │   ├── error_reporter.py
-│   │   └── ... (1 more files)
+│   │   ├── context_manager_refactored.py
+│   │   └── ... (3 more files)
 │   ├── events/
 │   │   └── handlers/
 │   │       ├── __init__.py
@@ -226,12 +226,12 @@ ai-coding-brain-mcp/
 │           ├── __init__.py
 │           ├── code_integration.py
 │           ├── context_integration.py
-│           └── ... (9 more files)
+│           └── ... (13 more files)
 │       ├── __init__.py
 │   ├── __init__.py
 │   ├── api_manager.py
 │   ├── atomic_io.py
-│   └── ... (13 more files)
+│   └── ... (14 more files)
 ├── scripts/
 │   ├── git_helper.py
 │   ├── migrate_search_api.py
@@ -266,7 +266,7 @@ ai-coding-brain-mcp/
 ├── .ai-brain.config.json
 ├── .eslintrc.json
 ├── check_syntax.py
-└── ... (39 more files)
+└── ... (49 more files)
 ```
 - `.ai-brain.config.json`: AI Coding Brain 설정
 - `package.json`: Node.js 프로젝트 설정
@@ -277,14 +277,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 509개
+- **전체 파일 수**: 530개
 - **디렉토리 수**: 87개
 - **파일 타입 분포**:
-  - `.py`: 166개 (32.6%)
-  - `.md`: 79개 (15.5%)
-  - `.json`: 76개 (14.9%)
-  - `.ts`: 63개 (12.4%)
-  - `.map`: 60개 (11.8%)
+  - `.py`: 182개 (34.3%)
+  - `.md`: 84개 (15.8%)
+  - `.json`: 77개 (14.5%)
+  - `.ts`: 63개 (11.9%)
+  - `.map`: 60개 (11.3%)
 
 ## 🚀 빠른 시작
 

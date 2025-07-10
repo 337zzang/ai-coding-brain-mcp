@@ -537,24 +537,78 @@ def _save_context(ctx: Dict[str, Any]):
     except Exception as e:
         logger.error(f"컨텍스트 저장 실패: {e}")
 
+def ensure_workflow_file(project_path: Path = None) -> Path:
+    """프로젝트에 워크플로우 파일이 있는지 확인하고 없으면 생성"""
+    if project_path is None:
+        project_path = Path.cwd()
+    
+    workflow_dir = project_path / 'memory' / 'active'
+    workflow_file = workflow_dir / 'workflow.json'
+    
+    # 디렉토리 생성
+    workflow_dir.mkdir(parents=True, exist_ok=True)
+    
+    # 워크플로우 파일이 없으면 생성
+    if not workflow_file.exists():
+        project_name = project_path.name
+        
+        # 기본 워크플로우 구조
+        default_workflow = {
+            'version': '3.0',
+            'active_project': project_name,
+            'projects': {
+                project_name: {
+                    'current_plan': None,
+                    'events': [],
+                    'version': '3.0.0',
+                    'metadata': {
+                        'created_at': datetime.now().isoformat(),
+                        'last_updated': datetime.now().isoformat()
+                    }
+                }
+            },
+            'metadata': {
+                'created_at': datetime.now().isoformat(),
+                'last_updated': datetime.now().isoformat()
+            }
+        }
+        
+        # 중앙 워크플로우에서 기존 데이터 확인 (마이그레이션)
+        try:
+            central_path = Path.home() / 'Desktop' / 'ai-coding-brain-mcp' / 'memory' / 'active' / 'workflow.json'
+            if central_path.exists() and central_path != workflow_file:
+                with open(central_path, 'r', encoding='utf-8') as f:
+                    central_data = json.load(f)
+                
+                # 해당 프로젝트 데이터가 있으면 마이그레이션
+                if project_name in central_data.get('projects', {}):
+                    project_data = central_data['projects'][project_name]
+                    default_workflow['projects'][project_name] = project_data
+                    logger.info(f"중앙 워크플로우에서 {project_name} 데이터 마이그레이션 완료")
+        except Exception as e:
+            logger.warning(f"중앙 워크플로우 마이그레이션 실패: {e}")
+        
+        # 파일 저장
+        with open(workflow_file, 'w', encoding='utf-8') as f:
+            json.dump(default_workflow, f, indent=2, ensure_ascii=False)
+        
+        logger.info(f"워크플로우 파일 생성: {workflow_file}")
+    
+    return workflow_file
+
+
 def _load_and_show_workflow() -> Dict[str, Any]:
-    """워크플로우 로드 및 상태 반환 - memory/active/workflow.json 사용"""
+    """워크플로우 로드 및 상태 반환 - 분산형 구조"""
     try:
-        # 현재 프로젝트명 가져오기
-        current_project = os.path.basename(os.getcwd())
+        # 워크플로우 파일 확인/생성
+        workflow_file = ensure_workflow_file()
         
-        # active/workflow.json 파일 읽기
-        active_workflow_path = Path('memory/active/workflow.json')
-        
-        if not active_workflow_path.exists():
-            return {'status': 'no_plan', 'message': '활성 계획 없음'}
-        
-        with open(active_workflow_path, 'r', encoding='utf-8') as f:
+        # 파일 읽기
+        with open(workflow_file, 'r', encoding='utf-8') as f:
             workflow_data = json.load(f)
         
-        # 현재 프로젝트가 활성 프로젝트인지 확인
-        if workflow_data.get('active_project') != current_project:
-            return {'status': 'no_plan', 'message': '활성 계획 없음'}
+        # 현재 프로젝트명
+        current_project = Path.cwd().name
         
         # 프로젝트 데이터 가져오기
         project_data = workflow_data.get('projects', {}).get(current_project, {})

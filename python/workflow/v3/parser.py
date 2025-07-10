@@ -93,9 +93,8 @@ class CommandParser:
             raise ValueError("명령어가 비어있습니다")
             
         # 공백으로 분리
-        parts = cmd_parts.split(None, 1)  # 첫 공백에서만 분리
+        parts = cmd_parts.split(None, 2)  # 최대 3개로 분리 (명령, 서브커맨드, 나머지)
         main_cmd = parts[0].lower()
-        remaining = parts[1] if len(parts) > 1 else ""
         
         # 별칭 처리
         if main_cmd in self.ALIASES:
@@ -110,8 +109,8 @@ class CommandParser:
                 raw=command_str
             )
             # 레거시 명령어는 추가 파싱 없이 반환
-            if remaining:
-                parsed.title = remaining
+            if len(parts) > 1:
+                parsed.title = ' '.join(parts[1:])
             return parsed
             
         # 유효한 명령어인지 확인
@@ -120,6 +119,22 @@ class CommandParser:
             
         # ParsedCommand 객체 생성
         parsed = ParsedCommand(command=main_cmd, raw=command_str)
+        
+        # 서브커맨드 우선 체크
+        subcommand = None
+        remaining = ""
+        
+        if len(parts) > 1:
+            # 두 번째 단어가 서브커맨드인지 확인
+            potential_subcmd = parts[1].lower()
+            if main_cmd in self.SUBCOMMANDS and potential_subcmd in self.SUBCOMMANDS[main_cmd]:
+                subcommand = potential_subcmd
+                parsed.subcommand = subcommand
+                # 나머지 인자는 세 번째부터
+                remaining = ' '.join(parts[2:]) if len(parts) > 2 else ""
+            else:
+                # 서브커맨드가 아니면 두 번째부터 모두 인자로 처리
+                remaining = ' '.join(parts[1:])
         
         # 명령어별 파싱
         if main_cmd in ['start', 'plan']:
@@ -174,25 +189,29 @@ class CommandParser:
                 
     def _parse_plan(self, args: str, parsed: ParsedCommand) -> None:
         """plan 명령어 파싱"""
+        # 서브커맨드가 이미 설정된 경우 (우선 처리됨)
+        if parsed.subcommand:
+            if parsed.subcommand == 'list':
+                # list는 추가 인자 필요 없음
+                return
+            # 다른 서브커맨드 처리...
+            return
+            
         if not args:
             # 인자 없으면 현재 플랜 조회
             return
             
-        args_lower = args.lower().strip()
-        if args_lower == 'list':
-            parsed.subcommand = 'list'
-        else:
-            # 새 플랜 생성
-            parsed.title, parsed.description = self._parse_title_description(args)
-            if not parsed.title:
-                raise ValueError("플랜 이름을 입력해주세요")
-            if len(parsed.title) > 200:
-                raise ValueError("플랜 이름은 200자를 초과할 수 없습니다")
-            
-            # --reset 옵션 확인
-            if '--reset' in parsed.description:
-                parsed.args['reset'] = True
-                parsed.description = parsed.description.replace('--reset', '').strip()
+        # 새 플랜 생성
+        parsed.title, parsed.description = self._parse_title_description(args)
+        if not parsed.title:
+            raise ValueError("플랜 이름을 입력해주세요")
+        if len(parsed.title) > 200:
+            raise ValueError("플랜 이름은 200자를 초과할 수 없습니다")
+        
+        # --reset 옵션 확인
+        if '--reset' in parsed.description:
+            parsed.args['reset'] = True
+            parsed.description = parsed.description.replace('--reset', '').strip()
 
                 
     def _parse_task(self, args: str, parsed: ParsedCommand) -> None:

@@ -29,7 +29,7 @@ def get_decorator_logger():
     """데코레이터용 로거 싱글톤"""
     global _logger
     if _logger is None:
-        from python.logging.logger import get_logger
+        from python.workflow_logging.logger import get_logger
         _logger = get_logger()
     return _logger
 

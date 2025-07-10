@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+from functools import wraps
 
 from .models import (
     WorkflowPlan, Task, WorkflowState, WorkflowEvent,
@@ -27,6 +28,30 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def auto_save(func):
+    """상태 변경 후 자동으로 저장하는 데코레이터"""
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        try:
+            # 원본 함수 실행
+            result = func(self, *args, **kwargs)
+            
+            # 성공적으로 실행되면 자동 저장
+            if hasattr(self, 'save_state'):
+                try:
+                    self.save_state()
+                    logger.debug(f"자동 저장 완료: {func.__name__}")
+                except Exception as e:
+                    logger.error(f"자동 저장 실패: {e}")
+                    # 저장 실패해도 원본 결과는 반환
+                    
+            return result
+        except Exception as e:
+            # 원본 함수의 예외는 그대로 전파
+            raise e
+    return wrapper
+
+
 class WorkflowManager:
     """워크플로우 중앙 관리자 (싱글톤)"""
     
@@ -43,6 +68,25 @@ class WorkflowManager:
         self.parser = CommandParser()
         self.storage = WorkflowStorage(project_name)
         self.context = ContextIntegration(project_name)
+        
+        # EventBus 초기화
+        from .events import EventBus, GitAutoCommitListener
+        self.event_bus = EventBus()
+        
+        # Git 자동 커밋 리스너 등록 (helpers가 있을 때만)
+        try:
+            import builtins
+            if hasattr(builtins, 'helpers'):
+                git_listener = GitAutoCommitListener(builtins.helpers)
+                self.event_bus.register(git_listener)
+                self.git_auto_commit = git_listener
+                logger.info("[GIT] 자동 커밋 리스너 등록 완료")
+            else:
+                self.git_auto_commit = None
+                logger.info("[GIT] helpers 없음 - 자동 커밋 비활성화")
+        except Exception as e:
+            self.git_auto_commit = None
+            logger.warning(f"[GIT] 자동 커밋 리스너 등록 실패: {e}")
         
         # EventBus 연동을 위한 어댑터 초기화
         self.event_adapter = WorkflowEventAdapter(self)
@@ -189,6 +233,7 @@ class WorkflowManager:
             return None
 
             
+    @auto_save
     def add_task(self, title: str, description: str = "") -> Optional[Task]:
         """현재 플랜에 태스크 추가"""
         if not self.state.current_plan:
@@ -219,6 +264,7 @@ class WorkflowManager:
             logger.error(f"Failed to add task: {e}")
             return None
             
+    @auto_save
     def add_task_note(self, note: str, task_id: str = None) -> Optional[Task]:
         """현재 태스크 또는 지정된 태스크에 노트 추가"""
         if not self.state.current_plan:
@@ -263,6 +309,7 @@ class WorkflowManager:
         logger.info(f"Note added to task {task.title}: {note[:50]}...")
         return task
             
+    @auto_save
     def complete_task(self, task_id: str, note: str = "") -> bool:
         """태스크 완료 처리"""
         if not self.state.current_plan:
@@ -321,6 +368,7 @@ class WorkflowManager:
             
         return None
         
+    @auto_save
     def archive_plan(self) -> bool:
         """현재 플랜 아카이브"""
         if not self.state.current_plan:
@@ -839,7 +887,14 @@ class WorkflowManager:
         # EventStore에 추가
         self.event_store.add(event)
         
-        # EventBus로 발행 (event_adapter가 있는 경우)
+        # EventBus로 발행
+        if hasattr(self, 'event_bus') and self.event_bus:
+            try:
+                self.event_bus.emit(event)
+            except Exception as e:
+                logger.error(f"EventBus 발행 실패: {e}")
+        
+        # EventBus 연동을 위한 어댑터로도 발행 (event_adapter가 있는 경우)
         if hasattr(self, 'event_adapter') and self.event_adapter:
             try:
                 self.event_adapter.publish_workflow_event(event)

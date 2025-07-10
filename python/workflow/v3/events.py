@@ -10,6 +10,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+__all__ = ['EventProcessor', 'EventBuilder', 'EventStore', 'GitAutoCommitListener', 'EventBus']
+
 
 class EventProcessor:
     """이벤트 처리기"""
@@ -237,3 +239,101 @@ class EventStore:
                 summary['tasks_completed'] += 1
                 
         return summary
+
+
+class GitAutoCommitListener:
+    """Git 자동 커밋 이벤트 리스너"""
+    
+    def __init__(self, helpers=None):
+        """
+        Args:
+            helpers: helpers 객체 (Git 명령 실행용)
+        """
+        self.helpers = helpers
+        self.enabled = True
+        self.auto_commit_events = {
+            EventType.TASK_COMPLETED,
+            EventType.PLAN_COMPLETED,
+            EventType.PLAN_ARCHIVED
+        }
+        
+    def handle_event(self, event: WorkflowEvent) -> None:
+        """이벤트 처리 - Git 자동 커밋"""
+        if not self.enabled or not self.helpers:
+            return
+            
+        if event.type not in self.auto_commit_events:
+            return
+            
+        try:
+            # Git 상태 확인
+            status = self.helpers.git_status()
+            if not status.ok or not status.data.get('modified'):
+                return
+                
+            # 자동 커밋 메시지 생성
+            commit_message = self._generate_commit_message(event)
+            
+            # Git add 및 commit
+            add_result = self.helpers.git_add(".")
+            if add_result.ok:
+                commit_result = self.helpers.git_commit(commit_message)
+                if commit_result.ok:
+                    logger.info(f"[GIT] 자동 커밋 성공: {commit_message}")
+                else:
+                    logger.warning(f"[GIT] 커밋 실패: {commit_result.error}")
+            else:
+                logger.warning(f"[GIT] add 실패: {add_result.error}")
+                
+        except Exception as e:
+            logger.error(f"[GIT] 자동 커밋 중 오류: {e}")
+            
+    def _generate_commit_message(self, event: WorkflowEvent) -> str:
+        """이벤트에 따른 커밋 메시지 생성"""
+        messages = {
+            EventType.TASK_COMPLETED: f"workflow: 태스크 완료 - {event.details.get('title', 'Unknown')}",
+            EventType.PLAN_COMPLETED: f"workflow: 플랜 완료 - {event.details.get('name', 'Unknown')}",
+            EventType.PLAN_ARCHIVED: f"workflow: 플랜 보관 - {event.details.get('name', 'Unknown')}"
+        }
+        
+        base_message = messages.get(event.type, "workflow: 자동 저장")
+        
+        # 노트가 있으면 추가
+        if event.details.get('note'):
+            base_message += f"\n\n{event.details['note']}"
+            
+        return base_message
+        
+    def set_enabled(self, enabled: bool) -> None:
+        """자동 커밋 활성화/비활성화"""
+        self.enabled = enabled
+        logger.info(f"[GIT] 자동 커밋 {'활성화' if enabled else '비활성화'}")
+
+
+class EventBus:
+    """이벤트 버스 - 이벤트 리스너 관리"""
+    
+    def __init__(self):
+        self.listeners: List[Any] = []
+        
+    def register(self, listener: Any) -> None:
+        """리스너 등록"""
+        if hasattr(listener, 'handle_event'):
+            self.listeners.append(listener)
+            logger.info(f"[EventBus] 리스너 등록: {listener.__class__.__name__}")
+        else:
+            logger.warning(f"[EventBus] 리스너에 handle_event 메서드가 없음: {listener}")
+            
+    def unregister(self, listener: Any) -> None:
+        """리스너 제거"""
+        if listener in self.listeners:
+            self.listeners.remove(listener)
+            logger.info(f"[EventBus] 리스너 제거: {listener.__class__.__name__}")
+            
+    def emit(self, event: WorkflowEvent) -> None:
+        """모든 리스너에 이벤트 전달"""
+        for listener in self.listeners:
+            try:
+                listener.handle_event(event)
+            except Exception as e:
+                logger.error(f"[EventBus] 리스너 오류 ({listener.__class__.__name__}): {e}")

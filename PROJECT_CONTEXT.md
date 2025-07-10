@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-10 18:31:47
+> 최종 업데이트: 2025-07-10 21:07:28
 
 ## 🎯 프로젝트 개요
 
@@ -26,11 +26,11 @@
 | `backup/` | 프로젝트 관련 파일 |
 | `backups/` | 프로젝트 관련 파일 |
 | `docs/` | 문서 |
+| `logs/` | 프로젝트 관련 파일 |
 | `memory/` | 캐시 및 상태 저장 |
 | `python/` | Python 스크립트 및 유틸리티 |
 | `scripts/` | 유틸리티 스크립트 |
 | `src/` | 소스 코드 |
-| `test/` | 테스트 코드 |
 
 ## 📦 의존성
 
@@ -105,6 +105,11 @@ ai-coding-brain-mcp/
 │   │   ├── atomic_io.py
 │   │   ├── utils_io_helpers.py
 │   ├── cache_api_integration_20250710_145158/
+│   ├── context_improvement_20250710_201108/
+│   │   ├── context.json
+│   │   ├── context_integration.py
+│   │   ├── context_manager.py
+│   │   └── ... (1 more files)
 │   ├── legacy_cleanup_20250709_120454/
 │   │   └── workflow_v2_data/
 │   │       ├── ai-coding-brain-mcp_workflow.json
@@ -118,20 +123,12 @@ ai-coding-brain-mcp/
 │   ├── refactoring_20250708/
 │   ├── unused_files_20250710_123848/
 │   │   ├── context_manager_ssot.py
-│   ├── workflow_refactoring_20250708_192554/
-│   │   ├── core/
-│   │   │   ├── context_manager.py
-│   │   └── workflow/
-│   │       ├── commands.py
-│   │       ├── models.py
-│   │       ├── workflow_manager.py
+│   ├── workflow_improvement_20250710_194801/
 │   │   ├── context.json
-│   │   ├── helpers_wrapper.py
-│   │   ├── workflow.json
-│   ├── workflow_storage_refactoring_20250710_124829/
-│   │   ├── storage_original.py
-│   │   ├── test_migration.py
-│   └── ... (2 more directories)
+│   │   ├── context_integration.py
+│   │   ├── enhanced_flow.py
+│   │   └── ... (4 more files)
+│   └── ... (4 more directories)
 ├── docs/
 │   ├── architecture/
 │   │   ├── workflow_context_integration.md
@@ -154,6 +151,13 @@ ai-coding-brain-mcp/
 │   ├── circular_dependency_fix_report.md
 │   ├── data_ownership_policy.md
 │   └── ... (43 more files)
+├── logs/
+│   ├── errors/
+│   ├── file/
+│   ├── git/
+│   ├── system/
+│   └── workflow/
+│   ├── log_manager_config.json
 ├── memory/
 │   ├── active/
 │   │   ├── workflow.json
@@ -190,9 +194,13 @@ ai-coding-brain-mcp/
 │   │   ├── enhanced_flow_load_workflow_backup.py
 │   │   └── ... (2 more files)
 │   ├── backups/
+│   │   └── contexts/
+│   │       └── ai-coding-brain-mcp/
+│   │       ├── ai-coding-brain-mcp_context_removed.json
 │   │   ├── workflow_backup_20250710_171516.json
 │   │   ├── workflow_backup_20250710_172152.json
 │   │   ├── workflow_backup_20250710_173914.json
+│   │   └── ... (6 more files)
 │   ├── cache/
 │   │   └── test_cache/
 │   │       ├── cache_metadata.json
@@ -242,7 +250,7 @@ ai-coding-brain-mcp/
 │   ├── context.json
 │   ├── task_context.json
 │   ├── workflow.json
-│   └── ... (2 more files)
+│   └── ... (3 more files)
 ├── python/
 │   ├── ai_helpers/
 │   │   └── api/
@@ -271,6 +279,10 @@ ai-coding-brain-mcp/
 │   │   ├── event_bus.py
 │   │   ├── event_bus_events.py
 │   │   └── ... (4 more files)
+│   ├── logging/
+│   │   ├── __init__.py
+│   │   ├── decorators.py
+│   │   ├── logger.py
 │   ├── tracking/
 │   │   ├── __init__.py
 │   │   ├── simple_tracker.py
@@ -278,28 +290,18 @@ ai-coding-brain-mcp/
 │   │   ├── __init__.py
 │   │   ├── git_task_helpers.py
 │   │   ├── git_utils.py
-│   │   └── ... (3 more files)
+│   │   └── ... (4 more files)
 │   ├── vendor/
 │   │   ├── tree-sitter-javascript/
 │   │   │   └── bindings/
 │   │   └── tree-sitter-typescript/
 │   │       └── bindings/
-│   └── workflow/
-│       └── v3/
-│           └── deprecated/
-│           ├── __init__.py
-│           ├── code_integration.py
-│           ├── context_integration.py
-│           └── ... (21 more files)
-│       ├── __init__.py
+│   └── ... (1 more directories)
 │   ├── __init__.py
 │   ├── api_manager.py
 │   ├── debug_flow.py
 │   └── ... (14 more files)
-├── scripts/
-│   ├── git_helper.py
-│   ├── migrate_search_api.py
-└── ... (6 more directories)
+└── ... (7 more directories)
 ├── .ai-brain.config.json
 ├── .eslintrc.json
 ├── check_syntax.py
@@ -314,14 +316,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 617개
-- **디렉토리 수**: 137개
+- **전체 파일 수**: 653개
+- **디렉토리 수**: 148개
 - **파일 타입 분포**:
-  - `.py`: 201개 (32.6%)
-  - `.json`: 132개 (21.4%)
-  - `.md`: 89개 (14.4%)
-  - `.ts`: 63개 (10.2%)
-  - `.map`: 60개 (9.7%)
+  - `.py`: 213개 (32.6%)
+  - `.json`: 146개 (22.4%)
+  - `.md`: 89개 (13.6%)
+  - `.ts`: 63개 (9.6%)
+  - `.map`: 60개 (9.2%)
 
 ## 🚀 빠른 시작
 

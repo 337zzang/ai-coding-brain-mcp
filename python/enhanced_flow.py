@@ -598,48 +598,72 @@ def ensure_workflow_file(project_path: Path = None) -> Path:
 
 
 def _load_and_show_workflow() -> Dict[str, Any]:
-    """워크플로우 로드 및 상태 반환 - 분산형 구조"""
+    """워크플로우 로드 및 상태 반환 - V3 독립 메모리 구조"""
     try:
-        # 워크플로우 파일 확인/생성
-        workflow_file = ensure_workflow_file()
-        
-        # 파일 읽기
-        with open(workflow_file, 'r', encoding='utf-8') as f:
-            workflow_data = json.load(f)
+        # WorkflowManager V3 사용
+        from python.workflow.v3.manager import WorkflowManager
         
         # 현재 프로젝트명
         current_project = Path.cwd().name
         
-        # 프로젝트 데이터 가져오기
-        project_data = workflow_data.get('projects', {}).get(current_project, {})
+        # WorkflowManager 인스턴스 가져오기 (캐시 무효화 포함)
+        try:
+            # 먼저 캐시 무효화하고 새로 로드
+            wm = WorkflowManager.invalidate_and_reload(current_project)
+            logger.info(f"[WORKFLOW] WorkflowManager 캐시 무효화 및 재로드 완료: {current_project}")
+        except Exception as e:
+            logger.warning(f"[WORKFLOW] invalidate_and_reload 실패, 일반 로드 시도: {e}")
+            # 실패 시 일반 로드
+            wm = WorkflowManager.get_instance(current_project)
+            wm.reload()  # 수동 리로드
         
-        # current_plan 확인
-        current_plan = project_data.get('current_plan')
-        if not current_plan:
+        # 상태 확인
+        status_result = wm.get_status()
+        
+        if status_result and status_result.get('status'):
+            workflow_status = status_result
+            logger.info(f"[WORKFLOW] 워크플로우 상태 로드 성공: {workflow_status.get('status')}")
+            return workflow_status
+        else:
+            logger.info("[WORKFLOW] 활성 워크플로우 없음")
             return {'status': 'no_plan', 'message': '활성 계획 없음'}
-        
-        # 태스크 정보 처리
-        tasks = current_plan.get('tasks', [])
-        completed = sum(1 for t in tasks if t.get('status') == 'completed')
-        
-        # 현재 작업 찾기
-        current_task = None
-        current_index = current_plan.get('current_task_index', 0)
-        if 0 <= current_index < len(tasks):
-            current_task = tasks[current_index]
-        
-        return {
-            'status': 'active',
-            'plan_name': current_plan.get('name', '이름 없음'),
-            'description': current_plan.get('description', ''),
-            'total_tasks': len(tasks),
-            'completed_tasks': completed,
-            'progress_percent': (completed / len(tasks) * 100) if tasks else 0,
-            'current_task': current_task
-        }
         
     except Exception as e:
         logger.error(f"워크플로우 로드 중 오류: {e}")
+        # 오류 발생 시 파일에서 직접 읽기 시도
+        try:
+            workflow_file = Path("memory/workflow.json")
+            if workflow_file.exists():
+                with open(workflow_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    
+                # 활성 플랜 찾기
+                if data.get('plans') and data.get('active_plan_id'):
+                    for plan in data['plans']:
+                        if plan['id'] == data['active_plan_id']:
+                            tasks = plan.get('tasks', [])
+                            completed = sum(1 for t in tasks if t.get('status') == 'completed')
+                            current_task = None
+                            
+                            # 현재 태스크 찾기
+                            for task in tasks:
+                                if task.get('status') in ['todo', 'in_progress']:
+                                    current_task = task
+                                    break
+                            
+                            return {
+                                'status': 'active',
+                                'plan_id': plan['id'],
+                                'plan_name': plan.get('name', '이름 없음'),
+                                'plan_description': plan.get('description', ''),
+                                'total_tasks': len(tasks),
+                                'completed_tasks': completed,
+                                'progress_percent': (completed / len(tasks) * 100) if tasks else 0,
+                                'current_task': current_task
+                            }
+        except Exception as e2:
+            logger.error(f"파일 직접 읽기도 실패: {e2}")
+        
         return {'status': 'error', 'message': f'워크플로우 로드 실패: {str(e)}'}
 
 def _update_file_directory():

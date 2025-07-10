@@ -37,9 +37,9 @@ def auto_save(func):
             result = func(self, *args, **kwargs)
             
             # 성공적으로 실행되면 자동 저장
-            if hasattr(self, 'save_state'):
+            if hasattr(self, '_save'):
                 try:
-                    self.save_state()
+                    self._save()
                     logger.debug(f"자동 저장 완료: {func.__name__}")
                 except Exception as e:
                     logger.error(f"자동 저장 실패: {e}")
@@ -199,6 +199,10 @@ class WorkflowManager:
             logger.error(f"Failed to save workflow data: {e}")
             return False
             
+    def save_state(self) -> bool:
+        """상태를 파일에 저장 (public 메서드)"""
+        return self._save()
+    
     # 플랜 관리 메서드
     
     def start_plan(self, name: str, description: str = "") -> Optional[WorkflowPlan]:
@@ -232,7 +236,6 @@ class WorkflowManager:
             logger.error(f"Failed to create plan: {e}")
             return None
 
-            
     @auto_save
     def add_task(self, title: str, description: str = "") -> Optional[Task]:
         """현재 플랜에 태스크 추가"""

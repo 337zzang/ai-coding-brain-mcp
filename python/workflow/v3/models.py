@@ -272,6 +272,13 @@ class WorkflowPlan:
         self._update_stats()
         
     def archive(self) -> None:
+        """플랜 보관 처리"""
+        self.status = PlanStatus.ARCHIVED
+        self.archived_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(timezone.utc)
+        self._update_stats()
+
+    def archive(self) -> None:
         """플랜 아카이브"""
         if self.status != PlanStatus.COMPLETED:
             self.complete()

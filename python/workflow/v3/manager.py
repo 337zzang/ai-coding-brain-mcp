@@ -37,6 +37,8 @@ class WorkflowManager:
         """프로젝트별 워크플로우 관리자 초기화"""
         self.project_name = project_name
         self.state = WorkflowState()
+        self.auto_archive_completed = False  # 완료된 플랜 자동 보관
+
         self.event_store = EventStore()
         self.parser = CommandParser()
         self.storage = WorkflowStorage(project_name)
@@ -354,7 +356,8 @@ class WorkflowManager:
         current_task = self.get_current_task()
         
         return {
-            'status': 'active',
+            'status': plan.status.value if hasattr(plan.status, 'value') else str(plan.status),
+
             'plan_id': plan.id,
             'plan_name': plan.name,
             'plan_description': plan.description,
@@ -365,7 +368,7 @@ class WorkflowManager:
                 'id': current_task.id,
                 'title': current_task.title,
                 'description': current_task.description,
-                'status': current_task.status.value
+                'status': current_task.status.value if hasattr(current_task.status, 'value') else str(current_task.status)
             } if current_task else None,
             'created_at': plan.created_at.isoformat(),
             'updated_at': plan.updated_at.isoformat()
@@ -552,10 +555,14 @@ class WorkflowManager:
             # 현재 플랜 정보
             if self.state.current_plan:
                 status = self.get_status()
-                return HelperResult(True, data={
-                    'success': True,
-                    'plan': status
-                })
+                # enum 값들을 문자열로 변환
+                if isinstance(status, dict):
+                    if 'status' in status and hasattr(status['status'], 'value'):
+                        status['status'] = status['status'].value
+                    if 'current_task' in status and status['current_task'] and 'status' in status['current_task']:
+                        if hasattr(status['current_task']['status'], 'value'):
+                            status['current_task']['status'] = status['current_task']['status'].value
+                return HelperResult(True, data=status)
             else:
                 return HelperResult(False, error="활성 플랜이 없습니다")
                 

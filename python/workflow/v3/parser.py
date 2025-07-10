@@ -122,7 +122,7 @@ class CommandParser:
         parsed = ParsedCommand(command=main_cmd, raw=command_str)
         
         # 명령어별 파싱
-        if main_cmd == 'start':
+        if main_cmd in ['start', 'plan']:
             self._parse_start(remaining, parsed)
         elif main_cmd == 'focus':
             self._parse_focus(remaining, parsed)
@@ -152,7 +152,7 @@ class CommandParser:
         return title, description
         
     def _parse_start(self, args: str, parsed: ParsedCommand) -> None:
-        """start 명령어 파싱"""
+        """start/plan 명령어 파싱"""
         if args:
             parsed.title, parsed.description = self._parse_title_description(args)
             # 플랜 이름 검증
@@ -312,7 +312,7 @@ class CommandParser:
             cmd = self.ALIASES[cmd]
             
         help_map = {
-            'start': "/start [플랜명 | 설명] - 새로운 워크플로우 플랜 시작",
+            'plan': "/plan [플랜명 | 설명] - 새로운 워크플로우 플랜 생성",
             'focus': "/focus [태스크 번호 또는 ID] - 특정 태스크로 포커스 이동",
             'plan': "/plan [list] 또는 /plan [플랜명 | 설명] - 플랜 조회/생성",
             'task': "/task [제목 | 설명] - 새 태스크 추가 또는 목록 조회",

@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-10 09:48:13
+> 최종 업데이트: 2025-07-10 11:20:18
 
 ## 🎯 프로젝트 개요
 
@@ -21,6 +21,7 @@
 
 | 디렉토리 | 설명 |
 |---------|------|
+| `.pytest_cache/` | 프로젝트 관련 파일 |
 | `.vscode/` | 프로젝트 관련 파일 |
 | `backup/` | 프로젝트 관련 파일 |
 | `backups/` | 프로젝트 관련 파일 |
@@ -30,7 +31,6 @@
 | `scripts/` | 유틸리티 스크립트 |
 | `src/` | 소스 코드 |
 | `test/` | 테스트 코드 |
-| `tests/` | 프로젝트 관련 파일 |
 
 ## 📦 의존성
 
@@ -60,6 +60,10 @@
 
 ```
 ai-coding-brain-mcp/
+├── .pytest_cache/
+│   └── v/
+│       └── cache/
+│   ├── README.md
 ├── .vscode/
 │   ├── settings.json
 ├── backup/
@@ -139,7 +143,7 @@ ai-coding-brain-mcp/
 │   ├── circular_dependency_analysis.md
 │   ├── circular_dependency_fix_report.md
 │   ├── data_ownership_policy.md
-│   └── ... (39 more files)
+│   └── ... (43 more files)
 ├── memory/
 │   ├── backup/
 │   │   ├── ai-coding-brain-mcp_20250704_195124/
@@ -149,11 +153,8 @@ ai-coding-brain-mcp/
 │   │   │   ├── context.json
 │   │   │   ├── workflow.json
 │   │   │   ├── workflow_data.json
-│   │   ├── v1_legacy_20250709_072950/
+│   │   ├── legacy_final_backup_20250710_095949/
 │   │   │   ├── workflow.json
-│   │   │   ├── workflow.py
-│   │   │   ├── workflow_commands.py
-│   │   │   └── ... (4 more files)
 │   │   ├── workflow_v2_20250709/
 │   │   │   └── v2/
 │   │   └── workflow_v3_migration_20250709_101958/
@@ -170,16 +171,22 @@ ai-coding-brain-mcp/
 │   └── workflow_v3/
 │       └── backups/
 │           ├── ai-coding-brain-mcp/
+│           ├── debug_test/
 │           ├── default/
-│           └── test_project/
+│           ├── eventbus_final_test/
+│           ├── eventbus_success_test/
+│           ├── eventbus_test_2/
+│           ├── eventbus_test_3/
+│           ├── test_eventbus_integration/
+│           └── ... (2 more directories)
 │       ├── ai-coding-brain-mcp_workflow.json
 │       ├── ai-coding-brain-mcp_workflow_backup_20250709_150224.json
-│       ├── default_workflow_backup_20250709_114306.json
-│       └── ... (1 more files)
+│       ├── debug_test_workflow.json
+│       └── ... (4 more files)
 │   ├── context.json
 │   ├── context_backup_20250701_145124_before_optimization.json
 │   ├── context_backup_ai-coding-brain-mcp_20250703_153224.json
-│   └── ... (24 more files)
+│   └── ... (23 more files)
 ├── python/
 │   ├── ai_helpers/
 │   │   └── api/
@@ -235,38 +242,11 @@ ai-coding-brain-mcp/
 ├── scripts/
 │   ├── git_helper.py
 │   ├── migrate_search_api.py
-├── src/
-│   ├── core/
-│   │   ├── domain/
-│   │   │   ├── entities/
-│   │   │   └── repositories/
-│   │   │   ├── index.ts
-│   │   └── infrastructure/
-│   │       └── filesystem/
-│   │       ├── index.ts
-│   │   ├── index.ts
-│   ├── handlers/
-│   │   ├── api-toggle-handler.ts
-│   │   ├── backup-handler.ts
-│   │   ├── build-handler.ts
-│   │   └── ... (4 more files)
-│   ├── services/
-│   │   ├── logger.ts
-│   ├── tools/
-│   │   ├── tool-definitions.ts
-│   ├── types/
-│   │   ├── tool-interfaces.ts
-│   └── utils/
-│       ├── hybrid-helper-system.ts
-│       ├── indent-helper.ts
-│       ├── logger.ts
-│       └── ... (1 more files)
-│   ├── index.ts
-└── ... (3 more directories)
+└── ... (4 more directories)
 ├── .ai-brain.config.json
 ├── .eslintrc.json
 ├── check_syntax.py
-└── ... (49 more files)
+└── ... (51 more files)
 ```
 - `.ai-brain.config.json`: AI Coding Brain 설정
 - `package.json`: Node.js 프로젝트 설정
@@ -277,14 +257,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 530개
-- **디렉토리 수**: 87개
+- **전체 파일 수**: 547개
+- **디렉토리 수**: 97개
 - **파일 타입 분포**:
-  - `.py`: 182개 (34.3%)
-  - `.md`: 84개 (15.8%)
-  - `.json`: 77개 (14.5%)
-  - `.ts`: 63개 (11.9%)
-  - `.map`: 60개 (11.3%)
+  - `.py`: 178개 (32.5%)
+  - `.md`: 89개 (16.3%)
+  - `.json`: 86개 (15.7%)
+  - `.ts`: 63개 (11.5%)
+  - `.map`: 60개 (11.0%)
 
 ## 🚀 빠른 시작
 

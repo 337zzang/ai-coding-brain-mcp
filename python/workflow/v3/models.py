@@ -391,9 +391,18 @@ class WorkflowState:
         
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'WorkflowState':
-        """딕셔너리에서 상태 복원"""
+        """딕셔너리에서 상태 복원 (개선된 버전)"""
         current_plan = None
-        if data.get('current_plan'):
+        
+        # 새로운 구조: plans 배열과 active_plan_id 처리
+        if data.get('plans') and data.get('active_plan_id'):
+            # plans 배열에서 active_plan 찾기
+            for plan_data in data['plans']:
+                if plan_data.get('id') == data['active_plan_id']:
+                    current_plan = WorkflowPlan.from_dict(plan_data)
+                    break
+        # 기존 구조 지원 (backward compatibility)
+        elif data.get('current_plan'):
             current_plan = WorkflowPlan.from_dict(data['current_plan'])
             
         events = [WorkflowEvent.from_dict(e) for e in data.get('events', [])]

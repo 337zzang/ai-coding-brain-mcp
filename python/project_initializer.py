@@ -7,7 +7,7 @@
 import json
 import logging
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 import subprocess
 
@@ -30,6 +30,9 @@ class ProjectInitializer:
     
     # 기본 디렉터리 구조
     DEFAULT_DIRS = ['src', 'test', 'docs', 'memory']
+    
+    # memory 하위 디렉터리 구조
+    MEMORY_SUBDIRS = ['active', 'backup', 'cache', 'projects', 'workflow_v3']
     
     def __init__(self):
         self.created_items = {
@@ -113,6 +116,14 @@ class ProjectInitializer:
             dir_path.mkdir(exist_ok=True)
             self.created_items['directories'].append(str(dir_path))
             logger.debug(f"디렉터리 생성: {dir_path}")
+            
+            # memory 디렉터리인 경우 하위 구조도 생성
+            if dir_name == 'memory':
+                for subdir in self.MEMORY_SUBDIRS:
+                    subdir_path = dir_path / subdir
+                    subdir_path.mkdir(exist_ok=True)
+                    self.created_items['directories'].append(str(subdir_path))
+                    logger.debug(f"하위 디렉터리 생성: {subdir_path}")
     
     def _create_basic_files(self, project_path: Path, project_name: str):
         """기본 파일들 생성"""
@@ -265,6 +276,9 @@ __author__ = "AI Coding Brain MCP"
                         except Exception as e:
                             logger.warning(f"파일 백업 실패 {file.name}: {e}")
         
+        # active 디렉토리 경로
+        active_path = project_path / "memory" / "active"
+        
         # 새로운 context 생성
         context_data = {
             "project_name": project_name,
@@ -280,13 +294,53 @@ __author__ = "AI Coding Brain MCP"
             }
         }
         
-        context_path = project_path / "memory" / "context.json"
+        context_path = active_path / "context.json"
         context_path.write_text(
             json.dumps(context_data, indent=2, ensure_ascii=False),
             encoding="utf-8"
         )
         self.created_items['files'].append(str(context_path))
         logger.debug(f"컨텍스트 초기화: {context_path}")
+        
+        # workflow.json 생성
+        workflow_data = {
+            "version": "3.0",
+            "projects": {
+                project_name: {
+                    "current_plan": None,
+                    "plans": [],
+                    "events": []
+                }
+            },
+            "active_project": project_name,
+            "metadata": {
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "last_modified": datetime.now(timezone.utc).isoformat()
+            }
+        }
+        
+        workflow_path = active_path / "workflow.json"
+        workflow_path.write_text(
+            json.dumps(workflow_data, indent=2, ensure_ascii=False),
+            encoding="utf-8"
+        )
+        self.created_items['files'].append(str(workflow_path))
+        logger.debug(f"워크플로우 초기화: {workflow_path}")
+        
+        # session_info.json 생성
+        session_data = {
+            "project": project_name,
+            "created_at": datetime.now().isoformat(),
+            "last_accessed": datetime.now().isoformat()
+        }
+        
+        session_path = active_path / "session_info.json"
+        session_path.write_text(
+            json.dumps(session_data, indent=2, ensure_ascii=False),
+            encoding="utf-8"
+        )
+        self.created_items['files'].append(str(session_path))
+        logger.debug(f"세션 정보 초기화: {session_path}")
     
     def _initialize_git(self, project_path: Path, project_name: str):
         """Git 저장소 초기화"""
@@ -326,6 +380,8 @@ venv/
 Thumbs.db
 memory/context.json.backup*
 memory/workflow.json.backup*
+memory/backup/
+memory/cache/
 """
             gitignore_path = project_path / ".gitignore"
             gitignore_path.write_text(gitignore_content, encoding="utf-8")

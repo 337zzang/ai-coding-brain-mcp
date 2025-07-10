@@ -40,11 +40,23 @@ def get_memory_dir(project_name: str = None) -> Path:
 
 def get_context_path(project_name: str = None) -> Path:
     """프로젝트의 context.json 경로를 반환합니다."""
-    return get_memory_dir(project_name) / "context.json"
+    memory_dir = get_memory_dir(project_name)
+    # 새로운 구조 우선 확인
+    active_path = memory_dir / "active" / "context.json"
+    if active_path.exists():
+        return active_path
+    # 기존 경로 fallback
+    return memory_dir / "context.json"
 
 def get_workflow_path(project_name: str = None) -> Path:
-    """프로젝트의 workflow.json 경로를 반환합니다."""  
-    return get_memory_dir(project_name) / "workflow.json"
+    """프로젝트의 workflow.json 경로를 반환합니다."""
+    memory_dir = get_memory_dir(project_name)
+    # 새로운 구조 우선 확인
+    active_path = memory_dir / "active" / "workflow.json"
+    if active_path.exists():
+        return active_path
+    # 기존 경로 fallback
+    return memory_dir / "workflow.json"
 
 def get_cache_dir(project_name: str = None) -> Path:
     """프로젝트의 캐시 디렉토리를 반환합니다."""

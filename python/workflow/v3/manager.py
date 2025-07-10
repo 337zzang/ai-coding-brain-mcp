@@ -73,6 +73,35 @@ class WorkflowManager:
         return cls._instances[project_name]
 
         
+    
+    @classmethod
+    def clear_instance(cls, project_name: str = None) -> None:
+        """인스턴스 캐시 무효화
+
+        Args:
+            project_name: 특정 프로젝트만 제거. None이면 모든 캐시 제거
+        """
+        if project_name:
+            if project_name in cls._instances:
+                del cls._instances[project_name]
+                logger.info(f"Cleared instance cache for {project_name}")
+        else:
+            cls._instances.clear()
+            logger.info("Cleared all instance caches")
+
+    @classmethod
+    def invalidate_and_reload(cls, project_name: str) -> 'WorkflowManager':
+        """인스턴스 캐시 무효화 후 새로 로드
+
+        Args:
+            project_name: 프로젝트 이름
+
+        Returns:
+            새로 로드된 WorkflowManager 인스턴스
+        """
+        cls.clear_instance(project_name)
+        return cls.get_instance(project_name)
+
     def _load_data(self) -> None:
         """저장된 데이터 로드"""
         data = self.storage.load()
@@ -103,7 +132,7 @@ class WorkflowManager:
             self.event_store = EventStore()
                 
     def _save_data(self) -> bool:
-        """데이터를 파일에 저장"""
+        """데이터를 파일에 저장 (개선: 저장 후 자동 리로드)"""
         try:
             # 이벤트 스토어를 상태에 동기화
             self.state.events = self.event_store.events
@@ -113,7 +142,14 @@ class WorkflowManager:
             create_backup = self.storage.should_auto_backup()
             
             # 저장
-            return self.storage.save(self.state.to_dict(), create_backup)
+            success = self.storage.save(self.state.to_dict(), create_backup)
+            
+            # 저장 성공 시 state 리로드 (동기화 보장)
+            if success:
+                self._load_data()
+                logger.info(f"State reloaded after save for {self.project_name}")
+            
+            return success
             
         except Exception as e:
             logger.error(f"Failed to save workflow data: {e}")

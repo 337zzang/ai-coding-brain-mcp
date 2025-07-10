@@ -12,7 +12,7 @@ from ai_helpers.context import get_project_context
 
 
 # _atomic_write는 atomic_io 모듈 사용
-from atomic_io import atomic_write as _atomic_write
+from utils.io_helpers import atomic_write as _atomic_write
 import textwrap
 
 @track_operation('file', 'create')

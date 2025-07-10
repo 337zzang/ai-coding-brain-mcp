@@ -1,7 +1,7 @@
 """코드 수정 관련 헬퍼 함수들"""
 
 import ast
-from typing import Optional, Union
+from typing import Optional, Union, List
 from ai_helpers.decorators import track_operation
 import difflib
 import shutil
@@ -574,6 +574,28 @@ def _get_parser() -> 'ASTParser':
     return _parser_instance
 
 
+def _get_indentation_level(lines: List[str], target_line: int) -> int:
+    """타겟 라인의 들여쓰기 레벨을 반환"""
+    if 0 <= target_line < len(lines):
+        line = lines[target_line]
+        return len(line) - len(line.lstrip())
+    return 0
+
+
+def _apply_indentation(code: str, indent_level: int) -> str:
+    """코드에 지정된 레벨의 들여쓰기를 적용"""
+    lines = code.split('\n')
+    indent = ' ' * indent_level
+    indented_lines = []
+    
+    for line in lines:
+        if line.strip():  # 빈 줄이 아닌 경우
+            indented_lines.append(indent + line)
+        else:
+            indented_lines.append(line)  # 빈 줄은 그대로
+    
+    return '\n'.join(indented_lines)
+
 
 @track_operation('code', 'replace_block')
 def replace_block(file_path: str, target_block: str, new_code: str) -> str:
@@ -603,15 +625,18 @@ def replace_block(file_path: str, target_block: str, new_code: str) -> str:
         except SyntaxError as e:
             raise RuntimeError(f"파일 파싱 실패 - {e}")
         
-        # 3. 새 코드 검증
+        # 3. 새 코드 검증 및 들여쓰기 보정
+        # 먼저 dedent로 들여쓰기 제거
+        normalized_code = textwrap.dedent(new_code).strip()
+        
         try:
             # 새 코드가 유효한지 확인
-            ast.parse(new_code)
+            ast.parse(normalized_code)
         except SyntaxError as e:
             raise ValueError(f"새 코드가 유효하지 않음 - {e}")
         
-        # 4. EnhancedFunctionReplacer 사용
-        replacer = EnhancedFunctionReplacer(target_block, new_code)
+        # 4. EnhancedFunctionReplacer 사용 (정규화된 코드 전달)
+        replacer = EnhancedFunctionReplacer(target_block, normalized_code)
         modified_tree = replacer.visit(tree)
         
         # 4-1. AST 위치 정보 수정 (안정성 확보)
@@ -634,7 +659,20 @@ def replace_block(file_path: str, target_block: str, new_code: str) -> str:
             except ImportError:
                 # astor도 없으면 수동으로 처리
                 # 원본 코드에서 직접 교체하는 방식으로 폴백
-                return _fallback_replace(file_path, target_block, new_code, content)
+                return _fallback_replace(file_path, target_block, normalized_code, content)
+        
+        # 5-1. 최종 코드 compile 검증
+        try:
+            compile(modified_code, file_path, 'exec')
+            _log(f"코드 compile 검증 성공: {file_path}")
+        except SyntaxError as e:
+            error_msg = f"생성된 코드에 문법 오류가 있습니다.\n"
+            error_msg += f"  파일: {file_path}\n"
+            error_msg += f"  위치: {e.lineno}:{e.offset}\n"
+            error_msg += f"  오류: {e.msg}"
+            if hasattr(e, 'text') and e.text:
+                error_msg += f"\n  코드: {e.text.strip()}"
+            raise RuntimeError(error_msg)
         
         # 6. 파일 저장 (원자적 저장)
         try:

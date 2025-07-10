@@ -179,6 +179,57 @@ class WorkflowEventAdapter:
         )
         event_bus.publish(event)
         logger.debug(f"Published CONTEXT_UPDATED: {context_type}")
+    
+    def publish_workflow_event(self, workflow_event):
+        """WorkflowEvent를 EventBus로 발행하는 범용 메서드
+        
+        Args:
+            workflow_event: WorkflowEvent 인스턴스
+        """
+        # WorkflowEvent 타입에 따라 적절한 Event 객체 생성
+        event_type = workflow_event.type
+        
+        if event_type in [EventType.PLAN_CREATED, EventType.PLAN_STARTED, 
+                         EventType.PLAN_COMPLETED, EventType.PLAN_ARCHIVED]:
+            # 플랜 관련 이벤트
+            event = create_plan_event(
+                event_type,
+                plan_id=workflow_event.plan_id,
+                plan_name=workflow_event.details.get('name', workflow_event.details.get('plan_name', '')),
+                plan_status=workflow_event.details.get('status', ''),
+                project_name=self.workflow_manager.project_name
+            )
+        elif event_type in [EventType.TASK_ADDED, EventType.TASK_STARTED,
+                           EventType.TASK_COMPLETED]:
+            # 태스크 관련 이벤트
+            event = create_task_event(
+                event_type,
+                task_id=workflow_event.task_id,
+                task_title=workflow_event.details.get('title', workflow_event.details.get('task_title', '')),
+                task_status=workflow_event.details.get('status', ''),
+                plan_id=workflow_event.plan_id,
+                project_name=self.workflow_manager.project_name
+            )
+        elif event_type == EventType.NOTE_ADDED:
+            # 노트 추가 이벤트
+            event = create_task_event(
+                event_type,
+                task_id=workflow_event.task_id,
+                task_title=workflow_event.details.get('task_title', ''),
+                plan_id=workflow_event.plan_id,
+                project_name=self.workflow_manager.project_name,
+                note=workflow_event.details.get('note', '')
+            )
+        else:
+            # 기타 이벤트는 context_event로 처리
+            event = create_context_event(
+                event_type,
+                workflow_event.details
+            )
+        
+        # EventBus로 발행
+        event_bus.publish(event)
+        logger.debug(f"Published {event_type.value} via WorkflowEventAdapter")
 
     def cleanup(self):
         """정리 작업 (이벤트 핸들러 제거)"""

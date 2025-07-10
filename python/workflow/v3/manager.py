@@ -16,6 +16,7 @@ from .events import EventStore, EventBuilder
 from .parser import CommandParser
 from .storage import WorkflowStorage
 from .context_integration import ContextIntegration
+from .workflow_event_adapter import WorkflowEventAdapter
 from .errors import (
     WorkflowError, ErrorCode, ErrorMessages, 
     ErrorHandler, InputValidator, SuccessMessages
@@ -40,6 +41,9 @@ class WorkflowManager:
         self.parser = CommandParser()
         self.storage = WorkflowStorage(project_name)
         self.context = ContextIntegration(project_name)
+        
+        # EventBus 연동을 위한 어댑터 초기화
+        self.event_adapter = WorkflowEventAdapter(self)
         
         # 명령어 핸들러 매핑
         self.command_handlers = {
@@ -129,8 +133,8 @@ class WorkflowManager:
             self.state.current_plan = plan
             
             # 이벤트 기록
-            self.event_store.add(EventBuilder.plan_created(plan))
-            self.event_store.add(EventBuilder.plan_started(plan))
+            self._add_event(EventBuilder.plan_created(plan))
+            self._add_event(EventBuilder.plan_started(plan))
             
             # 컨텍스트 동기화
             self.context.sync_plan_summary(plan)
@@ -163,7 +167,7 @@ class WorkflowManager:
             
             # 이벤트 기록
             event = EventBuilder.task_added(self.state.current_plan.id, task)
-            self.event_store.add(event)
+            self._add_event(event)
             
             # 컨텍스트 동기화
             self.context.sync_plan_summary(self.state.current_plan)
@@ -213,7 +217,7 @@ class WorkflowManager:
             details={'note': note}
         )
         self.state.add_event(event)
-        self.event_store.add(event)
+        self._add_event(event)
         
         # 저장
         self._save_data()
@@ -247,14 +251,14 @@ class WorkflowManager:
         
         # 이벤트 기록
         event = EventBuilder.task_completed(self.state.current_plan.id, task, note)
-        self.event_store.add(event)
+        self._add_event(event)
         self.context.record_event(event)  # 중요 이벤트이므로 컨텍스트에 기록
         
         # 모든 태스크가 완료되었는지 확인
         if self.is_plan_completed():
             self.state.current_plan.complete()
             complete_event = EventBuilder.plan_completed(self.state.current_plan)
-            self.event_store.add(complete_event)
+            self._add_event(complete_event)
             self.context.record_event(complete_event)
             
         # 컨텍스트 동기화
@@ -289,7 +293,7 @@ class WorkflowManager:
         
         # 이벤트 기록
         event = EventBuilder.plan_archived(self.state.current_plan)
-        self.event_store.add(event)
+        self._add_event(event)
         self.context.record_event(event)  # 중요 이벤트
         
         # 현재 플랜 제거
@@ -776,3 +780,21 @@ class WorkflowManager:
         except Exception as e:
             logger.error(f"Failed to import data: {e}")
             return False
+    
+    def cleanup(self):
+        """리소스 정리 및 이벤트 어댑터 해제"""
+        if hasattr(self, 'event_adapter'):
+            self.event_adapter.cleanup()
+            logger.info(f"WorkflowEventAdapter cleaned up for project: {self.project_name}")
+    
+    def _add_event(self, event):
+        """이벤트를 EventStore에 추가하고 EventBus로 발행"""
+        # EventStore에 추가
+        self.event_store.add(event)
+        
+        # EventBus로 발행 (event_adapter가 있는 경우)
+        if hasattr(self, 'event_adapter') and self.event_adapter:
+            try:
+                self.event_adapter.publish_workflow_event(event)
+            except Exception as e:
+                logger.error(f"Failed to publish event to EventBus: {e}")

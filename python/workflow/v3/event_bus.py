@@ -163,8 +163,9 @@ class EventBus:
         Args:
             event: 발행할 이벤트 객체
         """
-        if not isinstance(event, Event):
-            raise ValueError(f"Expected Event object, got {type(event)}")
+        # 더 유연한 타입 체크 - duck typing 방식
+        if not hasattr(event, 'type') or not hasattr(event, 'id'):
+            raise ValueError(f"Event must have 'type' and 'id' attributes, got {type(event)}")
 
         self._stats['published'] += 1
         self._event_queue.put(event)

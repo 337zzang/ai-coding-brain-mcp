@@ -35,7 +35,9 @@ def get_flow_instance():
             return {'plan': type('obj', (object,), {'id': 'dummy-id'})}
         
         def save_context(self):
-            pass
+            # ContextManager를 통해 저장
+            from ai_helpers.context import save_context as save_ctx
+            save_ctx()
         
         def add_task_to_project(self, project_id, description, phase_id=None, priority=1):
             return None
@@ -93,7 +95,7 @@ def get_flow_instance():
 @track_operation('project', 'get_current')
 def get_current_project() -> Optional[Dict[str, Any]]:
     """현재 활성 프로젝트 정보 반환"""
-    flow = get_flow_instance()
+    flow = get_flow_instance()()
     projects = flow.list_all_projects()
     
     # 활성 프로젝트 찾기 (보통 첫 번째)
@@ -113,7 +115,7 @@ def list_tasks(project_id: Optional[str] = None, status: Optional[str] = None) -
     Returns:
         작업 목록
     """
-    flow = get_flow_instance()
+    flow = get_flow_instance()()
     
     # 프로젝트 ID 확인
     if project_id is None:
@@ -144,7 +146,7 @@ def quick_task(description: str, priority: int = 1) -> Optional[Dict[str, Any]]:
     Returns:
         생성된 작업 정보
     """
-    flow = get_flow_instance()
+    flow = get_flow_instance()()
     current = get_current_project()
     
     if not current:
@@ -182,7 +184,7 @@ def get_project_progress(project_id: Optional[str] = None) -> Dict[str, Any]:
     Returns:
         진행 상황 정보
     """
-    flow = get_flow_instance()
+    flow = get_flow_instance()()
     
     if project_id is None:
         current = get_current_project()
@@ -206,7 +208,7 @@ def create_standard_phases(project_id: Optional[str] = None) -> List[Dict[str, A
     Returns:
         생성된 Phase 목록
     """
-    flow = get_flow_instance()
+    flow = get_flow_instance()()
     
     if project_id is None:
         current = get_current_project()
@@ -252,7 +254,7 @@ def get_current_phase(project_id: Optional[str] = None) -> Optional[Dict[str, An
     Returns:
         현재 Phase 정보
     """
-    flow = get_flow_instance()
+    flow = get_flow_instance()()
     
     if project_id is None:
         current = get_current_project()
@@ -268,7 +270,7 @@ def get_current_phase(project_id: Optional[str] = None) -> Optional[Dict[str, An
 @track_operation('phase', 'complete_current')
 def complete_current_phase() -> bool:
     """현재 Phase 완료 처리"""
-    flow = get_flow_instance()
+    flow = get_flow_instance()()
     current = get_current_project()
     
     if not current:
@@ -293,7 +295,7 @@ def complete_current_phase() -> bool:
 @track_operation('status', 'summary')
 def get_system_summary() -> Dict[str, Any]:
     """전체 시스템 상태 요약"""
-    flow = get_flow_instance()
+    flow = get_flow_instance()()
     
     # 각 Manager의 상태 수집
     projects = flow.list_all_projects()
@@ -327,7 +329,7 @@ def get_system_summary() -> Dict[str, Any]:
 @track_operation('status', 'pending_tasks')
 def get_pending_tasks() -> List[Dict[str, Any]]:
     """대기 중인 작업 목록 조회"""
-    flow = get_flow_instance()
+    flow = get_flow_instance()()
     tasks = flow.task_manager.get_pending_tasks()
     return [task.__dict__ for task in tasks]
 
@@ -343,7 +345,7 @@ def get_event_history(event_type: Optional[str] = None, limit: int = 10) -> List
     Returns:
         이벤트 목록
     """
-    flow = get_flow_instance()
+    flow = get_flow_instance()()
     
     if event_type:
         history = flow.event_bus.get_history(event_type)
@@ -375,10 +377,12 @@ def project(name: str = None) -> Dict[str, Any]:
         프로젝트 정보
     """
     if name:
-        flow = get_flow_instance()
+        flow = get_flow_instance()()
         result = flow.create_project(name, f"{name} 프로젝트")
         create_standard_phases(result['plan'].id)
-        flow.save_context()
+        # ContextManager를 통한 컨텍스트 저장
+        from ai_helpers.context import save_context
+        save_context()
         return result
     else:
         return get_current_project()
@@ -396,8 +400,8 @@ def task(description: str = None) -> Any:
     if description:
         result = quick_task(description)
         # 컨텍스트 저장
-        flow = get_flow_instance()
-        flow.save_context()
+        from ai_helpers.context import save_context
+        save_context()
         return result
     else:
         tasks = list_tasks()
@@ -409,7 +413,7 @@ def task(description: str = None) -> Any:
 
 def progress() -> Dict[str, Any]:
     """현재 프로젝트 진행 상황 조회 (간편 명령)"""
-    flow = get_flow_instance()
+    flow = get_flow_instance()()
     current = get_current_project()
     
     if not current:
@@ -443,7 +447,7 @@ def complete(task_id: str) -> bool:
     Returns:
         성공 여부
     """
-    flow = get_flow_instance()
+    flow = get_flow_instance()()
     
     # 짧은 ID로 검색
     if len(task_id) == 6:
@@ -481,7 +485,7 @@ def reset_project(project_id: Optional[str] = None) -> bool:
     Returns:
         성공 여부
     """
-    flow = get_flow_instance()
+    flow = get_flow_instance()()
     
     if project_id is None:
         current = get_current_project()

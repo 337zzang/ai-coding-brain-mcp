@@ -19,7 +19,8 @@ class WorkflowDispatcher:
             storage_path = os.path.join('memory', 'workflow_v3')
         
         self.project_name = project_name
-        self.manager = WorkflowManager(project_name)
+        # 싱글톤 패턴 사용
+        self.manager = WorkflowManager.get_instance(project_name)
         self.parser = CommandParser()
         
     def execute(self, command: str) -> Dict[str, Any]:

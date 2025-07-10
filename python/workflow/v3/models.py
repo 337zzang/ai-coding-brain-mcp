@@ -3,7 +3,10 @@ Workflow v3 데이터 모델
 이벤트 기반 아키텍처를 위한 개선된 모델
 """
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+
+# 한국 표준시(KST) 정의
+KST = timezone(timedelta(hours=9))
 from enum import Enum
 from typing import List, Dict, Any, Optional
 import uuid
@@ -42,7 +45,7 @@ class WorkflowEvent:
     """워크플로우 이벤트"""
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     type: EventType = EventType.PLAN_CREATED
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(KST))
     plan_id: str = ""
     task_id: Optional[str] = None
     user: str = "system"
@@ -65,14 +68,14 @@ class WorkflowEvent:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'WorkflowEvent':
         """딕셔너리에서 이벤트 생성"""
-        timestamp_str = data.get('timestamp', datetime.now(timezone.utc).isoformat())
+        timestamp_str = data.get('timestamp', datetime.now(KST).isoformat())
         # Handle both offset-aware and naive datetime strings
         try:
             timestamp = datetime.fromisoformat(timestamp_str)
             if timestamp.tzinfo is None:
-                timestamp = timestamp.replace(tzinfo=timezone.utc)
+                timestamp = timestamp.replace(tzinfo=KST)
         except:
-            timestamp = datetime.now(timezone.utc)
+            timestamp = datetime.now(KST)
             
         return cls(
             id=data.get('id', str(uuid.uuid4())),
@@ -113,7 +116,7 @@ class WorkflowEvent:
         details = {
             "task_id": task_id,
             "note": note,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(KST).isoformat(),
             **kwargs
         }
         return cls(type=event_type, plan_id=plan_id, task_id=task_id, details=details)
@@ -123,7 +126,7 @@ class WorkflowEvent:
         """시스템 관련 이벤트 생성 헬퍼"""
         details = {
             "message": message,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(KST).isoformat(),
             **kwargs
         }
         return cls(type=event_type, plan_id=plan_id, details=details)
@@ -136,8 +139,8 @@ class Task:
     title: str = ""
     description: str = ""
     status: TaskStatus = TaskStatus.TODO
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(KST))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(KST))
     started_at: Optional[datetime] = None  # v3 추가
     completed_at: Optional[datetime] = None
     duration: Optional[int] = None  # v3 추가 - 소요시간(초)
@@ -160,14 +163,14 @@ class Task:
     def start(self) -> None:
         """태스크 시작"""
         self.status = TaskStatus.IN_PROGRESS
-        self.started_at = datetime.now(timezone.utc)
-        self.updated_at = datetime.now(timezone.utc)
+        self.started_at = datetime.now(KST)
+        self.updated_at = datetime.now(KST)
         
     def complete(self, note: str = "") -> None:
         """태스크 완료"""
         self.status = TaskStatus.COMPLETED
-        self.completed_at = datetime.now(timezone.utc)
-        self.updated_at = datetime.now(timezone.utc)
+        self.completed_at = datetime.now(KST)
+        self.updated_at = datetime.now(KST)
         
         if self.started_at:
             self.duration = int((self.completed_at - self.started_at).total_seconds())
@@ -219,14 +222,14 @@ class Task:
     def _parse_datetime(dt_str: Optional[str]) -> datetime:
         """날짜/시간 문자열 파싱"""
         if not dt_str:
-            return datetime.now(timezone.utc)
+            return datetime.now(KST)
         try:
             dt = datetime.fromisoformat(dt_str)
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
+                dt = dt.replace(tzinfo=KST)
             return dt
         except:
-            return datetime.now(timezone.utc)
+            return datetime.now(KST)
 
 
 @dataclass
@@ -238,8 +241,8 @@ class WorkflowPlan:
     status: PlanStatus = PlanStatus.DRAFT
     tasks: List[Task] = field(default_factory=list)
     current_task_index: int = 0
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(KST))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(KST))
     completed_at: Optional[datetime] = None  # v3 추가
     archived_at: Optional[datetime] = None  # v3 추가
     stats: Dict[str, Any] = field(default_factory=dict)  # v3 추가
@@ -262,20 +265,20 @@ class WorkflowPlan:
     def start(self) -> None:
         """플랜 시작"""
         self.status = PlanStatus.ACTIVE
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(KST)
         
     def complete(self) -> None:
         """플랜 완료"""
         self.status = PlanStatus.COMPLETED
-        self.completed_at = datetime.now(timezone.utc)
-        self.updated_at = datetime.now(timezone.utc)
+        self.completed_at = datetime.now(KST)
+        self.updated_at = datetime.now(KST)
         self._update_stats()
         
     def archive(self) -> None:
         """플랜 보관 처리"""
         self.status = PlanStatus.ARCHIVED
-        self.archived_at = datetime.now(timezone.utc)
-        self.updated_at = datetime.now(timezone.utc)
+        self.archived_at = datetime.now(KST)
+        self.updated_at = datetime.now(KST)
         self._update_stats()
 
     def archive(self) -> None:
@@ -283,8 +286,8 @@ class WorkflowPlan:
         if self.status != PlanStatus.COMPLETED:
             self.complete()
         self.status = PlanStatus.ARCHIVED
-        self.archived_at = datetime.now(timezone.utc)
-        self.updated_at = datetime.now(timezone.utc)
+        self.archived_at = datetime.now(KST)
+        self.updated_at = datetime.now(KST)
         
     def _update_stats(self) -> None:
         """통계 정보 업데이트"""
@@ -370,14 +373,14 @@ class WorkflowState:
     current_plan: Optional[WorkflowPlan] = None
     events: List[WorkflowEvent] = field(default_factory=list)
     version: str = "3.0.0"
-    last_saved: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    last_saved: datetime = field(default_factory=lambda: datetime.now(KST))
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     
     def add_event(self, event: WorkflowEvent) -> None:
         """이벤트 추가"""
         self.events.append(event)
-        self.last_saved = datetime.now(timezone.utc)
+        self.last_saved = datetime.now(KST)
         
     def get_all_plans(self) -> List[WorkflowPlan]:
         """모든 플랜 반환 (현재는 current_plan만)"""

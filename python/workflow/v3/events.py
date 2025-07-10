@@ -3,7 +3,10 @@ Workflow v3 이벤트 시스템
 모든 워크플로우 변경사항을 이벤트로 기록하고 처리
 """
 from typing import Dict, Any, List, Optional, Callable
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+
+# 한국 표준시(KST) 정의
+KST = timezone(timedelta(hours=9))
 from .models import WorkflowEvent, EventType, WorkflowPlan, Task, TaskStatus
 from python.ai_helpers.helper_result import HelperResult
 import logging
@@ -93,7 +96,7 @@ class EventBuilder:
             user=user,
             details={
                 'name': plan.name,
-                'archived_at': plan.archived_at.isoformat() if plan.archived_at else datetime.now(timezone.utc).isoformat()
+                'archived_at': plan.archived_at.isoformat() if plan.archived_at else datetime.now(KST).isoformat()
             }
         )
         

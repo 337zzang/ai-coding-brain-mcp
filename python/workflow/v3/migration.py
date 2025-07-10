@@ -7,7 +7,10 @@ import os
 import shutil
 import uuid
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+
+# 한국 표준시(KST) 정의
+KST = timezone(timedelta(hours=9))
 from typing import Dict, Any, List, Optional, Tuple
 import logging
 
@@ -278,10 +281,10 @@ class WorkflowMigrator:
         try:
             dt = datetime.fromisoformat(timestamp_str)
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
+                dt = dt.replace(tzinfo=KST)
             return dt
         except:
-            return datetime.now(timezone.utc)
+            return datetime.now(KST)
             
     def _log(self, message: str, level: str = 'info') -> None:
         """마이그레이션 로그 기록"""

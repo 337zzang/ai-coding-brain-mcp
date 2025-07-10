@@ -3,7 +3,10 @@ Workflow v3 Manager
 싱글톤 패턴의 중앙 워크플로우 관리자
 """
 from typing import Dict, Optional, List, Any
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+
+# 한국 표준시(KST) 정의
+KST = timezone(timedelta(hours=9))
 import json
 import os
 from pathlib import Path
@@ -180,7 +183,7 @@ class WorkflowManager:
         try:
             # 이벤트 스토어를 상태에 동기화
             self.state.events = self.event_store.events
-            self.state.last_saved = datetime.now(timezone.utc)
+            self.state.last_saved = datetime.now(KST)
             
             # 자동 백업 확인
             create_backup = self.storage.should_auto_backup()
@@ -249,7 +252,7 @@ class WorkflowManager:
             
             # 플랜에 추가
             self.state.current_plan.tasks.append(task)
-            self.state.current_plan.updated_at = datetime.now(timezone.utc)
+            self.state.current_plan.updated_at = datetime.now(KST)
             
             # 이벤트 기록
             event = EventBuilder.task_added(self.state.current_plan.id, task)
@@ -294,7 +297,7 @@ class WorkflowManager:
                 
         # 노트 추가
         task.notes.append(note)
-        task.updated_at = datetime.now(timezone.utc)
+        task.updated_at = datetime.now(KST)
         
         # 이벤트 기록
         event = WorkflowEvent(
@@ -335,7 +338,7 @@ class WorkflowManager:
             
         # 완료 처리
         task.complete(note)
-        self.state.current_plan.updated_at = datetime.now(timezone.utc)
+        self.state.current_plan.updated_at = datetime.now(KST)
         
         # 이벤트 기록
         event = EventBuilder.task_completed(self.state.current_plan.id, task, note)

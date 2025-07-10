@@ -131,7 +131,111 @@ class HelpersWrapper:
 
     def __dir__(self):
         """사용 가능한 메서드 목록 반환"""
-        return dir(self._helpers)
+        base_methods = dir(self._helpers)
+        # 추가된 search 메서드들도 포함
+        additional_methods = ['scan_directory_dict', 'search_files_advanced', 'search_code_content']
+        return list(set(base_methods + additional_methods))
+    
+    # Search 관련 메서드들 추가
+    def scan_directory_dict(self, directory: str) -> HelperResult:
+        """디렉토리 스캔 (딕셔너리 반환)"""
+        from pathlib import Path
+        try:
+            scan_path = Path(directory).resolve()
+            
+            if not scan_path.exists():
+                return HelperResult(False, error=f"경로가 존재하지 않습니다: {directory}")
+                
+            if not scan_path.is_dir():
+                return HelperResult(False, error=f"디렉토리가 아닙니다: {directory}")
+            
+            files = []
+            directories = []
+            
+            for item in scan_path.iterdir():
+                if item.is_file():
+                    files.append({
+                        'name': item.name,
+                        'path': str(item),
+                        'size': item.stat().st_size
+                    })
+                elif item.is_dir():
+                    directories.append({
+                        'name': item.name,
+                        'path': str(item)
+                    })
+            
+            return HelperResult(True, data={
+                'files': files,
+                'directories': directories,
+                'total_files': len(files),
+                'total_directories': len(directories)
+            })
+            
+        except Exception as e:
+            return HelperResult(False, error=f"디렉토리 스캔 중 오류: {str(e)}")
+    
+    def search_files_advanced(self, directory: str, pattern: str = '*', **kwargs) -> HelperResult:
+        """파일 검색 (고급)"""
+        from pathlib import Path
+        try:
+            results = []
+            search_path = Path(directory).resolve()
+            
+            if not search_path.exists():
+                return HelperResult(False, error=f"경로가 존재하지 않습니다: {directory}")
+            
+            # 재귀적으로 파일 검색
+            if search_path.is_dir():
+                for file_path in search_path.rglob(pattern):
+                    if file_path.is_file():
+                        results.append(str(file_path))
+                        
+            return HelperResult(True, data={'results': results})
+            
+        except Exception as e:
+            return HelperResult(False, error=f"파일 검색 중 오류: {str(e)}")
+    
+    def search_code_content(self, path: str, pattern: str, file_pattern: str = "*.py") -> HelperResult:
+        """코드 내용 검색"""
+        from pathlib import Path
+        try:
+            results = []
+            search_path = Path(path).resolve()
+            
+            if not search_path.exists():
+                return HelperResult(False, error=f"경로가 존재하지 않습니다: {path}")
+            
+            # 파일 패턴에 맞는 파일들 검색
+            for file_path in search_path.rglob(file_pattern):
+                if file_path.is_file():
+                    try:
+                        content = file_path.read_text(encoding='utf-8')
+                        if pattern in content:
+                            # 패턴이 포함된 라인 찾기
+                            lines = content.split('\n')
+                            matches = []
+                            for i, line in enumerate(lines):
+                                if pattern in line:
+                                    matches.append({
+                                        'line_number': i + 1,
+                                        'line_content': line.strip()
+                                    })
+                            
+                            if matches:
+                                results.append({
+                                    'file_path': str(file_path),
+                                    'matches': matches
+                                })
+                                
+                    except Exception:
+                        # 읽을 수 없는 파일은 건너뛰기
+                        continue
+                        
+            return HelperResult(True, data={'results': results})
+            
+        except Exception as e:
+            return HelperResult(False, error=f"코드 검색 중 오류: {str(e)}")
 
     # 자주 사용하는 메서드들에 대한 타입 힌트와 문서화
     def read_file(self, path: str, **kwargs) -> HelperResult:

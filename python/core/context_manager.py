@@ -144,6 +144,21 @@ class ContextManager:
         # CacheAPI는 즉시 초기화 (캐시 매니저 없이도 작동)
         self._cache_api = CacheAPI(None)  # None으로 초기화하면 폴백 모드
         
+        # 통합 tracking 시스템 초기화
+        if 'tracking' not in self.context:
+            self.context['tracking'] = {
+                'tasks': {},
+                'files': {},
+                'operations': [],
+                'errors': [],
+                'statistics': {
+                    'total_operations': 0,
+                    'successful_operations': 0,
+                    'failed_operations': 0,
+                    'total_execution_time': 0
+                }
+            }
+        
         if not project_name:
             project_name = self.get_current_project_name()
             
@@ -575,6 +590,53 @@ class ContextManager:
             if self._cache_manager:
                 dep_paths = [Path(d) for d in dependencies]
                 self._cache_manager.set(f"context_{key}", value, dependencies=dep_paths)
+    
+    # ===== 통합 Tracking 시스템 메서드 =====
+    
+    def get_tracking(self) -> Dict[str, Any]:
+        """통합 tracking 데이터 반환"""
+        if 'tracking' not in self.context:
+            self.context['tracking'] = {
+                'tasks': {},
+                'files': {},
+                'operations': [],
+                'errors': [],
+                'statistics': {
+                    'total_operations': 0,
+                    'successful_operations': 0,
+                    'failed_operations': 0,
+                    'total_execution_time': 0
+                }
+            }
+        return self.context['tracking']
+    
+    def get_file_access_history(self) -> List[Dict[str, Any]]:
+        """파일 접근 이력 반환 (레거시 호환성)"""
+        tracking = self.get_tracking()
+        history = []
+        for file_path, file_data in tracking['files'].items():
+            for op in file_data.get('operations', []):
+                history.append({
+                    'file': file_path,
+                    'operation': op['action'],
+                    'timestamp': op['timestamp'],
+                    'task_id': op.get('task_id')
+                })
+        # 시간 역순 정렬
+        return sorted(history, key=lambda x: x['timestamp'], reverse=True)[:100]
+    
+    def get_error_log(self) -> List[Dict[str, Any]]:
+        """에러 로그 반환 (레거시 호환성)"""
+        tracking = self.get_tracking()
+        return tracking.get('errors', [])
+    
+    def get_tracking_statistics(self) -> Dict[str, Any]:
+        """추적 통계 반환"""
+        tracking = self.get_tracking()
+        stats = tracking.get('statistics', {}).copy()
+        stats['total_files_tracked'] = len(tracking.get('files', {}))
+        stats['total_tasks_tracked'] = len(tracking.get('tasks', {}))
+        return stats
 
 # 싱글톤 인스턴스
 _context_manager_instance = None

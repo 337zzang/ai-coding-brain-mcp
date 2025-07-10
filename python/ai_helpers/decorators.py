@@ -105,168 +105,231 @@ def _set_attr_safe(obj, attr, value):
 
 
 def _track_success(context, operation_type: str, action: str, args: tuple, kwargs: dict, result: Any, execution_time: float):
-    """작업 성공 추적"""
+    """작업 성공 추적 - 통합된 tracking 시스템 사용"""
     if not context:
         return
-        
-    # 현재 태스크 가져오기
-    current_task = _get_attr_safe(context, 'current_task')
-    if not current_task:
-        return
     
-    # metadata 가져오기
-    metadata = _get_attr_safe(context, 'metadata', {})
-    if not isinstance(metadata, dict):
-        metadata = {}
-    
-    # task_tracking이 metadata에 있는지 확인
-    if 'task_tracking' not in metadata:
-        metadata['task_tracking'] = {}
-    
-    task_tracking = metadata['task_tracking']
-    
-    # 현재 태스크의 추적 정보가 없으면 생성
-    if current_task not in task_tracking:
-        task_tracking[current_task] = {
+    # 통합 tracking 초기화
+    if 'tracking' not in context:
+        context['tracking'] = {
+            'tasks': {},
+            'files': {},
             'operations': [],
-            'files_modified': set(),
-            'files_accessed': set(),
-            'functions_edited': set(),
-            'start_time': datetime.now().isoformat(),
-            'status': 'in_progress'
+            'errors': [],
+            'statistics': {
+                'total_operations': 0,
+                'successful_operations': 0,
+                'failed_operations': 0,
+                'total_execution_time': 0
+            }
         }
     
-    # 작업 기록 추가
+    tracking = context['tracking']
+    
+    # 전체 작업 로그에 추가
     operation_record = {
         'timestamp': datetime.now().isoformat(),
         'type': operation_type,
         'action': action,
         'execution_time': execution_time,
+        'status': 'success',
         'function': args[0].__name__ if args and hasattr(args[0], '__name__') else None
     }
     
-    task_tracking[current_task]['operations'].append(operation_record)
+    tracking['operations'].append(operation_record)
     
-    # metadata 다시 설정
-    _set_attr_safe(context, 'metadata', metadata)
+    # 최근 1000개만 유지
+    if len(tracking['operations']) > 1000:
+        tracking['operations'] = tracking['operations'][-1000:]
+    
+    # 통계 업데이트
+    tracking['statistics']['total_operations'] += 1
+    tracking['statistics']['successful_operations'] += 1
+    tracking['statistics']['total_execution_time'] += execution_time
+    
+    # 현재 태스크가 있으면 태스크별 추적
+    current_task = _get_attr_safe(context, 'current_task')
+    if current_task:
+        if current_task not in tracking['tasks']:
+            tracking['tasks'][current_task] = {
+                'operations': [],
+                'files_modified': set(),
+                'files_accessed': set(),
+                'functions_edited': set(),
+                'start_time': datetime.now().isoformat(),
+                'status': 'in_progress'
+            }
+        
+        tracking['tasks'][current_task]['operations'].append(operation_record)
 
 
 def _track_error(context, operation_type: str, action: str, error: Exception, args: tuple, kwargs: dict, execution_time: float):
-    """작업 실패 추적"""
+    """작업 실패 추적 - 통합된 tracking 시스템 사용"""
     if not context:
         return
     
-    # 오류 로그에 추가
+    # 통합 tracking 초기화
+    if 'tracking' not in context:
+        context['tracking'] = {
+            'tasks': {},
+            'files': {},
+            'operations': [],
+            'errors': [],
+            'statistics': {
+                'total_operations': 0,
+                'successful_operations': 0,
+                'failed_operations': 0,
+                'total_execution_time': 0
+            }
+        }
+    
+    tracking = context['tracking']
+    
+    # 에러 기록
     error_record = {
         'timestamp': datetime.now().isoformat(),
         'type': operation_type,
         'action': action,
         'error': str(error),
         'error_type': error.__class__.__name__,
-        'execution_time': execution_time
+        'execution_time': execution_time,
+        'function': args[0].__name__ if args and hasattr(args[0], '__name__') else None
     }
     
-    # error_log 가져오기/설정
-    error_log = _get_attr_safe(context, 'error_log', [])
-    if not isinstance(error_log, list):
-        error_log = []
+    # 에러 로그에 추가
+    tracking['errors'].append(error_record)
     
-    error_log.append(error_record)
+    # 최근 100개만 유지
+    if len(tracking['errors']) > 100:
+        tracking['errors'] = tracking['errors'][-100:]
     
-    # 로그 크기 제한 (최근 100개만 유지)
-    if len(error_log) > 100:
-        error_log = error_log[-100:]
+    # 전체 작업 로그에도 추가
+    operation_record = {**error_record, 'status': 'error'}
+    tracking['operations'].append(operation_record)
     
-    _set_attr_safe(context, 'error_log', error_log)
+    # 통계 업데이트
+    tracking['statistics']['total_operations'] += 1
+    tracking['statistics']['failed_operations'] += 1
+    tracking['statistics']['total_execution_time'] += execution_time
 
 
 def _track_file_operation(context, action: str, args: tuple, kwargs: dict):
-    """파일 작업 추적"""
+    """파일 작업 추적 - 통합된 tracking 시스템 사용"""
     if not context or not args:
         return
+        
+    # 통합 tracking 초기화 확인
+    if 'tracking' not in context:
+        context['tracking'] = {
+            'tasks': {},
+            'files': {},
+            'operations': [],
+            'errors': [],
+            'statistics': {
+                'total_operations': 0,
+                'successful_operations': 0,
+                'failed_operations': 0,
+                'total_execution_time': 0
+            }
+        }
+    
+    tracking = context['tracking']
     
     # 파일 경로 추출
     file_path = args[0] if args else kwargs.get('path', kwargs.get('file_path', ''))
     
-    # file_access_history에 기록
-    file_access_history = _get_attr_safe(context, 'file_access_history', [])
-    if not isinstance(file_access_history, list):
-        file_access_history = []
+    # 파일별 추적
+    if file_path not in tracking['files']:
+        tracking['files'][file_path] = {
+            'first_accessed': datetime.now().isoformat(),
+            'last_accessed': datetime.now().isoformat(),
+            'access_count': 0,
+            'operations': []
+        }
     
-    access_record = {
-        'file': file_path,
-        'operation': action,
+    file_tracking = tracking['files'][file_path]
+    file_tracking['last_accessed'] = datetime.now().isoformat()
+    file_tracking['access_count'] += 1
+    file_tracking['operations'].append({
         'timestamp': datetime.now().isoformat(),
+        'action': action,
         'task_id': _get_attr_safe(context, 'current_task')
-    }
+    })
     
-    file_access_history.append(access_record)
+    # 최근 100개 작업만 유지
+    if len(file_tracking['operations']) > 100:
+        file_tracking['operations'] = file_tracking['operations'][-100:]
     
-    # 히스토리 크기 제한
-    if len(file_access_history) > 100:
-        file_access_history = file_access_history[-100:]
-    
-    _set_attr_safe(context, 'file_access_history', file_access_history)
-    
-    # task_tracking에도 기록
+    # 현재 태스크의 파일 추적
     current_task = _get_attr_safe(context, 'current_task')
-    metadata = _get_attr_safe(context, 'metadata', {})
-    
-    if current_task and isinstance(metadata, dict) and 'task_tracking' in metadata:
-        task_tracking = metadata['task_tracking']
-        if current_task in task_tracking:
-            if action in ['create', 'modify', 'write']:
-                # files_modified가 set인지 확인하고 아니면 set으로 변환
-                if 'files_modified' not in task_tracking[current_task]:
-                    task_tracking[current_task]['files_modified'] = set()
-                elif not isinstance(task_tracking[current_task]['files_modified'], set):
-                    # 문자열이나 리스트인 경우 set으로 변환
-                    existing = task_tracking[current_task]['files_modified']
-                    if isinstance(existing, str):
-                        task_tracking[current_task]['files_modified'] = {existing} if existing else set()
-                    elif isinstance(existing, list):
-                        task_tracking[current_task]['files_modified'] = set(existing)
-                    else:
-                        task_tracking[current_task]['files_modified'] = set()
-                
-                task_tracking[current_task]['files_modified'].add(file_path)
+    if current_task and current_task in tracking['tasks']:
+        task_tracking = tracking['tasks'][current_task]
+        if action in ['create', 'modify', 'write']:
+            task_tracking['files_modified'].add(file_path)
+        else:
+            task_tracking['files_accessed'].add(file_path)
 
 
 def _track_code_operation(context, action: str, args: tuple, kwargs: dict):
-    """코드 수정 작업 추적"""
+    """코드 수정 작업 추적 - 통합된 tracking 시스템 사용"""
     if not context or len(args) < 2:
         return
+        
+    # 통합 tracking 초기화 확인
+    if 'tracking' not in context:
+        context['tracking'] = {
+            'tasks': {},
+            'files': {},
+            'operations': [],
+            'errors': [],
+            'statistics': {
+                'total_operations': 0,
+                'successful_operations': 0,
+                'failed_operations': 0,
+                'total_execution_time': 0
+            }
+        }
+    
+    tracking = context['tracking']
     
     file_path = args[0]
     block_name = args[1] if len(args) > 1 else kwargs.get('block_name', '')
     
-    # function_edit_history에 기록
-    function_edit_history = _get_attr_safe(context, 'function_edit_history', [])
-    if not isinstance(function_edit_history, list):
-        function_edit_history = []
+    # 파일별 추적에 코드 수정 기록
+    if file_path not in tracking['files']:
+        tracking['files'][file_path] = {
+            'first_accessed': datetime.now().isoformat(),
+            'last_accessed': datetime.now().isoformat(),
+            'access_count': 0,
+            'operations': [],
+            'code_edits': []  # 코드 수정 전용
+        }
     
+    file_tracking = tracking['files'][file_path]
+    file_tracking['last_accessed'] = datetime.now().isoformat()
+    
+    # 코드 수정 기록
     edit_record = {
-        'file': file_path,
-        'function': block_name,
-        'operation': action,
         'timestamp': datetime.now().isoformat(),
+        'function': block_name,
+        'action': action,
         'task_id': _get_attr_safe(context, 'current_task')
     }
     
-    function_edit_history.append(edit_record)
+    if 'code_edits' not in file_tracking:
+        file_tracking['code_edits'] = []
     
-    # 히스토리 크기 제한
-    if len(function_edit_history) > 50:
-        function_edit_history = function_edit_history[-50:]
+    file_tracking['code_edits'].append(edit_record)
     
-    _set_attr_safe(context, 'function_edit_history', function_edit_history)
+    # 최근 50개만 유지
+    if len(file_tracking['code_edits']) > 50:
+        file_tracking['code_edits'] = file_tracking['code_edits'][-50:]
     
-    # task_tracking에도 기록
+    # 현재 태스크의 함수 편집 추적
     current_task = _get_attr_safe(context, 'current_task')
-    metadata = _get_attr_safe(context, 'metadata', {})
-    
-    if current_task and isinstance(metadata, dict) and 'task_tracking' in metadata:
-        task_tracking = metadata['task_tracking']
+    if current_task and current_task in tracking['tasks']:
+        task_tracking = tracking['tasks'][current_task]
+        task_tracking['functions_edited'].add(f"{file_path}::{block_name}")
         if current_task in task_tracking:
             # functions_edited가 set인지 확인하고 아니면 set으로 변환
             if 'functions_edited' not in task_tracking[current_task]:

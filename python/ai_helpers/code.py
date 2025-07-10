@@ -9,6 +9,7 @@ import warnings
 from datetime import datetime
 import textwrap
 import tempfile  # 원자적 저장을 위해 추가
+import re  # 정규식을 위해 추가
 
 
 # HelperResult import만 수행 (safe_helper는 import하지 않음)
@@ -598,18 +599,24 @@ def _apply_indentation(code: str, indent_level: int) -> str:
 
 
 @track_operation('code', 'replace_block')
-def replace_block(file_path: str, target_block: str, new_code: str) -> str:
+def replace_block(file_path: str, target_block: str, new_code: str, preserve_format: bool = False) -> str:
     """코드 블록을 새로운 코드로 교체 - AST 기반 구현
     
     Args:
         file_path: 수정할 파일 경로
         target_block: 찾을 블록 이름 (함수명, 클래스명, ClassName.method 형식 지원)
         new_code: 교체할 새 코드
+        preserve_format: True면 포맷 보존 시도 (현재는 경고만 표시)
         
     Returns:
         str: 성공/실패 메시지
     """
     try:
+        # 포맷 보존 옵션 확인
+        if preserve_format:
+            _log("⚠️ preserve_format=True: AST 변환은 주석과 포맷을 보존하지 못합니다.")
+            _log("향후 LibCST 등의 도구를 사용한 포맷 보존 기능이 추가될 예정입니다.")
+        
         # 1. 파일 읽기
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
@@ -707,82 +714,155 @@ def replace_block(file_path: str, target_block: str, new_code: str) -> str:
 
 
 def _fallback_replace(file_path: str, target_block: str, new_code: str, content: str) -> str:
-    """AST 기반 교체가 실패한 경우의 폴백 함수"""
+    """AST 기반 교체가 실패한 경우의 폴백 함수 - 개선된 버전"""
     try:
         lines = content.split('\n')
         
         # 타겟 블록 찾기
         target_line = -1
         target_indent = 0
+        decorator_start = -1
+        
+        # 클래스.메서드 형식 파싱
+        is_method = '.' in target_block
+        class_name = None
+        method_name = target_block
+        
+        if is_method:
+            parts = target_block.split('.')
+            if len(parts) == 2:
+                class_name, method_name = parts
+            else:
+                # 중첩 클래스 지원 (예: OuterClass.InnerClass.method)
+                method_name = parts[-1]
+                class_name = '.'.join(parts[:-1])
+        
+        # 현재 클래스 스코프 추적
+        current_class = None
+        class_indent = -1
         
         for i, line in enumerate(lines):
-            # 함수나 클래스 정의 찾기
-            if (f'def {target_block}(' in line or 
-                f'async def {target_block}(' in line or 
-                f'class {target_block}' in line or
-                f'class {target_block}(' in line):
-                target_line = i
-                target_indent = len(line) - len(line.lstrip())
-                break
+            stripped = line.strip()
+            
+            # 클래스 정의 추적
+            if stripped.startswith('class '):
+                indent = len(line) - len(line.lstrip())
+                # 클래스 이름 추출
+                class_match = re.match(r'class\s+(\w+)', stripped)
+                if class_match:
+                    # 이전 클래스보다 들여쓰기가 적으면 새로운 최상위 클래스
+                    if class_indent == -1 or indent <= class_indent:
+                        current_class = class_match.group(1)
+                        class_indent = indent
+                    # 중첩 클래스 처리
+                    elif indent > class_indent:
+                        current_class = f"{current_class}.{class_match.group(1)}"
+            
+            # 데코레이터 감지
+            if stripped.startswith('@') and decorator_start == -1:
+                decorator_start = i
+            
+            # 함수/메서드 정의 찾기
+            if is_method and current_class == class_name:
+                # 클래스 내 메서드 찾기
+                if (f'def {method_name}(' in line or 
+                    f'async def {method_name}(' in line):
+                    target_line = i
+                    target_indent = len(line) - len(line.lstrip())
+                    # 데코레이터가 있으면 시작 위치 조정
+                    if decorator_start != -1 and i - decorator_start < 10:  # 데코레이터와 함수 사이 최대 10줄
+                        target_line = decorator_start
+                    break
+            elif not is_method:
+                # 일반 함수/클래스 찾기
+                if (f'def {target_block}(' in line or 
+                    f'async def {target_block}(' in line or 
+                    f'class {target_block}' in line or
+                    f'class {target_block}(' in line):
+                    target_line = i
+                    target_indent = len(line) - len(line.lstrip())
+                    # 데코레이터가 있으면 시작 위치 조정
+                    if decorator_start != -1 and i - decorator_start < 10:
+                        target_line = decorator_start
+                    break
+            
+            # 데코레이터가 아닌 코드를 만나면 리셋
+            if stripped and not stripped.startswith('@') and not stripped.startswith('def') and not stripped.startswith('async def') and not stripped.startswith('class'):
+                decorator_start = -1
         
         if target_line == -1:
-            # 메서드인 경우도 확인 (ClassName.method_name)
-            if '.' in target_block:
-                parts = target_block.split('.')
-                method_name = parts[-1]
-                for i, line in enumerate(lines):
-                    if f'def {method_name}(' in line:
-                        target_line = i
-                        target_indent = len(line) - len(line.lstrip())
-                        break
+            # 비슷한 이름의 함수/클래스 찾기
+            candidates = []
+            for i, line in enumerate(lines):
+                for pattern in ['def ', 'async def ', 'class ']:
+                    if pattern in line:
+                        match = re.search(rf'{pattern}(\w+)', line)
+                        if match:
+                            name = match.group(1)
+                            if target_block.lower() in name.lower() or name.lower() in target_block.lower():
+                                candidates.append(f"라인 {i+1}: {name}")
+            
+            error_msg = f"{target_block}를 찾을 수 없습니다."
+            if candidates:
+                error_msg += f"\n\n유사한 항목들:\n" + "\n".join(candidates)
+            raise ValueError(error_msg)
         
-        if target_line == -1:
-            raise ValueError(f"{target_block}를 찾을 수 없습니다")
-        
-        # 블록의 끝 찾기
+        # 블록의 끝 찾기 - 개선된 버전
         end_line = target_line + 1
+        in_string = False
+        string_delimiter = None
+        
         while end_line < len(lines):
             line = lines[end_line]
-            # 빈 줄은 무시
-            if not line.strip():
-                end_line += 1
-                continue
-            # 같거나 더 적은 들여쓰기면 블록 끝
-            current_indent = len(line) - len(line.lstrip())
-            if current_indent <= target_indent:
-                break
+            stripped = line.strip()
+            
+            # 멀티라인 문자열 처리
+            if '"""' in line or "'''" in line:
+                if not in_string:
+                    in_string = True
+                    string_delimiter = '"""' if '"""' in line else "'''"
+                elif string_delimiter in line:
+                    in_string = False
+                    string_delimiter = None
+            
+            # 문자열 내부가 아닌 경우에만 들여쓰기 체크
+            if not in_string:
+                # 빈 줄은 무시
+                if not stripped:
+                    end_line += 1
+                    continue
+                
+                # 주석은 무시
+                if stripped.startswith('#'):
+                    end_line += 1
+                    continue
+                
+                # 같거나 더 적은 들여쓰기면 블록 끝
+                current_indent = len(line) - len(line.lstrip())
+                if current_indent <= target_indent and stripped:
+                    break
+            
             end_line += 1
         
-        # 새 코드 처리
+        # 새 코드 처리 - 이미 dedent된 코드
         new_lines = new_code.split('\n')
         
         # 원본 들여쓰기 적용
         if target_indent > 0:
-            adjusted_lines = []
-            for i, line in enumerate(new_lines):
-                if line.strip():  # 빈 줄이 아니면
-                    # 첫 줄은 이미 올바른 들여쓰기를 가질 수 있음
-                    if i == 0 and not line.startswith(' '):
-                        adjusted_lines.append(' ' * target_indent + line)
-                    else:
-                        # 기존 들여쓰기 유지하면서 target_indent 추가
-                        line_indent = len(line) - len(line.lstrip())
-                        if i > 0:  # 첫 줄이 아닌 경우
-                            adjusted_lines.append(' ' * target_indent + line)
-                        else:
-                            adjusted_lines.append(line)
-                else:
-                    adjusted_lines.append(line)
-            new_lines = adjusted_lines
+            new_lines = _apply_indentation(new_code, target_indent).split('\n')
         
         # 교체
         lines[target_line:end_line] = new_lines
+        
+        # 백업 생성
+        backup_path = f"{file_path}.{datetime.now():%Y%m%d%H%M%S}.bak"
+        shutil.copy2(file_path, backup_path)
         
         # 파일 저장
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write('\n'.join(lines))
         
-        return f"SUCCESS: {target_block} 교체 완료 (폴백 방식)"
+        return f"SUCCESS: {target_block} 교체 완료 (폴백 방식, 백업: {backup_path})"
         
     except Exception as e:
         raise RuntimeError(f"폴백 교체 실패 - {e}")

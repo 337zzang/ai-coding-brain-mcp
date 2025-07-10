@@ -379,10 +379,23 @@ class WorkflowState:
         self.events.append(event)
         self.last_saved = datetime.now(timezone.utc)
         
+    def get_all_plans(self) -> List[WorkflowPlan]:
+        """모든 플랜 반환 (현재는 current_plan만)"""
+        return [self.current_plan] if self.current_plan else []
+        
     def to_dict(self) -> Dict[str, Any]:
-        """상태를 딕셔너리로 변환"""
+        """상태를 딕셔너리로 변환 (v46: plans + active_plan_id 구조)"""
+        # 새로운 구조: plans 배열과 active_plan_id 사용
+        plans = []
+        active_plan_id = None
+        
+        if self.current_plan:
+            plans = [self.current_plan.to_dict()]
+            active_plan_id = self.current_plan.id
+            
         return {
-            'current_plan': self.current_plan.to_dict() if self.current_plan else None,
+            'plans': plans,
+            'active_plan_id': active_plan_id,
             'events': [event.to_dict() for event in self.events],
             'version': self.version,
             'last_saved': self.last_saved.isoformat(),

@@ -73,7 +73,7 @@ class WorkflowStorage:
 
                 # 원자적 쓰기
                 temp_file = self.main_file.with_suffix(".tmp")
-                write_json(temp_file, data)
+                write_json(data, temp_file)
                 temp_file.replace(self.main_file)
 
                 logger.info(f"Workflow saved: {self.main_file}")

@@ -14,6 +14,7 @@ from datetime import datetime
 
 # path_utils에서 필요한 함수들 import
 from utils.path_utils import write_gitignore, is_git_available
+from python.utils.io_helpers import write_json, atomic_write
 
 
 # 로깅 설정 - stderr로 출력하여 JSON 응답 오염 방지
@@ -379,7 +380,14 @@ def _safe_project_check(project_name: str) -> Dict[str, Any]:
 
     # 4. workflow.json 점검
     print("\n[SEARCH] 워크플로우 상태 점검 중...")
-    wf_path = Path("memory/workflow.json")
+    # 먼저 active 디렉토리에서 찾고, 없으면 기존 위치에서 찾기
+    wf_paths = [Path("memory/active/workflow.json"), Path("memory/workflow.json")]
+    
+    wf_path = None
+    for path in wf_paths:
+        if path.exists():
+            wf_path = path
+            break
 
     if wf_path.exists():
         wf_data = _safe_load_json(wf_path)
@@ -523,84 +531,62 @@ def _save_context(ctx: Dict[str, Any]):
 
     try:
         os.makedirs('memory', exist_ok=True)
-        with open(context_file, 'w', encoding='utf-8') as f:
-            json.dump(ctx, f, indent=2, ensure_ascii=False)
+        # atomic_write 사용으로 변경
+        write_json(context_file, ctx)
         logger.info("[OK] 컨텍스트 저장 완료")
     except Exception as e:
         logger.error(f"컨텍스트 저장 실패: {e}")
 
 def _load_and_show_workflow() -> Dict[str, Any]:
-    """워크플로우 로드 및 상태 반환 - 프로젝트별 독립적 관리"""
+    """워크플로우 로드 및 상태 반환 - memory/active/workflow.json 사용"""
     try:
         # 현재 프로젝트명 가져오기
         current_project = os.path.basename(os.getcwd())
         
-        # V3 워크플로우 시스템의 프로젝트별 워크플로우 파일 확인
-        v3_project_file = Path(f'memory/workflow_v3/{current_project}_workflow.json')
-        v3_default_file = Path('memory/workflow_v3/default_workflow.json')
+        # active/workflow.json 파일 읽기
+        active_workflow_path = Path('memory/active/workflow.json')
         
-        # 프로젝트별 워크플로우 파일 우선 확인
-        workflow_file = v3_project_file if v3_project_file.exists() else v3_default_file
+        if not active_workflow_path.exists():
+            return {'status': 'no_plan', 'message': '활성 계획 없음'}
         
-        if workflow_file.exists():
-            with open(workflow_file, 'r', encoding='utf-8') as f:
-                v3_data = json.load(f)
-            
-            # 워크플로우의 project_name 확인
-            if v3_data.get('project_name') and v3_data.get('project_name') != current_project:
-                logger.warning(f"워크플로우 파일이 다른 프로젝트({v3_data.get('project_name')})의 것임")
-                return {'status': 'no_plan', 'message': '활성 계획 없음'}
-            
-            # current_plan 확인
-            current_plan = v3_data.get('current_plan')
-            if current_plan:
-                tasks = current_plan.get('tasks', [])
-                completed = sum(1 for t in tasks if t.get('status') == 'completed')
-                
-                # 현재 작업 찾기
-                current_task = None
-                current_index = current_plan.get('current_task_index', 0)
-                if 0 <= current_index < len(tasks):
-                    current_task = tasks[current_index]
-                
-                return {
-                    'status': 'active',
-                    'plan_name': current_plan.get('name', '이름 없음'),
-                    'description': current_plan.get('description', ''),
-                    'total_tasks': len(tasks),
-                    'completed_tasks': completed,
-                    'progress_percent': (completed / len(tasks) * 100) if tasks else 0,
-                    'current_task': current_task
-                }
+        with open(active_workflow_path, 'r', encoding='utf-8') as f:
+            workflow_data = json.load(f)
         
-        # V3 파일이 없으면 기존 workflow.json 확인 (하위 호환성)
-        old_workflow_file = Path('memory') / 'workflow.json'
-        if old_workflow_file.exists():
-            with open(old_workflow_file, 'r', encoding='utf-8') as f:
-                workflow_data = json.load(f)
-            
-            # 구버전 구조 확인
-            current_plan = workflow_data.get('current_plan')
-            if current_plan:
-                tasks = current_plan.get('tasks', [])
-                completed = sum(1 for t in tasks if t.get('status') == 'completed')
-                current_task = next((t for t in tasks if t.get('status') in ['pending', 'in_progress']), None)
-                
-                return {
-                    'status': 'active',
-                    'plan_name': current_plan.get('name'),
-                    'description': current_plan.get('description'),
-                    'total_tasks': len(tasks),
-                    'completed_tasks': completed,
-                    'progress_percent': (completed / len(tasks) * 100) if tasks else 0,
-                    'current_task': current_task
-                }
+        # 현재 프로젝트가 활성 프로젝트인지 확인
+        if workflow_data.get('active_project') != current_project:
+            return {'status': 'no_plan', 'message': '활성 계획 없음'}
         
-        return {'status': 'no_plan', 'message': '활성 계획 없음'}
+        # 프로젝트 데이터 가져오기
+        project_data = workflow_data.get('projects', {}).get(current_project, {})
+        
+        # current_plan 확인
+        current_plan = project_data.get('current_plan')
+        if not current_plan:
+            return {'status': 'no_plan', 'message': '활성 계획 없음'}
+        
+        # 태스크 정보 처리
+        tasks = current_plan.get('tasks', [])
+        completed = sum(1 for t in tasks if t.get('status') == 'completed')
+        
+        # 현재 작업 찾기
+        current_task = None
+        current_index = current_plan.get('current_task_index', 0)
+        if 0 <= current_index < len(tasks):
+            current_task = tasks[current_index]
+        
+        return {
+            'status': 'active',
+            'plan_name': current_plan.get('name', '이름 없음'),
+            'description': current_plan.get('description', ''),
+            'total_tasks': len(tasks),
+            'completed_tasks': completed,
+            'progress_percent': (completed / len(tasks) * 100) if tasks else 0,
+            'current_task': current_task
+        }
         
     except Exception as e:
-        logger.error(f"워크플로우 로드 실패: {e}")
-        return {'status': 'error', 'message': str(e)}
+        logger.error(f"워크플로우 로드 중 오류: {e}")
+        return {'status': 'error', 'message': f'워크플로우 로드 실패: {str(e)}'}
 
 def _update_file_directory():
     """파일 디렉토리 업데이트 - helpers 의존성 제거"""
@@ -641,9 +627,8 @@ def _update_file_directory():
         if len(directories) > 50:
             content += f"... and {len(directories) - 50} more directories\n"
 
-        # 파일 쓰기
-        with open('file_directory.md', 'w', encoding='utf-8') as f:
-            f.write(content)
+        # 파일 쓰기 - atomic_write 사용
+        atomic_write('file_directory.md', content, mode='text')
 
         logger.info("[OK] file_directory.md 업데이트 완료")
 

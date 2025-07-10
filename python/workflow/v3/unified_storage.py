@@ -210,9 +210,16 @@ class UnifiedWorkflowStorage:
         """기존 V3 파일들을 통합 workflow.json으로 마이그레이션"""
         results = {}
         memory_dir = os.path.dirname(get_memory_path("dummy"))
+        # v3_dir 대신 active 디렉토리의 기존 파일들 확인
         v3_dir = Path(memory_dir) / "workflow_v3"
+        active_dir = Path(memory_dir) / "active"
         
-        if not v3_dir.exists():
+        # workflow_v3가 있으면 마이그레이션, 없으면 active 디렉토리 사용
+        if v3_dir.exists():
+            migrate_dir = v3_dir
+        elif active_dir.exists():
+            migrate_dir = active_dir
+        else:
             return results
         
         with self._lock:

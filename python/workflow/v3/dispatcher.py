@@ -16,7 +16,8 @@ class WorkflowDispatcher:
     
     def __init__(self, project_name: str = "default", storage_path: str = None):
         if storage_path is None:
-            storage_path = os.path.join('memory', 'workflow_v3')
+            # workflow_v3 대신 active 디렉토리 사용
+            storage_path = os.path.join('memory', 'active')
         
         self.project_name = project_name
         # 싱글톤 패턴 사용

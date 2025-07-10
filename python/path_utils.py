@@ -46,3 +46,14 @@ def get_memory_path(filename: str, project_name: Optional[str] = None) -> Path:
         project_root = Path.cwd()
         
     return project_root / 'memory' / filename
+
+def get_workflow_v3_dir() -> Path:
+    """workflow 디렉토리 경로 반환 (v3 호환성 유지)"""
+    # workflow_v3 대신 active 디렉토리 사용
+    active_dir = Path.cwd() / "memory" / "active"
+    active_dir.mkdir(parents=True, exist_ok=True)
+    return active_dir
+
+def get_workflow_file() -> Path:
+    """워크플로우 파일 경로 반환"""
+    return Path.cwd() / "memory" / "active" / "workflow.json"

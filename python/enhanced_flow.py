@@ -159,6 +159,9 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
 
         # 7. 워크플로우 로드 및 표시
         workflow_status = _load_and_show_workflow()
+        # 종합 컨텍스트 구축 - 함수가 없으므로 주석 처리
+        # comprehensive_ctx = _build_comprehensive_context(project_name, workflow_status)
+        
 
         # 8. Git 상태 확인 및 context에 추가
         git_info = _safe_git_status(os.getcwd())

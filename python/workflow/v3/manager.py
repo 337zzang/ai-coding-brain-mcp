@@ -3,14 +3,10 @@ Workflow v3 Manager
 싱글톤 패턴의 중앙 워크플로우 관리자
 """
 from typing import Dict, Optional, List, Any
-from datetime import datetime, timezone, timedelta
-
-# 한국 표준시(KST) 정의
-KST = timezone(timedelta(hours=9))
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
-from functools import wraps
 
 from .models import (
     WorkflowPlan, Task, WorkflowState, WorkflowEvent,
@@ -31,30 +27,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def auto_save(func):
-    """상태 변경 후 자동으로 저장하는 데코레이터"""
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        try:
-            # 원본 함수 실행
-            result = func(self, *args, **kwargs)
-            
-            # 성공적으로 실행되면 자동 저장
-            if hasattr(self, '_save'):
-                try:
-                    self._save()
-                    logger.debug(f"자동 저장 완료: {func.__name__}")
-                except Exception as e:
-                    logger.error(f"자동 저장 실패: {e}")
-                    # 저장 실패해도 원본 결과는 반환
-                    
-            return result
-        except Exception as e:
-            # 원본 함수의 예외는 그대로 전파
-            raise e
-    return wrapper
-
-
 class WorkflowManager:
     """워크플로우 중앙 관리자 (싱글톤)"""
     
@@ -71,25 +43,6 @@ class WorkflowManager:
         self.parser = CommandParser()
         self.storage = WorkflowStorage(project_name)
         self.context = ContextIntegration(project_name)
-        
-        # EventBus 초기화
-        from .events import EventBus, GitAutoCommitListener
-        self.event_bus = EventBus()
-        
-        # Git 자동 커밋 리스너 등록 (helpers가 있을 때만)
-        try:
-            import builtins
-            if hasattr(builtins, 'helpers'):
-                git_listener = GitAutoCommitListener(builtins.helpers)
-                self.event_bus.register(git_listener)
-                self.git_auto_commit = git_listener
-                logger.info("[GIT] 자동 커밋 리스너 등록 완료")
-            else:
-                self.git_auto_commit = None
-                logger.info("[GIT] helpers 없음 - 자동 커밋 비활성화")
-        except Exception as e:
-            self.git_auto_commit = None
-            logger.warning(f"[GIT] 자동 커밋 리스너 등록 실패: {e}")
         
         # EventBus 연동을 위한 어댑터 초기화
         self.event_adapter = WorkflowEventAdapter(self)
@@ -183,7 +136,7 @@ class WorkflowManager:
         try:
             # 이벤트 스토어를 상태에 동기화
             self.state.events = self.event_store.events
-            self.state.last_saved = datetime.now(KST)
+            self.state.last_saved = datetime.now(timezone.utc)
             
             # 자동 백업 확인
             create_backup = self.storage.should_auto_backup()
@@ -202,10 +155,6 @@ class WorkflowManager:
             logger.error(f"Failed to save workflow data: {e}")
             return False
             
-    def save_state(self) -> bool:
-        """상태를 파일에 저장 (public 메서드)"""
-        return self._save()
-    
     # 플랜 관리 메서드
     
     def start_plan(self, name: str, description: str = "") -> Optional[WorkflowPlan]:
@@ -239,7 +188,7 @@ class WorkflowManager:
             logger.error(f"Failed to create plan: {e}")
             return None
 
-    @auto_save
+            
     def add_task(self, title: str, description: str = "") -> Optional[Task]:
         """현재 플랜에 태스크 추가"""
         if not self.state.current_plan:
@@ -252,7 +201,7 @@ class WorkflowManager:
             
             # 플랜에 추가
             self.state.current_plan.tasks.append(task)
-            self.state.current_plan.updated_at = datetime.now(KST)
+            self.state.current_plan.updated_at = datetime.now(timezone.utc)
             
             # 이벤트 기록
             event = EventBuilder.task_added(self.state.current_plan.id, task)
@@ -270,7 +219,6 @@ class WorkflowManager:
             logger.error(f"Failed to add task: {e}")
             return None
             
-    @auto_save
     def add_task_note(self, note: str, task_id: str = None) -> Optional[Task]:
         """현재 태스크 또는 지정된 태스크에 노트 추가"""
         if not self.state.current_plan:
@@ -297,7 +245,7 @@ class WorkflowManager:
                 
         # 노트 추가
         task.notes.append(note)
-        task.updated_at = datetime.now(KST)
+        task.updated_at = datetime.now(timezone.utc)
         
         # 이벤트 기록
         event = WorkflowEvent(
@@ -315,7 +263,6 @@ class WorkflowManager:
         logger.info(f"Note added to task {task.title}: {note[:50]}...")
         return task
             
-    @auto_save
     def complete_task(self, task_id: str, note: str = "") -> bool:
         """태스크 완료 처리"""
         if not self.state.current_plan:
@@ -338,7 +285,7 @@ class WorkflowManager:
             
         # 완료 처리
         task.complete(note)
-        self.state.current_plan.updated_at = datetime.now(KST)
+        self.state.current_plan.updated_at = datetime.now(timezone.utc)
         
         # 이벤트 기록
         event = EventBuilder.task_completed(self.state.current_plan.id, task, note)
@@ -374,7 +321,6 @@ class WorkflowManager:
             
         return None
         
-    @auto_save
     def archive_plan(self) -> bool:
         """현재 플랜 아카이브"""
         if not self.state.current_plan:
@@ -770,33 +716,54 @@ class WorkflowManager:
         return HelperResult(True, data=result_data)
         
     def _handle_build(self, parsed) -> HelperResult:
-        """build 명령 처리"""
-        # 간단한 구현 - 추후 확장 가능
+        """build 명령 처리 - 개선된 버전"""
+        from pathlib import Path
+        import json
+        import os
+
+        # 간단한 프로젝트 정보 수집
+        project_info = {
+            'name': Path.cwd().name,
+            'path': str(Path.cwd()),
+            'file_count': 0,
+            'dir_count': 0
+        }
+
+        # 파일 개수 세기 (간단한 버전)
+        try:
+            for root, dirs, files in os.walk('.'):
+                if '.git' not in root:
+                    project_info['file_count'] += len(files)
+                    project_info['dir_count'] += len(dirs)
+        except:
+            pass
+
         if parsed.subcommand == 'review':
             # 플랜 리뷰
             if not self.state.current_plan:
                 return HelperResult(False, error="활성 플랜이 없습니다")
-                
+
             status = self.get_status()
             events = self.get_recent_events(20)
-            
+
             return HelperResult(True, data={
                 'success': True,
-                'type': 'review',
+                'type': 'review_with_context',
                 'plan_status': status,
                 'recent_events': events,
-                'message': "📊 플랜 리뷰 생성 완료"
+                'project_info': project_info,
+                'message': "📊 플랜 리뷰 (프로젝트 정보 포함)"
             })
-            
+
         elif parsed.subcommand == 'task':
             # 현재 태스크 문서화
             current = self.get_current_task()
             if not current:
                 return HelperResult(False, error="현재 작업 중인 태스크가 없습니다")
-                
+
             return HelperResult(True, data={
                 'success': True,
-                'type': 'task_doc',
+                'type': 'task_doc_with_context',
                 'task': {
                     'id': current.id,
                     'title': current.title,
@@ -804,17 +771,25 @@ class WorkflowManager:
                     'notes': current.notes,
                     'outputs': current.outputs
                 },
+                'project_info': project_info,
                 'message': f"📄 태스크 문서화: {current.title}"
             })
-            
+
         else:
             # 기본 빌드
+            status = self.get_status()
+
+            # README 확인
+            readme_exists = Path('README.md').exists()
+
             return HelperResult(True, data={
                 'success': True,
-                'message': "🔨 빌드 준비 완료"
+                'type': 'build_with_context',
+                'workflow_status': status,
+                'project_info': project_info,
+                'readme_exists': readme_exists,
+                'message': f"🔨 빌드 완료 - {project_info['name']} ({project_info['file_count']} files)"
             })
-
-            
     def _handle_status(self, parsed) -> HelperResult:
         """status 명령 처리"""
         if parsed.subcommand == 'history':
@@ -893,14 +868,7 @@ class WorkflowManager:
         # EventStore에 추가
         self.event_store.add(event)
         
-        # EventBus로 발행
-        if hasattr(self, 'event_bus') and self.event_bus:
-            try:
-                self.event_bus.emit(event)
-            except Exception as e:
-                logger.error(f"EventBus 발행 실패: {e}")
-        
-        # EventBus 연동을 위한 어댑터로도 발행 (event_adapter가 있는 경우)
+        # EventBus로 발행 (event_adapter가 있는 경우)
         if hasattr(self, 'event_adapter') and self.event_adapter:
             try:
                 self.event_adapter.publish_workflow_event(event)

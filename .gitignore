@@ -23,7 +23,7 @@ debug_flow.log
 
 # Backups
 backups/
-memory/
+# memory/ # 워크플로우 데이터 추적 필요
 
 # Test files
 test_*.txt
@@ -68,7 +68,7 @@ tmp/
 
 
 # Documentation
-docs/
+# docs/ # 프로젝트 문서 추적 필요
 
 # Images
 image/

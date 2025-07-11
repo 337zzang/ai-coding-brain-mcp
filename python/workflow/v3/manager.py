@@ -131,7 +131,7 @@ class WorkflowManager:
             self.state = WorkflowState()
             self.event_store = EventStore()
                 
-    def _save_data(self) -> bool:
+    def _save_data(self) -> bool:(self) -> bool:
         """데이터를 파일에 저장 (개선: 저장 후 자동 리로드)"""
         try:
             # 이벤트 스토어를 상태에 동기화
@@ -560,7 +560,7 @@ class WorkflowManager:
             return HelperResult(False, error="태스크를 찾을 수 없습니다")
 
             
-    def _handle_plan(self, parsed) -> HelperResult:
+    def _handle_plan(self, parsed) -> HelperResult:(self, parsed) -> HelperResult:
         """plan 명령 처리"""
         if parsed.subcommand == 'list':
             # 플랜 히스토리
@@ -837,6 +837,10 @@ class WorkflowManager:
     def clear_cache(self) -> None:
         """캐시 클리어 (필요시 구현)"""
         pass
+        
+    def save(self) -> bool:
+        """워크플로우 상태를 파일에 저장 (public 메서드)"""
+        return self._save_data()
         
     def reload(self) -> None:
         """데이터 다시 로드"""

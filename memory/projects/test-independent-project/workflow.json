@@ -1,0 +1,29 @@
+{
+  "version": "3.0",
+  "current_plan": {
+    "id": "test-plan-1",
+    "name": "독립 저장소 테스트",
+    "tasks": [
+      {
+        "id": "task-1",
+        "title": "첫 번째 작업",
+        "status": "todo"
+      },
+      {
+        "id": "task-2",
+        "title": "두 번째 작업",
+        "status": "todo"
+      }
+    ]
+  },
+  "events": [
+    {
+      "id": "event-1",
+      "type": "PLAN_CREATED",
+      "timestamp": "2025-07-10T17:09:25.897646"
+    }
+  ],
+  "metadata": {
+    "last_modified": "2025-07-10T17:09:25.901644"
+  }
+}

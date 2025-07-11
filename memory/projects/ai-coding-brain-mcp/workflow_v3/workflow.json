@@ -1,0 +1,104 @@
+{
+  "current_plan": {
+    "id": "ad3f0311-7411-4fbc-b8d5-5da41d40a695",
+    "name": "저장 테스트 플랜",
+    "description": "",
+    "status": "active",
+    "tasks": [
+      {
+        "id": "ac7da1d2-60ba-4c3e-9c8f-53113faa06a1",
+        "title": "첫 번째 태스크",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-10T08:01:11.331688+00:00",
+        "updated_at": "2025-07-10T08:01:11.331688+00:00",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "notes": [],
+        "outputs": {}
+      },
+      {
+        "id": "2064ec21-19e2-4d4f-a1d3-af37f65e3639",
+        "title": "두 번째 태스크",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-10T08:01:11.331688+00:00",
+        "updated_at": "2025-07-10T08:01:11.331688+00:00",
+        "started_at": null,
+        "completed_at": null,
+        "duration": null,
+        "notes": [],
+        "outputs": {}
+      }
+    ],
+    "current_task_index": 0,
+    "created_at": "2025-07-10T08:01:11.331688+00:00",
+    "updated_at": "2025-07-10T08:01:11.331688+00:00",
+    "completed_at": null,
+    "archived_at": null,
+    "stats": {},
+    "metadata": {}
+  },
+  "events": [
+    {
+      "id": "f5c838a3-e761-440e-af46-4fbef8c6b2b3",
+      "type": "plan_created",
+      "timestamp": "2025-07-10T08:01:11.331688+00:00",
+      "plan_id": "ad3f0311-7411-4fbc-b8d5-5da41d40a695",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "저장 테스트 플랜",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "d625a865-dfd1-4934-ad3a-fe5fac8f4d20",
+      "type": "plan_started",
+      "timestamp": "2025-07-10T08:01:11.331688+00:00",
+      "plan_id": "ad3f0311-7411-4fbc-b8d5-5da41d40a695",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "저장 테스트 플랜",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "1ebd370f-0d61-4fc4-8915-fc99beda28f6",
+      "type": "task_added",
+      "timestamp": "2025-07-10T08:01:11.331688+00:00",
+      "plan_id": "ad3f0311-7411-4fbc-b8d5-5da41d40a695",
+      "task_id": "ac7da1d2-60ba-4c3e-9c8f-53113faa06a1",
+      "user": "system",
+      "details": {
+        "title": "첫 번째 태스크",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "b931f998-8bbe-466e-8548-4d77ff182450",
+      "type": "task_added",
+      "timestamp": "2025-07-10T08:01:11.331688+00:00",
+      "plan_id": "ad3f0311-7411-4fbc-b8d5-5da41d40a695",
+      "task_id": "2064ec21-19e2-4d4f-a1d3-af37f65e3639",
+      "user": "system",
+      "details": {
+        "title": "두 번째 태스크",
+        "description": ""
+      },
+      "metadata": {}
+    }
+  ],
+  "version": "3.0",
+  "last_saved": "2025-07-10T08:01:11.331688+00:00",
+  "metadata": {
+    "created_at": "2025-07-10T16:23:58.137224",
+    "last_updated": "2025-07-10T16:23:58.137224"
+  },
+  "last_updated": "2025-07-10T08:02:01.987317+00:00"
+}

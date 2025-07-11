@@ -1,9 +1,838 @@
 {
-  "summary": {
-    "current_plan": null,
-    "progress": 0,
-    "total_tasks": 2,
-    "completed_tasks": 0,
-    "updated_at": "2025-07-11T14:27:19.359795"
-  }
+  "plans": [
+    {
+      "id": "55dedbfe-5d98-41d7-a4c3-3481b889ab9e",
+      "name": "\"완벽한 성공\" \"드디어 따옴표 문제 해결!\"",
+      "description": "",
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "c6536d80-7e71-4c6f-b37f-68ea26e79e45",
+          "title": "\"복잡한 태스크 이름 with special chars: /api/v1/users\"",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-11T14:47:43.864071+09:00",
+          "updated_at": "2025-07-11T14:47:43.884069+09:00",
+          "started_at": null,
+          "completed_at": "2025-07-11T14:47:43.884069+09:00",
+          "duration": null,
+          "notes": [
+            "[완료] \"parser.py와 manager.py 수정 완료. 따옴표 파싱 문제 해결\""
+          ],
+          "outputs": {}
+        }
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-11T14:47:43.829069+09:00",
+      "updated_at": "2025-07-11T14:47:43.899068+09:00",
+      "completed_at": "2025-07-11T14:47:43.899068+09:00",
+      "archived_at": null,
+      "stats": {
+        "total_tasks": 1,
+        "completed_tasks": 1,
+        "completion_rate": 1.0,
+        "total_duration_seconds": 0,
+        "average_task_duration": 0.0
+      },
+      "metadata": {}
+    }
+  ],
+  "active_plan_id": "55dedbfe-5d98-41d7-a4c3-3481b889ab9e",
+  "events": [
+    {
+      "id": "e074e0b4-d06b-482d-b54c-772702bc889f",
+      "type": "plan_created",
+      "timestamp": "2025-07-11T14:27:19.359795+09:00",
+      "plan_id": "815f14cd-4649-458a-828a-51f6cde4e031",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "task add 테스트",
+        "description": "서브커맨드 검증"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "6e428f9a-0fc7-4c9c-9df4-a24c944541f2",
+      "type": "plan_started",
+      "timestamp": "2025-07-11T14:27:19.359795+09:00",
+      "plan_id": "815f14cd-4649-458a-828a-51f6cde4e031",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "task add 테스트",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "aabd93e1-50e5-442b-a8cd-0e24b868b302",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:27:19.359795+09:00",
+      "plan_id": "815f14cd-4649-458a-828a-51f6cde4e031",
+      "task_id": "e343f010-a050-41a8-ad46-4d7c73cf6775",
+      "user": "system",
+      "details": {
+        "title": "첫 번째 태스크",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "fb83167e-7c4c-489d-89c1-a990af3f5b5d",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:27:19.359795+09:00",
+      "plan_id": "815f14cd-4649-458a-828a-51f6cde4e031",
+      "task_id": "f5950954-e8b1-459f-b422-41d93d9d57e6",
+      "user": "system",
+      "details": {
+        "title": "두 번째 태스크",
+        "description": "상세 설명 포함"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "331a88a1-9938-477f-826a-d338fd8338a6",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:27:19.359795+09:00",
+      "plan_id": "815f14cd-4649-458a-828a-51f6cde4e031",
+      "task_id": "ddb37d64-759a-4f22-b378-7e312ca3388a",
+      "user": "system",
+      "details": {
+        "title": "세 번째 태스크",
+        "description": "별칭 테스트"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "f7bec83a-8011-4790-a12c-946ed27a4049",
+      "type": "plan_archived",
+      "timestamp": "2025-07-11T14:27:19.359795+09:00",
+      "plan_id": "815f14cd-4649-458a-828a-51f6cde4e031",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "task add 테스트",
+        "archived_at": "2025-07-11T14:12:17.051266+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "da639b52-a18e-416c-ac60-fabf3aa91165",
+      "type": "plan_created",
+      "timestamp": "2025-07-11T14:27:19.359795+09:00",
+      "plan_id": "2a436980-c246-44f4-acdf-e372f7496c7c",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "영속성 검증",
+        "description": "재시작 후 모든 기능 테스트"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "ba632570-5530-4956-ac22-527f3fd4a227",
+      "type": "plan_started",
+      "timestamp": "2025-07-11T14:27:19.359795+09:00",
+      "plan_id": "2a436980-c246-44f4-acdf-e372f7496c7c",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "영속성 검증",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "9ee2302c-c91b-454e-a866-2427e185d583",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:27:19.359795+09:00",
+      "plan_id": "2a436980-c246-44f4-acdf-e372f7496c7c",
+      "task_id": "2215faa2-7baf-470b-b42b-00a3df7e9713",
+      "user": "system",
+      "details": {
+        "title": "영속성 테스트 태스크",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "6aec25b4-bd3f-4893-b420-d4c48ab82ef3",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:27:19.359795+09:00",
+      "plan_id": "2a436980-c246-44f4-acdf-e372f7496c7c",
+      "task_id": "90c86395-471e-4f0d-9d11-66ccf036b128",
+      "user": "system",
+      "details": {
+        "title": "두 번째 태스크",
+        "description": "재시작 후에도 정상 작동"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "e9516397-dae8-46d4-be89-93daadacccdf",
+      "type": "task_completed",
+      "timestamp": "2025-07-11T14:30:46.727475+09:00",
+      "plan_id": "2a436980-c246-44f4-acdf-e372f7496c7c",
+      "task_id": "2215faa2-7baf-470b-b42b-00a3df7e9713",
+      "user": "system",
+      "details": {
+        "title": "영속성 테스트 태스크",
+        "duration": null,
+        "note": "영속성 테스트 완료"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "9ffd7357-de7e-4922-bbe2-c769487a0e5b",
+      "type": "task_completed",
+      "timestamp": "2025-07-11T14:30:47.266496+09:00",
+      "plan_id": "2a436980-c246-44f4-acdf-e372f7496c7c",
+      "task_id": "90c86395-471e-4f0d-9d11-66ccf036b128",
+      "user": "system",
+      "details": {
+        "title": "두 번째 태스크",
+        "duration": null,
+        "note": "워크플로우 동작 확인 완료"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "468d59cd-0912-452a-9361-88bb240d1ef3",
+      "type": "plan_completed",
+      "timestamp": "2025-07-11T14:30:47.284445+09:00",
+      "plan_id": "2a436980-c246-44f4-acdf-e372f7496c7c",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "영속성 검증",
+        "total_tasks": 2,
+        "completed_tasks": 2,
+        "stats": {
+          "total_tasks": 2,
+          "completed_tasks": 2,
+          "completion_rate": 1.0,
+          "total_duration_seconds": 0,
+          "average_task_duration": 0.0
+        }
+      },
+      "metadata": {}
+    },
+    {
+      "id": "8f1b8357-f08f-47d5-be24-b9041e053e42",
+      "type": "plan_archived",
+      "timestamp": "2025-07-11T14:31:22.079431+09:00",
+      "plan_id": "2a436980-c246-44f4-acdf-e372f7496c7c",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "영속성 검증",
+        "archived_at": "2025-07-11T14:31:22.079431+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "f96fe0ba-08d5-4a9f-969f-57029ed757b9",
+      "type": "plan_created",
+      "timestamp": "2025-07-11T14:31:22.099433+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"워크플로우 시스템 v47.1 강화\" \"이벤트 기반 아키텍처, 명령 체계, Helpers 통합, 코드 실행 개선\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "ff9aa89f-47b0-4955-9f84-b1ff75ace9b1",
+      "type": "plan_started",
+      "timestamp": "2025-07-11T14:31:22.100432+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"워크플로우 시스템 v47.1 강화\" \"이벤트 기반 아키텍처, 명령 체계, Helpers 통합, 코드 실행 개선\"",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "c093a63f-30a8-4277-ab5b-7469d23f7925",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.281554+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "7fc31449-7bff-4002-ad7f-80acd6b6156e",
+      "user": "system",
+      "details": {
+        "title": "이벤트 버스 리스너 체계 구현",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "b5e9fe6b-1d73-4b4e-8b68-f8bc4d4b300a",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.300552+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "0ce0556d-6e24-45ff-bbc8-4ab2cee8de94",
+      "user": "system",
+      "details": {
+        "title": "미사용 이벤트 타입 활성화",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "326ea010-c68c-421a-be29-12ab8b49e96b",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.319552+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "6cdfb202-a034-425d-b77f-2e8ba74b6666",
+      "user": "system",
+      "details": {
+        "title": "이벤트 발행 경로 표준화",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "fd41a33a-0e1e-458d-90d3-0bdb8989da2c",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.337552+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "6e5ee61a-cf21-40a5-97cc-bd447c8403ff",
+      "user": "system",
+      "details": {
+        "title": "Helpers 선택적 로드 구현",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "66b95c01-f2c2-4006-99ee-a6da794ce142",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.357552+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "30537e27-5c06-482b-b76c-74a819a30ebe",
+      "user": "system",
+      "details": {
+        "title": "에러 처리 정보 강화",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "65e45528-26cf-4cbb-8327-2a3b0d9c0300",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.381554+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "83a108f4-d1e3-47d2-9fbc-a0422e9d559d",
+      "user": "system",
+      "details": {
+        "title": "Desktop Commander 추상화",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "1fd93b24-8790-4ca9-b073-904458e17b4a",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.400553+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "57c8056c-5619-4cf3-bdbb-4824d16774f1",
+      "user": "system",
+      "details": {
+        "title": "명령 API 이원화",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "17b1bb75-2a1b-4ccd-9e3d-fd7e88f7a024",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.419552+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "f58f924a-d37b-47fe-a7b8-40848f3936bc",
+      "user": "system",
+      "details": {
+        "title": "자동 실행 모드 구현",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "e627a20e-ec64-47c7-a449-169d27d86d2d",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.437552+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "0b4bda66-9d86-47c0-8368-99d0838a5cf4",
+      "user": "system",
+      "details": {
+        "title": "명령어 확장",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "29148f49-9234-4f20-825d-ecb3e8342f1b",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.479553+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "a8b33077-62c5-4073-89d7-dbac121af6b1",
+      "user": "system",
+      "details": {
+        "title": "실행 결과 구조화 저장",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "374cd413-e804-4d2b-afd2-06a5af266b54",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.497551+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "8cbb60a6-0942-43ae-89e5-01431ea691b9",
+      "user": "system",
+      "details": {
+        "title": "태스크 자동 진행 로직",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "09367ece-f09e-4baf-9d89-e79b556758c2",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.515552+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "fd6a2e31-092c-44a0-b047-d4f7d14893e8",
+      "user": "system",
+      "details": {
+        "title": "실시간 모니터링",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "dde88cf0-5513-4df5-8a33-aa26176d7a4f",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.533552+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "b552d516-daff-4841-9b7f-6a9168fb80a1",
+      "user": "system",
+      "details": {
+        "title": "통합 테스트 작성",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "1e2d16eb-140b-4e32-8f3d-8a0624cca3fe",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:32:32.551552+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": "be9cfe25-b8dd-496b-89f3-dbdece32a639",
+      "user": "system",
+      "details": {
+        "title": "문서화 및 마이그레이션 가이드",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "9e70a83a-c01d-41b9-a353-4fa0ce49bdb0",
+      "type": "plan_archived",
+      "timestamp": "2025-07-11T14:40:35.228509+09:00",
+      "plan_id": "614370f2-f0ac-4a81-b5f1-1c257d2e4b1f",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"워크플로우 시스템 v47.1 강화\" \"이벤트 기반 아키텍처, 명령 체계, Helpers 통합, 코드 실행 개선\"",
+        "archived_at": "2025-07-11T14:40:35.228509+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "e5847c65-f10c-407d-a30d-a0c02eb7d2b0",
+      "type": "plan_created",
+      "timestamp": "2025-07-11T14:40:35.251508+09:00",
+      "plan_id": "c18e5473-7069-436a-b203-f8fd996c0950",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"테스트 플랜 v2\" \"따옴표 파싱 테스트\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "1292bd69-aa55-495c-b5ab-8dd8069d0dd5",
+      "type": "plan_started",
+      "timestamp": "2025-07-11T14:40:35.251508+09:00",
+      "plan_id": "c18e5473-7069-436a-b203-f8fd996c0950",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"테스트 플랜 v2\" \"따옴표 파싱 테스트\"",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "2f68406c-7607-4226-ae8e-f32075fbf802",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:40:35.287508+09:00",
+      "plan_id": "c18e5473-7069-436a-b203-f8fd996c0950",
+      "task_id": "8b0a3c81-3a76-4e55-a769-a66aaff02b7c",
+      "user": "system",
+      "details": {
+        "title": "\"복잡한 태스크 이름 with spaces\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "0bb4ece4-2270-4624-934a-3e0adb85fb88",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:40:35.306509+09:00",
+      "plan_id": "c18e5473-7069-436a-b203-f8fd996c0950",
+      "task_id": "9ea21b6a-9c2c-48cf-9547-bbb883c565c3",
+      "user": "system",
+      "details": {
+        "title": "\"따옴표가 '포함된' 제목\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "6df49510-17cc-4285-a95e-e8ea55d80f12",
+      "type": "plan_archived",
+      "timestamp": "2025-07-11T14:40:35.327507+09:00",
+      "plan_id": "c18e5473-7069-436a-b203-f8fd996c0950",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"테스트 플랜 v2\" \"따옴표 파싱 테스트\"",
+        "archived_at": "2025-07-11T14:40:35.327507+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "331f6457-29eb-49c2-8326-b785146a4f25",
+      "type": "plan_created",
+      "timestamp": "2025-07-11T14:40:35.346507+09:00",
+      "plan_id": "b1d37026-2482-49bb-b495-f39be26a96b0",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"New Feature: User Auth\" \"Implement JWT-based authentication\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "adce7a77-1150-4b75-bfc6-0fc0bea3fdc3",
+      "type": "plan_started",
+      "timestamp": "2025-07-11T14:40:35.346507+09:00",
+      "plan_id": "b1d37026-2482-49bb-b495-f39be26a96b0",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"New Feature: User Auth\" \"Implement JWT-based authentication\"",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "964fb3d5-1d6e-44b4-8fed-9c822d5f6dde",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:40:35.378508+09:00",
+      "plan_id": "b1d37026-2482-49bb-b495-f39be26a96b0",
+      "task_id": "76afe43b-27c7-4a2a-871c-8311ba65ea3f",
+      "user": "system",
+      "details": {
+        "title": "\"API endpoint for /users/:id\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "29005235-7918-4b1a-9d5c-c57942aff32c",
+      "type": "plan_archived",
+      "timestamp": "2025-07-11T14:42:23.486526+09:00",
+      "plan_id": "b1d37026-2482-49bb-b495-f39be26a96b0",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"New Feature: User Auth\" \"Implement JWT-based authentication\"",
+        "archived_at": "2025-07-11T14:42:23.486526+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "0cea4407-1c44-4caa-a750-6a5d006cd673",
+      "type": "plan_created",
+      "timestamp": "2025-07-11T14:42:23.511523+09:00",
+      "plan_id": "6acc4cf9-e588-445f-9203-d7bfee5d9279",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"개선된 테스트 v3\" \"shlex 파싱 적용\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "1062fe48-202a-468d-bc97-24cf14e6a5c4",
+      "type": "plan_started",
+      "timestamp": "2025-07-11T14:42:23.511523+09:00",
+      "plan_id": "6acc4cf9-e588-445f-9203-d7bfee5d9279",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"개선된 테스트 v3\" \"shlex 파싱 적용\"",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "db937b19-909f-4c11-9419-ee8e036aadbf",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:42:23.545523+09:00",
+      "plan_id": "6acc4cf9-e588-445f-9203-d7bfee5d9279",
+      "task_id": "e47f5e66-46d5-448a-a9b3-6ae2c4ce3dad",
+      "user": "system",
+      "details": {
+        "title": "\"매우 복잡한 태스크 이름 with special chars: /api/v1\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "abafba91-3c55-4b2f-874e-88856e420fc6",
+      "type": "plan_archived",
+      "timestamp": "2025-07-11T14:43:16.163107+09:00",
+      "plan_id": "6acc4cf9-e588-445f-9203-d7bfee5d9279",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"개선된 테스트 v3\" \"shlex 파싱 적용\"",
+        "archived_at": "2025-07-11T14:43:16.163107+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "0b12bc0d-c3a9-4d63-98ef-eae6d5d4dcce",
+      "type": "plan_created",
+      "timestamp": "2025-07-11T14:43:16.187104+09:00",
+      "plan_id": "1e5c4fb8-af53-4f6d-b38d-2a8025b72317",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"최종 테스트 플랜\" \"모든 수정사항 적용 완료\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "5a9e7601-a944-496e-98c7-2cf8c630c91d",
+      "type": "plan_started",
+      "timestamp": "2025-07-11T14:43:16.187104+09:00",
+      "plan_id": "1e5c4fb8-af53-4f6d-b38d-2a8025b72317",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"최종 테스트 플랜\" \"모든 수정사항 적용 완료\"",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "2fdf3b02-991f-40d7-9b69-c1f281d5456b",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:43:16.229106+09:00",
+      "plan_id": "1e5c4fb8-af53-4f6d-b38d-2a8025b72317",
+      "task_id": "2e262a91-b3de-4ec1-b86f-142f0c291b6f",
+      "user": "system",
+      "details": {
+        "title": "\"복잡한 태스크: API /users/:id 구현\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "36232753-42f2-42a6-a2ed-6a6c78e6cadf",
+      "type": "plan_archived",
+      "timestamp": "2025-07-11T14:44:08.110194+09:00",
+      "plan_id": "1e5c4fb8-af53-4f6d-b38d-2a8025b72317",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"최종 테스트 플랜\" \"모든 수정사항 적용 완료\"",
+        "archived_at": "2025-07-11T14:44:08.110194+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "24ebe056-7e07-4181-9de2-30f822518f70",
+      "type": "plan_created",
+      "timestamp": "2025-07-11T14:44:08.136194+09:00",
+      "plan_id": "642a6695-c6db-42eb-9535-976cd271e033",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"완벽한 파싱 테스트\" \"드디어 성공!\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "43ca34da-6be2-4e70-94f1-a4495f66b206",
+      "type": "plan_started",
+      "timestamp": "2025-07-11T14:44:08.136194+09:00",
+      "plan_id": "642a6695-c6db-42eb-9535-976cd271e033",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"완벽한 파싱 테스트\" \"드디어 성공!\"",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "c53eedba-ee8d-4cc5-bbb4-f48819308628",
+      "type": "plan_archived",
+      "timestamp": "2025-07-11T14:46:13.809419+09:00",
+      "plan_id": "642a6695-c6db-42eb-9535-976cd271e033",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"완벽한 파싱 테스트\" \"드디어 성공!\"",
+        "archived_at": "2025-07-11T14:46:13.809419+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "66706a6b-c01a-453a-bfef-cac4d5ae53d1",
+      "type": "plan_created",
+      "timestamp": "2025-07-11T14:46:13.834418+09:00",
+      "plan_id": "d94dd52b-9fed-4e91-a47e-9765d7cef5b5",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"드디어 성공\" \"완벽한 파싱\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "ea4bed70-0dac-4337-9208-12afb8ad0cb7",
+      "type": "plan_started",
+      "timestamp": "2025-07-11T14:46:13.834418+09:00",
+      "plan_id": "d94dd52b-9fed-4e91-a47e-9765d7cef5b5",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"드디어 성공\" \"완벽한 파싱\"",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "cb7e71c9-2c31-404c-acd7-ae8860966308",
+      "type": "plan_archived",
+      "timestamp": "2025-07-11T14:47:43.806069+09:00",
+      "plan_id": "d94dd52b-9fed-4e91-a47e-9765d7cef5b5",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"드디어 성공\" \"완벽한 파싱\"",
+        "archived_at": "2025-07-11T14:47:43.806069+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "8e0781ff-8c4d-45c0-8646-406c0bfef3a7",
+      "type": "plan_created",
+      "timestamp": "2025-07-11T14:47:43.829069+09:00",
+      "plan_id": "55dedbfe-5d98-41d7-a4c3-3481b889ab9e",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"완벽한 성공\" \"드디어 따옴표 문제 해결!\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "9697a479-6bff-4fa4-b967-6f88653910ba",
+      "type": "plan_started",
+      "timestamp": "2025-07-11T14:47:43.829069+09:00",
+      "plan_id": "55dedbfe-5d98-41d7-a4c3-3481b889ab9e",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"완벽한 성공\" \"드디어 따옴표 문제 해결!\"",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "e1b36938-c342-49c6-943d-fc8e46c4b2cb",
+      "type": "task_added",
+      "timestamp": "2025-07-11T14:47:43.864071+09:00",
+      "plan_id": "55dedbfe-5d98-41d7-a4c3-3481b889ab9e",
+      "task_id": "c6536d80-7e71-4c6f-b37f-68ea26e79e45",
+      "user": "system",
+      "details": {
+        "title": "\"복잡한 태스크 이름 with special chars: /api/v1/users\"",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "e2fc26cd-d84a-4196-938e-43664d428d23",
+      "type": "task_completed",
+      "timestamp": "2025-07-11T14:47:43.884069+09:00",
+      "plan_id": "55dedbfe-5d98-41d7-a4c3-3481b889ab9e",
+      "task_id": "c6536d80-7e71-4c6f-b37f-68ea26e79e45",
+      "user": "system",
+      "details": {
+        "title": "\"복잡한 태스크 이름 with special chars: /api/v1/users\"",
+        "duration": null,
+        "note": "\"parser.py와 manager.py 수정 완료. 따옴표 파싱 문제 해결\""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "7d1b8e61-ca45-44ed-848a-d0089194bc8f",
+      "type": "plan_completed",
+      "timestamp": "2025-07-11T14:47:43.899068+09:00",
+      "plan_id": "55dedbfe-5d98-41d7-a4c3-3481b889ab9e",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "\"완벽한 성공\" \"드디어 따옴표 문제 해결!\"",
+        "total_tasks": 1,
+        "completed_tasks": 1,
+        "stats": {
+          "total_tasks": 1,
+          "completed_tasks": 1,
+          "completion_rate": 1.0,
+          "total_duration_seconds": 0,
+          "average_task_duration": 0.0
+        }
+      },
+      "metadata": {}
+    }
+  ],
+  "version": "3.0.0",
+  "last_saved": "2025-07-11T05:47:43.924069+00:00",
+  "metadata": {
+    "last_modified": "2025-07-11T05:47:43.928070+00:00",
+    "project_name": "ai-coding-brain-mcp",
+    "project_root": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp",
+    "version": "3.0"
+  },
+  "project_name": "ai-coding-brain-mcp"
 }

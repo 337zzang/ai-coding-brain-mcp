@@ -568,3 +568,64 @@ def cache_project_structure(root_path=".", ignore_patterns=None, force_rescan=Fa
     return result
 
 
+def get_project_structure(force_rescan=False):
+    """캐시된 프로젝트 구조 반환 (필요시 자동 스캔)
+    
+    Args:
+        force_rescan: 강제 재스캔 여부
+    
+    Returns:
+        dict: 프로젝트 구조 정보
+    """
+    return cache_project_structure(force_rescan=force_rescan)
+
+
+def search_in_structure(pattern, search_type="all"):
+    """캐시된 구조에서 파일/디렉토리 검색
+    
+    Args:
+        pattern: 검색 패턴 (glob 형식)
+        search_type: "file", "dir", "all"
+    
+    Returns:
+        list: 검색 결과 리스트
+    """
+    import fnmatch
+    import os
+    
+    # 캐시된 구조 가져오기
+    structure = get_project_structure()
+    
+    results = []
+    
+    for path, info in structure['structure'].items():
+        if info.get('error'):
+            continue
+            
+        # 디렉토리 검색
+        if search_type in ["dir", "all"] and info['type'] == 'directory':
+            dir_name = os.path.basename(path.rstrip('/'))
+            if dir_name and fnmatch.fnmatch(dir_name, pattern):
+                results.append({
+                    'type': 'directory',
+                    'path': path,
+                    'name': dir_name,
+                    'file_count': info.get('file_count', 0),
+                    'dir_count': info.get('dir_count', 0)
+                })
+        
+        # 파일 검색
+        if search_type in ["file", "all"] and 'files' in info:
+            for file_name in info['files']:
+                if fnmatch.fnmatch(file_name, pattern):
+                    file_path = os.path.join(path, file_name).replace("\\", "/")
+                    results.append({
+                        'type': 'file',
+                        'path': file_path,
+                        'name': file_name,
+                        'dir': path
+                    })
+    
+    return results
+
+

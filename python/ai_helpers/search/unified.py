@@ -277,3 +277,81 @@ def search_files_smart(
         format=format,
         **kwargs
     )
+
+
+# Legacy API 호환성 함수들
+
+def list_file_paths(directory, pattern="*", recursive=True):
+    """파일 경로 목록 반환
+
+    Args:
+        directory: 검색할 디렉토리
+        pattern: 파일 패턴 (기본값: "*")
+        recursive: 재귀 검색 여부 (기본값: True)
+
+    Returns:
+        HelperResult: 성공 시 data에 {'paths': [파일경로들]}
+    """
+    try:
+        from pathlib import Path
+
+        directory = Path(directory).resolve()
+        if not directory.exists():
+            return HelperResult(ok=False, data=None, error=f"디렉토리가 존재하지 않음: {directory}")
+
+        if recursive:
+            files = list(directory.rglob(pattern))
+        else:
+            files = list(directory.glob(pattern))
+
+        paths = [str(f) for f in files if f.is_file()]
+
+        return HelperResult(ok=True, data={'paths': paths}, error=None)
+
+    except Exception as e:
+        return HelperResult(ok=False, data=None, error=f"파일 목록 조회 실패: {str(e)}")
+
+
+def grep_code(directory, regex, file_pattern='*', **kwargs):
+    """
+    코드 내용 검색 표준 API (규격 B: Grouped Dict)
+    기존 search_code_content의 개선 버전
+    """
+    from .code_search import search_code_content
+    
+    result = search_code_content(directory, regex, file_pattern, **kwargs)
+    if result.ok:
+        data = result.get_data({})
+        if 'results' in data:
+            # 결과를 파일별로 그룹화
+            grouped = {}
+            for match in data.get('results', []):
+                filepath = match.get('file', '')
+                grouped.setdefault(filepath, []).append(match)
+            return HelperResult(ok=True, data={
+                'success': True,
+                'results': grouped
+            })
+    return result
+
+
+def scan_dir(directory, as_dict=True, **kwargs):
+    """
+    디렉토리 스캔 표준 API
+    as_dict=True: 기존 형식 유지
+    as_dict=False: Path List 형식 (규격 A)
+    """
+    from .directory_scan import scan_directory_dict
+    
+    if as_dict:
+        return scan_directory_dict(directory)
+    else:
+        result = scan_directory_dict(directory)
+        if result.ok:
+            data = result.get_data({})
+            paths = [f['path'] for f in data.get('files', [])]
+            return HelperResult(ok=True, data={
+                'success': True,
+                'paths': paths
+            })
+        return result

@@ -188,3 +188,19 @@ def scan_dir(directory, as_dict=True, **kwargs):
         }
 
 # ================== 끝 ==================
+
+# Export할 함수들 정의
+__all__ = [
+    # 디렉토리 관련
+    'scan_directory', 'scan_directory_dict', 'cache_project_structure',
+    'get_project_structure', 'search_in_structure',
+    
+    # 파일 검색
+    'search_files_advanced', '_search_files_advanced',
+    
+    # 코드 검색
+    'search_code_content', '_search_code_content',
+    
+    # 표준 API
+    'list_file_paths', 'grep_code', 'scan_dir'
+]

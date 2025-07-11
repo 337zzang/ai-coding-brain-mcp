@@ -158,6 +158,50 @@ class EventBuilder:
         )
         
     @staticmethod
+    def task_failed(plan_id: str, task: Task, error: str, user: str = "system") -> WorkflowEvent:
+        """태스크 실패 이벤트"""
+        return WorkflowEvent(
+            type=EventType.TASK_FAILED,
+            plan_id=plan_id,
+            task_id=task.id,
+            user=user,
+            details={
+                'title': task.title,
+                'error': error,
+                'status': 'failed'
+            }
+        )
+        
+    @staticmethod
+    def task_blocked(plan_id: str, task: Task, blocker: str, user: str = "system") -> WorkflowEvent:
+        """태스크 차단 이벤트"""
+        return WorkflowEvent(
+            type=EventType.TASK_BLOCKED,
+            plan_id=plan_id,
+            task_id=task.id,
+            user=user,
+            details={
+                'title': task.title,
+                'blocker': blocker,
+                'status': 'blocked'
+            }
+        )
+        
+    @staticmethod
+    def task_unblocked(plan_id: str, task: Task, user: str = "system") -> WorkflowEvent:
+        """태스크 차단 해제 이벤트"""
+        return WorkflowEvent(
+            type=EventType.TASK_UNBLOCKED,
+            plan_id=plan_id,
+            task_id=task.id,
+            user=user,
+            details={
+                'title': task.title,
+                'status': task.status.value
+            }
+        )
+        
+    @staticmethod
     def task_updated(plan_id: str, task: Task, changes: Dict[str, Any], user: str = "system") -> WorkflowEvent:
         """태스크 업데이트 이벤트"""
         return WorkflowEvent(

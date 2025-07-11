@@ -21,6 +21,9 @@ from .errors import (
     WorkflowError, ErrorCode, ErrorMessages, 
     ErrorHandler, InputValidator, SuccessMessages
 )
+from .api.internal_api import InternalWorkflowAPI
+from .api.user_api import UserCommandAPI
+from .commands.auto_executor import AutoTaskExecutor
 from python.ai_helpers.helper_result import HelperResult
 import logging
 
@@ -46,6 +49,13 @@ class WorkflowManager:
         
         # EventBus 연동을 위한 어댑터 초기화
         self.event_adapter = WorkflowEventAdapter(self)
+        
+        # API 초기화 (v3 개선)
+        self.internal_api = InternalWorkflowAPI(self)
+        self.user_api = UserCommandAPI(self)
+        
+        # 자동 실행기 (필요시 생성)
+        self._auto_executor: Optional[AutoTaskExecutor] = None
         
         # 명령어 핸들러 매핑
         self.command_handlers = {
@@ -113,7 +123,14 @@ class WorkflowManager:
                 # events 로드는 별도로 처리 (실패해도 state는 유지)
                 try:
                     if hasattr(self.state, 'events') and self.state.events:
-                        self.event_store.from_list(self.state.events)
+                        # events가 이미 WorkflowEvent 객체 리스트인지 확인
+                        if len(self.state.events) > 0 and hasattr(self.state.events[0], '__dict__'):
+                            # 이미 객체인 경우 - 딕셔너리로 변환
+                            events_dict = [event.__dict__ if hasattr(event, '__dict__') else event for event in self.state.events]
+                            self.event_store.from_list(events_dict)
+                        else:
+                            # 딕셔너리인 경우 - 그대로 사용
+                            self.event_store.from_list(self.state.events)
                         logger.info(f"Loaded {len(self.state.events)} events")
                 except Exception as e:
                     logger.warning(f"Failed to load events: {e}")
@@ -132,22 +149,19 @@ class WorkflowManager:
             self.event_store = EventStore()
                 
     def _save_data(self) -> bool:
-        """데이터를 파일에 저장 (개선: 저장 후 자동 리로드)"""
+        """데이터를 파일에 저장"""
         try:
             # 이벤트 스토어를 상태에 동기화
             self.state.events = self.event_store.events
             self.state.last_saved = datetime.now(timezone.utc)
             
-            # 자동 백업 확인
-            create_backup = self.storage.should_auto_backup()
+            # 저장 (백업은 storage.save()에서 자동 처리)
+            success = self.storage.save(self.state.to_dict())
             
-            # 저장
-            success = self.storage.save(self.state.to_dict(), create_backup)
-            
-            # 저장 성공 시 state 리로드 (동기화 보장)
             if success:
-                self._load_data()
-                logger.info(f"State reloaded after save for {self.project_name}")
+                logger.info(f"Workflow data saved successfully for {self.project_name}")
+            else:
+                logger.warning(f"Failed to save workflow data for {self.project_name}")
             
             return success
             
@@ -321,6 +335,134 @@ class WorkflowManager:
             
         return None
         
+    def fail_task(self, task_id: str, error: str) -> bool:
+        """태스크 실패 처리"""
+        if not self.state.current_plan:
+            return False
+            
+        # 태스크 찾기
+        task = None
+        for t in self.state.current_plan.tasks:
+            if t.id == task_id:
+                task = t
+                break
+                
+        if not task:
+            logger.error(f"Task not found: {task_id}")
+            return False
+            
+        # 실패 처리
+        task.fail(error)
+        self.state.current_plan.updated_at = datetime.now(timezone.utc)
+        
+        # 이벤트 기록
+        event = EventBuilder.task_failed(self.state.current_plan.id, task, error)
+        self._add_event(event)
+        
+        # 컨텍스트 동기화
+        self.context.sync_plan_summary(self.state.current_plan)
+        
+        # 저장
+        self._save_data()
+        
+        return True
+        
+    def block_task(self, task_id: str, blocker: str) -> bool:
+        """태스크 차단 처리"""
+        if not self.state.current_plan:
+            return False
+            
+        # 태스크 찾기
+        task = None
+        for t in self.state.current_plan.tasks:
+            if t.id == task_id:
+                task = t
+                break
+                
+        if not task:
+            logger.error(f"Task not found: {task_id}")
+            return False
+            
+        # 차단 처리
+        task.block(blocker)
+        self.state.current_plan.updated_at = datetime.now(timezone.utc)
+        
+        # 이벤트 기록
+        event = EventBuilder.task_blocked(self.state.current_plan.id, task, blocker)
+        self._add_event(event)
+        
+        # 컨텍스트 동기화
+        self.context.sync_plan_summary(self.state.current_plan)
+        
+        # 저장
+        self._save_data()
+        
+        return True
+        
+    def unblock_task(self, task_id: str) -> bool:
+        """태스크 차단 해제 처리"""
+        if not self.state.current_plan:
+            return False
+            
+        # 태스크 찾기
+        task = None
+        for t in self.state.current_plan.tasks:
+            if t.id == task_id:
+                task = t
+                break
+                
+        if not task:
+            logger.error(f"Task not found: {task_id}")
+            return False
+            
+        # 차단 해제 처리
+        task.unblock()
+        self.state.current_plan.updated_at = datetime.now(timezone.utc)
+        
+        # 이벤트 기록
+        event = EventBuilder.task_unblocked(self.state.current_plan.id, task)
+        self._add_event(event)
+        
+        # 컨텍스트 동기화
+        self.context.sync_plan_summary(self.state.current_plan)
+        
+        # 저장
+        self._save_data()
+        
+        return True
+        
+    def cancel_task(self, task_id: str, reason: str = "") -> bool:
+        """태스크 취소 처리"""
+        if not self.state.current_plan:
+            return False
+            
+        # 태스크 찾기
+        task = None
+        for t in self.state.current_plan.tasks:
+            if t.id == task_id:
+                task = t
+                break
+                
+        if not task:
+            logger.error(f"Task not found: {task_id}")
+            return False
+            
+        # 취소 처리
+        task.cancel(reason)
+        self.state.current_plan.updated_at = datetime.now(timezone.utc)
+        
+        # 이벤트 기록
+        event = EventBuilder.task_cancelled(self.state.current_plan.id, task, reason)
+        self._add_event(event)
+        
+        # 컨텍스트 동기화
+        self.context.sync_plan_summary(self.state.current_plan)
+        
+        # 저장
+        self._save_data()
+        
+        return True
+        
     def archive_plan(self) -> bool:
         """현재 플랜 아카이브"""
         if not self.state.current_plan:
@@ -443,7 +585,12 @@ class WorkflowManager:
     # 명령어 실행 메서드
     
     def execute_command(self, command_str: str) -> HelperResult:
-        """명령어 문자열 실행"""
+        """명령어 문자열 실행 (개선된 버전)"""
+        # UserCommandAPI를 통해 실행
+        if hasattr(self, 'user_api'):
+            return self.user_api.execute_command(command_str)
+        
+        # 기존 방식 (fallback)
         try:
             # 명령어 파싱
             parsed = self.parser.parse(command_str)
@@ -614,6 +761,17 @@ class WorkflowManager:
             # 현재 태스크
             return self._handle_focus(parsed)
             
+        elif parsed.subcommand == 'list':
+            # 태스크 목록 명시적 처리
+            tasks = self.get_tasks()  # 이미 dict 리스트를 반환
+            return HelperResult(True, data={
+                'success': True,
+                'tasks': tasks,
+                'total': len(tasks),
+                'completed': len([t for t in tasks if t.get('status') == 'completed']),
+                'message': f"📋 전체 태스크: {len(tasks)}개"
+            })
+            
         elif parsed.subcommand == 'note':
             # 현재 태스크에 노트 추가
             note = parsed.args.get('note', parsed.title)
@@ -634,10 +792,9 @@ class WorkflowManager:
             else:
                 return HelperResult(False, error="노트 추가 실패")
             
-        elif parsed.title and parsed.subcommand != 'note':
-            # 새 태스크 추가 (note 서브커맨드가 아닐 때만)
-            # 빈 제목 검증
-            if not parsed.title.strip():
+        elif parsed.subcommand == 'add':
+            # 명시적인 add 서브커맨드 처리
+            if not parsed.title or not parsed.title.strip():
                 return HelperResult(False, error="태스크 제목을 입력해주세요")
             
             task = self.add_task(parsed.title, parsed.description)
@@ -655,9 +812,13 @@ class WorkflowManager:
                 })
             else:
                 return HelperResult(False, error="태스크 추가 실패")
+            
+        elif parsed.title and parsed.subcommand != 'note' and parsed.subcommand != 'add':
+            # 서브커맨드가 필요한 경우
+            return HelperResult(False, error="서브커맨드를 사용해주세요. 예: /task add 새로운 태스크 | /task list | /task current")
                 
         else:
-            # 태스크 목록
+            # 태스크 목록 (인자 없이 /task만 입력한 경우)
             tasks = self.get_tasks()
             return HelperResult(True, data={
                 'success': True,

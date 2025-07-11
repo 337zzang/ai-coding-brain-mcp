@@ -178,6 +178,44 @@ class Task:
         if note:
             self.notes.append(f"[완료] {note}")
     
+    def fail(self, error: str) -> None:
+        """태스크 실패"""
+        self.status = TaskStatus.CANCELLED  # FAILED가 없으므로 CANCELLED 사용
+        self.updated_at = datetime.now(KST)
+        self.notes.append(f"[실패] {error}")
+        
+    def block(self, blocker: str) -> None:
+        """태스크 차단"""
+        # 현재 상태를 outputs에 저장
+        if 'previous_status' not in self.outputs:
+            self.outputs['previous_status'] = self.status.value
+        self.outputs['blocker'] = blocker
+        self.outputs['blocked_at'] = datetime.now(KST).isoformat()
+        self.updated_at = datetime.now(KST)
+        self.notes.append(f"[차단] {blocker}")
+        
+    def unblock(self) -> None:
+        """태스크 차단 해제"""
+        if 'previous_status' in self.outputs:
+            # 이전 상태로 복원
+            prev_status = self.outputs.pop('previous_status', TaskStatus.TODO.value)
+            self.status = TaskStatus(prev_status)
+        if 'blocker' in self.outputs:
+            del self.outputs['blocker']
+        if 'blocked_at' in self.outputs:
+            del self.outputs['blocked_at']
+        self.updated_at = datetime.now(KST)
+        self.notes.append("[차단 해제]")
+        
+    def cancel(self, reason: str = "") -> None:
+        """태스크 취소"""
+        self.status = TaskStatus.CANCELLED
+        self.updated_at = datetime.now(KST)
+        if reason:
+            self.notes.append(f"[취소] {reason}")
+        else:
+            self.notes.append("[취소]")
+    
     def to_dict(self) -> Dict[str, Any]:
         """객체를 딕셔너리로 변환"""
         return {

@@ -11,6 +11,7 @@ from typing import List, Optional, Union, Pattern
 from pathlib import Path
 
 from ..helper_result import HelperResult
+from ..utils import track_file_access
 from .types import SearchMatch
 from .core import (
     normalize_path,

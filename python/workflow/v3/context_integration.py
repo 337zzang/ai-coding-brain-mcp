@@ -25,7 +25,10 @@ class ContextIntegration:
         try:
             # 컨텍스트 매니저 import 시도
             from python.core.context_manager import ContextManager
-            self.context_manager = ContextManager(self.project_name)
+            self.context_manager = ContextManager()  # 인자 없이 생성
+            # 프로젝트 이름은 별도로 설정
+            if hasattr(self.context_manager, 'current_project_name'):
+                self.context_manager.current_project_name = self.project_name
             logger.info("ContextManager initialized")
         except ImportError:
             logger.warning("ContextManager not available, running without context integration")

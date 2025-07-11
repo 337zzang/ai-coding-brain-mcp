@@ -7,7 +7,7 @@ Search 모듈 핵심 유틸리티
 import os
 import re
 import fnmatch
-from typing import List, Pattern, Optional, Set
+from typing import List, Pattern, Optional, Set, Union
 from pathlib import Path
 
 

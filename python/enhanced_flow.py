@@ -383,8 +383,8 @@ def _safe_project_check(project_name: str) -> Dict[str, Any]:
 
     # 4. workflow.json 점검
     print("\n[SEARCH] 워크플로우 상태 점검 중...")
-    # 먼저 active 디렉토리에서 찾고, 없으면 기존 위치에서 찾기
-    wf_paths = [Path("memory/active/workflow.json"), Path("memory/workflow.json")]
+    # workflow.json 통일 경로 사용
+    wf_paths = [Path("memory/workflow.json")]
     
     wf_path = None
     for path in wf_paths:

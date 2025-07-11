@@ -45,8 +45,15 @@ execution_count = 0  # 실행 카운터
 # ============================================================================
 
 # API 모듈 import (절대 임포트 사용 - 독립 실행 파일)
-from ai_helpers.api import toggle_api as api_toggle_api, list_apis as api_list_apis, check_api_enabled
-from ai_helpers.api import ImageAPI
+try:
+    from ai_helpers.api import toggle_api as api_toggle_api, list_apis as api_list_apis, check_api_enabled
+    from ai_helpers.api import ImageAPI
+except ImportError as e:
+    print(f"WARNING: API 모듈 로드 실패: {e}")
+    api_toggle_api = None
+    api_list_apis = None
+    check_api_enabled = None
+    ImageAPI = None
 
 class AIHelpers:
     """AI Coding Brain 헬퍼 함수 네임스페이스"""
@@ -123,10 +130,13 @@ class AIHelpers:
         self.parse_code = code.parse_code
         
         # Search 메서드들
-        from ai_helpers import search, search_code, find_class, find_function, find_import
-        self.scan_directory_dict = search.scan_directory_dict
-        self.search_files_advanced = search.search_files_advanced
-        self.search_code_content = search.search_code_content
+        from ai_helpers.search import (
+            scan_directory_dict, search_files_advanced, search_code_content
+        )
+        from ai_helpers import search_code, find_class, find_function, find_import
+        self.scan_directory_dict = scan_directory_dict
+        self.search_files_advanced = search_files_advanced
+        self.search_code_content = search_code_content
         # 새로운 search wrapper 함수들
         self.search_code = search_code
         self.find_class = find_class
@@ -323,7 +333,7 @@ class AIHelpers:
             logger.warning(f"⚠️ Workflow 메서드 바인딩 실패: {e}")
 
 
-def ensure_helpers_loaded():
+def ensure_helpers_loaded_old():
     """helpers 모듈이 제대로 로드되었는지 확인하고 필요시 재로드"""
     global repl_globals
     

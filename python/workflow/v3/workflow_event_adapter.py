@@ -167,6 +167,60 @@ class WorkflowEventAdapter:
         event_bus.publish(event)
         logger.debug(f"Published TASK_COMPLETED: {task.title}")
 
+    def publish_task_failed(self, task, plan, error: str):
+        """태스크 실패 이벤트 발행"""
+        event = create_task_event(
+            EventType.TASK_FAILED,
+            task_id=task.id,
+            task_title=task.title,
+            task_status='failed',
+            plan_id=plan.id,
+            project_name=self.workflow_manager.project_name,
+            error=error
+        )
+        event_bus.publish(event)
+        logger.debug(f"Published TASK_FAILED: {task.title}")
+
+    def publish_task_blocked(self, task, plan, blocker: str):
+        """태스크 차단 이벤트 발행"""
+        event = create_task_event(
+            EventType.TASK_BLOCKED,
+            task_id=task.id,
+            task_title=task.title,
+            task_status='blocked',
+            plan_id=plan.id,
+            project_name=self.workflow_manager.project_name,
+            blocker=blocker
+        )
+        event_bus.publish(event)
+        logger.debug(f"Published TASK_BLOCKED: {task.title}")
+
+    def publish_task_unblocked(self, task, plan):
+        """태스크 차단 해제 이벤트 발행"""
+        event = create_task_event(
+            EventType.TASK_UNBLOCKED,
+            task_id=task.id,
+            task_title=task.title,
+            task_status=task.status.value,
+            plan_id=plan.id,
+            project_name=self.workflow_manager.project_name
+        )
+        event_bus.publish(event)
+        logger.debug(f"Published TASK_UNBLOCKED: {task.title}")
+
+    def publish_task_cancelled(self, task, plan):
+        """태스크 취소 이벤트 발행"""
+        event = create_task_event(
+            EventType.TASK_CANCELLED,
+            task_id=task.id,
+            task_title=task.title,
+            task_status='cancelled',
+            plan_id=plan.id,
+            project_name=self.workflow_manager.project_name
+        )
+        event_bus.publish(event)
+        logger.debug(f"Published TASK_CANCELLED: {task.title}")
+
     # === 컨텍스트 동기화 이벤트 ===
 
     def publish_context_update(self, context_type: str, data: Dict[str, Any]):
@@ -190,7 +244,8 @@ class WorkflowEventAdapter:
         event_type = workflow_event.type
         
         if event_type in [EventType.PLAN_CREATED, EventType.PLAN_STARTED, 
-                         EventType.PLAN_COMPLETED, EventType.PLAN_ARCHIVED]:
+                         EventType.PLAN_COMPLETED, EventType.PLAN_ARCHIVED,
+                         EventType.PLAN_CANCELLED]:
             # 플랜 관련 이벤트
             event = create_plan_event(
                 event_type,
@@ -200,9 +255,11 @@ class WorkflowEventAdapter:
                 project_name=self.workflow_manager.project_name
             )
         elif event_type in [EventType.TASK_ADDED, EventType.TASK_STARTED,
-                           EventType.TASK_COMPLETED]:
+                           EventType.TASK_COMPLETED, EventType.TASK_FAILED,
+                           EventType.TASK_BLOCKED, EventType.TASK_UNBLOCKED,
+                           EventType.TASK_CANCELLED]:
             # 태스크 관련 이벤트
-            event = create_task_event(
+            task_event = create_task_event(
                 event_type,
                 task_id=workflow_event.task_id,
                 task_title=workflow_event.details.get('title', workflow_event.details.get('task_title', '')),
@@ -210,21 +267,45 @@ class WorkflowEventAdapter:
                 plan_id=workflow_event.plan_id,
                 project_name=self.workflow_manager.project_name
             )
-        elif event_type == EventType.NOTE_ADDED:
-            # 노트 추가 이벤트
+            # 추가 정보를 payload에 포함
+            if event_type == EventType.TASK_FAILED:
+                task_event.payload['error'] = workflow_event.details.get('error', '')
+            elif event_type == EventType.TASK_BLOCKED:
+                task_event.payload['blocker'] = workflow_event.details.get('blocker', '')
+            elif event_type == EventType.TASK_CANCELLED:
+                task_event.payload['reason'] = workflow_event.details.get('reason', '')
+            
+            event = task_event
+        elif event_type in [EventType.NOTE_ADDED, EventType.NOTE_UPDATED, EventType.NOTE_DELETED]:
+            # 노트 관련 이벤트
             event = create_task_event(
                 event_type,
                 task_id=workflow_event.task_id,
                 task_title=workflow_event.details.get('task_title', ''),
                 plan_id=workflow_event.plan_id,
                 project_name=self.workflow_manager.project_name,
-                note=workflow_event.details.get('note', '')
+                note=workflow_event.details.get('note', ''),
+                note_index=workflow_event.details.get('note_index', None)
+            )
+        elif event_type in [EventType.SESSION_STARTED, EventType.SESSION_RESUMED, EventType.SESSION_ENDED]:
+            # 세션 관련 이벤트
+            event = create_context_event(
+                event_type,
+                context_type='session',
+                context_data={
+                    'session_id': workflow_event.details.get('session_id', ''),
+                    'timestamp': workflow_event.timestamp.isoformat(),
+                    **workflow_event.details
+                },
+                project_name=self.workflow_manager.project_name
             )
         else:
             # 기타 이벤트는 context_event로 처리
             event = create_context_event(
                 event_type,
-                workflow_event.details
+                context_type='workflow',
+                context_data=workflow_event.details,
+                project_name=self.workflow_manager.project_name
             )
         
         # EventBus로 발행

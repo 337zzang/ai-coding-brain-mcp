@@ -66,6 +66,7 @@ class HelpersWrapper:
     def __init__(self, helpers_instance):
         self._helpers = helpers_instance
         self._cache = {}
+        self._dc = None  # Desktop Commander 인스턴스 (lazy loading)
 
         # v44: 특정 메서드들을 명시적으로 바인딩 (캐시 우선순위 문제 해결)
         self._bind_override_methods()
@@ -110,10 +111,34 @@ class HelpersWrapper:
         if callable(attr):
             # 이미 HelperResult를 반환하는 메서드들은 추가 래핑하지 않음
             no_wrap_methods = {
-                'workflow', 'scan_directory_dict', 'run_command',
-                'git_status', 'git_add', 'git_commit', 'git_push',
-                'read_file', 'create_file', 'edit_block', 'replace_block',
-                'search_files', 'search_code', 'parse_with_snippets'
+                # Workflow 관련
+                'workflow', 'flow_project', 'list_functions',
+                
+                # File 관련
+                'read_file', 'create_file', 'write_file', 'append_to_file',
+                
+                # Directory/Search 관련  
+                'scan_directory_dict', 'scan_directory',
+                'search_files_advanced', 'search_code_content',
+                'search_code', 'find_class', 'find_function', 'find_import',
+                
+                # Git 관련
+                'git_status', 'git_add', 'git_commit', 'git_push', 'git_pull',
+                'git_branch', 'git_log', 'git_diff', 'git_stash', 'git_stash_pop',
+                'git_commit_smart', 'git_branch_smart', 'is_git_repository', 'git_init',
+                
+                # Compile/Code 관련
+                'edit_block', 'replace_block', 'parse_with_snippets',
+                'check_syntax', 'compile_project', 'parse_code',
+                
+                # Utils
+                'run_command',
+                
+                # Context 관련
+                'get_context', 'save_context', 'update_context',
+                
+                # Project 관련
+                'get_project_progress', 'get_system_summary'
             }
             
             if name in no_wrap_methods:
@@ -241,32 +266,45 @@ class HelpersWrapper:
     def read_file(self, path: str, **kwargs) -> HelperResult:
         """파일 읽기 - offset/length 파라미터 지원 (v44 개선)"""
         try:
-            # Desktop Commander의 read_file 파라미터 매핑
+            # Desktop Commander 지원 파라미터 확인
             dc_params = {}
-
-            # offset과 length는 Desktop Commander에서 지원
+            use_dc = False
+            
+            # offset과 length는 Desktop Commander에서만 지원
             if 'offset' in kwargs:
                 dc_params['offset'] = kwargs['offset']
+                use_dc = True
             if 'length' in kwargs:
                 dc_params['length'] = kwargs['length']
+                use_dc = True
             if 'isUrl' in kwargs:
                 dc_params['isUrl'] = kwargs['isUrl']
+                use_dc = True
 
-            # Desktop Commander의 read_file 호출
-            if hasattr(self._dc, 'read_file'):
-                # Desktop Commander 사용
-                result = self._dc.read_file(path=path, **dc_params)
-                if hasattr(result, 'data'):
-                    return HelperResult(True, result.data)
-                else:
-                    return HelperResult(True, result)
+            # Desktop Commander가 필요하고 사용 가능한 경우
+            if use_dc:
+                try:
+                    # Desktop Commander lazy loading
+                    if self._dc is None:
+                        import desktop_commander as dc
+                        self._dc = dc
+                    
+                    if hasattr(self._dc, 'read_file'):
+                        result = self._dc.read_file(path=path, **dc_params)
+                        if hasattr(result, 'data'):
+                            return HelperResult(True, result.data)
+                        else:
+                            return HelperResult(True, result)
+                except (ImportError, AttributeError):
+                    # Desktop Commander 사용 불가 시 AI Helpers로 fallback
+                    pass
+            
+            # AI Helpers 사용 (기본 동작)
+            result = self._helpers.read_file(path)
+            if hasattr(result, 'ok'):
+                return result
             else:
-                # AI Helpers fallback
-                result = self._helpers.read_file(path)
-                if hasattr(result, 'ok'):
-                    return result
-                else:
-                    return HelperResult(True, result)
+                return HelperResult(True, result)
 
         except Exception as e:
             return HelperResult(False, error=f"read_file 오류: {str(e)}")

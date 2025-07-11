@@ -16,6 +16,7 @@ class ErrorCode(str, Enum):
     TITLE_TOO_LONG = "title_too_long"
     INVALID_COMMAND = "invalid_command"
     MISSING_ARGUMENT = "missing_argument"
+    INVALID_ARGUMENT = "invalid_argument"
     
     # 상태 에러
     NO_ACTIVE_PLAN = "no_active_plan"
@@ -28,6 +29,11 @@ class ErrorCode(str, Enum):
     FILE_CORRUPTED = "file_corrupted"
     SAVE_FAILED = "save_failed"
     LOAD_FAILED = "load_failed"
+    
+    # 권한 및 제한 에러
+    PERMISSION_DENIED = "permission_denied"
+    UNAUTHORIZED = "unauthorized"
+    RATE_LIMIT_EXCEEDED = "rate_limit_exceeded"
     
     # 일반 에러
     UNKNOWN_ERROR = "unknown_error"

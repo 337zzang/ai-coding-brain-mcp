@@ -692,6 +692,11 @@ class WorkflowManager:
         note = parsed.args.get('note', parsed.title)
         next_task = self.complete_current_task(note)
         
+        # 진행률 정보 계산
+        total_tasks = len(self.state.current_plan.tasks)
+        completed_tasks = sum(1 for t in self.state.current_plan.tasks if t.status.value == 'completed')
+        progress_percent = int((completed_tasks / total_tasks * 100) if total_tasks > 0 else 0)
+        
         result_data = {
             'success': True,
             'completed_task': {
@@ -699,7 +704,11 @@ class WorkflowManager:
                 'title': current.title,
                 'duration': current.duration
             },
-            'message': f"✅ 완료: {current.title}"
+            'message': f"✅ 완료: {current.title}",
+            # 진행률 정보 추가
+            'total_tasks': total_tasks,
+            'completed_tasks': completed_tasks,
+            'progress_percent': progress_percent
         }
         
         if next_task:

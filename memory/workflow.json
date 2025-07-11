@@ -10,39 +10,45 @@
           "id": "8f28a075-26d2-49a5-899c-3f643dda83b3",
           "title": "현재 MCP 통합 수준 분석",
           "description": "",
-          "status": "todo",
+          "status": "completed",
           "created_at": "2025-07-11T09:51:47.861706+09:00",
-          "updated_at": "2025-07-11T09:51:47.861706+09:00",
+          "updated_at": "2025-07-11T10:20:32.170804+09:00",
           "started_at": null,
-          "completed_at": null,
+          "completed_at": "2025-07-11T10:20:32.170804+09:00",
           "duration": null,
-          "notes": [],
+          "notes": [
+            "[완료] 워크플로우 문제 수정 테스트"
+          ],
           "outputs": {}
         },
         {
           "id": "ab5fb4d7-b408-43e6-af3d-057bd29ee2f1",
           "title": "EventBus 비동기 처리 최적화",
           "description": "",
-          "status": "todo",
+          "status": "completed",
           "created_at": "2025-07-11T09:51:47.861706+09:00",
-          "updated_at": "2025-07-11T09:51:47.861706+09:00",
+          "updated_at": "2025-07-11T10:22:46.007721+09:00",
           "started_at": null,
-          "completed_at": null,
+          "completed_at": "2025-07-11T10:22:46.007721+09:00",
           "duration": null,
-          "notes": [],
+          "notes": [
+            "[완료] EventBus 분석 완료"
+          ],
           "outputs": {}
         },
         {
           "id": "42f7c252-bcb3-438e-84f8-15338ad36c77",
           "title": "에러 처리 표준화",
           "description": "",
-          "status": "todo",
+          "status": "completed",
           "created_at": "2025-07-11T09:51:47.861706+09:00",
-          "updated_at": "2025-07-11T09:51:47.861706+09:00",
+          "updated_at": "2025-07-11T10:22:46.008718+09:00",
           "started_at": null,
-          "completed_at": null,
+          "completed_at": "2025-07-11T10:22:46.008718+09:00",
           "duration": null,
-          "notes": [],
+          "notes": [
+            "[완료] 에러 처리 분석 완료"
+          ],
           "outputs": {}
         },
         {
@@ -72,9 +78,9 @@
           "outputs": {}
         }
       ],
-      "current_task_index": 0,
+      "current_task_index": 1,
       "created_at": "2025-07-11T09:51:47.857473+09:00",
-      "updated_at": "2025-07-11T00:51:47.861706+00:00",
+      "updated_at": "2025-07-11T01:22:46.008718+00:00",
       "completed_at": null,
       "archived_at": null,
       "stats": {},
@@ -84,115 +90,53 @@
   "active_plan_id": "ab3d89bf-fe8b-4d55-9593-851b098853ef",
   "events": [
     {
-      "id": "0dafa1c8-325c-4e9a-b9c4-c3b3a05bf77c",
-      "type": "plan_archived",
-      "timestamp": "2025-07-11T09:51:47.857473+09:00",
-      "plan_id": "d039aeb1-49e3-47b1-965e-ad8ae0a4848e",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "KST 테스트 플랜 2025",
-        "archived_at": "2025-07-11T09:51:47.857473+09:00"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "51fac1ae-ebab-4725-898d-6e2f5b7f2411",
-      "type": "plan_created",
-      "timestamp": "2025-07-11T09:51:47.857473+09:00",
-      "plan_id": "ab3d89bf-fe8b-4d55-9593-851b098853ef",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "MCP 기반 워크플로우 자동화 강화 플랜",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "098ca911-c00d-4f39-ab8e-5146f3f3c5eb",
-      "type": "plan_started",
-      "timestamp": "2025-07-11T09:51:47.857473+09:00",
-      "plan_id": "ab3d89bf-fe8b-4d55-9593-851b098853ef",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "MCP 기반 워크플로우 자동화 강화 플랜",
-        "task_count": 0
-      },
-      "metadata": {}
-    },
-    {
-      "id": "80853bec-44bf-4dd6-89df-b0ae3b9ba726",
-      "type": "task_added",
-      "timestamp": "2025-07-11T09:51:47.861706+09:00",
+      "id": "3a964533-5976-48cb-8a9b-c921fa976e50",
+      "type": "task_completed",
+      "timestamp": "2025-07-11T10:20:32.170804+09:00",
       "plan_id": "ab3d89bf-fe8b-4d55-9593-851b098853ef",
       "task_id": "8f28a075-26d2-49a5-899c-3f643dda83b3",
       "user": "system",
       "details": {
         "title": "현재 MCP 통합 수준 분석",
-        "description": ""
+        "duration": null,
+        "note": "워크플로우 문제 수정 테스트"
       },
       "metadata": {}
     },
     {
-      "id": "88d4484e-1eee-4dc0-8748-ad06fe1f7482",
-      "type": "task_added",
-      "timestamp": "2025-07-11T09:51:47.861706+09:00",
+      "id": "a0ea2e0f-692a-4ed9-88f3-62f2113672f7",
+      "type": "task_completed",
+      "timestamp": "2025-07-11T10:22:46.007721+09:00",
       "plan_id": "ab3d89bf-fe8b-4d55-9593-851b098853ef",
       "task_id": "ab5fb4d7-b408-43e6-af3d-057bd29ee2f1",
       "user": "system",
       "details": {
         "title": "EventBus 비동기 처리 최적화",
-        "description": ""
+        "duration": null,
+        "note": "EventBus 분석 완료"
       },
       "metadata": {}
     },
     {
-      "id": "aa2a3914-45ed-43d8-991d-d1ba65ec002a",
-      "type": "task_added",
-      "timestamp": "2025-07-11T09:51:47.861706+09:00",
+      "id": "e0659042-2bbc-43bd-bbb3-99ea79705253",
+      "type": "task_completed",
+      "timestamp": "2025-07-11T10:22:46.008718+09:00",
       "plan_id": "ab3d89bf-fe8b-4d55-9593-851b098853ef",
       "task_id": "42f7c252-bcb3-438e-84f8-15338ad36c77",
       "user": "system",
       "details": {
         "title": "에러 처리 표준화",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "52708961-2475-4d22-8a65-e760d46f113f",
-      "type": "task_added",
-      "timestamp": "2025-07-11T09:51:47.861706+09:00",
-      "plan_id": "ab3d89bf-fe8b-4d55-9593-851b098853ef",
-      "task_id": "97a0e188-3a2e-4a3f-b20b-242ebc987f35",
-      "user": "system",
-      "details": {
-        "title": "컨텍스트 자동 갱신 강화",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "2a9a72bf-9e84-43a8-8592-69c85a52a1fc",
-      "type": "task_added",
-      "timestamp": "2025-07-11T09:51:47.861706+09:00",
-      "plan_id": "ab3d89bf-fe8b-4d55-9593-851b098853ef",
-      "task_id": "9a1f60c5-5ee9-42a0-9bb1-c93481c536e2",
-      "user": "system",
-      "details": {
-        "title": "AI 에이전트 자율성 구현",
-        "description": ""
+        "duration": null,
+        "note": "에러 처리 분석 완료"
       },
       "metadata": {}
     }
   ],
   "version": "3.0.0",
-  "last_saved": "2025-07-11T01:00:25.650483+00:00",
+  "last_saved": "2025-07-11T01:22:46.008718+00:00",
   "metadata": {
     "created_at": "2025-07-10T08:40:07.484043+00:00",
-    "last_modified": "2025-07-11T01:07:33.300955+00:00",
+    "last_modified": "2025-07-11T01:23:09.037933+00:00",
     "project_name": "ai-coding-brain-mcp",
     "project_root": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp",
     "version": "3.0"

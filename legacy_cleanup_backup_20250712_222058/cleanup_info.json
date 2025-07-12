@@ -1,0 +1,44 @@
+{
+  "timestamp": "20250712_222058",
+  "delete_plan": {
+    "backup_files": [
+      "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\python\\ai_helpers\\api\\wrappers.py.backup",
+      "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\backup\\memory_workflow_data.json.backup",
+      "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\backups\\refactoring_20250708\\helpers_wrapper.py.backup",
+      "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\test_backup\\task_context.json.backup",
+      "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\backups\\refactoring_20250708\\code.py.backup",
+      "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\backup\\workflow_data.json.backup",
+      "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\backups\\refactoring_20250708\\decorators.py.backup",
+      "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\python\\ai_helpers\\file.py.backup",
+      "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\test_backup\\context.json.backup",
+      "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\backups\\cache_api_integration_20250710_145158\\context_manager.py.bak",
+      "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\backups\\workflow_fix_20250711_152837\\manager.py.backup",
+      "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\backups\\refactoring_20250708\\helper_result.py.backup",
+      "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\test_backup\\workflow.json.backup"
+    ],
+    "backup_dirs": [
+      "backup",
+      "backups"
+    ],
+    "memory_legacy": [
+      "memory/workflow_backups",
+      "memory/workflow_v3",
+      "memory/test_backup"
+    ]
+  },
+  "total_items": 18,
+  "git_status": {
+    "branch": "master",
+    "modified": [
+      "PROJECT_CONTEXT.md",
+      "README.md",
+      "docs/plan_summary_.md",
+      "memory/context.json",
+      "memory/workflow.json",
+      "python/helpers_wrapper.py"
+    ],
+    "untracked": [],
+    "staged": [],
+    "clean": false
+  }
+}

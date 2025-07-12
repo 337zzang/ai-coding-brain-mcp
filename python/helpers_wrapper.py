@@ -571,3 +571,55 @@ def get_workflow_context() -> HelperResult:
 
     except Exception as e:
         return HelperResult(False, None, str(e))
+
+
+# helpers_extension 함수들을 HelpersWrapper에 추가
+try:
+    from python.helpers_extension import (
+        create_directory, list_directory, delete_directory,
+        file_exists, delete_file, copy_file, move_file, get_file_size,
+        append_to_file, read_lines, backup_file,
+        read_json, write_json,
+        run_command,
+        get_project_name as ext_get_project_name,
+        get_project_path as ext_get_project_path, 
+        get_current_branch as ext_get_current_branch,
+        get_timestamp
+    )
+    
+    # HelpersWrapper 클래스에 동적으로 메서드 추가
+    # 디렉토리 관련
+    HelpersWrapper.create_directory = lambda self, path: create_directory(path)
+    HelpersWrapper.list_directory = lambda self, path=".": list_directory(path)
+    HelpersWrapper.delete_directory = lambda self, path: delete_directory(path)
+    
+    # 파일 관련
+    HelpersWrapper.file_exists = lambda self, path: file_exists(path)
+    HelpersWrapper.delete_file = lambda self, path: delete_file(path)
+    HelpersWrapper.copy_file = lambda self, src, dst: copy_file(src, dst)
+    HelpersWrapper.move_file = lambda self, src, dst: move_file(src, dst)
+    HelpersWrapper.get_file_size = lambda self, path: get_file_size(path)
+    HelpersWrapper.backup_file = lambda self, path, backup_dir="backups": backup_file(path, backup_dir)
+    
+    # 텍스트 파일 관련 (append_to_file은 이미 있을 수 있음)
+    if not hasattr(HelpersWrapper, 'append_to_file'):
+        HelpersWrapper.append_to_file = lambda self, path, content: append_to_file(path, content)
+    HelpersWrapper.read_lines = lambda self, path, start=0, count=None: read_lines(path, start, count)
+    
+    # JSON 관련
+    HelpersWrapper.read_json = lambda self, path, default=None: read_json(path, default)
+    HelpersWrapper.write_json = lambda self, path, data, indent=2: write_json(path, data, indent)
+    
+    # 명령어 실행 (run_command는 이미 있을 수 있음)
+    if not hasattr(HelpersWrapper, 'run_command'):
+        HelpersWrapper.run_command = lambda self, cmd, timeout=30, encoding=None: run_command(cmd, timeout, encoding)
+    
+    # 유틸리티
+    HelpersWrapper.get_timestamp = lambda self, format="%Y%m%d_%H%M%S": get_timestamp(format)
+    
+    print("✅ helpers_extension 함수들이 helpers에 자동 등록되었습니다!")
+    
+except ImportError as e:
+    print(f"⚠️ helpers_extension 자동 등록 실패: {e}")
+except Exception as e:
+    print(f"❌ 예상치 못한 오류: {e}")

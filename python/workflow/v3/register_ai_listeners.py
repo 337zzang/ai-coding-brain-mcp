@@ -17,22 +17,28 @@ def register_ai_instructors(project_name: str):
         # 기존 리스너 제거 (중복 방지)
         if hasattr(wm, 'listener_manager') and wm.listener_manager:
             # listener_manager가 있는 경우
-            existing_listeners = wm.listener_manager.get_listeners()
-            for listener in existing_listeners:
-                if isinstance(listener, (TaskCompletionInstructor, ErrorInstructor, WorkflowInstructor)):
-                    wm.listener_manager.unregister_listener(listener)
+            # listeners 딕셔너리 직접 확인
+            if hasattr(wm.listener_manager, 'listeners'):
+                existing_listeners = list(wm.listener_manager.listeners.values())
+                for listener in existing_listeners:
+                    if listener.__class__.__name__ in ['TaskCompletionInstructor', 'ErrorInstructor', 'WorkflowInstructor']:
+                        # listener의 name을 찾아서 unregister
+                        for name, l in wm.listener_manager.listeners.items():
+                            if l == listener:
+                                wm.listener_manager.unregister_listener(name)
+                                break
         
         # 새 리스너 생성 및 등록
         instructors = [
-            TaskCompletionInstructor(wm),
-            ErrorInstructor(wm),
-            WorkflowInstructor(wm)
+            ('task_completion_instructor', TaskCompletionInstructor()),
+            ('error_instructor', ErrorInstructor()),
+            ('workflow_instructor', WorkflowInstructor())
         ]
         
         registered = 0
-        for instructor in instructors:
+        for name, instructor in instructors:
             if hasattr(wm, 'listener_manager') and wm.listener_manager:
-                wm.listener_manager.register_listener(instructor)
+                wm.listener_manager.register_listener(name, instructor)
                 logger.info(f"✅ 등록됨: {instructor.__class__.__name__}")
                 registered += 1
             else:
@@ -75,7 +81,23 @@ def test_ai_instruction_system(project_name: str):
     # 실제로는 helpers.workflow("/next") 등으로 발생
     
     # 3. 지시서 확인
-    from python.workflow.v3.ai_instruction_executor import check_ai_instructions
+    try:
+        from python.workflow.v3.ai_instruction_executor import check_ai_instructions
+    except ImportError:
+        # check_ai_instructions가 없으면 로컬 함수 사용
+        def check_ai_instructions():
+            import os
+            import json
+            instruction_file = "memory/ai_instructions.json"
+            
+            if os.path.exists(instruction_file):
+                with open(instruction_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    return {
+                        'pending': len(data.get('pending', [])),
+                        'completed': len(data.get('completed', []))
+                    }
+            return {'pending': 0, 'completed': 0}
     
     import time
     time.sleep(1)  # 파일 쓰기 대기

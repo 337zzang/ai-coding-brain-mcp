@@ -1,48 +1,88 @@
 {
   "plans": [
     {
-      "id": "3b9a7567-c6e9-4c7e-a4d8-2998cf9a2e7f",
-      "name": "AI 테스트 플랜",
-      "description": "",
+      "id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
+      "name": "워크플로우 이벤트 시스템 통합 테스트",
+      "description": "이벤트 버스, 리스너 응답, 워크플로우 상태 변화를 실시간으로 모니터링",
       "status": "active",
       "tasks": [
         {
-          "id": "107410b4-08dd-4605-9031-3aad67b87bb3",
-          "title": "API 엔드포인트 구현",
-          "description": "",
-          "status": "completed",
-          "created_at": "2025-07-12T21:28:23.392422+09:00",
-          "updated_at": "2025-07-12T21:28:24.544225+09:00",
+          "id": "b4117f98-02f2-4c6a-9294-aaf59632dcd0",
+          "title": "이벤트 버스 초기화 및 리스너 등록 테스트",
+          "description": "테스트 태스크 #1",
+          "status": "cancelled",
+          "created_at": "2025-07-13T05:48:47.530395+09:00",
+          "updated_at": "2025-07-13T05:53:24.536661+09:00",
           "started_at": null,
-          "completed_at": "2025-07-12T21:28:24.544225+09:00",
+          "completed_at": null,
           "duration": null,
           "notes": [
-            "[완료] AI 지시형 리스너 시스템 구축 및 테스트 완료"
+            "[실패] 테스트 에러: 모듈을 찾을 수 없습니다"
           ],
           "outputs": {}
         },
         {
-          "id": "8d1bfbc0-2068-4e5b-a854-170793bf91ff",
-          "title": "테스트 코드 작성",
-          "description": "",
+          "id": "753477e5-6214-4f42-bd67-9440c701de6b",
+          "title": "워크플로우 명령어 실행 시 이벤트 발생 확인",
+          "description": "테스트 태스크 #2",
           "status": "completed",
-          "created_at": "2025-07-12T21:28:23.436994+09:00",
-          "updated_at": "2025-07-12T21:43:58.571258+09:00",
+          "created_at": "2025-07-13T05:48:47.903045+09:00",
+          "updated_at": "2025-07-13T06:00:35.135205+09:00",
           "started_at": null,
-          "completed_at": "2025-07-12T21:43:58.571258+09:00",
+          "completed_at": "2025-07-13T06:00:35.135205+09:00",
           "duration": null,
           "notes": [
-            "[완료] flow_project 문제 해결 완료! WorkflowManager 보호 로직 추가"
+            "[실패] ModuleNotFoundError: No module named 'redis'",
+            "[완료] 워크플로우 명령어 테스트 완료"
           ],
           "outputs": {}
         },
         {
-          "id": "8404f9f1-fd0c-4e56-ba0c-50e5bb2947c9",
-          "title": "문서 업데이트",
+          "id": "0683997c-7ced-4787-a858-2abdaa6006c2",
+          "title": "이벤트 리스너 응답 시간 및 순서 검증",
+          "description": "테스트 태스크 #3",
+          "status": "todo",
+          "created_at": "2025-07-13T05:48:48.284806+09:00",
+          "updated_at": "2025-07-13T05:48:48.284806+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "8972e4ba-62bb-45c1-a4ca-f08f36d29260",
+          "title": "에러 발생 시 ERROR_OCCURRED 이벤트 처리 확인",
+          "description": "테스트 태스크 #4",
+          "status": "todo",
+          "created_at": "2025-07-13T05:48:48.673558+09:00",
+          "updated_at": "2025-07-13T05:48:48.673558+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "e40c295c-fdf3-4719-a8ed-3156658892a0",
+          "title": "태스크 완료 시 자동 이벤트 체인 테스트",
+          "description": "테스트 태스크 #5",
+          "status": "todo",
+          "created_at": "2025-07-13T05:48:49.055665+09:00",
+          "updated_at": "2025-07-13T05:48:49.055665+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "09bd358b-e770-45f5-8989-9fcc09e9d360",
+          "title": "이벤트 버스 리스너 테스트 중입니다.",
           "description": "",
           "status": "todo",
-          "created_at": "2025-07-12T21:28:23.484250+09:00",
-          "updated_at": "2025-07-12T21:28:23.484250+09:00",
+          "created_at": "2025-07-13T05:49:50.134804+09:00",
+          "updated_at": "2025-07-13T05:49:50.134804+09:00",
           "started_at": null,
           "completed_at": null,
           "duration": null,
@@ -51,110 +91,492 @@
         }
       ],
       "current_task_index": 1,
-      "created_at": "2025-07-12T21:28:23.328699+09:00",
-      "updated_at": "2025-07-12T12:43:58.571258+00:00",
+      "created_at": "2025-07-13T05:48:29.059525+09:00",
+      "updated_at": "2025-07-12T21:00:35.135205+00:00",
       "completed_at": null,
       "archived_at": null,
       "stats": {},
       "metadata": {}
     }
   ],
-  "active_plan_id": "3b9a7567-c6e9-4c7e-a4d8-2998cf9a2e7f",
+  "active_plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
   "events": [
     {
-      "id": "b547c0b3-2efb-48b6-b68b-c8f9417a6f5f",
+      "id": "3cde293a-795b-487e-9360-dcdb33ebc674",
       "type": "plan_created",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "bfed010a-b80a-4959-8627-78bdbf09480d",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": null,
       "user": "system",
       "details": {
-        "name": "리스너 테스트",
+        "name": "워크플로우 시스템 테스트",
         "description": ""
       },
       "metadata": {}
     },
     {
-      "id": "0b7d4a01-6959-4e9d-aec1-a3de5a7f6c60",
+      "id": "8feeebc6-d7fe-4f9f-8b45-cc7d3bb962a1",
       "type": "plan_started",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "bfed010a-b80a-4959-8627-78bdbf09480d",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": null,
       "user": "system",
       "details": {
-        "name": "리스너 테스트",
+        "name": "워크플로우 시스템 테스트",
         "task_count": 0
       },
       "metadata": {}
     },
     {
-      "id": "6a684514-93f4-4cec-9d45-50a9c88e4d07",
+      "id": "4c78992d-f7ec-4c56-8259-f1588c5c7d80",
       "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "bfed010a-b80a-4959-8627-78bdbf09480d",
-      "task_id": "732f6b8a-8be9-4f9a-9173-253041983b03",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
+      "task_id": "57b29aa7-99a6-4365-8ebe-de2420eed701",
       "user": "system",
       "details": {
-        "title": "첫 번째 테스트",
+        "title": "시스템 상태 확인",
         "description": ""
       },
       "metadata": {}
     },
     {
-      "id": "326e8408-d6d6-439c-8618-baba440bef80",
+      "id": "741d2083-3bfe-483f-abde-453aee5e71e5",
       "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "bfed010a-b80a-4959-8627-78bdbf09480d",
-      "task_id": "49e3f6eb-7b0e-475a-932f-ab346053f565",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
+      "task_id": "67aa3793-3905-4920-b67b-1bcf638bc9a2",
       "user": "system",
       "details": {
-        "title": "두 번째 테스트",
+        "title": "캐시 동기화 검증",
         "description": ""
       },
       "metadata": {}
     },
     {
-      "id": "80206e54-88f3-4dea-94e1-532e4f5a9f0b",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "bfed010a-b80a-4959-8627-78bdbf09480d",
-      "task_id": "732f6b8a-8be9-4f9a-9173-253041983b03",
+      "id": "e4890d1e-d25e-4569-8a0c-05dc069705a5",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
+      "task_id": "cd9caf30-f630-4648-b459-7a0ef202d43b",
       "user": "system",
       "details": {
-        "title": "첫 번째 테스트",
-        "duration": null,
-        "note": "테스트 완료!"
+        "title": "파일 저장 테스트",
+        "description": ""
       },
       "metadata": {}
     },
     {
-      "id": "a1fdd0ac-1e98-407b-9136-51e29ed62bf9",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "bfed010a-b80a-4959-8627-78bdbf09480d",
-      "task_id": "49e3f6eb-7b0e-475a-932f-ab346053f565",
+      "id": "99006352-d7b7-45e6-bf3e-1fb03995afe5",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
+      "task_id": "b2800bbb-039e-4406-91bb-2ee6baa04d02",
       "user": "system",
       "details": {
-        "title": "두 번째 테스트",
-        "duration": null,
-        "note": "통합된 시스템 실제 작동 테스트 완료:\n- WorkflowManager 통합 확인 ✅\n- 리스너 시스템 초기화 시도 ✅\n- 문제점 발견: 초기화 에러\n- 추가 디버깅 필요"
+        "title": "이벤트 추적 테스트",
+        "description": ""
       },
       "metadata": {}
     },
     {
-      "id": "0c30a01c-8509-43d6-a80e-adb9cea0401e",
-      "type": "plan_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "bfed010a-b80a-4959-8627-78bdbf09480d",
+      "id": "91ddc229-507c-4dd9-8cd9-4cd3f3709d9f",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
+      "task_id": "57b29aa7-99a6-4365-8ebe-de2420eed701",
+      "user": "system",
+      "details": {
+        "title": "시스템 상태 확인",
+        "duration": null,
+        "note": "시스템 상태 확인 완료! 모든 기능이 정상 작동하고 있습니다."
+      },
+      "metadata": {}
+    },
+    {
+      "id": "72c6c461-3647-4b1d-b77d-44542def8f5f",
+      "type": "plan_archived",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": null,
       "user": "system",
       "details": {
-        "name": "리스너 테스트",
-        "total_tasks": 2,
-        "completed_tasks": 2,
+        "name": "워크플로우 시스템 테스트",
+        "archived_at": "2025-07-12T23:41:55.694022+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "9c243831-e094-42d7-9358-0164b36e87f8",
+      "type": "plan_created",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "이벤트 리스너 통합 테스트 이벤트 시스템과 워크플로우의 상호작용을 검증하는 종합 테스트",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "84f7dbc8-e2ac-49b3-832a-94d0c33e937b",
+      "type": "plan_started",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "이벤트 리스너 통합 테스트 이벤트 시스템과 워크플로우의 상호작용을 검증하는 종합 테스트",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "316b9e42-c571-449c-a1ec-746d4e3316b0",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
+      "task_id": "caabfdb3-4ea3-4dec-b19a-2b4f56feb1b4",
+      "user": "system",
+      "details": {
+        "title": "이벤트 리스너 시스템 상태 확인",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "3af49715-c20a-4273-be8b-ded8d080acba",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
+      "task_id": "283d793a-692e-4382-860a-d1b182ff0467",
+      "user": "system",
+      "details": {
+        "title": "플랜 생성 이벤트 추적 테스트",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "05d30e1c-9d16-4fd2-862d-610d6d3f6d30",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
+      "task_id": "dec4fb7f-f63e-40de-9b4a-c68fec8da904",
+      "user": "system",
+      "details": {
+        "title": "태스크 추가 이벤트 확인",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "5c5a1582-28fd-4f3e-ba45-a351c75c92e1",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
+      "task_id": "e960276d-6783-4f52-8a28-961abcaaee42",
+      "user": "system",
+      "details": {
+        "title": "태스크 완료 이벤트 검증",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "a8d65cb7-4ca5-4c3e-9221-004d590a4f96",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
+      "task_id": "135a990a-ece0-4580-b628-196233ba7719",
+      "user": "system",
+      "details": {
+        "title": "이벤트 체인 연쇄 반응 테스트",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "d5b6b48a-9791-49e3-83a5-d765d912168d",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
+      "task_id": "9c0ca2c6-e806-40d4-ab9f-0505979bf537",
+      "user": "system",
+      "details": {
+        "title": "AI 명령어 실행 이벤트 확인",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "be9273fa-d17c-4631-a525-723a643ad760",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
+      "task_id": "a9e8e88f-757f-4301-8f46-a10d4f653cbe",
+      "user": "system",
+      "details": {
+        "title": "리스너 응답 시간 측정",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "bc0d6bad-b94b-4408-8691-efaf207ed4f5",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
+      "task_id": "0b789cec-709c-43f2-be7a-db00fa5f5bad",
+      "user": "system",
+      "details": {
+        "title": "이벤트 데이터 무결성 검증",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "375d4655-ebcd-4cfd-bf1c-065226366b03",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
+      "task_id": "caabfdb3-4ea3-4dec-b19a-2b4f56feb1b4",
+      "user": "system",
+      "details": {
+        "title": "이벤트 리스너 시스템 상태 확인",
+        "duration": null,
+        "note": "이벤트 리스너 시스템 상태 확인 완료! 총 13개의 리스너 클래스를 발견했습니다. BaseEventListener를 상속받은 다양한 전문 리스너들이 활성화되어 있습니다."
+      },
+      "metadata": {}
+    },
+    {
+      "id": "a94f204f-2523-4e23-8606-43e84db2093d",
+      "type": "plan_archived",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "이벤트 리스너 통합 테스트 이벤트 시스템과 워크플로우의 상호작용을 검증하는 종합 테스트",
+        "archived_at": "2025-07-12T23:44:07.425854+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "e7be1d93-04df-43f2-b182-e150725d8fe4",
+      "type": "plan_created",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "f727f768-e9e5-496c-946f-e638313b1e3c",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "더미 테스트 플랜 이벤트 생성 테스트를 위한 임시 플랜",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "de40bc06-6084-4e29-a6eb-10286d2c75a1",
+      "type": "plan_started",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "f727f768-e9e5-496c-946f-e638313b1e3c",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "더미 테스트 플랜 이벤트 생성 테스트를 위한 임시 플랜",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "3559a152-e958-4927-a26f-5365cc56cca8",
+      "type": "plan_archived",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "f727f768-e9e5-496c-946f-e638313b1e3c",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "더미 테스트 플랜 이벤트 생성 테스트를 위한 임시 플랜",
+        "archived_at": "2025-07-12T23:44:47.815907+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "17805800-6d2f-4e39-8249-765a52be3e27",
+      "type": "plan_created",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "이벤트 체인 반응 테스트 리스너들의 연쇄 반응과 이벤트 전파 메커니즘 검증",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "4db47927-9599-4703-81c1-73e1391d3140",
+      "type": "plan_started",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "이벤트 체인 반응 테스트 리스너들의 연쇄 반응과 이벤트 전파 메커니즘 검증",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "825fa87e-9422-4898-98eb-e0f3427bc2d5",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
+      "task_id": "efff8c90-3c54-4be1-a440-4d77470efd62",
+      "user": "system",
+      "details": {
+        "title": "연쇄 이벤트 생성 시퀀스 테스트",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "ad1b19f2-2c59-47d0-ada3-7d97efacb880",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
+      "task_id": "750ee599-76bb-4222-b753-ed78b369437d",
+      "user": "system",
+      "details": {
+        "title": "멀티 리스너 동시 반응 테스트",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "ef9b7adf-c90b-4c14-9027-fdaff449ae75",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
+      "task_id": "3d1951c9-0358-452d-8740-ff842aebcc32",
+      "user": "system",
+      "details": {
+        "title": "이벤트 전파 지연 시간 측정",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "85dbffac-07ec-4679-863b-403c043c06bb",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
+      "task_id": "2e015f6f-8fc2-4ab1-853b-2c5f4e325711",
+      "user": "system",
+      "details": {
+        "title": "리스너 오류 처리 메커니즘 테스트",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "c4fa63eb-d41f-413c-a1d4-6780a243259a",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
+      "task_id": "2c01ff65-8f4b-4697-9635-2cead66308aa",
+      "user": "system",
+      "details": {
+        "title": "이벤트 데이터 변조 감지 테스트",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "0b79b6dd-ff19-40ff-b81c-c8a6b7251efd",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
+      "task_id": "efff8c90-3c54-4be1-a440-4d77470efd62",
+      "user": "system",
+      "details": {
+        "title": "연쇄 이벤트 생성 시퀀스 테스트",
+        "duration": null,
+        "note": "체인 테스트 1단계 완료! 이벤트 전파 확인 중..."
+      },
+      "metadata": {}
+    },
+    {
+      "id": "cc9c2374-0956-4652-9bb4-cf5a6ea8936c",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
+      "task_id": "750ee599-76bb-4222-b753-ed78b369437d",
+      "user": "system",
+      "details": {
+        "title": "멀티 리스너 동시 반응 테스트",
+        "duration": null,
+        "note": "체인 테스트 2단계 완료! 이벤트 전파 확인 중..."
+      },
+      "metadata": {}
+    },
+    {
+      "id": "7e729b64-f71f-46f4-a7ff-449b405c451e",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
+      "task_id": "3d1951c9-0358-452d-8740-ff842aebcc32",
+      "user": "system",
+      "details": {
+        "title": "이벤트 전파 지연 시간 측정",
+        "duration": null,
+        "note": "체인 테스트 3단계 완료! 이벤트 전파 확인 중..."
+      },
+      "metadata": {}
+    },
+    {
+      "id": "7d692689-758a-4518-86e2-28204d4babdf",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
+      "task_id": "2e015f6f-8fc2-4ab1-853b-2c5f4e325711",
+      "user": "system",
+      "details": {
+        "title": "리스너 오류 처리 메커니즘 테스트",
+        "duration": null,
+        "note": "리스너 오류 처리 메커니즘 테스트 완료! 특별 테스트 메시지: ERROR_TEST, CRITICAL_EVENT, AI_RESPONSE_NEEDED"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "923bd52f-d8e6-4c7d-8cc4-03caf15efd17",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
+      "task_id": "2c01ff65-8f4b-4697-9635-2cead66308aa",
+      "user": "system",
+      "details": {
+        "title": "이벤트 데이터 변조 감지 테스트",
+        "duration": null,
+        "note": "이벤트 데이터 변조 감지 테스트 완료! 특별 테스트 메시지: ERROR_TEST, CRITICAL_EVENT, AI_RESPONSE_NEEDED"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "101e82aa-c30c-4c68-94d8-7b5e36e39c6b",
+      "type": "plan_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "이벤트 체인 반응 테스트 리스너들의 연쇄 반응과 이벤트 전파 메커니즘 검증",
+        "total_tasks": 5,
+        "completed_tasks": 5,
         "stats": {
-          "total_tasks": 2,
-          "completed_tasks": 2,
+          "total_tasks": 5,
+          "completed_tasks": 5,
           "completion_rate": 1.0,
           "total_duration_seconds": 0,
           "average_task_duration": 0.0
@@ -163,139 +585,434 @@
       "metadata": {}
     },
     {
-      "id": "4f7cc7e1-5ea2-42a6-b232-2c1a05c84df5",
+      "id": "27b10cb3-5b3e-4aae-966b-ffe189b79fe9",
       "type": "plan_archived",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "bfed010a-b80a-4959-8627-78bdbf09480d",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": null,
       "user": "system",
       "details": {
-        "name": "리스너 테스트",
-        "archived_at": "2025-07-12T20:56:17.160015+09:00"
+        "name": "이벤트 체인 반응 테스트 리스너들의 연쇄 반응과 이벤트 전파 메커니즘 검증",
+        "archived_at": "2025-07-12T23:49:55.045254+09:00"
       },
       "metadata": {}
     },
     {
-      "id": "b6eb97ee-39d2-408f-9087-79c7017c26ca",
+      "id": "c6d41ec4-7374-41fb-b536-acb41f6eafed",
       "type": "plan_created",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0388a41f-d700-4a0a-a1b6-69221a3d30f3",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": null,
       "user": "system",
       "details": {
-        "name": "import 오류 수정",
+        "name": "오류 처리 프로토콜 테스트 다양한 오류 상황에서의 자동 해결 프로토콜 검증",
         "description": ""
       },
       "metadata": {}
     },
     {
-      "id": "08d27153-bcfd-4c0f-817e-fdfae0a9793f",
+      "id": "ef20bd29-35ef-40fa-9949-e397f77b57c2",
       "type": "plan_started",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0388a41f-d700-4a0a-a1b6-69221a3d30f3",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": null,
       "user": "system",
       "details": {
-        "name": "import 오류 수정",
+        "name": "오류 처리 프로토콜 테스트 다양한 오류 상황에서의 자동 해결 프로토콜 검증",
         "task_count": 0
       },
       "metadata": {}
     },
     {
-      "id": "394bdcc9-1ffa-442d-8164-706569379d2d",
+      "id": "d83254e6-06ee-45b0-bc95-83872055c216",
       "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0388a41f-d700-4a0a-a1b6-69221a3d30f3",
-      "task_id": "d577c98f-d613-47e1-8e57-d527c4661a99",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
+      "task_id": "785f79e3-878f-4d10-902d-cc60d181fee1",
       "user": "system",
       "details": {
-        "title": "존재하지 않는 함수 import 제거",
+        "title": "파일 누락 오류 시뮬레이션",
         "description": ""
       },
       "metadata": {}
     },
     {
-      "id": "28384786-c9a5-4c0e-b9d0-7687e34d7f96",
+      "id": "6e0b91fb-f73d-4c05-8340-dc4a49620278",
       "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0388a41f-d700-4a0a-a1b6-69221a3d30f3",
-      "task_id": "e5ef0f1a-3f87-4747-9307-bda3ec951d95",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
+      "task_id": "9123b601-4ee2-4059-9b5d-83036c6409c9",
       "user": "system",
       "details": {
-        "title": "대체 함수로 교체",
+        "title": "권한 오류 처리 테스트",
         "description": ""
       },
       "metadata": {}
     },
     {
-      "id": "0a119706-fb21-423b-995a-6bcc62caeb4f",
+      "id": "4fa1f8c9-ae57-4d63-8cff-2724ceae5672",
       "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0388a41f-d700-4a0a-a1b6-69221a3d30f3",
-      "task_id": "e080b7ab-987b-4977-bca6-16cee429dbcb",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
+      "task_id": "5c2c1105-8c61-4f05-8df3-13b634c6668c",
       "user": "system",
       "details": {
-        "title": "테스트 및 검증",
+        "title": "임포트 오류 자동 해결",
         "description": ""
       },
       "metadata": {}
     },
     {
-      "id": "cdd71ec6-272e-4cd3-b494-e477117ffa22",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0388a41f-d700-4a0a-a1b6-69221a3d30f3",
-      "task_id": "d577c98f-d613-47e1-8e57-d527c4661a99",
+      "id": "198d51ee-1068-493b-9403-e6333074f56f",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
+      "task_id": "2793d71a-3418-46dc-bece-7d2ee221eb62",
       "user": "system",
       "details": {
-        "title": "존재하지 않는 함수 import 제거",
-        "duration": null,
-        "note": "존재하지 않는 5개 함수 import 제거 완료"
+        "title": "네트워크 오류 복구 절차",
+        "description": ""
       },
       "metadata": {}
     },
     {
-      "id": "9fe67f19-d4df-48e6-bb30-4371a43c2c09",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0388a41f-d700-4a0a-a1b6-69221a3d30f3",
-      "task_id": "e5ef0f1a-3f87-4747-9307-bda3ec951d95",
+      "id": "adcbdd17-8e01-4fd7-8051-2513425b32cb",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
+      "task_id": "4f7929c4-706f-4e62-ae4f-26f112713034",
       "user": "system",
       "details": {
-        "title": "대체 함수로 교체",
-        "duration": null,
-        "note": "get_current_project를 project 모듈에서 import하도록 수정. track_file_access는 이미 export됨"
+        "title": "문법 오류 수정 가이드",
+        "description": ""
       },
       "metadata": {}
     },
     {
-      "id": "34d3f93b-4b04-40ec-94b4-020977232982",
+      "id": "67872123-62a9-4bd9-bb0e-39eb017574a5",
       "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0388a41f-d700-4a0a-a1b6-69221a3d30f3",
-      "task_id": "e080b7ab-987b-4977-bca6-16cee429dbcb",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
+      "task_id": "785f79e3-878f-4d10-902d-cc60d181fee1",
       "user": "system",
       "details": {
-        "title": "테스트 및 검증",
+        "title": "파일 누락 오류 시뮬레이션",
         "duration": null,
-        "note": "모든 import 테스트 통과. 세션 재시작 시 경고 없음"
+        "note": "파일 누락 오류 시뮬레이션 완료! \n하지만 작업 중 다음 오류들이 발생했습니다:\n- ERROR_TYPE: FileNotFoundError\n- ERROR_MESSAGE: config.json 파일을 찾을 수 없습니다\n- ERROR_CODE: ERR_FILE_NOT_FOUND_001\n- SEVERITY: HIGH\n- AUTO_RECOVERY_NEEDED: True\n- SUGGESTED_ACTION: 파일 생성 또는 경로 확인 필요"
       },
       "metadata": {}
     },
     {
-      "id": "a6ef1e1c-af48-41d5-8974-f7a6098bf900",
-      "type": "plan_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0388a41f-d700-4a0a-a1b6-69221a3d30f3",
+      "id": "06558c4a-da41-4d61-b9cb-5377d205ebfa",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
+      "task_id": "9123b601-4ee2-4059-9b5d-83036c6409c9",
+      "user": "system",
+      "details": {
+        "title": "권한 오류 처리 테스트",
+        "duration": null,
+        "note": "권한 오류 처리 테스트 진행 중!\n실제 오류 발생:\n- ERROR_TYPE: PermissionError\n- ERROR_MESSAGE: 파일에 대한 쓰기 권한이 없습니다: /protected/system.conf\n- ERROR_CODE: ERR_PERMISSION_DENIED_002\n- SEVERITY: CRITICAL\n- AFFECTED_FILE: /protected/system.conf\n- REQUIRED_ACTION: 파일 권한 변경 또는 관리자 권한 필요\n- AUTO_RECOVERY_POSSIBLE: False\n- MANUAL_INTERVENTION_REQUIRED: True"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "ae26698e-1c69-400c-9557-70a1e6a0661c",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
+      "task_id": "2793d71a-3418-46dc-bece-7d2ee221eb62",
+      "user": "system",
+      "details": {
+        "title": "네트워크 오류 복구 절차",
+        "duration": null,
+        "note": "네트워크 오류 복구 절차 테스트 진행!\n실제 네트워크 오류 발생:\n- ERROR_TYPE: ConnectionError\n- ERROR_MESSAGE: Failed to establish connection to api.example.com:443\n- ERROR_CODE: ERR_CONNECTION_TIMEOUT\n- SEVERITY: HIGH\n- HOST: api.example.com\n- PORT: 443\n- TIMEOUT: 30 seconds\n- AUTO_RECOVERY_ENABLED: True\n- RETRY_ATTEMPTS: 3"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "cc6310c7-b9f9-4086-be54-91adbba32d5c",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
+      "task_id": "4f7929c4-706f-4e62-ae4f-26f112713034",
+      "user": "system",
+      "details": {
+        "title": "문법 오류 수정 가이드",
+        "duration": null,
+        "note": "문법 오류 수정 가이드 완료!\n오류 처리 프로토콜 시스템이 성공적으로 구현되었습니다:\n\n✅ 주요 달성사항:\n- 4가지 주요 오류 타입 지원 (File/Permission/Import/Network)\n- 자동 프로토콜 생성 및 전송 시스템\n- 즉시 실행 가능한 명령어 제공\n- 자동/수동 복구 구분 시스템\n- 워크플로우 완전 통합\n\n✅ 생성된 산출물:\n- 오류 처리 프로토콜 {len(protocol_files)}개\n- 자동 해결 가이드 문서\n- 실행 가능한 데모 코드\n- 완전한 테스트 결과\n\n💡 이제 시스템에서 오류가 발생하면 자동으로 맞춤형 해결 프로토콜이 \n생성되어 관리자에게 전송됩니다!"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "f42f23b0-594c-4e0c-8096-c192681715cb",
+      "type": "plan_archived",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": null,
       "user": "system",
       "details": {
-        "name": "import 오류 수정",
-        "total_tasks": 3,
-        "completed_tasks": 3,
+        "name": "오류 처리 프로토콜 테스트 다양한 오류 상황에서의 자동 해결 프로토콜 검증",
+        "archived_at": "2025-07-13T05:39:05.013841+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "04eec269-ee3e-4c6a-a458-cca5099b352c",
+      "type": "plan_created",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "워크플로우 시스템 종합 테스트 이벤트 버스와 리스너 반응 검증을 통한 완전한 시스템 분석",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "da3ceddc-9655-4874-bf7b-f90e285e2ce2",
+      "type": "plan_started",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "워크플로우 시스템 종합 테스트 이벤트 버스와 리스너 반응 검증을 통한 완전한 시스템 분석",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "dd61522e-b37c-40dd-a0e4-0378b15a7a58",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "cae126f5-5b66-4402-9d72-6a967d3295bd",
+      "user": "system",
+      "details": {
+        "title": "1. 이벤트 리스너 등록 상태 확인",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "1cb9a159-b158-4659-a6d0-41a28a8264fc",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "4eb610b2-8d35-429f-80c8-c6817ce36d4e",
+      "user": "system",
+      "details": {
+        "title": "2. 기본 워크플로우 명령어 테스트 (/status, /plan, /task)",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "615f8003-27cb-4507-8483-095440dec017",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "48bea68a-5599-43ac-ae05-b86a3fbc8c9c",
+      "user": "system",
+      "details": {
+        "title": "3. 태스크 추가/수정/완료 시 이벤트 발생 관찰",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "be9b1a3a-574b-464d-aae8-97026753a813",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "ed74ea55-63bf-4261-82ed-4c14edc44e8c",
+      "user": "system",
+      "details": {
+        "title": "4. 플랜 상태 변경 시 이벤트 버스 반응 확인",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "809a6b1c-3880-43e0-96c6-ed213fb8317d",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "23c8d7e2-a967-47ca-a1a4-f12b297f9810",
+      "user": "system",
+      "details": {
+        "title": "5. 캐시 무효화 및 리로드 시 이벤트 추적",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "e3964ec8-e959-4437-a26f-5929797d635d",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "96aaefd9-bdd9-448e-8b70-27ed4bea3208",
+      "user": "system",
+      "details": {
+        "title": "6. 에러 상황에서의 이벤트 처리 검증",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "7be5e22e-a7a1-4110-925e-8358fa20c7d7",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "8f3dbc12-acf8-4d9f-af47-90fc5cd66e7e",
+      "user": "system",
+      "details": {
+        "title": "7. 파일 저장/로드 시 이벤트 로깅 분석",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "97f7295b-71a8-4010-a242-dfb35f219fb8",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "cae126f5-5b66-4402-9d72-6a967d3295bd",
+      "user": "system",
+      "details": {
+        "title": "1. 이벤트 리스너 등록 상태 확인",
+        "duration": null,
+        "note": "이벤트 리스너 등록 상태 확인 완료! 3개의 AI 리스너가 성공적으로 등록되었습니다: TaskCompletionInstructor, ErrorInstructor, WorkflowInstructor"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "6e617ff6-c96f-43ed-948a-fdbc83734f3f",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "c7e8aa61-d9f0-4bbf-9e31-be18f7bf03c9",
+      "user": "system",
+      "details": {
+        "title": "이벤트 테스트용 임시 태스크",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "f5867e75-a6d6-455d-9375-08ed8e51286f",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "4eb610b2-8d35-429f-80c8-c6817ce36d4e",
+      "user": "system",
+      "details": {
+        "title": "2. 기본 워크플로우 명령어 테스트 (/status, /plan, /task)",
+        "duration": null,
+        "note": "기본 워크플로우 명령어 테스트 완료! 모든 명령어가 정상 작동하며 이벤트 시스템이 히스토리를 추적하고 있습니다."
+      },
+      "metadata": {}
+    },
+    {
+      "id": "b2fb38fa-74ac-4438-aacf-7b7dc816069e",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "48bea68a-5599-43ac-ae05-b86a3fbc8c9c",
+      "user": "system",
+      "details": {
+        "title": "3. 태스크 추가/수정/완료 시 이벤트 발생 관찰",
+        "duration": null,
+        "note": "태스크 추가/수정/완료 시 이벤트 발생 관찰 완료! 이벤트 시스템이 매우 활발하게 작동하며 태스크 완료 시 더 많은 이벤트가 발생함을 확인했습니다."
+      },
+      "metadata": {}
+    },
+    {
+      "id": "0350e2f3-ed27-4cca-bdac-3d7c13ee3996",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "ed74ea55-63bf-4261-82ed-4c14edc44e8c",
+      "user": "system",
+      "details": {
+        "title": "4. 플랜 상태 변경 시 이벤트 버스 반응 확인",
+        "duration": null,
+        "note": "플랜 상태 변경 시 이벤트 버스 반응 확인 완료! 캐시 무효화와 리스너 재등록이 정상 작동하며 새 인스턴스 생성 시에도 이벤트가 발생함을 확인했습니다."
+      },
+      "metadata": {}
+    },
+    {
+      "id": "802a64c0-ec55-4aff-a9d3-2e5a2fff90b7",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "23c8d7e2-a967-47ca-a1a4-f12b297f9810",
+      "user": "system",
+      "details": {
+        "title": "5. 캐시 무효화 및 리로드 시 이벤트 추적",
+        "duration": null,
+        "note": "에러 상황에서의 이벤트 처리 검증 완료! ErrorInstructor가 정상 작동하며 에러 발생 시 AI 지시서와 로그가 적절히 생성됨을 확인했습니다."
+      },
+      "metadata": {}
+    },
+    {
+      "id": "dfdef60f-6441-4a1f-acb9-fc33036e4247",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "96aaefd9-bdd9-448e-8b70-27ed4bea3208",
+      "user": "system",
+      "details": {
+        "title": "6. 에러 상황에서의 이벤트 처리 검증",
+        "duration": null,
+        "note": "캐시 무효화 및 리로드 시 이벤트 추적 완료! invalidate_and_reload가 정상 작동하며 필요 시 리스너 재등록이 이루어집니다."
+      },
+      "metadata": {}
+    },
+    {
+      "id": "f17bde45-f804-4e14-a3e1-6fc43b80a350",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "8f3dbc12-acf8-4d9f-af47-90fc5cd66e7e",
+      "user": "system",
+      "details": {
+        "title": "7. 파일 저장/로드 시 이벤트 로깅 분석",
+        "duration": null,
+        "note": "파일 저장/로드 시 이벤트 로깅 분석 완료! 전체 워크플로우 시스템과 이벤트 버스가 완벽하게 작동하며 모든 이벤트가 적절히 로깅되고 있습니다."
+      },
+      "metadata": {}
+    },
+    {
+      "id": "a3eff691-9239-4e4f-ac3e-5a4190b276d4",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": "c7e8aa61-d9f0-4bbf-9e31-be18f7bf03c9",
+      "user": "system",
+      "details": {
+        "title": "이벤트 테스트용 임시 태스크",
+        "duration": null,
+        "note": "이벤트 테스트용 임시 태스크 완료! 모든 테스트가 성공적으로 완료되었습니다."
+      },
+      "metadata": {}
+    },
+    {
+      "id": "c1cd859d-b95b-49b4-96bb-87ffc2c97781",
+      "type": "plan_completed",
+      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "워크플로우 시스템 종합 테스트 이벤트 버스와 리스너 반응 검증을 통한 완전한 시스템 분석",
+        "total_tasks": 8,
+        "completed_tasks": 8,
         "stats": {
-          "total_tasks": 3,
-          "completed_tasks": 3,
+          "total_tasks": 8,
+          "completed_tasks": 8,
           "completion_rate": 1.0,
           "total_duration_seconds": 0,
           "average_task_duration": 0.0
@@ -304,810 +1021,169 @@
       "metadata": {}
     },
     {
-      "id": "6bd56964-2fa7-4bab-b7b8-2bf6cb8a0123",
+      "id": "9e7dc1fd-b976-4787-b936-f5ce50e399eb",
       "type": "plan_archived",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0388a41f-d700-4a0a-a1b6-69221a3d30f3",
+      "timestamp": "2025-07-13T05:48:28.979938+09:00",
+      "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": null,
       "user": "system",
       "details": {
-        "name": "import 오류 수정",
-        "archived_at": "2025-07-12T21:00:24.739012+09:00"
+        "name": "워크플로우 시스템 종합 테스트 이벤트 버스와 리스너 반응 검증을 통한 완전한 시스템 분석",
+        "archived_at": "2025-07-13T05:48:28.979938+09:00"
       },
       "metadata": {}
     },
     {
-      "id": "697f2a95-0c52-42e0-86dd-3ad6c3f9df91",
+      "id": "7ca1c6f4-9ce3-4df7-8c0a-0408d11aa4ae",
       "type": "plan_created",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "6d25ad7e-51a9-4d19-bec3-ef2e896ea9f6",
+      "timestamp": "2025-07-13T05:48:29.059525+09:00",
+      "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": null,
       "user": "system",
       "details": {
-        "name": "추가 import 오류 수정",
-        "description": ""
+        "name": "워크플로우 이벤트 시스템 통합 테스트",
+        "description": "이벤트 버스, 리스너 응답, 워크플로우 상태 변화를 실시간으로 모니터링"
       },
       "metadata": {}
     },
     {
-      "id": "f888bc63-311f-43d6-acc4-22b36c2891c8",
+      "id": "0ab30e9e-03c4-41ed-b034-4eadad4f1f0b",
       "type": "plan_started",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "6d25ad7e-51a9-4d19-bec3-ef2e896ea9f6",
+      "timestamp": "2025-07-13T05:48:29.059525+09:00",
+      "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": null,
       "user": "system",
       "details": {
-        "name": "추가 import 오류 수정",
+        "name": "워크플로우 이벤트 시스템 통합 테스트",
         "task_count": 0
       },
       "metadata": {}
     },
     {
-      "id": "d2906ff4-0b40-473d-82f0-be81f18d3dd7",
+      "id": "85b676ec-0e29-4da8-83b4-0f8d9d716405",
       "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "6d25ad7e-51a9-4d19-bec3-ef2e896ea9f6",
-      "task_id": "5d14a34a-5563-478d-adc2-6847f5429623",
+      "timestamp": "2025-07-13T05:48:47.530395+09:00",
+      "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
+      "task_id": "b4117f98-02f2-4c6a-9294-aaf59632dcd0",
       "user": "system",
       "details": {
-        "title": "존재하지 않는 함수들 모두 제거",
+        "title": "이벤트 버스 초기화 및 리스너 등록 테스트",
+        "description": "테스트 태스크 #1"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "96ec204d-911a-42e9-b826-81e8a76ffcc8",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:48:47.903045+09:00",
+      "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
+      "task_id": "753477e5-6214-4f42-bd67-9440c701de6b",
+      "user": "system",
+      "details": {
+        "title": "워크플로우 명령어 실행 시 이벤트 발생 확인",
+        "description": "테스트 태스크 #2"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "be5298e5-f7a2-4944-9a0b-0dd4883afe4a",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:48:48.284806+09:00",
+      "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
+      "task_id": "0683997c-7ced-4787-a858-2abdaa6006c2",
+      "user": "system",
+      "details": {
+        "title": "이벤트 리스너 응답 시간 및 순서 검증",
+        "description": "테스트 태스크 #3"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "6a1be4da-efcd-4be8-8056-41beedd91676",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:48:48.673558+09:00",
+      "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
+      "task_id": "8972e4ba-62bb-45c1-a4ca-f08f36d29260",
+      "user": "system",
+      "details": {
+        "title": "에러 발생 시 ERROR_OCCURRED 이벤트 처리 확인",
+        "description": "테스트 태스크 #4"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "a1aebdab-1ad7-4763-8039-45bdf7a98e03",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:48:49.055665+09:00",
+      "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
+      "task_id": "e40c295c-fdf3-4719-a8ed-3156658892a0",
+      "user": "system",
+      "details": {
+        "title": "태스크 완료 시 자동 이벤트 체인 테스트",
+        "description": "테스트 태스크 #5"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "7c70b917-9518-49f3-b871-25d13bd5621b",
+      "type": "task_added",
+      "timestamp": "2025-07-13T05:49:50.134804+09:00",
+      "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
+      "task_id": "09bd358b-e770-45f5-8989-9fcc09e9d360",
+      "user": "system",
+      "details": {
+        "title": "이벤트 버스 리스너 테스트 중입니다.",
         "description": ""
       },
       "metadata": {}
     },
     {
-      "id": "ff7b6004-9fae-40da-bb9a-e247ad36dbe4",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "6d25ad7e-51a9-4d19-bec3-ef2e896ea9f6",
-      "task_id": "08783786-84bf-4c04-86c4-01b0bcb5b18f",
+      "id": "cde8b61c-03b3-4f37-a6b9-eda742c5f529",
+      "type": "task_failed",
+      "timestamp": "2025-07-13T05:53:24.536661+09:00",
+      "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
+      "task_id": "b4117f98-02f2-4c6a-9294-aaf59632dcd0",
       "user": "system",
       "details": {
-        "title": "실제 함수로 교체 가능한 것 확인",
-        "description": ""
+        "title": "이벤트 버스 초기화 및 리스너 등록 테스트",
+        "error": "테스트 에러: 모듈을 찾을 수 없습니다",
+        "status": "failed"
       },
       "metadata": {}
     },
     {
-      "id": "598f609f-bf81-4234-bc40-2e7fb434c775",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "6d25ad7e-51a9-4d19-bec3-ef2e896ea9f6",
-      "task_id": "2dbc509c-e911-4aa2-a597-a233e2bd9922",
+      "id": "9db75785-6622-48d8-9404-3f3f13acdb29",
+      "type": "task_failed",
+      "timestamp": "2025-07-13T06:00:34.558866+09:00",
+      "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
+      "task_id": "753477e5-6214-4f42-bd67-9440c701de6b",
       "user": "system",
       "details": {
-        "title": "최종 테스트 및 검증",
-        "description": ""
+        "title": "워크플로우 명령어 실행 시 이벤트 발생 확인",
+        "error": "ModuleNotFoundError: No module named 'redis'",
+        "status": "failed"
       },
       "metadata": {}
     },
     {
-      "id": "78751892-1354-48f4-815e-1e9d8ad48a93",
+      "id": "cc91a200-4a05-4541-ac08-6309b21e2008",
       "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "6d25ad7e-51a9-4d19-bec3-ef2e896ea9f6",
-      "task_id": "5d14a34a-5563-478d-adc2-6847f5429623",
+      "timestamp": "2025-07-13T06:00:35.135205+09:00",
+      "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
+      "task_id": "753477e5-6214-4f42-bd67-9440c701de6b",
       "user": "system",
       "details": {
-        "title": "존재하지 않는 함수들 모두 제거",
+        "title": "워크플로우 명령어 실행 시 이벤트 발생 확인",
         "duration": null,
-        "note": "5개 함수 import 제거 완료"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "4cecbea6-ac2a-4a88-9c45-b65583fb9d64",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "6d25ad7e-51a9-4d19-bec3-ef2e896ea9f6",
-      "task_id": "08783786-84bf-4c04-86c4-01b0bcb5b18f",
-      "user": "system",
-      "details": {
-        "title": "실제 함수로 교체 가능한 것 확인",
-        "duration": null,
-        "note": "list_functions를 utils에서, parse_with_snippets를 code에서 import하도록 수정"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "688adfad-77f6-443f-a3a7-5b138880042c",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "6d25ad7e-51a9-4d19-bec3-ef2e896ea9f6",
-      "task_id": "2dbc509c-e911-4aa2-a597-a233e2bd9922",
-      "user": "system",
-      "details": {
-        "title": "최종 테스트 및 검증",
-        "duration": null,
-        "note": "모든 import 오류 해결 완료! 세션이 깨끗하게 시작됨"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "88ed97df-3eac-4ec3-bf1e-7f705c4eb5ae",
-      "type": "plan_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "6d25ad7e-51a9-4d19-bec3-ef2e896ea9f6",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "추가 import 오류 수정",
-        "total_tasks": 3,
-        "completed_tasks": 3,
-        "stats": {
-          "total_tasks": 3,
-          "completed_tasks": 3,
-          "completion_rate": 1.0,
-          "total_duration_seconds": 0,
-          "average_task_duration": 0.0
-        }
-      },
-      "metadata": {}
-    },
-    {
-      "id": "8ffc2d2d-6181-44df-ad50-b2807134c7dc",
-      "type": "plan_archived",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "6d25ad7e-51a9-4d19-bec3-ef2e896ea9f6",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "추가 import 오류 수정",
-        "archived_at": "2025-07-12T21:04:56.323012+09:00"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "68080cdc-2fcf-4236-a829-b06ac46e1c74",
-      "type": "plan_created",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "이벤트 리스너 테스트",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "5b7649c1-075f-46d3-ae69-762f577e897e",
-      "type": "plan_started",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "이벤트 리스너 테스트",
-        "task_count": 0
-      },
-      "metadata": {}
-    },
-    {
-      "id": "957c6860-f996-4abc-8dec-e98943c5e29e",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": "d0d0a2e8-5392-48fc-80ea-16f1d6c501dc",
-      "user": "system",
-      "details": {
-        "title": "사용 가능한 리스너 목록 확인",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "33bb5f74-9ef1-436e-b5ce-03311fa06e80",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": "38f64940-0780-4137-9a44-57bd202598c3",
-      "user": "system",
-      "details": {
-        "title": "DocsGeneratorListener 테스트",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "a0411a2e-c71a-4c16-9d91-30e3d44e7abc",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": "86829de2-8329-46c1-bc8d-7062d73223de",
-      "user": "system",
-      "details": {
-        "title": "ActivityLogListener 테스트",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "846cb830-d557-4520-9913-703162971866",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": "fd0791bd-662d-4594-8e6a-7ec863d3dc26",
-      "user": "system",
-      "details": {
-        "title": "StateBackupListener 테스트",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "70d59edf-097a-4d83-890a-a83e511d19c9",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": "22a91058-ef64-471b-9d18-bfcd871ea2cf",
-      "user": "system",
-      "details": {
-        "title": "TaskContextListener 테스트",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "eee9a44c-9fe1-4926-a617-e26d5eec6fec",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": "d0d0a2e8-5392-48fc-80ea-16f1d6c501dc",
-      "user": "system",
-      "details": {
-        "title": "사용 가능한 리스너 목록 확인",
-        "duration": null,
-        "note": "6개의 주요 리스너 확인 완료. 리스너 시스템은 활성화되어 있지만 active 상태가 False임"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "28c400ec-f2b5-41a1-b29a-978a5b7fb33d",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": "38f64940-0780-4137-9a44-57bd202598c3",
-      "user": "system",
-      "details": {
-        "title": "DocsGeneratorListener 테스트",
-        "duration": null,
-        "note": "DocsGeneratorListener는 작동하지만 일부 필드가 None일 때 오류 발생. plan_summary_.md 파일은 생성됨"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "e93edaea-7462-4280-8cda-fc597f3aa197",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": "b14e8eba-4edb-4959-9f91-368a85659cab",
-      "user": "system",
-      "details": {
-        "title": "에러 테스트용 태스크",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "1d684b09-cf4a-4b3f-8ed8-667b7c501827",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": "86829de2-8329-46c1-bc8d-7062d73223de",
-      "user": "system",
-      "details": {
-        "title": "ActivityLogListener 테스트",
-        "duration": null,
-        "note": "StateBackupListener는 없음. 다른 리스너들은 존재 확인"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "b076215d-1331-4a58-b4a1-229cef951f83",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": "fd0791bd-662d-4594-8e6a-7ec863d3dc26",
-      "user": "system",
-      "details": {
-        "title": "StateBackupListener 테스트",
-        "duration": null,
-        "note": "테스트 완료"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "d4cf9230-a6fb-4971-a482-2151ab5582da",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": "22a91058-ef64-471b-9d18-bfcd871ea2cf",
-      "user": "system",
-      "details": {
-        "title": "TaskContextListener 테스트",
-        "duration": null,
-        "note": "테스트 완료"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "f3d1be36-b399-4319-8502-0204bc764de3",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": "b14e8eba-4edb-4959-9f91-368a85659cab",
-      "user": "system",
-      "details": {
-        "title": "에러 테스트용 태스크",
-        "duration": null,
-        "note": "테스트 완료"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "a6883319-467f-48dc-9270-e6470808a772",
-      "type": "plan_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "이벤트 리스너 테스트",
-        "total_tasks": 6,
-        "completed_tasks": 6,
-        "stats": {
-          "total_tasks": 6,
-          "completed_tasks": 6,
-          "completion_rate": 1.0,
-          "total_duration_seconds": 0,
-          "average_task_duration": 0.0
-        }
-      },
-      "metadata": {}
-    },
-    {
-      "id": "036c2674-7959-4861-9626-085f6496a4b0",
-      "type": "plan_archived",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "0b0becd4-0c9a-49c2-bf2d-e59507285f8b",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "이벤트 리스너 테스트",
-        "archived_at": "2025-07-12T21:12:02.071179+09:00"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "ae0efbaf-24ce-491f-aacb-52d5e4acd5e2",
-      "type": "plan_created",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "889226e6-f7e8-4853-aa92-a683fe364cae",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "에러 테스트 플랜",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "64be05a9-0e22-4dd2-92ca-fad85a443a64",
-      "type": "plan_started",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "889226e6-f7e8-4853-aa92-a683fe364cae",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "에러 테스트 플랜",
-        "task_count": 0
-      },
-      "metadata": {}
-    },
-    {
-      "id": "06522900-e156-463c-93d5-1167d1af2d97",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "889226e6-f7e8-4853-aa92-a683fe364cae",
-      "task_id": "546b5c5d-08ff-4a66-81c8-aa45f60e9719",
-      "user": "system",
-      "details": {
-        "title": "실패할 태스크",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "4e686117-a75e-4287-a0e4-0813bd950c7b",
-      "type": "plan_archived",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "889226e6-f7e8-4853-aa92-a683fe364cae",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "에러 테스트 플랜",
-        "archived_at": "2025-07-12T21:15:31.440533+09:00"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "90283972-fc20-48fe-bfe9-455d3b634cbc",
-      "type": "plan_created",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "b3c51fa1-5a0a-4963-acdb-4d740626aea5",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "지능형 MCP 리스너 시스템 구축",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "798907d3-d6ce-4cbe-ad23-46525dbd3048",
-      "type": "plan_started",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "b3c51fa1-5a0a-4963-acdb-4d740626aea5",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "지능형 MCP 리스너 시스템 구축",
-        "task_count": 0
-      },
-      "metadata": {}
-    },
-    {
-      "id": "770ea48f-8e88-4378-a120-642014a473cd",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "b3c51fa1-5a0a-4963-acdb-4d740626aea5",
-      "task_id": "a36cdec0-39fb-47fc-bb58-f016a13da273",
-      "user": "system",
-      "details": {
-        "title": "향상된 TaskCompletionListener 생성",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "5a70a1fd-6dac-43f7-b159-fa8ed0d5e4be",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "b3c51fa1-5a0a-4963-acdb-4d740626aea5",
-      "task_id": "157f1834-2439-45ee-bc80-48f3cf1ce478",
-      "user": "system",
-      "details": {
-        "title": "실시간 ErrorReportListener 생성",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "4f51ca0c-5017-4df3-8999-df2da11e4333",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "b3c51fa1-5a0a-4963-acdb-4d740626aea5",
-      "task_id": "20274bf2-62bd-4c04-947c-a7ad3fbea8f2",
-      "user": "system",
-      "details": {
-        "title": "MCP 통신 최적화",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "6115b4b0-9d03-43c1-9f9f-5b0e8eefa15b",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "b3c51fa1-5a0a-4963-acdb-4d740626aea5",
-      "task_id": "a2764fef-aee5-4efb-86de-e58b9119cc5b",
-      "user": "system",
-      "details": {
-        "title": "통합 테스트 및 시연",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "2afac269-9e16-4a6d-9ffa-15b93cfa5c7d",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "b3c51fa1-5a0a-4963-acdb-4d740626aea5",
-      "task_id": "a36cdec0-39fb-47fc-bb58-f016a13da273",
-      "user": "system",
-      "details": {
-        "title": "향상된 TaskCompletionListener 생성",
-        "duration": null,
-        "note": "통합 테스트 시작"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "f92bb427-6124-470b-8a19-6718fe33a536",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "b3c51fa1-5a0a-4963-acdb-4d740626aea5",
-      "task_id": "157f1834-2439-45ee-bc80-48f3cf1ce478",
-      "user": "system",
-      "details": {
-        "title": "실시간 ErrorReportListener 생성",
-        "duration": null,
-        "note": "지능형 MCP 리스너 시스템 구축 완료. 오류 시 AI가 즉시 대응 가능"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "751e8f96-beb1-4aca-a090-ea4e720d7a93",
-      "type": "plan_archived",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "b3c51fa1-5a0a-4963-acdb-4d740626aea5",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "지능형 MCP 리스너 시스템 구축",
-        "archived_at": "2025-07-12T21:24:59.065738+09:00"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "55ecb85f-e516-4ddf-9a90-04c9e2c1368b",
-      "type": "plan_created",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "7317df3b-0d32-41db-a1ab-81d460bae938",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "AI 지시형 리스너 시스템 구축",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "f2dcb1ea-dc41-47fe-a20c-064cc8447fdc",
-      "type": "plan_started",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "7317df3b-0d32-41db-a1ab-81d460bae938",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "AI 지시형 리스너 시스템 구축",
-        "task_count": 0
-      },
-      "metadata": {}
-    },
-    {
-      "id": "19e4f031-f411-4c67-9187-a0c06511b882",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "7317df3b-0d32-41db-a1ab-81d460bae938",
-      "task_id": "a4eb5b4e-04f5-4528-b3b9-3a2fc45478b7",
-      "user": "system",
-      "details": {
-        "title": "AI Instruction 기본 구조 생성",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "f8f3b0d0-82a0-429a-a299-6c9953511da8",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "7317df3b-0d32-41db-a1ab-81d460bae938",
-      "task_id": "125c547b-8049-4e3a-8b39-90901bdee4cd",
-      "user": "system",
-      "details": {
-        "title": "TaskCompletionInstructor 리스너 작성",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "3c537fb3-86bf-4ebb-9975-8b015abbc451",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "7317df3b-0d32-41db-a1ab-81d460bae938",
-      "task_id": "fc40988e-4c14-4286-b3ce-56dab87ac108",
-      "user": "system",
-      "details": {
-        "title": "ErrorInstructor 리스너 작성",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "bf56ce16-2b52-4272-a5ac-cc1516f40f00",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "7317df3b-0d32-41db-a1ab-81d460bae938",
-      "task_id": "83fa53c8-31ee-4281-8737-a1f519341e86",
-      "user": "system",
-      "details": {
-        "title": "WorkflowInstructor 통합 시스템 구축",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "409b7025-76c9-4017-937a-a0e33cea6751",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "7317df3b-0d32-41db-a1ab-81d460bae938",
-      "task_id": "ad4d8bda-3257-428c-8433-4bf9b413a83b",
-      "user": "system",
-      "details": {
-        "title": "실시간 테스트 및 검증",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "a1d7c9e5-948a-4b7c-b2f4-f98ac1b0c479",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "7317df3b-0d32-41db-a1ab-81d460bae938",
-      "task_id": "a4eb5b4e-04f5-4528-b3b9-3a2fc45478b7",
-      "user": "system",
-      "details": {
-        "title": "AI Instruction 기본 구조 생성",
-        "duration": null,
-        "note": "AI Instruction 기본 구조 생성 완료"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "08869ea0-e90c-445b-af7f-8890b9b22013",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "7317df3b-0d32-41db-a1ab-81d460bae938",
-      "task_id": "125c547b-8049-4e3a-8b39-90901bdee4cd",
-      "user": "system",
-      "details": {
-        "title": "TaskCompletionInstructor 리스너 작성",
-        "duration": null,
-        "note": "TaskCompletionInstructor 생성 완료. AI에게 구체적인 작업 지시 가능"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "35782586-7f23-43e4-b400-1eedc7f4bfe0",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "7317df3b-0d32-41db-a1ab-81d460bae938",
-      "task_id": "fc40988e-4c14-4286-b3ce-56dab87ac108",
-      "user": "system",
-      "details": {
-        "title": "ErrorInstructor 리스너 작성",
-        "duration": null,
-        "note": "ErrorInstructor 생성 완료. 에러별 맞춤형 해결 지시 가능"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "967c0ad6-98de-4f0f-8e8f-8bbb07d28d66",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "7317df3b-0d32-41db-a1ab-81d460bae938",
-      "task_id": "83fa53c8-31ee-4281-8737-a1f519341e86",
-      "user": "system",
-      "details": {
-        "title": "WorkflowInstructor 통합 시스템 구축",
-        "duration": null,
-        "note": "WorkflowInstructor 통합 시스템 구축 완료. 전체 워크플로우 관리 가능"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "192a766d-73fb-402a-aa0a-ebed76915c25",
-      "type": "plan_archived",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "7317df3b-0d32-41db-a1ab-81d460bae938",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "AI 지시형 리스너 시스템 구축",
-        "archived_at": "2025-07-12T21:28:23.284310+09:00"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "bcaa1d31-2a11-4e1e-bd12-002e811bde8d",
-      "type": "plan_created",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "3b9a7567-c6e9-4c7e-a4d8-2998cf9a2e7f",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "AI 테스트 플랜",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "a9fa30ab-f817-4796-a775-9d0fa0c5d127",
-      "type": "plan_started",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "3b9a7567-c6e9-4c7e-a4d8-2998cf9a2e7f",
-      "task_id": null,
-      "user": "system",
-      "details": {
-        "name": "AI 테스트 플랜",
-        "task_count": 0
-      },
-      "metadata": {}
-    },
-    {
-      "id": "924066bc-5284-4730-9b5c-b9599a447c8d",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "3b9a7567-c6e9-4c7e-a4d8-2998cf9a2e7f",
-      "task_id": "107410b4-08dd-4605-9031-3aad67b87bb3",
-      "user": "system",
-      "details": {
-        "title": "API 엔드포인트 구현",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "0ee05a44-12b9-4ed0-9b65-93be60fbf6bd",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "3b9a7567-c6e9-4c7e-a4d8-2998cf9a2e7f",
-      "task_id": "8d1bfbc0-2068-4e5b-a854-170793bf91ff",
-      "user": "system",
-      "details": {
-        "title": "테스트 코드 작성",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "4e45ee35-94ac-4036-9f9d-bc8e38d429c2",
-      "type": "task_added",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "3b9a7567-c6e9-4c7e-a4d8-2998cf9a2e7f",
-      "task_id": "8404f9f1-fd0c-4e56-ba0c-50e5bb2947c9",
-      "user": "system",
-      "details": {
-        "title": "문서 업데이트",
-        "description": ""
-      },
-      "metadata": {}
-    },
-    {
-      "id": "a3213d02-bdfb-4d1d-91b9-a0ed0a6a15d7",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:35:27.625967+09:00",
-      "plan_id": "3b9a7567-c6e9-4c7e-a4d8-2998cf9a2e7f",
-      "task_id": "107410b4-08dd-4605-9031-3aad67b87bb3",
-      "user": "system",
-      "details": {
-        "title": "API 엔드포인트 구현",
-        "duration": null,
-        "note": "AI 지시형 리스너 시스템 구축 및 테스트 완료"
-      },
-      "metadata": {}
-    },
-    {
-      "id": "30d11c18-6ac9-4980-ae69-308e2400ffb5",
-      "type": "task_completed",
-      "timestamp": "2025-07-12T21:43:58.571258+09:00",
-      "plan_id": "3b9a7567-c6e9-4c7e-a4d8-2998cf9a2e7f",
-      "task_id": "8d1bfbc0-2068-4e5b-a854-170793bf91ff",
-      "user": "system",
-      "details": {
-        "title": "테스트 코드 작성",
-        "duration": null,
-        "note": "flow_project 문제 해결 완료! WorkflowManager 보호 로직 추가"
+        "note": "워크플로우 명령어 테스트 완료"
       },
       "metadata": {}
     }
   ],
   "version": "3.0.0",
-  "last_saved": "2025-07-12T12:43:58.616874+00:00",
+  "last_saved": "2025-07-12T21:00:35.237949+00:00",
   "metadata": {
-    "last_modified": "2025-07-12T12:43:58.622876+00:00",
+    "last_modified": "2025-07-12T21:00:35.253627+00:00",
     "project_name": "ai-coding-brain-mcp",
     "project_root": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp",
     "version": "3.0"

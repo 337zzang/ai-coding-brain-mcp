@@ -623,7 +623,8 @@ def _load_and_show_workflow() -> Dict[str, Any]:
         # 상태 확인
         status_result = wm.get_status()
         
-        if status_result and status_result.get('status'):
+        # status가 'no_plan'이 아닌 경우에만 성공으로 처리
+        if status_result and status_result.get('status') != 'no_plan':
             workflow_status = status_result
             logger.info(f"[WORKFLOW] 워크플로우 상태 로드 성공: {workflow_status.get('status')}")
             return workflow_status

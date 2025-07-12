@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-12 21:30:58
+> 최종 업데이트: 2025-07-13 05:41:23
 
 ## 🎯 프로젝트 개요
 
@@ -25,12 +25,12 @@
 | `.vscode/` | 프로젝트 관련 파일 |
 | `backup/` | 프로젝트 관련 파일 |
 | `backups/` | 프로젝트 관련 파일 |
+| `chroma_db/` | 프로젝트 관련 파일 |
 | `docs/` | 문서 |
+| `legacy_cleanup_backup_20250712_222058/` | 프로젝트 관련 파일 |
 | `logs/` | 프로젝트 관련 파일 |
 | `memory/` | 캐시 및 상태 저장 |
 | `python/` | Python 스크립트 및 유틸리티 |
-| `scripts/` | 유틸리티 스크립트 |
-| `src/` | 소스 코드 |
 
 ## 📦 의존성
 
@@ -136,7 +136,9 @@ ai-coding-brain-mcp/
 │   │   ├── core_path_utils.py
 │   │   ├── path_utils.py
 │   └── ... (11 more directories)
+│   ├── register_ai_listeners_20250712_222229.py
 │   ├── workflow_event_adapter_backup_20250712_152114.py
+├── chroma_db/
 ├── docs/
 │   ├── architecture/
 │   │   ├── event_listener_design.md
@@ -164,10 +166,13 @@ ai-coding-brain-mcp/
 │       ├── DEPLOYMENT_CHECKLIST.md
 │       ├── MIGRATION_GUIDE.md
 │       └── ... (2 more files)
+│   ├── ai_instruction_guide.md
 │   ├── circular_dependency_analysis.md
 │   ├── circular_dependency_fix_report.md
-│   ├── data_ownership_policy.md
-│   └── ... (50 more files)
+│   └── ... (51 more files)
+├── legacy_cleanup_backup_20250712_222058/
+│   ├── cleanup_info.json
+│   ├── deletion_log.json
 ├── logs/
 │   ├── errors/
 │   ├── file/
@@ -175,162 +180,10 @@ ai-coding-brain-mcp/
 │   ├── system/
 │   └── workflow/
 │   ├── active_errors.json
+│   ├── ai_instructions.json
 │   ├── error_history.json
-│   ├── log_manager_config.json
-│   └── ... (2 more files)
-├── memory/
-│   ├── archive/
-│   ├── backup/
-│   │   ├── active_backup_20250710_171855/
-│   │   │   ├── context.json
-│   │   │   ├── session_info.json
-│   │   │   ├── task_context.json
-│   │   │   └── ... (1 more files)
-│   │   ├── ai-coding-brain-mcp_20250704_195124/
-│   │   │   ├── context.json
-│   │   │   ├── workflow.json
-│   │   ├── ai-coding-brain-mcp_20250705_120052/
-│   │   │   ├── context.json
-│   │   │   ├── workflow.json
-│   │   │   ├── workflow_data.json
-│   │   ├── legacy_final_backup_20250710_095949/
-│   │   │   ├── workflow.json
-│   │   ├── old_contexts/
-│   │   │   ├── context_backup_20250701_145124_before_optimization.json
-│   │   │   ├── context_backup_ai-coding-brain-mcp_20250703_153224.json
-│   │   │   ├── context_backup_ai-coding-brain-mcp_20250704_180546.json
-│   │   │   └── ... (18 more files)
-│   │   ├── old_workflows/
-│   │   │   ├── workflow_backup_20250707_155352.json
-│   │   │   ├── workflow_before_cleanup_20250707_155640.json
-│   │   ├── workflow_backups/
-│   │   │   ├── workflow_backup_20250710_125357.json
-│   │   ├── workflow_test_backup_20250710_162330/
-│   │   │   ├── workflow.json
-│   │   └── ... (2 more directories)
-│   │   ├── context_ai-coding-brain-mcp_20250704_195124.json
-│   │   ├── context_ai-coding-brain-mcp_20250705_120052.json
-│   │   ├── enhanced_flow_load_workflow_backup.py
-│   │   └── ... (3 more files)
-│   ├── backups/
-│   │   └── contexts/
-│   │       └── ai-coding-brain-mcp/
-│   │       ├── ai-coding-brain-mcp_context_removed.json
-│   │   ├── workflow_backup_20250712_210225.json
-│   │   ├── workflow_backup_20250712_210456.json
-│   │   ├── workflow_backup_20250712_210512.json
-│   │   └── ... (17 more files)
-│   ├── cache/
-│   │   └── test_cache/
-│   │       ├── cache_metadata.json
-│   │       ├── test_key.json
-│   │   ├── cache_manifest.json
-│   │   ├── cache_metadata.json
-│   │   ├── file_directory.json
-│   │   └── ... (1 more files)
-│   ├── deprecated/
-│   │   ├── active_backup_20250710_180947/
-│   │   │   ├── context.json
-│   │   │   ├── session_info.json
-│   │   │   ├── task_context.json
-│   │   │   └── ... (2 more files)
-│   │   └── cleanup_20250710_182629/
-│   │       └── active/
-│   ├── errors/
-│   ├── logs/
-│   ├── projects/
-│   │   ├── ai-coding-brain-mcp/
-│   │   │   └── workflow_v3/
-│   │   ├── project-alpha/
-│   │   │   ├── backups/
-│   │   │   └── cache/
-│   │   │   ├── context.json
-│   │   │   ├── workflow.json
-│   │   ├── project-beta/
-│   │   │   ├── backups/
-│   │   │   └── cache/
-│   │   │   ├── context.json
-│   │   │   ├── workflow.json
-│   │   ├── project-gamma/
-│   │   │   ├── backups/
-│   │   │   └── cache/
-│   │   │   ├── context.json
-│   │   │   ├── workflow.json
-│   │   ├── test-independent-project/
-│   │   │   ├── backups/
-│   │   │   └── cache/
-│   │   │   ├── context.json
-│   │   │   ├── workflow.json
-│   │   └── test-workflow-project/
-│   │       ├── workflow.json
-│   └── ... (4 more directories)
-│   ├── context.json
-│   ├── hook_config.json
-│   ├── integrated_context.json
-│   └── ... (9 more files)
-├── python/
-│   ├── ai_helpers/
-│   │   ├── api/
-│   │   │   ├── __init__.py
-│   │   │   ├── image.py
-│   │   │   ├── manager.py
-│   │   │   └── ... (2 more files)
-│   │   └── search/
-│   │       ├── __init__.py
-│   │       ├── code_search.py
-│   │       ├── core.py
-│   │       └── ... (4 more files)
-│   │   ├── __init__.py
-│   │   ├── build.py
-│   │   ├── code.py
-│   │   └── ... (11 more files)
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── image_generator.py
-│   │   ├── public.py
-│   │   └── ... (3 more files)
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── cache_manager.py
-│   │   ├── context_manager.py
-│   │   └── ... (4 more files)
-│   ├── events/
-│   │   └── handlers/
-│   │       ├── __init__.py
-│   │   ├── __init__.py
-│   │   ├── enhanced_event_bus.py
-│   │   ├── event_bus.py
-│   │   └── ... (5 more files)
-│   ├── tracking/
-│   │   ├── __init__.py
-│   │   ├── simple_tracker.py
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   ├── git_task_helpers.py
-│   │   ├── git_utils.py
-│   │   └── ... (4 more files)
-│   ├── vendor/
-│   │   ├── tree-sitter-javascript/
-│   │   │   └── bindings/
-│   │   └── tree-sitter-typescript/
-│   │       └── bindings/
-│   ├── workflow/
-│   │   └── v3/
-│   │       ├── api/
-│   │       ├── commands/
-│   │       ├── listeners/
-│   │       └── tests/
-│   │       ├── __init__.py
-│   │       ├── code_integration.py
-│   │       ├── context_integration.py
-│   │       └── ... (19 more files)
-│   │   ├── __init__.py
-│   └── ... (1 more directories)
-│   ├── __init__.py
-│   ├── api_manager.py
-│   ├── debug_flow.py
-│   └── ... (14 more files)
-└── ... (7 more directories)
+│   └── ... (3 more files)
+└── ... (10 more directories)
 ├── .ai-brain.config.json
 ├── .eslintrc.json
 ├── check_syntax.py
@@ -345,14 +198,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 746개
-- **디렉토리 수**: 167개
+- **전체 파일 수**: 743개
+- **디렉토리 수**: 166개
 - **파일 타입 분포**:
-  - `.py`: 266개 (35.7%)
-  - `.json`: 168개 (22.5%)
-  - `.md`: 101개 (13.5%)
-  - `.ts`: 63개 (8.4%)
-  - `.map`: 60개 (8.0%)
+  - `.py`: 270개 (36.3%)
+  - `.json`: 173개 (23.3%)
+  - `.md`: 102개 (13.7%)
+  - `.ts`: 63개 (8.5%)
+  - `.map`: 60개 (8.1%)
 
 ## 🚀 빠른 시작
 

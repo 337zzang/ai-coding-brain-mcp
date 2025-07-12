@@ -5,7 +5,7 @@ import logging
 from typing import Dict, Any, Optional
 from datetime import datetime
 
-from .event_bus import EventBus
+from .event_bus import EventBus, Event
 from .models import WorkflowEvent, EventType
 from .events import EventBuilder
 import uuid

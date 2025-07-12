@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-12 16:26:03
+> 최종 업데이트: 2025-07-12 19:11:03
 
 ## 🎯 프로젝트 개요
 
@@ -146,11 +146,19 @@ ai-coding-brain-mcp/
 │   │   ├── workflow_context_bridge_example.py
 │   ├── fixes/
 │   │   ├── list_functions_error_fix.md
+│   ├── integrated/
+│   │   ├── summary_report_20250712_164427.md
+│   │   ├── summary_report_20250712_164541.md
+│   │   ├── task_4c36482a_complete.md
+│   │   └── ... (1 more files)
 │   ├── tasks/
 │   │   ├── import_fix_report.md
 │   │   ├── task1_atomic_save.md
 │   │   ├── task1_completion_report.md
 │   │   └── ... (8 more files)
+│   ├── workflow/
+│   │   ├── task_hooktest_20250712_173014.md
+│   ├── workflow_docs/
 │   └── workflow_v2/
 │       ├── API_REFERENCE.md
 │       ├── DEPLOYMENT_CHECKLIST.md
@@ -159,7 +167,7 @@ ai-coding-brain-mcp/
 │   ├── circular_dependency_analysis.md
 │   ├── circular_dependency_fix_report.md
 │   ├── data_ownership_policy.md
-│   └── ... (48 more files)
+│   └── ... (49 more files)
 ├── logs/
 │   ├── errors/
 │   ├── file/
@@ -168,6 +176,7 @@ ai-coding-brain-mcp/
 │   └── workflow/
 │   ├── log_manager_config.json
 ├── memory/
+│   ├── archive/
 │   ├── backup/
 │   │   ├── active_backup_20250710_171855/
 │   │   │   ├── context.json
@@ -204,9 +213,9 @@ ai-coding-brain-mcp/
 │   │   └── contexts/
 │   │       └── ai-coding-brain-mcp/
 │   │       ├── ai-coding-brain-mcp_context_removed.json
-│   │   ├── workflow_backup_20250712_081819.json
-│   │   ├── workflow_backup_20250712_081900.json
-│   │   ├── workflow_backup_20250712_082451.json
+│   │   ├── workflow_backup_20250712_165156.json
+│   │   ├── workflow_backup_20250712_165238.json
+│   │   ├── workflow_backup_20250712_165320.json
 │   │   └── ... (17 more files)
 │   ├── cache/
 │   │   └── test_cache/
@@ -224,6 +233,8 @@ ai-coding-brain-mcp/
 │   │   │   └── ... (2 more files)
 │   │   └── cleanup_20250710_182629/
 │   │       └── active/
+│   ├── errors/
+│   ├── logs/
 │   ├── projects/
 │   │   ├── ai-coding-brain-mcp/
 │   │   │   └── workflow_v3/
@@ -249,16 +260,11 @@ ai-coding-brain-mcp/
 │   │   │   ├── workflow.json
 │   │   └── test-workflow-project/
 │   │       ├── workflow.json
-│   ├── task_context_archive/
-│   ├── workflow_backups/
-│   │   ├── workflow_backup_20250710_165927.json
-│   │   ├── workflow_backup_20250710_170111.json
-│   └── workflow_v3/
-│       └── active/
+│   └── ... (4 more directories)
 │   ├── context.json
-│   ├── task_context.json
-│   ├── task_context_realtime.json
-│   └── ... (5 more files)
+│   ├── hook_config.json
+│   ├── integrated_context.json
+│   └── ... (9 more files)
 ├── python/
 │   ├── ai_helpers/
 │   │   ├── api/
@@ -308,15 +314,14 @@ ai-coding-brain-mcp/
 │   ├── workflow/
 │   │   └── v3/
 │   │       ├── api/
-│   │       ├── backup_20250712_155359/
 │   │       ├── commands/
-│   │       ├── deprecated/
+│   │       ├── hooks/
 │   │       ├── listeners/
 │   │       └── tests/
 │   │       ├── __init__.py
 │   │       ├── code_integration.py
 │   │       ├── context_integration.py
-│   │       └── ... (21 more files)
+│   │       └── ... (19 more files)
 │   │   ├── __init__.py
 │   └── ... (1 more directories)
 │   ├── __init__.py
@@ -338,14 +343,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 744개
-- **디렉토리 수**: 165개
+- **전체 파일 수**: 735개
+- **디렉토리 수**: 168개
 - **파일 타입 분포**:
-  - `.py`: 273개 (36.7%)
-  - `.json`: 159개 (21.4%)
-  - `.md`: 98개 (13.2%)
-  - `.ts`: 63개 (8.5%)
-  - `.map`: 60개 (8.1%)
+  - `.py`: 260개 (35.4%)
+  - `.json`: 164개 (22.3%)
+  - `.md`: 100개 (13.6%)
+  - `.ts`: 63개 (8.6%)
+  - `.map`: 60개 (8.2%)
 
 ## 🚀 빠른 시작
 

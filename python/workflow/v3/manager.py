@@ -50,20 +50,25 @@ class WorkflowManager:
         # EventBus 연동을 위한 어댑터 초기화
         self.event_adapter = WorkflowEventAdapter(self)
         
-        # 🆕 리스너 시스템 초기화
+        # 🆕 향상된 리스너 시스템 초기화
         self.listener_manager = None
+        self.listener_integration = None
         self.task_context_manager = None
         try:
-            from .listener_integration import initialize_event_listeners
+            # Enhanced Listener Integration 사용
+            from .enhanced_listener_integration import integrate_enhanced_listeners
             # helpers 전역 객체 가져오기
             import builtins
             helpers_obj = getattr(builtins, 'helpers', None)
             
-            self.listener_manager = initialize_event_listeners(self, helpers_obj)
-            if self.listener_manager:
-                logger.info(f"Event listeners initialized for project: {project_name}")
+            # 향상된 통합 시스템 초기화
+            self.listener_integration = integrate_enhanced_listeners(self, helpers_obj)
+            if self.listener_integration:
+                logger.info(f"Enhanced listener system initialized for project: {project_name}")
+                status = self.listener_integration.get_status()
+                logger.info(f"Registered listeners: {', '.join(status['listeners'])}")
                 
-                # TaskContextHandlers 활성화
+                # TaskContextHandlers 활성화 (기존 호환성 유지)
                 from .task_context_handlers import TaskContextEventHandlers
                 from .task_context_manager import TaskContextManager
                 from .event_bus import event_bus
@@ -75,7 +80,7 @@ class WorkflowManager:
                 logger.info("TaskContextHandlers registered for automatic task recording")
                 
         except Exception as e:
-            logger.warning(f"Failed to initialize event listeners: {e}")
+            logger.warning(f"Failed to initialize enhanced listener system: {e}")
             import traceback
             logger.debug(traceback.format_exc())
         

@@ -12,6 +12,54 @@ from .base import BaseEventListener
 logger = logging.getLogger(__name__)
 
 
+class TaskAutoProgressListener(BaseEventListener):
+    """태스크 완료 시 자동으로 다음 태스크 시작"""
+
+    def __init__(self, workflow_manager, enabled: bool = True):
+        super().__init__(enabled)
+        self.workflow_manager = workflow_manager
+
+    def get_subscribed_events(self) -> List[EventType]:
+        return [EventType.TASK_COMPLETED]
+
+    def handle_event(self, event: WorkflowEvent) -> None:
+        """태스크 완료 시 자동으로 다음 태스크 시작"""
+        if not self.enabled:
+            return
+            
+        try:
+            # 다음 태스크 자동 시작
+            if hasattr(self.workflow_manager, 'auto_start_next_task'):
+                self.workflow_manager.auto_start_next_task()
+                logger.info("Auto-started next task")
+        except Exception as e:
+            logger.error(f"TaskAutoProgressListener error: {e}")
+
+
+class PlanAutoArchiveListener(BaseEventListener):
+    """플랜 완료 시 자동 보관"""
+
+    def __init__(self, workflow_manager, enabled: bool = True):
+        super().__init__(enabled)
+        self.workflow_manager = workflow_manager
+
+    def get_subscribed_events(self) -> List[EventType]:
+        return [EventType.PLAN_COMPLETED]
+
+    def handle_event(self, event: WorkflowEvent) -> None:
+        """플랜 완료 시 자동 보관"""
+        if not self.enabled:
+            return
+            
+        try:
+            # 플랜 자동 보관
+            if hasattr(self.workflow_manager, 'archive_completed_plan'):
+                self.workflow_manager.archive_completed_plan(event.plan_id)
+                logger.info(f"Auto-archived completed plan: {event.plan_id}")
+        except Exception as e:
+            logger.error(f"PlanAutoArchiveListener error: {e}")
+
+
 class ContextSyncListener(BaseEventListener):
     """컨텍스트 동기화를 이벤트 기반으로 처리"""
 
@@ -120,6 +168,21 @@ class GitCommitListener(BaseEventListener):
 
         except Exception as e:
             logger.error(f"GitCommitListener error: {e}")
+
+    def _auto_commit(self, message: str):
+        """Git 자동 커밋 수행"""
+        # 실제 구현에서는 helpers를 사용하여 git commit
+        logger.info(f"Would auto-commit: {message}")
+
+
+# Export all listeners
+__all__ = [
+    'TaskAutoProgressListener',
+    'PlanAutoArchiveListener',
+    'ContextSyncListener',
+    'AutoSaveListener',
+    'GitCommitListener'
+]
 
     def _auto_commit(self, message: str):
         """Git 자동 커밋 수행"""

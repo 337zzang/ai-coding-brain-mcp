@@ -1,67 +1,77 @@
 """
-EventBus와 EventTypes 최종 통합 테스트
+워크플로우 통합 테스트 스크립트
 """
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import time
+from python.helpers_wrapper import create_helpers
 
-# 독립적으로 실행
-exec(open("python/workflow/v3/event_bus.py").read())
-exec(open("python/workflow/v3/event_types.py").read())
+print("🧪 워크플로우 통합 시스템 실제 테스트\n")
 
-print("="*50)
-print("EventBus + EventTypes 통합 테스트")
-print("="*50)
+# helpers 생성
+helpers = create_helpers()
 
-# 1. EventBus 인스턴스
-bus = EventBus()
-print(f"\n1. EventBus 준비: {bus._running}")
+# 1. 현재 워크플로우 상태 확인
+print("1️⃣ 현재 워크플로우 상태:")
+status = helpers.workflow("/status")
+if status.ok:
+    data = status.get_data({})
+    print(f"  플랜: {data.get('plan_name', 'None')}")
+    print(f"  진행률: {data.get('progress_percent', 0)}%")
+    current_task = data.get('current_task')
+    if current_task:
+        print(f"  현재 태스크: {current_task.get('title', 'Unknown')}")
 
-# 2. 이벤트 생성 (기존 EventType 활용)
-print("\n2. 이벤트 생성 (기존 타입 활용)")
+# 2. 테스트 태스크 실행
+print("\n2️⃣ 태스크 진행 테스트:")
 
-events = [
-    create_plan_event(EventType.PLAN_CREATED, plan_id="p1", plan_name="테스트 플랜"),
-    create_task_event(EventType.TASK_ADDED, task_id="t1", task_title="태스크 1"),
-    create_task_event(EventType.TASK_COMPLETED, task_id="t1", task_title="태스크 1"),
-    create_context_event(EventType.CONTEXT_UPDATED, context_type="workflow"),
-    create_command_event("/start", args=["플랜명"], success=True),
-    create_system_event("info", "시스템 시작됨")
-]
+# 현재 태스크 시작
+if current_task and current_task.get('status') == 'todo':
+    print(f"  태스크 '{current_task['title']}' 시작...")
+    focus_result = helpers.workflow("/focus")
+    if focus_result.ok:
+        print("  ✅ 태스크 시작됨")
 
-for event in events:
-    print(f"   ✅ {event.__class__.__name__}: {event.type}")
+# 3. 파일 생성 확인 (리스너 작동 확인)
+print("\n3️⃣ 리스너 작동 확인:")
 
-# 3. 발행/구독 테스트
-print("\n3. 발행/구독 테스트")
+# task_context.json 확인
+if os.path.exists("memory/task_context.json"):
+    print("  ✅ task_context.json 파일 존재")
+    import json
+    with open("memory/task_context.json", 'r', encoding='utf-8') as f:
+        context_data = json.load(f)
+    print(f"  - 저장된 태스크 수: {len(context_data.get('tasks', {}))}")
+else:
+    print("  ❌ task_context.json 파일 없음")
 
-received_count = {"count": 0}
+# error_log.json 확인
+if os.path.exists("memory/error_log.json"):
+    print("  ✅ error_log.json 파일 존재")
+else:
+    print("  ℹ️ error_log.json 파일 없음 (오류 없음)")
 
-def universal_handler(event):
-    received_count["count"] += 1
-    info = f"{event.type}"
-    if hasattr(event, 'plan_name'):
-        info += f" - {event.plan_name}"
-    elif hasattr(event, 'task_title'):
-        info += f" - {event.task_title}"
-    elif hasattr(event, 'command'):
-        info += f" - {event.command}"
-    print(f"   📨 수신: {info}")
+# docs 디렉토리 확인
+if os.path.exists("docs/tasks"):
+    print("  ✅ docs/tasks 디렉토리 존재")
+    task_docs = os.listdir("docs/tasks")
+    if task_docs:
+        print(f"  - 생성된 문서: {len(task_docs)}개")
+else:
+    print("  ❌ docs/tasks 디렉토리 없음")
 
-# 모든 이벤트 타입 구독
-for event in events:
-    bus.subscribe(event.type, universal_handler)
+# 4. 이벤트 로그 확인
+print("\n4️⃣ 이벤트 발행 확인:")
+workflow_data = helpers.read_json("memory/workflow.json").get_data({})
+if workflow_data.get('events'):
+    events = workflow_data['events'][-5:]  # 최근 5개
+    print(f"  최근 이벤트 {len(events)}개:")
+    for event in events:
+        print(f"    - {event.get('type', 'unknown')} at {event.get('timestamp', 'unknown')[:19]}")
+else:
+    print("  ❌ 이벤트 로그 없음")
 
-# 이벤트 발행
-for event in events:
-    bus.publish(event)
-
-# 처리 대기
-time.sleep(1)
-
-print(f"\n4. 결과")
-print(f"   발행된 이벤트: {len(events)}개")
-print(f"   수신된 이벤트: {received_count['count']}개")
-print(f"   EventBus 통계: {bus.get_stats()}")
-
-bus.stop()
 print("\n✅ 통합 테스트 완료!")
+print("\n💡 다음 명령어로 태스크를 진행해보세요:")
+print("  helpers.workflow('/next 작업 완료 메모')")

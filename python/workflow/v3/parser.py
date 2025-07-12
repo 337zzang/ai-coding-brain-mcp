@@ -272,8 +272,13 @@ class CommandParser:
             parsed.args['note'] = note_text
             return
             
-        # 서브커맨드 없이 args만 있는 경우
-        raise ValueError("서브커맨드를 사용해주세요. 예: /task add 새로운 태스크 | /task list | /task current")
+        # 서브커맨드 없이 args만 있는 경우 - 자동으로 add로 처리
+        parsed.subcommand = 'add'
+        parsed.title, parsed.description = self._parse_title_description(args)
+        if not parsed.title:
+            raise ValueError("태스크 제목을 입력해주세요")
+        if len(parsed.title) > 200:
+            raise ValueError("태스크 제목은 200자를 초과할 수 없습니다")
             
     def _parse_next(self, args: str, parsed: ParsedCommand) -> None:
         """next 명령어 파싱"""

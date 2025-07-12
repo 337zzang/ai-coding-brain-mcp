@@ -92,9 +92,12 @@ class UserCommandAPI:
             
         except Exception as e:
             logger.error(f"Command execution error: {e}")
+            # 개발 중에는 실제 에러 메시지를 표시
+            import traceback
+            error_detail = f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}"
             return HelperResult(
                 False, 
-                error="명령어 실행 중 오류가 발생했습니다. 명령어를 확인해주세요."
+                error=f"명령어 실행 중 오류: {type(e).__name__}: {str(e)}"
             )
             
     def _get_user_friendly_error(self, error: WorkflowError) -> str:

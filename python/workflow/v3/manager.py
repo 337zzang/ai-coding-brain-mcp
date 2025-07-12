@@ -50,6 +50,35 @@ class WorkflowManager:
         # EventBus 연동을 위한 어댑터 초기화
         self.event_adapter = WorkflowEventAdapter(self)
         
+        # 🆕 리스너 시스템 초기화
+        self.listener_manager = None
+        self.task_context_manager = None
+        try:
+            from .listener_integration import initialize_event_listeners
+            # helpers 전역 객체 가져오기
+            import builtins
+            helpers_obj = getattr(builtins, 'helpers', None)
+            
+            self.listener_manager = initialize_event_listeners(self, helpers_obj)
+            if self.listener_manager:
+                logger.info(f"Event listeners initialized for project: {project_name}")
+                
+                # TaskContextHandlers 활성화
+                from .task_context_handlers import TaskContextEventHandlers
+                from .task_context_manager import TaskContextManager
+                from .event_bus import event_bus
+                
+                # TaskContextManager 생성 및 핸들러 등록
+                self.task_context_manager = TaskContextManager()
+                task_handlers = TaskContextEventHandlers(self.task_context_manager)
+                task_handlers.register_all(event_bus)
+                logger.info("TaskContextHandlers registered for automatic task recording")
+                
+        except Exception as e:
+            logger.warning(f"Failed to initialize event listeners: {e}")
+            import traceback
+            logger.debug(traceback.format_exc())
+        
         # API 초기화 (v3 개선)
         self.internal_api = InternalWorkflowAPI(self)
         self.user_api = UserCommandAPI(self)
@@ -813,9 +842,27 @@ class WorkflowManager:
             else:
                 return HelperResult(False, error="태스크 추가 실패")
             
-        elif parsed.title and parsed.subcommand != 'note' and parsed.subcommand != 'add':
-            # 서브커맨드가 필요한 경우
-            return HelperResult(False, error="서브커맨드를 사용해주세요. 예: /task add 새로운 태스크 | /task list | /task current")
+        elif parsed.title and not parsed.subcommand:
+            # /task 태스크명 형식으로 입력한 경우 - 자동으로 add로 처리
+            task = self.add_task(parsed.title, parsed.description)
+            if task:
+                task_count = len(self.state.current_plan.tasks)
+                return HelperResult(True, data={
+                    'success': True,
+                    'task': {
+                        'id': task.id,
+                        'title': task.title,
+                        'description': task.description,
+                        'index': task_count
+                    },
+                    'message': f"✅ 태스크 추가: {task.title}"
+                })
+            else:
+                return HelperResult(False, error="태스크 추가 실패")
+                
+        elif parsed.title and parsed.subcommand not in ['note', 'add', 'list', 'current']:
+            # 알 수 없는 서브커맨드
+            return HelperResult(False, error="알 수 없는 서브커맨드입니다. 사용 가능: add, list, current, note")
                 
         else:
             # 태스크 목록 (인자 없이 /task만 입력한 경우)
@@ -983,7 +1030,8 @@ class WorkflowManager:
             if status['status'] == 'no_plan':
                 return HelperResult(True, data={
                     'success': True,
-                    'status': status
+                    'status': status['status'],
+                    'message': status.get('message', '활성 플랜이 없습니다')
                 })
             else:
                 # 추가 정보 포함
@@ -992,7 +1040,7 @@ class WorkflowManager:
                 
                 return HelperResult(True, data={
                     'success': True,
-                    'status': status,
+                    **status,  # status 딕셔너리의 내용을 직접 포함
                     'tasks_summary': {
                         'total': len(tasks),
                         'completed': len([t for t in tasks if t['status'] == 'completed']),
@@ -1036,6 +1084,13 @@ class WorkflowManager:
         if hasattr(self, 'event_adapter'):
             self.event_adapter.cleanup()
             logger.info(f"WorkflowEventAdapter cleaned up for project: {self.project_name}")
+        
+        # 🆕 리스너 메트릭 로깅 및 정리
+        if hasattr(self, 'listener_manager') and self.listener_manager:
+            # 리스너 메트릭 로깅
+            metrics = self.listener_manager.get_metrics()
+            if metrics.get('_summary'):
+                logger.info(f"Listener metrics summary: {metrics['_summary']}")
     
     def _add_event(self, event):
         """이벤트를 EventStore에 추가하고 EventBus로 발행"""

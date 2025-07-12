@@ -423,6 +423,11 @@ class WorkflowState:
     def get_all_plans(self) -> List[WorkflowPlan]:
         """모든 플랜 반환 (현재는 current_plan만)"""
         return [self.current_plan] if self.current_plan else []
+    
+    @property
+    def plans(self) -> List['WorkflowPlan']:
+        """플랜 목록 반환 (호환성을 위한 속성)"""
+        return self.get_all_plans()
         
     def to_dict(self) -> Dict[str, Any]:
         """상태를 딕셔너리로 변환 (v46: plans + active_plan_id 구조)"""

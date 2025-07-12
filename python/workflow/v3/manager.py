@@ -1110,6 +1110,19 @@ class WorkflowManager:
         # EventBus로 발행 (event_adapter가 있는 경우)
         if hasattr(self, 'event_adapter') and self.event_adapter:
             try:
-                self.event_adapter.publish_workflow_event(event)
+                # event가 dict인 경우 WorkflowEvent로 변환
+                if isinstance(event, dict):
+                    from .models import WorkflowEvent, EventType
+                    workflow_event = WorkflowEvent(
+                        type=EventType[event.get('type', 'UNKNOWN')],
+                        plan_id=event.get('plan_id', ''),
+                        task_id=event.get('task_id'),
+                        user=event.get('user', 'system'),
+                        details=event.get('details', {}),
+                        metadata=event.get('metadata', {})
+                    )
+                    self.event_adapter.publish_workflow_event(workflow_event)
+                else:
+                    self.event_adapter.publish_workflow_event(event)
             except Exception as e:
                 logger.error(f"Failed to publish event to EventBus: {e}")

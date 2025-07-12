@@ -103,18 +103,30 @@ class WorkflowEventAdapter:
         """WorkflowEvent를 EventBus의 Event로 변환"""
         from .event_bus import Event
 
-        # Event 객체 생성
-        event = Event()
-        event.id = workflow_event.id
-        event.type = workflow_event.type.value if hasattr(workflow_event.type, 'value') else str(workflow_event.type)
-        event.timestamp = workflow_event.timestamp
-        event.data = {
-            'plan_id': workflow_event.plan_id,
-            'task_id': workflow_event.task_id,
-            'user': workflow_event.user,
-            'details': workflow_event.details,
-            'metadata': workflow_event.metadata
-        }
+        # 디버깅: WorkflowEvent 타입 확인
+        if not hasattr(workflow_event, 'type'):
+            logger.error(f"WorkflowEvent has no type attribute: {type(workflow_event)}, {workflow_event}")
+            return None
+
+        # Event 객체 생성 - type을 생성자에 전달
+        event_type = workflow_event.type.value if hasattr(workflow_event.type, 'value') else str(workflow_event.type)
+        
+        if not event_type:
+            logger.error(f"Event type is empty: workflow_event.type={workflow_event.type}")
+            return None
+        
+        event = Event(
+            id=workflow_event.id,
+            type=event_type,
+            timestamp=workflow_event.timestamp,
+            payload={
+                'plan_id': workflow_event.plan_id,
+                'task_id': workflow_event.task_id,
+                'user': workflow_event.user,
+                'details': workflow_event.details,
+                'metadata': workflow_event.metadata
+            }
+        )
 
         return event
 
@@ -122,13 +134,17 @@ class WorkflowEventAdapter:
     def publish_workflow_event(self, workflow_event: WorkflowEvent):
         """WorkflowEvent를 EventBus로 발행"""
         if not isinstance(workflow_event, WorkflowEvent):
-            logger.error(f"Invalid event type: {type(workflow_event)}")
+            logger.error(f"Invalid event type: {type(workflow_event)}, expected WorkflowEvent but got {workflow_event}")
             return
 
         try:
             # EventBus로 발행
-            self.event_bus.publish(self._convert_workflow_event_to_event(workflow_event))
-            logger.debug(f"Published {workflow_event.type} event to EventBus")
+            event = self._convert_workflow_event_to_event(workflow_event)
+            if event:
+                self.event_bus.publish(event)
+                logger.debug(f"Published {workflow_event.type} event to EventBus")
+            else:
+                logger.error(f"Failed to convert WorkflowEvent to Event: {workflow_event}")
         except Exception as e:
             logger.error(f"Failed to publish event: {e}")
 

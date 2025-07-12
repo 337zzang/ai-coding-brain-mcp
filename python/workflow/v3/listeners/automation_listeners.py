@@ -184,14 +184,6 @@ __all__ = [
     'GitCommitListener'
 ]
 
-    def _auto_commit(self, message: str):
-        """Git 자동 커밋 수행"""
-        try:
-            # 실제 구현에서는 helpers.git_add(), helpers.git_commit() 사용
-            logger.info(f"Auto-commit: {message}")
-        except Exception as e:
-            logger.debug(f"Auto-commit failed: {e}")
-
 
 class AuditLogListener(BaseEventListener):
     """감사 로그를 이벤트 기반으로 처리"""

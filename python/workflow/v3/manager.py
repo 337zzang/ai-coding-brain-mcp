@@ -220,9 +220,9 @@ class WorkflowManager:
             
             # 이벤트 기록
             self._add_event(EventBuilder.plan_created(plan))
-            self.event_adapter.publish_plan_created(plan)
+            # self.event_adapter.publish_plan_created(plan)  # 중복 제거 - _add_event가 이미 처리
             self._add_event(EventBuilder.plan_started(plan))
-            self.event_adapter.publish_plan_started(plan)
+            # self.event_adapter.publish_plan_started(plan)  # 중복 제거 - _add_event가 이미 처리
             
             # 컨텍스트 동기화
             self.context.sync_plan_summary(plan)
@@ -256,7 +256,7 @@ class WorkflowManager:
             # 이벤트 기록
             event = EventBuilder.task_added(self.state.current_plan.id, task)
             self._add_event(event)
-            self.event_adapter.publish_task_added(task, self.state.current_plan)  # 이벤트 리스너 통합
+            # self.event_adapter.publish_task_added(task, self.state.current_plan)  # 중복 제거 - _add_event가 이미 처리
             
             # 컨텍스트 동기화
             self.context.sync_plan_summary(self.state.current_plan)
@@ -341,7 +341,7 @@ class WorkflowManager:
         # 이벤트 기록
         event = EventBuilder.task_completed(self.state.current_plan.id, task, note)
         self._add_event(event)
-        self.event_adapter.publish_task_completed(task, self.state.current_plan)  # 이벤트 리스너 통합
+        # self.event_adapter.publish_task_completed(task, self.state.current_plan)  # 중복 제거 - _add_event가 이미 처리
         self.context.record_event(event)  # 중요 이벤트이므로 컨텍스트에 기록
         
         # 모든 태스크가 완료되었는지 확인
@@ -349,7 +349,7 @@ class WorkflowManager:
             self.state.current_plan.complete()
             complete_event = EventBuilder.plan_completed(self.state.current_plan)
             self._add_event(complete_event)
-            self.event_adapter.publish_plan_completed(self.state.current_plan)  # 이벤트 리스너 통합
+            # self.event_adapter.publish_plan_completed(self.state.current_plan)  # 중복 제거 - _add_event가 이미 처리
             self.context.record_event(complete_event)
             
         # 컨텍스트 동기화

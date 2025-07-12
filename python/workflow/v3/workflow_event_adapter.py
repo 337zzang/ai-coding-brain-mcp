@@ -111,6 +111,9 @@ class WorkflowEventAdapter:
         # Event 객체 생성 - type을 생성자에 전달
         event_type = workflow_event.type.value if hasattr(workflow_event.type, 'value') else str(workflow_event.type)
         
+        # 디버깅: event_type 값 확인
+        logger.debug(f"Converting WorkflowEvent to Event: type={event_type}")
+        
         if not event_type:
             logger.error(f"Event type is empty: workflow_event.type={workflow_event.type}")
             return None

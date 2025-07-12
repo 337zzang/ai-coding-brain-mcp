@@ -8,10 +8,13 @@ HelpersWrapper - 모든 헬퍼 함수를 HelperResult로 래핑
 import functools
 from typing import Any, Callable
 from ai_helpers.helper_result import HelperResult
+from pathlib import Path
+import os
 
+# 프로젝트 루트 경로 중앙화
+ROOT = Path(__file__).resolve().parent.parent  # ai-coding-brain-mcp 루트
 
 from python.workflow.v3.code_integration import WorkflowCodeIntegration
-import os
 def safe_helper(func: Callable) -> Callable:
     """헬퍼 함수를 안전하게 래핑하는 데코레이터"""
     @functools.wraps(func)
@@ -75,7 +78,11 @@ class HelpersWrapper:
         """클래스에 정의된 메서드들을 명시적으로 바인딩"""
         # 이 메서드들은 HelpersWrapper에서 오버라이드되었으므로
         # __getattr__를 거치지 않고 직접 사용되어야 함
-        override_methods = ['list_functions', 'workflow', 'read_file']
+        override_methods = [
+            'list_functions', 'workflow', 'read_file',
+            'scan_directory_dict', 'search_files_advanced', 'search_code_content',
+            'search_files', 'parse_with_snippets', 'get_project_name', 'get_project_path'
+        ]
         for method_name in override_methods:
             if hasattr(self.__class__, method_name):
                 # 클래스 메서드를 인스턴스에 바인딩
@@ -158,7 +165,10 @@ class HelpersWrapper:
         """사용 가능한 메서드 목록 반환"""
         base_methods = dir(self._helpers)
         # 추가된 search 메서드들도 포함
-        additional_methods = ['scan_directory_dict', 'search_files_advanced', 'search_code_content']
+        additional_methods = [
+            'scan_directory_dict', 'search_files_advanced', 'search_code_content',
+            'search_files', 'parse_with_snippets', 'get_project_name', 'get_project_path'
+        ]
         return list(set(base_methods + additional_methods))
     
     # Search 관련 메서드들 추가
@@ -261,6 +271,51 @@ class HelpersWrapper:
             
         except Exception as e:
             return HelperResult(False, error=f"코드 검색 중 오류: {str(e)}")
+
+    def search_files(self, directory: str, pattern: str = '*', **kwargs) -> HelperResult:
+        """파일 검색 - search_files_advanced의 간단한 별칭"""
+        return self.search_files_advanced(directory, pattern, **kwargs)
+    
+    def parse_with_snippets(self, file_path: str) -> HelperResult:
+        """파일을 파싱하여 코드 구조 분석"""
+        try:
+            # 절대 경로로 변환
+            if not Path(file_path).is_absolute():
+                file_path = str(ROOT / file_path)
+            
+            # ai_helpers.code 모듈에서 직접 import
+            from ai_helpers.code import parse_with_snippets as _parse_with_snippets
+            
+            result = _parse_with_snippets(file_path)
+            
+            # 이미 HelperResult인 경우
+            if hasattr(result, 'ok'):
+                return result
+            # dict나 다른 타입인 경우 래핑
+            else:
+                return HelperResult(True, data=result)
+                
+        except ImportError:
+            return HelperResult(False, error="parse_with_snippets를 사용할 수 없습니다. ai_helpers.code 모듈을 확인하세요.")
+        except Exception as e:
+            return HelperResult(False, error=f"파싱 중 오류: {str(e)}")
+    
+    def get_project_name(self) -> HelperResult:
+        """현재 프로젝트 이름 반환"""
+        try:
+            # 현재 작업 디렉토리의 이름을 프로젝트 이름으로 사용
+            project_name = os.path.basename(os.getcwd())
+            return HelperResult(True, data=project_name)
+        except Exception as e:
+            return HelperResult(False, error=f"프로젝트 이름 획득 중 오류: {str(e)}")
+    
+    def get_project_path(self) -> HelperResult:
+        """현재 프로젝트 경로 반환"""
+        try:
+            project_path = os.getcwd()
+            return HelperResult(True, data=project_path)
+        except Exception as e:
+            return HelperResult(False, error=f"프로젝트 경로 획득 중 오류: {str(e)}")
 
     # 자주 사용하는 메서드들에 대한 타입 힌트와 문서화
     def read_file(self, path: str, **kwargs) -> HelperResult:

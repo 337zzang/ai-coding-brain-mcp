@@ -53,6 +53,11 @@ class WorkflowStorage:
         """데이터 저장 (원자적 쓰기)"""
         with self._lock:
             try:
+                # 데이터 유효성 검증
+                if not self._validate_workflow_data(data):
+                    logger.error("Invalid workflow data: missing required fields or contains only summary")
+                    return False
+                
                 # 백업 생성
                 if create_backup and self.main_file.exists():
                     self._create_backup()
@@ -220,6 +225,23 @@ class WorkflowStorage:
             ).isoformat()
 
         return stats
+
+    def _validate_workflow_data(self, data: Dict[str, Any]) -> bool:
+        """워크플로우 데이터 유효성 검증"""
+        # summary만 있는 데이터는 거부
+        if len(data) == 1 and "summary" in data:
+            logger.warning("Rejecting data with only 'summary' field")
+            return False
+        
+        # 필수 필드 확인 (적어도 하나는 있어야 함)
+        required_fields = ["plans", "events", "current_plan", "active_plan_id"]
+        has_required = any(field in data for field in required_fields)
+        
+        if not has_required and "version" not in data:
+            logger.warning(f"Missing required workflow fields. Keys: {list(data.keys())}")
+            return False
+        
+        return True
 
     # 기존 UnifiedWorkflowStorage와의 호환성을 위한 메서드들
     def get_project_data(self, project_name: str) -> Optional[Dict[str, Any]]:

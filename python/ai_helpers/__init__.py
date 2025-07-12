@@ -61,7 +61,7 @@ from .search_wrappers import (
 # Compile 관련
 try:
     from .compile import (
-        check_syntax, compile_project, parse_code, parse_with_snippets,
+        check_syntax, compile_project,
         replace_block, insert_block, get_snippet_preview
     )
 except ImportError as e:
@@ -77,7 +77,7 @@ except ImportError as e:
 try:
     from .code import (
         ASTParser, EnhancedFunctionReplacer, FunctionReplacer,
-        ClassReplacer, BlockInsertTransformer
+        ClassReplacer, BlockInsertTransformer, parse_with_snippets
     )
 except ImportError as e:
     logger.warning(f"⚠️ code 모듈 로드 실패: {e}")
@@ -86,8 +86,7 @@ except ImportError as e:
 try:
     from .context import (
         get_context, save_context, update_context, initialize_context,
-        get_project_context, track_file_operation, track_function_edit,
-        track_operation
+        get_project_context, track_operation
     )
 except ImportError as e:
     logger.warning(f"⚠️ context 모듈 로드 실패: {e}")
@@ -95,8 +94,8 @@ except ImportError as e:
 # Project 관련
 try:
     from .project import (
-        detect_project_type, install_dependencies, get_project_progress,
-        get_system_summary
+        get_project_progress,
+        get_system_summary, get_current_project
     )
 except ImportError as e:
     logger.warning(f"⚠️ project 모듈 로드 실패: {e}")
@@ -104,9 +103,9 @@ except ImportError as e:
 # Utils 관련
 try:
     from .utils import (
-        get_current_phase, complete_current_phase, create_standard_phases,
+        create_standard_phases,
         quick_task, task, complete, progress, reset_project, update_cache,
-        get_cache_value, track_file_access, get_value, safe_print
+        get_cache_value, track_file_access, get_value, safe_print, list_functions
     )
 except ImportError as e:
     logger.warning(f"⚠️ utils 모듈 로드 실패: {e}")
@@ -114,7 +113,7 @@ except ImportError as e:
 # Legacy replacements
 try:
     from .legacy_replacements import (
-        cmd_flow, get_current_project, list_functions, list_tasks,
+        cmd_flow, list_tasks,
         get_pending_tasks, get_work_tracking_summary, get_event_history,
         run_command, get_flow_instance, edit_block, update_symbol_index,
         get_verbose, set_verbose
@@ -204,7 +203,7 @@ __all__ = [
     'search_code', 'find_class', 'find_function', 'find_import',
     
     # Workflow
-    'workflow', 'flow_project', 'start_project',
+    'workflow', 'flow_project', 'start_project', 'get_current_project',
     
     # Utilities
     'get_load_status',

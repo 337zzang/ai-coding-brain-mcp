@@ -27,35 +27,37 @@ from .git import (
     GIT_AVAILABLE
 )
 
-# Search 관련 - 하위 모듈에서 직접 import
-from .search.directory_scan import (
+# Search 관련 - 통합 모듈에서 import
+from .search_unified import (
+    search_files,
+    search_code,
+    find_symbol,
     scan_directory,
+    find_class,
+    find_function,
+    find_import,
+    grep,
+    # 별칭 (하위 호환성)
+    search_files as search_files_advanced,
+    search_code as search_code_content
+)
+
+# 기존 모듈에서 필요한 것만 import (점진적 마이그레이션)
+from .directory_scan import (
     scan_directory_dict,
     cache_project_structure,
     get_project_structure,
     search_in_structure
 )
 
-from .search.file_search import (
-    search_files_advanced,
-    _search_files_advanced
-)
-
-from .search.code_search import (
-    search_code_content,
-    _search_code_content
-)
-
-from .search.unified import (
-    list_file_paths,
-    grep_code,
-    scan_dir
-)
-
-# Search wrappers
-from .search_wrappers import (
-    search_code, find_class, find_function, find_import
-)
+# Legacy aliases for backward compatibility
+_search_files_advanced = search_files
+_search_code_content = search_code
+list_file_paths = lambda directory, pattern="*", recursive=True: [
+    f['path'] for f in search_files(directory, pattern, recursive=recursive, include_details=True).data.get('results', [])
+]
+grep_code = grep
+scan_dir = scan_directory
 
 # Optional 모듈들 - try/except로 처리
 # Compile 관련
@@ -206,11 +208,13 @@ __all__ = [
     'GIT_AVAILABLE',
     
     # Search operations
+    'search_files', 'search_code', 'find_symbol', 'scan_directory',
+    'find_class', 'find_function', 'find_import', 'grep',
+    # Legacy aliases
     'search_files_advanced', '_search_files_advanced',
     'search_code_content', '_search_code_content',
     'cache_project_structure', 'get_project_structure', 'search_in_structure',
-    'list_file_paths', 'grep_code', 'scan_dir',
-    'search_code', 'find_class', 'find_function', 'find_import',
+    'scan_directory_dict', 'list_file_paths', 'grep_code', 'scan_dir',
     
     # Workflow
     'workflow', 'flow_project', 'start_project', 'get_current_project',

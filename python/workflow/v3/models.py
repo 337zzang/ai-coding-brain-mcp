@@ -13,7 +13,7 @@ import uuid
 import json
 
 # 통합 이벤트 타입 import
-from events.unified_event_types import EventType
+from .event_types import EventType
 
 # v3에서 추가된 에러 처리 import
 try:

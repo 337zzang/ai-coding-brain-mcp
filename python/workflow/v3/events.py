@@ -7,7 +7,8 @@ from datetime import datetime, timezone, timedelta
 
 # 한국 표준시(KST) 정의
 KST = timezone(timedelta(hours=9))
-from .models import WorkflowEvent, EventType, WorkflowPlan, Task, TaskStatus
+from .models import WorkflowEvent, WorkflowPlan, Task, TaskStatus
+from .event_types import EventType
 from python.ai_helpers.helper_result import HelperResult
 import logging
 

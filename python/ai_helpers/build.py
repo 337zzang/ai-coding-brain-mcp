@@ -6,7 +6,7 @@ import platform
 import subprocess
 from typing import Dict, Any, List, Optional, Union
 from pathlib import Path
-from ai_helpers.decorators import track_operation
+from .decorators import track_operation
 
 
 @track_operation('build', 'find_executable')

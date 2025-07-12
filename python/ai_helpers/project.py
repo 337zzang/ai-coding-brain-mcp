@@ -10,7 +10,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 # EnhancedFlow import 제거 - 순환 참조 방지
-from ai_helpers.decorators import track_operation
+from .decorators import track_operation
 
 # 임시 구현 - EnhancedFlow 기능을 직접 구현하거나 대체
 def get_flow_instance():
@@ -36,7 +36,7 @@ def get_flow_instance():
         
         def save_context(self):
             # ContextManager를 통해 저장
-            from ai_helpers.context import save_context as save_ctx
+            from .context import save_context as save_ctx
             save_ctx()
         
         def add_task_to_project(self, project_id, description, phase_id=None, priority=1):
@@ -381,7 +381,7 @@ def project(name: str = None) -> Dict[str, Any]:
         result = flow.create_project(name, f"{name} 프로젝트")
         create_standard_phases(result['plan'].id)
         # ContextManager를 통한 컨텍스트 저장
-        from ai_helpers.context import save_context
+        from .context import save_context
         save_context()
         return result
     else:
@@ -400,7 +400,7 @@ def task(description: str = None) -> Any:
     if description:
         result = quick_task(description)
         # 컨텍스트 저장
-        from ai_helpers.context import save_context
+        from .context import save_context
         save_context()
         return result
     else:

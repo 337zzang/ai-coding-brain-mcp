@@ -1,7 +1,7 @@
 """유틸리티 함수들"""
 
 from typing import List
-from ai_helpers.decorators import track_operation
+from .decorators import track_operation
 
 
 @track_operation('utils', 'list_functions')
@@ -39,7 +39,7 @@ def track_file_access(file_path: str, operation: str = 'access') -> None:
 def _safe_import_parse_with_snippets():
     """parse_with_snippets를 안전하게 import"""
     try:
-        from ai_helpers.code import parse_with_snippets
+        from .code import parse_with_snippets
         return parse_with_snippets
     except ImportError:
         return None

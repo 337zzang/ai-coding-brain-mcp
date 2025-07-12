@@ -58,7 +58,16 @@ class EventBus:
     비동기 처리를 통해 발행자를 블로킹하지 않습니다.
     """
 
+    _instance = None
     _lock = threading.Lock()
+
+    def __new__(cls):
+        """싱글톤 패턴 구현"""
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __init__(self):
         """EventBus 초기화"""
@@ -302,15 +311,6 @@ class EventBus:
             f"stats={self._stats})"
         )
 
-
-
-    def reset(self):
-        """EventBus 리셋 (테스트용)"""
-        self.stop()
-        self._handlers.clear()
-        self._executor = None
-        self._running = False
-        logger.info("EventBus reset completed")
 
 # 전역 이벤트 버스 인스턴스
 event_bus = EventBus()

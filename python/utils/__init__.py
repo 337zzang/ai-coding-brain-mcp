@@ -1,7 +1,7 @@
 """Utility modules for AI Coding Brain MCP"""
 
-from utils.io_helpers import open_text
-from utils.path_utils import (
+from .io_helpers import open_text
+from .path_utils import (
     get_project_root, 
     verify_git_root, 
     find_git_root,

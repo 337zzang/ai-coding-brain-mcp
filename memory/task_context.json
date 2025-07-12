@@ -330,6 +330,28 @@
       },
       "events": [],
       "notes": []
+    },
+    "docs-test-task-001": {
+      "task_id": "docs-test-task-001",
+      "task_title": "DocsGeneratorListener 테스트",
+      "started_at": "2025-07-12T15:25:45.052052",
+      "files_created": [
+        "docs_generator_listener.py",
+        "__init__.py"
+      ],
+      "files_modified": [
+        "listener_integration.py"
+      ],
+      "code_snippet": "# DocsGeneratorListener 등록\ndocs_generator = DocsGeneratorListener()\nevent_bus.subscribe(EventType.TASK_COMPLETED.value, docs_generator.handle_event)",
+      "test_results": {
+        "passed": 5,
+        "failed": 0,
+        "coverage": "95%"
+      },
+      "performance_metrics": {
+        "execution_time": "0.5s",
+        "memory_usage": "12MB"
+      }
     }
   },
   "summary": {

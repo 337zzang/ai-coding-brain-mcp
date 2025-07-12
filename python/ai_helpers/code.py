@@ -2,7 +2,7 @@
 
 import ast
 from typing import Optional, Union, List
-from ai_helpers.decorators import track_operation
+from .decorators import track_operation
 import difflib
 import shutil
 import warnings

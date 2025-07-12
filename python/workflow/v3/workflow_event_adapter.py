@@ -1,389 +1,179 @@
 """
-Workflow Event Adapter
-=====================
-
-WorkflowManager가 EventBus를 사용하도록 하는 어댑터입니다.
-상태 변경 시 이벤트를 발행하고, 프로젝트 전환 이벤트를 구독합니다.
+WorkflowEventAdapter - 워크플로우와 EventBus를 연결하는 어댑터
 """
-
 import logging
-from typing import Optional, Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
 
-from python.workflow.v3.event_bus import event_bus
-from python.workflow.v3.event_types import (
-    EventType,
-    create_plan_event,
-    create_task_event,
-    create_project_event,
-    create_context_event
-)
+from .event_bus import EventBus
+from .models import WorkflowEvent, EventType
+from .events import EventBuilder
+import uuid
 
 logger = logging.getLogger(__name__)
 
 
 class WorkflowEventAdapter:
-    """
-    WorkflowManager와 EventBus를 연결하는 어댑터
-
-    WorkflowManager의 상태 변경을 이벤트로 발행하고,
-    외부 이벤트를 구독하여 WorkflowManager에 전달합니다.
-    """
+    """워크플로우 이벤트를 EventBus로 전달하는 어댑터"""
 
     def __init__(self, workflow_manager):
-        """
-        Args:
-            workflow_manager: WorkflowV3Manager 인스턴스
-        """
         self.workflow_manager = workflow_manager
+        self.event_bus = EventBus()
+        self.event_bus.start()
+        logger.info("WorkflowEventAdapter initialized with EventBus")
         self._register_handlers()
 
-        logger.info("WorkflowEventAdapter initialized")
+
+    def add_listener(self, event_type: str, handler):
+        """이벤트 리스너 추가"""
+        self.event_bus.subscribe(event_type, handler)
+        logger.debug(f"Added listener for {event_type}")
+
+    def remove_listener(self, event_type: str, handler):
+        """이벤트 리스너 제거"""
+        self.event_bus.unsubscribe(event_type, handler)
+        logger.debug(f"Removed listener for {event_type}")
+
+    def add_workflow_listener(self, listener):
+        """BaseEventListener 인터페이스를 구현한 리스너 추가"""
+        if hasattr(listener, 'get_subscribed_events') and hasattr(listener, 'handle_event'):
+            # 구독할 이벤트 타입 가져오기
+            event_types = listener.get_subscribed_events()
+
+            # 각 이벤트 타입에 대해 핸들러 등록
+            for event_type in event_types:
+                event_type_str = event_type.value if hasattr(event_type, 'value') else str(event_type)
+
+                # 래퍼 함수 생성 (Event를 WorkflowEvent로 변환)
+                def create_handler(listener_ref):
+                    def handler(event):
+                        # Event를 WorkflowEvent로 변환
+                        workflow_event = self._convert_event_to_workflow_event(event)
+                        if workflow_event:
+                            listener_ref.handle_event(workflow_event)
+                    return handler
+
+                self.event_bus.subscribe(event_type_str, create_handler(listener))
+                logger.debug(f"Added workflow listener for {event_type_str}")
+
+    def _convert_event_to_workflow_event(self, event) -> Optional[WorkflowEvent]:
+        """EventBus의 Event를 WorkflowEvent로 변환"""
+        try:
+            from .event_types import EventType
+
+            # EventType 찾기
+            event_type = None
+            for et in EventType:
+                if et.value == event.type:
+                    event_type = et
+                    break
+
+            if not event_type:
+                logger.warning(f"Unknown event type: {event.type}")
+                return None
+
+            # WorkflowEvent 생성
+            data = event.data if hasattr(event, 'data') else {}
+            workflow_event = WorkflowEvent(
+                id=event.id if hasattr(event, 'id') else str(uuid.uuid4()),
+                type=event_type,
+                timestamp=event.timestamp if hasattr(event, 'timestamp') else datetime.now(),
+                plan_id=data.get('plan_id', ''),
+                task_id=data.get('task_id'),
+                user=data.get('user', 'system'),
+                details=data.get('details', {}),
+                metadata=data.get('metadata', {})
+            )
+
+            return workflow_event
+        except Exception as e:
+            logger.error(f"Error converting Event to WorkflowEvent: {e}")
+            return None
 
     def _register_handlers(self):
-        """이벤트 핸들러 등록"""
-        # 프로젝트 전환 이벤트 구독
-        event_bus.subscribe(EventType.PROJECT_SWITCHED.value, self._on_project_switched)
-
-        logger.debug("Event handlers registered in WorkflowEventAdapter")
+        """기본 핸들러 등록"""
+        # PROJECT_SWITCHED 이벤트 핸들러
+        self.event_bus.subscribe("project_switched", self._on_project_switched)
 
     def _on_project_switched(self, event):
-        """PROJECT_SWITCHED 이벤트 핸들러"""
-        if hasattr(event, 'project_name'):
-            logger.info(f"Received PROJECT_SWITCHED event: {event.project_name}")
+        """프로젝트 전환 이벤트 처리"""
+        logger.info(f"Project switched event: {event}")
 
-            # WorkflowManager의 프로젝트 전환 처리
-            # 이미 WorkflowManager가 프로젝트별로 인스턴스화되므로
-            # 여기서는 상태 저장 후 PROJECT_LOADED 이벤트 발행
+    def _convert_workflow_event_to_event(self, workflow_event: WorkflowEvent) -> Event:
+        """WorkflowEvent를 EventBus의 Event로 변환"""
+        from .event_bus import Event
 
-            # 현재 상태 저장
-            if self.workflow_manager.state.current_plan:
-                self.workflow_manager.save_data()
+        # Event 객체 생성
+        event = Event()
+        event.id = workflow_event.id
+        event.type = workflow_event.type.value if hasattr(workflow_event.type, 'value') else str(workflow_event.type)
+        event.timestamp = workflow_event.timestamp
+        event.data = {
+            'plan_id': workflow_event.plan_id,
+            'task_id': workflow_event.task_id,
+            'user': workflow_event.user,
+            'details': workflow_event.details,
+            'metadata': workflow_event.metadata
+        }
 
-            # PROJECT_LOADED 이벤트 발행
-            loaded_event = create_project_event(
-                EventType.PROJECT_LOADED,
-                project_name=event.project_name,
-                workflow_info={
-                    'has_active_plan': bool(self.workflow_manager.state.current_plan),
-                    'plan_name': self.workflow_manager.state.current_plan.name if self.workflow_manager.state.current_plan else None,
-                    'total_tasks': len(self.workflow_manager.state.current_plan.tasks) if self.workflow_manager.state.current_plan else 0
-                }
-            )
-            event_bus.publish(loaded_event)
+        return event
 
-    # === 플랜 관련 이벤트 발행 ===
+
+    def publish_workflow_event(self, workflow_event: WorkflowEvent):
+        """WorkflowEvent를 EventBus로 발행"""
+        if not isinstance(workflow_event, WorkflowEvent):
+            logger.error(f"Invalid event type: {type(workflow_event)}")
+            return
+
+        try:
+            # EventBus로 발행
+            self.event_bus.publish(self._convert_workflow_event_to_event(workflow_event))
+            logger.debug(f"Published {workflow_event.type} event to EventBus")
+        except Exception as e:
+            logger.error(f"Failed to publish event: {e}")
 
     def publish_plan_created(self, plan):
         """플랜 생성 이벤트 발행"""
-        event = create_plan_event(
-            EventType.PLAN_CREATED,
-            plan_id=plan.id,
-            plan_name=plan.name,
-            plan_status=plan.status.value,
-            project_name=self.workflow_manager.project_name,
-            description=plan.description
-        )
-        event_bus.publish(event)
-        logger.debug(f"Published PLAN_CREATED: {plan.name}")
+        event = EventBuilder.plan_created(plan)
+        self.publish_workflow_event(event)
 
     def publish_plan_started(self, plan):
         """플랜 시작 이벤트 발행"""
-        event = create_plan_event(
-            EventType.PLAN_STARTED,
-            plan_id=plan.id,
-            plan_name=plan.name,
-            plan_status=plan.status.value,
-            project_name=self.workflow_manager.project_name
-        )
-        event_bus.publish(event)
-        logger.debug(f"Published PLAN_STARTED: {plan.name}")
+        event = EventBuilder.plan_started(plan)
+        self.publish_workflow_event(event)
 
     def publish_plan_completed(self, plan):
         """플랜 완료 이벤트 발행"""
-        event = create_plan_event(
-            EventType.PLAN_COMPLETED,
-            plan_id=plan.id,
-            plan_name=plan.name,
-            plan_status=plan.status.value,
-            project_name=self.workflow_manager.project_name,
-            completed_at=datetime.now().isoformat()
-        )
-        event_bus.publish(event)
-        logger.debug(f"Published PLAN_COMPLETED: {plan.name}")
-
-    def publish_plan_archived(self, plan):
-        """플랜 보관 이벤트 발행"""
-        event = create_plan_event(
-            EventType.PLAN_ARCHIVED,
-            plan_id=plan.id,
-            plan_name=plan.name,
-            plan_status=plan.status.value,
-            project_name=self.workflow_manager.project_name,
-            archived_at=datetime.now().isoformat()
-        )
-        event_bus.publish(event)
-        logger.debug(f"Published PLAN_ARCHIVED: {plan.name}")
-
-    # === 태스크 관련 이벤트 발행 ===
+        event = EventBuilder.plan_completed(plan)
+        self.publish_workflow_event(event)
 
     def publish_task_added(self, task, plan):
         """태스크 추가 이벤트 발행"""
-        event = create_task_event(
-            EventType.TASK_ADDED,
-            task_id=task.id,
-            task_title=task.title,
-            task_status=task.status.value,
-            plan_id=plan.id,
-            project_name=self.workflow_manager.project_name
-        )
-        event_bus.publish(event)
-        logger.debug(f"Published TASK_ADDED: {task.title}")
+        event = EventBuilder.task_added(plan.id, task)
+        self.publish_workflow_event(event)
 
     def publish_task_started(self, task, plan):
         """태스크 시작 이벤트 발행"""
-        event = create_task_event(
-            EventType.TASK_STARTED,
-            task_id=task.id,
-            task_title=task.title,
-            task_status=task.status.value,
-            plan_id=plan.id,
-            project_name=self.workflow_manager.project_name
-        )
-        event_bus.publish(event)
-        logger.debug(f"Published TASK_STARTED: {task.title}")
+        event = EventBuilder.task_started(plan.id, task)
+        self.publish_workflow_event(event)
 
     def publish_task_completed(self, task, plan):
         """태스크 완료 이벤트 발행"""
-        event = create_task_event(
-            EventType.TASK_COMPLETED,
-            task_id=task.id,
-            task_title=task.title,
-            task_status=task.status.value,
-            plan_id=plan.id,
-            project_name=self.workflow_manager.project_name,
-            completed_at=datetime.now().isoformat()
-        )
-        event_bus.publish(event)
-        logger.debug(f"Published TASK_COMPLETED: {task.title}")
+        event = EventBuilder.task_completed(plan.id, task)
+        self.publish_workflow_event(event)
 
     def publish_task_failed(self, task, plan, error: str):
         """태스크 실패 이벤트 발행"""
-        event = create_task_event(
-            EventType.TASK_FAILED,
-            task_id=task.id,
-            task_title=task.title,
-            task_status='failed',
-            plan_id=plan.id,
-            project_name=self.workflow_manager.project_name,
-            error=error
-        )
-        event_bus.publish(event)
-        logger.debug(f"Published TASK_FAILED: {task.title}")
-
-    def publish_task_blocked(self, task, plan, blocker: str):
-        """태스크 차단 이벤트 발행"""
-        event = create_task_event(
-            EventType.TASK_BLOCKED,
-            task_id=task.id,
-            task_title=task.title,
-            task_status='blocked',
-            plan_id=plan.id,
-            project_name=self.workflow_manager.project_name,
-            blocker=blocker
-        )
-        event_bus.publish(event)
-        logger.debug(f"Published TASK_BLOCKED: {task.title}")
-
-    def publish_task_unblocked(self, task, plan):
-        """태스크 차단 해제 이벤트 발행"""
-        event = create_task_event(
-            EventType.TASK_UNBLOCKED,
-            task_id=task.id,
-            task_title=task.title,
-            task_status=task.status.value,
-            plan_id=plan.id,
-            project_name=self.workflow_manager.project_name
-        )
-        event_bus.publish(event)
-        logger.debug(f"Published TASK_UNBLOCKED: {task.title}")
-
-    def publish_task_cancelled(self, task, plan):
-        """태스크 취소 이벤트 발행"""
-        event = create_task_event(
-            EventType.TASK_CANCELLED,
-            task_id=task.id,
-            task_title=task.title,
-            task_status='cancelled',
-            plan_id=plan.id,
-            project_name=self.workflow_manager.project_name
-        )
-        event_bus.publish(event)
-        logger.debug(f"Published TASK_CANCELLED: {task.title}")
-
-    # === 컨텍스트 동기화 이벤트 ===
-
-    def publish_context_update(self, context_type: str, data: Dict[str, Any]):
-        """컨텍스트 업데이트 이벤트 발행"""
-        event = create_context_event(
-            EventType.CONTEXT_UPDATED,
-            context_type=context_type,
-            context_data=data,
-            project_name=self.workflow_manager.project_name
-        )
-        event_bus.publish(event)
-        logger.debug(f"Published CONTEXT_UPDATED: {context_type}")
-    
-    def publish_workflow_event(self, workflow_event):
-        """WorkflowEvent를 EventBus로 발행하는 범용 메서드
-        
-        Args:
-            workflow_event: WorkflowEvent 인스턴스
-        """
-        # WorkflowEvent 타입에 따라 적절한 Event 객체 생성
-        event_type = workflow_event.type
-        
-        if event_type in [EventType.PLAN_CREATED, EventType.PLAN_STARTED, 
-                         EventType.PLAN_COMPLETED, EventType.PLAN_ARCHIVED,
-                         EventType.PLAN_CANCELLED]:
-            # 플랜 관련 이벤트
-            event = create_plan_event(
-                event_type,
-                plan_id=workflow_event.plan_id,
-                plan_name=workflow_event.details.get('name', workflow_event.details.get('plan_name', '')),
-                plan_status=workflow_event.details.get('status', ''),
-                project_name=self.workflow_manager.project_name
-            )
-        elif event_type in [EventType.TASK_ADDED, EventType.TASK_STARTED,
-                           EventType.TASK_COMPLETED, EventType.TASK_FAILED,
-                           EventType.TASK_BLOCKED, EventType.TASK_UNBLOCKED,
-                           EventType.TASK_CANCELLED]:
-            # 태스크 관련 이벤트
-            task_event = create_task_event(
-                event_type,
-                task_id=workflow_event.task_id,
-                task_title=workflow_event.details.get('title', workflow_event.details.get('task_title', '')),
-                task_status=workflow_event.details.get('status', ''),
-                plan_id=workflow_event.plan_id,
-                project_name=self.workflow_manager.project_name
-            )
-            # 추가 정보를 payload에 포함
-            if event_type == EventType.TASK_FAILED:
-                task_event.payload['error'] = workflow_event.details.get('error', '')
-            elif event_type == EventType.TASK_BLOCKED:
-                task_event.payload['blocker'] = workflow_event.details.get('blocker', '')
-            elif event_type == EventType.TASK_CANCELLED:
-                task_event.payload['reason'] = workflow_event.details.get('reason', '')
-            
-            event = task_event
-        elif event_type in [EventType.NOTE_ADDED, EventType.NOTE_UPDATED, EventType.NOTE_DELETED]:
-            # 노트 관련 이벤트
-            event = create_task_event(
-                event_type,
-                task_id=workflow_event.task_id,
-                task_title=workflow_event.details.get('task_title', ''),
-                plan_id=workflow_event.plan_id,
-                project_name=self.workflow_manager.project_name,
-                note=workflow_event.details.get('note', ''),
-                note_index=workflow_event.details.get('note_index', None)
-            )
-        elif event_type in [EventType.SESSION_STARTED, EventType.SESSION_RESUMED, EventType.SESSION_ENDED]:
-            # 세션 관련 이벤트
-            event = create_context_event(
-                event_type,
-                context_type='session',
-                context_data={
-                    'session_id': workflow_event.details.get('session_id', ''),
-                    'timestamp': workflow_event.timestamp.isoformat(),
-                    **workflow_event.details
-                },
-                project_name=self.workflow_manager.project_name
-            )
-        else:
-            # 기타 이벤트는 context_event로 처리
-            event = create_context_event(
-                event_type,
-                context_type='workflow',
-                context_data=workflow_event.details,
-                project_name=self.workflow_manager.project_name
-            )
-        
-        # EventBus로 발행
-        event_bus.publish(event)
-        logger.debug(f"Published {event_type.value} via WorkflowEventAdapter")
+        error_details = {
+            'error': error,
+            'task_title': task.title,
+            'error_type': 'TaskExecutionError'
+        }
+        event = EventBuilder.task_failed(plan.id, task, error_details)
+        self.publish_workflow_event(event)
 
     def cleanup(self):
-        """정리 작업 (이벤트 핸들러 제거)"""
-        event_bus.unsubscribe(EventType.PROJECT_SWITCHED.value, self._on_project_switched)
-        logger.info("WorkflowEventAdapter cleanup completed")
-
-
-# === WorkflowManager 확장 함수 ===
-
-def inject_event_publishing(workflow_manager):
-    """
-    기존 WorkflowManager에 이벤트 발행 기능 주입
-
-    메서드를 래핑하여 상태 변경 시 자동으로 이벤트를 발행합니다.
-    """
-    # EventAdapter 생성
-    adapter = WorkflowEventAdapter(workflow_manager)
-    workflow_manager._event_adapter = adapter
-
-    # 원본 메서드 저장
-    original_create_plan = workflow_manager.create_plan
-    original_add_task = workflow_manager.add_task
-    original_complete_task = workflow_manager.complete_task
-    original_archive_current_plan = workflow_manager.archive_current_plan
-
-    # 메서드 래핑
-    def create_plan_with_event(*args, **kwargs):
-        result = original_create_plan(*args, **kwargs)
-        if result and workflow_manager.state.current_plan:
-            adapter.publish_plan_created(workflow_manager.state.current_plan)
-        return result
-
-    def add_task_with_event(*args, **kwargs):
-        result = original_add_task(*args, **kwargs)
-        if result and workflow_manager.state.current_plan:
-            # 방금 추가된 태스크 찾기
-            tasks = workflow_manager.state.current_plan.tasks
-            if tasks:
-                new_task = tasks[-1]  # 마지막 태스크가 새로 추가된 것
-                adapter.publish_task_added(new_task, workflow_manager.state.current_plan)
-        return result
-
-    def complete_task_with_event(task_id: str, *args, **kwargs):
-        # 태스크 찾기
-        task = None
-        if workflow_manager.state.current_plan:
-            for t in workflow_manager.state.current_plan.tasks:
-                if t.id == task_id:
-                    task = t
-                    break
-
-        result = original_complete_task(task_id, *args, **kwargs)
-
-        if result and task and workflow_manager.state.current_plan:
-            adapter.publish_task_completed(task, workflow_manager.state.current_plan)
-
-        return result
-
-    def archive_with_event(*args, **kwargs):
-        plan = workflow_manager.state.current_plan
-        result = original_archive_current_plan(*args, **kwargs)
-
-        if result and plan:
-            adapter.publish_plan_archived(plan)
-
-        return result
-
-    # 메서드 교체
-    workflow_manager.create_plan = create_plan_with_event
-    workflow_manager.add_task = add_task_with_event
-    workflow_manager.complete_task = complete_task_with_event
-    workflow_manager.archive_current_plan = archive_with_event
-
-    logger.info("Event publishing injected into WorkflowManager")
-
-    return adapter
+        """정리 작업"""
+        if self.event_bus:
+            self.event_bus.stop()
+            logger.info("EventBus stopped")

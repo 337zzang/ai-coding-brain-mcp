@@ -1,59 +1,160 @@
 """
-경로 유틸리티 - 프로젝트 경로 관리
+Path utilities for project and git directory management
 """
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
+import subprocess
+import shutil
+
+
+# Git ignore 템플릿
+GIT_IGNORE_TEMPLATE = """\
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Unit test / coverage reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+.pytest_cache/
+
+# Virtual env
+venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific
+memory/backup/
+memory/context_backup_*.json
+dist/
+node_modules/
+*.log
+"""
+
+def write_gitignore(project_root: Path) -> None:
+    """프로젝트에 .gitignore 파일 생성"""
+    gitignore = project_root / ".gitignore"
+    if not gitignore.exists():
+        gitignore.write_text(GIT_IGNORE_TEMPLATE, encoding="utf-8")
+
+def is_git_available() -> bool:
+    """Git이 설치되어 있는지 확인"""
+    return shutil.which("git") is not None
+
 
 def get_project_root(project_name: Optional[str] = None) -> Path:
-    """프로젝트 루트 경로 가져오기
-    
-    우선순위:
-    1. FLOW_PROJECT_ROOT 환경변수
-    2. AI_PROJECTS_DIR 환경변수  
-    3. ~/Desktop (기본값)
     """
-    # 환경변수 확인
-    root = os.environ.get('FLOW_PROJECT_ROOT')
-    if not root:
-        root = os.environ.get('AI_PROJECTS_DIR')
-    if not root:
-        root = os.path.expanduser("~/Desktop")
-        
-    root_path = Path(root)
+    프로젝트 루트 디렉토리 경로 반환
     
-    if project_name:
-        return root_path / project_name
-    return root_path
-
-def ensure_project_directory(project_name: str) -> Path:
-    """프로젝트 디렉토리 확인 및 생성"""
-    project_path = get_project_root(project_name)
-    project_path.mkdir(parents=True, exist_ok=True)
-    
-    # 필수 서브디렉토리 생성
-    subdirs = ['memory', 'test', 'docs']
-    for subdir in subdirs:
-        (project_path / subdir).mkdir(exist_ok=True)
+    Args:
+        project_name: 프로젝트 이름 (None이면 현재 디렉토리)
         
-    return project_path
-
-def get_memory_path(filename: str, project_name: Optional[str] = None) -> Path:
-    """메모리 파일 경로 가져오기"""
+    Returns:
+        프로젝트 루트 경로 (절대경로)
+    """
     if project_name:
-        project_root = get_project_root(project_name)
+        # 프로젝트 이름이 주어진 경우, 상위 디렉토리에서 찾기
+        base_dir = Path.cwd().parent
+        project_path = base_dir / project_name
+        if project_path.exists():
+            return project_path.resolve()
+    
+    # 현재 디렉토리 반환
+    return Path.cwd().resolve()
+
+
+def verify_git_root(path: Union[str, Path]) -> Path:
+    """
+    Git 저장소 루트인지 검증
+    
+    Args:
+        path: 검증할 경로
+        
+    Returns:
+        검증된 절대 경로
+        
+    Raises:
+        ValueError: .git 디렉토리가 없는 경우
+    """
+    path = Path(path).resolve()
+    git_dir = path / '.git'
+    
+    if not git_dir.exists():
+        raise ValueError(f"Not a git repository: {path}")
+    
+    return path
+
+
+def find_git_root(start_path: Optional[Union[str, Path]] = None) -> Optional[Path]:
+    """
+    현재 경로부터 상위로 올라가며 Git 저장소 루트 찾기
+    
+    Args:
+        start_path: 시작 경로 (None이면 현재 디렉토리)
+        
+    Returns:
+        Git 저장소 루트 경로 또는 None
+    """
+    if start_path is None:
+        start_path = Path.cwd()
     else:
-        project_root = Path.cwd()
+        start_path = Path(start_path)
+    
+    current = start_path.resolve()
+    
+    while current != current.parent:
+        if (current / '.git').exists():
+            return current
+        current = current.parent
+    
+    # 루트 디렉토리에도 .git이 있는지 확인
+    if (current / '.git').exists():
+        return current
+    
+    return None
+
+
+def ensure_dir(path: Union[str, Path]) -> Path:
+    """
+    디렉토리가 존재하지 않으면 생성
+    
+    Args:
+        path: 디렉토리 경로
         
-    return project_root / 'memory' / filename
+    Returns:
+        생성된 또는 기존 디렉토리 경로
+    """
+    path = Path(path)
+    path.mkdir(parents=True, exist_ok=True)
+    return path.resolve()
 
-def get_workflow_v3_dir() -> Path:
-    """workflow 디렉토리 경로 반환 (v3 호환성 유지)"""
-    # workflow_v3 대신 active 디렉토리 사용
-    active_dir = Path.cwd() / "memory" / "active"
-    active_dir.mkdir(parents=True, exist_ok=True)
-    return active_dir
 
-def get_workflow_file() -> Path:
-    """워크플로우 파일 경로 반환"""
-    return Path.cwd() / "memory" / "active" / "workflow.json"
+def safe_relative_path(path: Union[str, Path], base: Optional[Union[str, Path]] = None) -> str:
+    """
+    안전한 상대 경로 반환
+    
+    Args:
+        path: 대상 경로
+        base: 기준 경로 (None이면 현재 디렉토리)
+        
+    Returns:
+        상대 경로 문자열
+    """
+    path = Path(path).resolve()
+    base = Path(base).resolve() if base else Path.cwd().resolve()
+    
+    try:
+        return str(path.relative_to(base))
+    except ValueError:
+        # 상대 경로로 표현할 수 없는 경우 절대 경로 반환
+        return str(path)

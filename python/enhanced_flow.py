@@ -13,7 +13,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 # path_utils에서 필요한 함수들 import
-from utils.path_utils import write_gitignore, is_git_available
+from path_utils import write_gitignore, is_git_available
 from python.utils.io_helpers import write_json, atomic_write
 
 

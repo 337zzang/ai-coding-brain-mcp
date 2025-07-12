@@ -1,0 +1,113 @@
+{
+  "file_analysis": {
+    "core": {
+      "python/workflow/v3/event_bus.py": {
+        "exists": true,
+        "size": 10336,
+        "lines": 320
+      },
+      "python/workflow/v3/events.py": {
+        "exists": true,
+        "size": 14037,
+        "lines": 387
+      },
+      "python/workflow/v3/event_types.py": {
+        "exists": true,
+        "size": 8984,
+        "lines": 299
+      },
+      "python/workflow/v3/models.py": {
+        "exists": true,
+        "size": 19455,
+        "lines": 490
+      },
+      "python/workflow/v3/workflow_event_adapter.py": {
+        "exists": true,
+        "size": 7073,
+        "lines": 179
+      },
+      "python/workflow/v3/integrated_system.py": {
+        "exists": false
+      }
+    },
+    "listeners": {
+      "python/workflow/v3/listeners/__init__.py": {
+        "exists": true,
+        "size": 506,
+        "lines": 16
+      },
+      "python/workflow/v3/listeners/base.py": {
+        "exists": true,
+        "size": 3025,
+        "lines": 111
+      },
+      "python/workflow/v3/listeners/error_listener.py": {
+        "exists": true,
+        "size": 8321,
+        "lines": 220
+      },
+      "python/workflow/v3/listeners/error_collector_listener.py": {
+        "exists": true,
+        "size": 1707,
+        "lines": 54
+      },
+      "python/workflow/v3/listeners/context_listener.py": {
+        "exists": true,
+        "size": 7667,
+        "lines": 197
+      },
+      "python/workflow/v3/listeners/task_context_listener.py": {
+        "exists": true,
+        "size": 9945,
+        "lines": 260
+      },
+      "python/workflow/v3/listeners/docs_generator_listener.py": {
+        "exists": true,
+        "size": 7457,
+        "lines": 219
+      },
+      "python/workflow/v3/listeners/automation_listeners.py": {
+        "exists": true,
+        "size": 6236,
+        "lines": 182
+      }
+    },
+    "tests": {
+      "tests/test_event_system.py": {
+        "exists": false
+      },
+      "python/workflow/v3/event_integration_example.py": {
+        "exists": false
+      }
+    },
+    "docs": {
+      "docs/EVENT_SYSTEM_GUIDE.md": {
+        "exists": false
+      },
+      "docs/event_migration_example.py": {
+        "exists": false
+      }
+    }
+  },
+  "import_tests": [
+    [
+      "EventBus",
+      true
+    ],
+    [
+      "EventBuilder/EventStore",
+      true
+    ],
+    [
+      "Models",
+      true
+    ],
+    [
+      "WorkflowEventAdapter",
+      true
+    ]
+  ],
+  "total_files": 18,
+  "missing_files": 5,
+  "timestamp": "2025-07-12T16:51:26.069636"
+}

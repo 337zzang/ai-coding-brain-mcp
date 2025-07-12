@@ -25,13 +25,15 @@
           "id": "8d1bfbc0-2068-4e5b-a854-170793bf91ff",
           "title": "테스트 코드 작성",
           "description": "",
-          "status": "todo",
+          "status": "completed",
           "created_at": "2025-07-12T21:28:23.436994+09:00",
-          "updated_at": "2025-07-12T21:28:23.436994+09:00",
+          "updated_at": "2025-07-12T21:43:58.571258+09:00",
           "started_at": null,
-          "completed_at": null,
+          "completed_at": "2025-07-12T21:43:58.571258+09:00",
           "duration": null,
-          "notes": [],
+          "notes": [
+            "[완료] flow_project 문제 해결 완료! WorkflowManager 보호 로직 추가"
+          ],
           "outputs": {}
         },
         {
@@ -50,7 +52,7 @@
       ],
       "current_task_index": 1,
       "created_at": "2025-07-12T21:28:23.328699+09:00",
-      "updated_at": "2025-07-12T12:28:24.544225+00:00",
+      "updated_at": "2025-07-12T12:43:58.571258+00:00",
       "completed_at": null,
       "archived_at": null,
       "stats": {},
@@ -1086,12 +1088,26 @@
         "note": "AI 지시형 리스너 시스템 구축 및 테스트 완료"
       },
       "metadata": {}
+    },
+    {
+      "id": "30d11c18-6ac9-4980-ae69-308e2400ffb5",
+      "type": "task_completed",
+      "timestamp": "2025-07-12T21:43:58.571258+09:00",
+      "plan_id": "3b9a7567-c6e9-4c7e-a4d8-2998cf9a2e7f",
+      "task_id": "8d1bfbc0-2068-4e5b-a854-170793bf91ff",
+      "user": "system",
+      "details": {
+        "title": "테스트 코드 작성",
+        "duration": null,
+        "note": "flow_project 문제 해결 완료! WorkflowManager 보호 로직 추가"
+      },
+      "metadata": {}
     }
   ],
   "version": "3.0.0",
-  "last_saved": "2025-07-12T12:39:22.681650+00:00",
+  "last_saved": "2025-07-12T12:43:58.616874+00:00",
   "metadata": {
-    "last_modified": "2025-07-12T12:39:22.683219+00:00",
+    "last_modified": "2025-07-12T12:43:58.622876+00:00",
     "project_name": "ai-coding-brain-mcp",
     "project_root": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp",
     "version": "3.0"

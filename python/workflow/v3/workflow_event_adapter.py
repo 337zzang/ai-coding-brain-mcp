@@ -145,7 +145,7 @@ class WorkflowEventAdapter:
             event = self._convert_workflow_event_to_event(workflow_event)
             if event:
                 self.event_bus.publish(event)
-                logger.debug(f"Published {workflow_event.type} event to EventBus")
+                logger.info(f"✅ Published {workflow_event.type.value} event to EventBus")  # debug → info로 변경
             else:
                 logger.error(f"Failed to convert WorkflowEvent to Event: {workflow_event}")
         except Exception as e:

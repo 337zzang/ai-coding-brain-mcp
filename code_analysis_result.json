@@ -1,0 +1,138 @@
+{
+  "file": "python/workflow/v3/event_bus.py",
+  "timestamp": "2025-07-13T06:06:51.619933",
+  "imports": [
+    {
+      "type": "import",
+      "module": "threading",
+      "alias": null,
+      "line": 15
+    },
+    {
+      "type": "import",
+      "module": "logging",
+      "alias": null,
+      "line": 16
+    },
+    {
+      "type": "from",
+      "module": "typing",
+      "name": "Dict",
+      "alias": null,
+      "line": 17
+    },
+    {
+      "type": "from",
+      "module": "typing",
+      "name": "List",
+      "alias": null,
+      "line": 17
+    },
+    {
+      "type": "from",
+      "module": "typing",
+      "name": "Callable",
+      "alias": null,
+      "line": 17
+    },
+    {
+      "type": "from",
+      "module": "typing",
+      "name": "Any",
+      "alias": null,
+      "line": 17
+    },
+    {
+      "type": "from",
+      "module": "typing",
+      "name": "Optional",
+      "alias": null,
+      "line": 17
+    },
+    {
+      "type": "from",
+      "module": "collections",
+      "name": "defaultdict",
+      "alias": null,
+      "line": 18
+    },
+    {
+      "type": "from",
+      "module": "queue",
+      "name": "Queue",
+      "alias": null,
+      "line": 19
+    },
+    {
+      "type": "from",
+      "module": "queue",
+      "name": "Empty",
+      "alias": null,
+      "line": 19
+    },
+    {
+      "type": "from",
+      "module": "concurrent.futures",
+      "name": "ThreadPoolExecutor",
+      "alias": null,
+      "line": 20
+    },
+    {
+      "type": "from",
+      "module": "concurrent.futures",
+      "name": "Future",
+      "alias": null,
+      "line": 20
+    },
+    {
+      "type": "from",
+      "module": "datetime",
+      "name": "datetime",
+      "alias": null,
+      "line": 21
+    },
+    {
+      "type": "import",
+      "module": "traceback",
+      "alias": null,
+      "line": 22
+    },
+    {
+      "type": "import",
+      "module": "time",
+      "alias": null,
+      "line": 23
+    },
+    {
+      "type": "from",
+      "module": "dataclasses",
+      "name": "dataclass",
+      "alias": null,
+      "line": 24
+    },
+    {
+      "type": "from",
+      "module": "dataclasses",
+      "name": "field",
+      "alias": null,
+      "line": 24
+    },
+    {
+      "type": "import",
+      "module": "uuid",
+      "alias": null,
+      "line": 25
+    }
+  ],
+  "metrics": {
+    "total_lines": 320,
+    "code_lines": 239,
+    "comment_lines": 13,
+    "blank_lines": 68,
+    "classes": 2,
+    "functions": 0,
+    "methods": 17,
+    "complexity_score": 22
+  },
+  "docstrings_count": 18
+}

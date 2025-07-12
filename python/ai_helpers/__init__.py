@@ -77,10 +77,20 @@ except ImportError as e:
 try:
     from .code import (
         ASTParser, EnhancedFunctionReplacer, FunctionReplacer,
-        ClassReplacer, BlockInsertTransformer, parse_with_snippets
+        ClassReplacer, BlockInsertTransformer, parse_with_snippets,
+        replace_block  # AST 기반 코드 블록 교체 함수 추가
     )
 except ImportError as e:
     logger.warning(f"⚠️ code 모듈 로드 실패: {e}")
+
+# Code helpers - AST 기반 고급 기능
+try:
+    from .code_helpers import (
+        replace_function, replace_class_method, add_method_to_class,
+        update_function_signature, refactor_variable_name
+    )
+except ImportError as e:
+    logger.warning(f"⚠️ code_helpers 모듈 로드 실패: {e}")
 
 # Context 관련
 try:
@@ -213,7 +223,10 @@ __all__ = [
 optional_exports = [
     # Compile
     'check_syntax', 'compile_project', 'parse_code', 'parse_with_snippets',
-    'replace_block', 'insert_block', 'get_snippet_preview',
+    'replace_block', 'insert_block',
+    # Code helpers
+    'replace_function', 'replace_class_method', 'add_method_to_class',
+    'update_function_signature', 'refactor_variable_name', 'get_snippet_preview',
     
     # Build
     'build_project',

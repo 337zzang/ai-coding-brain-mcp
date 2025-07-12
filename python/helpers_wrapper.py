@@ -456,6 +456,170 @@ class HelpersWrapper:
             return HelperResult(False, error=str(e))
 
 
+    def parse_with_enhanced_snippets(self, file_path: str) -> HelperResult:
+        """향상된 파일 파싱 - 더 상세한 구조와 스니펫 정보"""
+        try:
+            import ast
+            from pathlib import Path
+
+            # 파일 읽기
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            lines = content.splitlines()
+
+            # AST 파싱
+            try:
+                tree = ast.parse(content)
+            except SyntaxError as e:
+                return HelperResult(False, error=f"구문 오류: {str(e)}")
+
+            # 구조 분석
+            structure = {
+                'classes': [],
+                'functions': [],
+                'variables': []
+            }
+
+            # 클래스와 함수 추출
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef):
+                    class_info = {
+                        'name': node.name,
+                        'line_number': node.lineno,
+                        'end_line': getattr(node, 'end_lineno', node.lineno),
+                        'methods': [],
+                        'docstring': ast.get_docstring(node)
+                    }
+
+                    # 메서드 추출
+                    for item in node.body:
+                        if isinstance(item, ast.FunctionDef):
+                            method_info = {
+                                'name': item.name,
+                                'line_number': item.lineno,
+                                'args': [arg.arg for arg in item.args.args]
+                            }
+                            class_info['methods'].append(method_info)
+
+                    structure['classes'].append(class_info)
+
+                elif isinstance(node, ast.FunctionDef) and node.col_offset == 0:
+                    # 최상위 함수만
+                    func_info = {
+                        'name': node.name,
+                        'line_number': node.lineno,
+                        'end_line': getattr(node, 'end_lineno', node.lineno),
+                        'args': [arg.arg for arg in node.args.args],
+                        'docstring': ast.get_docstring(node)
+                    }
+                    structure['functions'].append(func_info)
+
+            # Import 분석
+            imports = []
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        imports.append({
+                            'type': 'import',
+                            'module': alias.name,
+                            'line': node.lineno
+                        })
+                elif isinstance(node, ast.ImportFrom):
+                    for alias in node.names:
+                        imports.append({
+                            'type': 'from',
+                            'module': node.module or '',
+                            'name': alias.name,
+                            'line': node.lineno
+                        })
+
+            # 복잡도 계산
+            complexity = {
+                'branches': sum(1 for n in ast.walk(tree) if isinstance(n, ast.If)),
+                'loops': sum(1 for n in ast.walk(tree) if isinstance(n, (ast.For, ast.While))),
+                'try_blocks': sum(1 for n in ast.walk(tree) if isinstance(n, ast.Try))
+            }
+
+            result = {
+                'parsing_success': True,
+                'file_path': file_path,
+                'language': 'python',
+                'total_lines': len(lines),
+                'structure': structure,
+                'imports': imports,
+                'complexity': complexity
+            }
+
+            return HelperResult(True, data=result)
+
+        except Exception as e:
+            return HelperResult(False, error=f"파싱 오류: {str(e)}")
+
+    def search_code_snippet(self, file_path: str, pattern: str, context_lines: int = 3) -> HelperResult:
+        """파일에서 패턴을 검색하고 컨텍스트와 함께 스니펫 반환"""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+
+            results = []
+            for i, line in enumerate(lines):
+                if pattern.lower() in line.lower():
+                    start = max(0, i - context_lines)
+                    end = min(len(lines), i + context_lines + 1)
+
+                    snippet_lines = []
+                    for j in range(start, end):
+                        prefix = ">>>" if j == i else "   "
+                        snippet_lines.append(f"{prefix} {j+1:4d} | {lines[j].rstrip()}")
+
+                    results.append({
+                        'line_number': i + 1,
+                        'line_content': line.strip(),
+                        'snippet': '\n'.join(snippet_lines)
+                    })
+
+            return HelperResult(True, data={
+                'file_path': file_path,
+                'pattern': pattern,
+                'matches': len(results),
+                'results': results
+            })
+
+        except Exception as e:
+            return HelperResult(False, error=f"검색 오류: {str(e)}")
+
+    def extract_function_snippet(self, file_path: str, function_name: str) -> HelperResult:
+        """특정 함수의 전체 코드 스니펫 추출"""
+        try:
+            import ast
+
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            tree = ast.parse(content)
+            lines = content.splitlines()
+
+            for node in ast.walk(tree):
+                if isinstance(node, ast.FunctionDef) and node.name == function_name:
+                    start = node.lineno - 1
+                    end = getattr(node, 'end_lineno', len(lines))
+
+                    snippet = '\n'.join(lines[start:end])
+
+                    return HelperResult(True, data={
+                        'function_name': function_name,
+                        'line_range': (node.lineno, end),
+                        'snippet': snippet,
+                        'args': [arg.arg for arg in node.args.args],
+                        'docstring': ast.get_docstring(node)
+                    })
+
+            return HelperResult(False, error=f"함수 '{function_name}'을 찾을 수 없습니다")
+
+        except Exception as e:
+            return HelperResult(False, error=f"함수 추출 오류: {str(e)}")
+
 def auto_wrap_helpers():
     """builtins의 helpers를 자동으로 래핑"""
     import builtins

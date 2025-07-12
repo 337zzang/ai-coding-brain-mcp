@@ -1,88 +1,72 @@
 {
   "plans": [
     {
-      "id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
-      "name": "워크플로우 이벤트 시스템 통합 테스트",
-      "description": "이벤트 버스, 리스너 응답, 워크플로우 상태 변화를 실시간으로 모니터링",
+      "id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
+      "name": "parse_with_snippets 기반 코드 분석 시스템",
+      "description": "",
       "status": "active",
       "tasks": [
         {
-          "id": "b4117f98-02f2-4c6a-9294-aaf59632dcd0",
-          "title": "이벤트 버스 초기화 및 리스너 등록 테스트",
-          "description": "테스트 태스크 #1",
-          "status": "cancelled",
-          "created_at": "2025-07-13T05:48:47.530395+09:00",
-          "updated_at": "2025-07-13T05:53:24.536661+09:00",
-          "started_at": null,
-          "completed_at": null,
-          "duration": null,
-          "notes": [
-            "[실패] 테스트 에러: 모듈을 찾을 수 없습니다"
-          ],
-          "outputs": {}
-        },
-        {
-          "id": "753477e5-6214-4f42-bd67-9440c701de6b",
-          "title": "워크플로우 명령어 실행 시 이벤트 발생 확인",
-          "description": "테스트 태스크 #2",
+          "id": "a79bdf4e-ce94-4b19-9b2b-899948425171",
+          "title": "모든 Python 파일 parse_with_snippets 분석",
+          "description": "",
           "status": "completed",
-          "created_at": "2025-07-13T05:48:47.903045+09:00",
-          "updated_at": "2025-07-13T06:00:35.135205+09:00",
+          "created_at": "2025-07-13T06:35:33.119364+09:00",
+          "updated_at": "2025-07-13T06:35:33.582646+09:00",
           "started_at": null,
-          "completed_at": "2025-07-13T06:00:35.135205+09:00",
+          "completed_at": "2025-07-13T06:35:33.582646+09:00",
           "duration": null,
           "notes": [
-            "[실패] ModuleNotFoundError: No module named 'redis'",
-            "[완료] 워크플로우 명령어 테스트 완료"
+            "[완료] 모든 Python 파일 parse_with_snippets 분석 완료! 총 10개 파일, 45개 함수, 4개 클래스 분석됨"
           ],
           "outputs": {}
         },
         {
-          "id": "0683997c-7ced-4787-a858-2abdaa6006c2",
-          "title": "이벤트 리스너 응답 시간 및 순서 검증",
-          "description": "테스트 태스크 #3",
-          "status": "todo",
-          "created_at": "2025-07-13T05:48:48.284806+09:00",
-          "updated_at": "2025-07-13T05:48:48.284806+09:00",
-          "started_at": null,
-          "completed_at": null,
-          "duration": null,
-          "notes": [],
-          "outputs": {}
-        },
-        {
-          "id": "8972e4ba-62bb-45c1-a4ca-f08f36d29260",
-          "title": "에러 발생 시 ERROR_OCCURRED 이벤트 처리 확인",
-          "description": "테스트 태스크 #4",
-          "status": "todo",
-          "created_at": "2025-07-13T05:48:48.673558+09:00",
-          "updated_at": "2025-07-13T05:48:48.673558+09:00",
-          "started_at": null,
-          "completed_at": null,
-          "duration": null,
-          "notes": [],
-          "outputs": {}
-        },
-        {
-          "id": "e40c295c-fdf3-4719-a8ed-3156658892a0",
-          "title": "태스크 완료 시 자동 이벤트 체인 테스트",
-          "description": "테스트 태스크 #5",
-          "status": "todo",
-          "created_at": "2025-07-13T05:48:49.055665+09:00",
-          "updated_at": "2025-07-13T05:48:49.055665+09:00",
-          "started_at": null,
-          "completed_at": null,
-          "duration": null,
-          "notes": [],
-          "outputs": {}
-        },
-        {
-          "id": "09bd358b-e770-45f5-8989-9fcc09e9d360",
-          "title": "이벤트 버스 리스너 테스트 중입니다.",
+          "id": "4fd73e21-d1f4-4b5e-b150-fe831bb9c68a",
+          "title": "함수/클래스 인벤토리 생성",
           "description": "",
           "status": "todo",
-          "created_at": "2025-07-13T05:49:50.134804+09:00",
-          "updated_at": "2025-07-13T05:49:50.134804+09:00",
+          "created_at": "2025-07-13T06:35:33.183823+09:00",
+          "updated_at": "2025-07-13T06:35:33.183823+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "e28f07d9-e8d9-405d-b322-62d64f6c8b94",
+          "title": "의존성 맵 작성",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-13T06:35:33.255245+09:00",
+          "updated_at": "2025-07-13T06:35:33.255245+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "b095c3d3-fbe3-4135-a573-69cbbd1b95ca",
+          "title": "코드 품질 보고서 생성",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-13T06:35:33.307481+09:00",
+          "updated_at": "2025-07-13T06:35:33.307481+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "a29f51ac-bd32-4a08-a907-dde88d854d7a",
+          "title": "분석 결과 문서화",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-13T06:35:33.361057+09:00",
+          "updated_at": "2025-07-13T06:35:33.361057+09:00",
           "started_at": null,
           "completed_at": null,
           "duration": null,
@@ -90,21 +74,21 @@
           "outputs": {}
         }
       ],
-      "current_task_index": 1,
-      "created_at": "2025-07-13T05:48:29.059525+09:00",
-      "updated_at": "2025-07-12T21:00:35.135205+00:00",
+      "current_task_index": 0,
+      "created_at": "2025-07-13T06:35:33.057181+09:00",
+      "updated_at": "2025-07-12T21:35:33.582646+00:00",
       "completed_at": null,
       "archived_at": null,
       "stats": {},
       "metadata": {}
     }
   ],
-  "active_plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
+  "active_plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
   "events": [
     {
       "id": "3cde293a-795b-487e-9360-dcdb33ebc674",
       "type": "plan_created",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": null,
       "user": "system",
@@ -117,7 +101,7 @@
     {
       "id": "8feeebc6-d7fe-4f9f-8b45-cc7d3bb962a1",
       "type": "plan_started",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": null,
       "user": "system",
@@ -130,7 +114,7 @@
     {
       "id": "4c78992d-f7ec-4c56-8259-f1588c5c7d80",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": "57b29aa7-99a6-4365-8ebe-de2420eed701",
       "user": "system",
@@ -143,7 +127,7 @@
     {
       "id": "741d2083-3bfe-483f-abde-453aee5e71e5",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": "67aa3793-3905-4920-b67b-1bcf638bc9a2",
       "user": "system",
@@ -156,7 +140,7 @@
     {
       "id": "e4890d1e-d25e-4569-8a0c-05dc069705a5",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": "cd9caf30-f630-4648-b459-7a0ef202d43b",
       "user": "system",
@@ -169,7 +153,7 @@
     {
       "id": "99006352-d7b7-45e6-bf3e-1fb03995afe5",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": "b2800bbb-039e-4406-91bb-2ee6baa04d02",
       "user": "system",
@@ -182,7 +166,7 @@
     {
       "id": "91ddc229-507c-4dd9-8cd9-4cd3f3709d9f",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": "57b29aa7-99a6-4365-8ebe-de2420eed701",
       "user": "system",
@@ -196,7 +180,7 @@
     {
       "id": "72c6c461-3647-4b1d-b77d-44542def8f5f",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": null,
       "user": "system",
@@ -209,7 +193,7 @@
     {
       "id": "9c243831-e094-42d7-9358-0164b36e87f8",
       "type": "plan_created",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": null,
       "user": "system",
@@ -222,7 +206,7 @@
     {
       "id": "84f7dbc8-e2ac-49b3-832a-94d0c33e937b",
       "type": "plan_started",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": null,
       "user": "system",
@@ -235,7 +219,7 @@
     {
       "id": "316b9e42-c571-449c-a1ec-746d4e3316b0",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "caabfdb3-4ea3-4dec-b19a-2b4f56feb1b4",
       "user": "system",
@@ -248,7 +232,7 @@
     {
       "id": "3af49715-c20a-4273-be8b-ded8d080acba",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "283d793a-692e-4382-860a-d1b182ff0467",
       "user": "system",
@@ -261,7 +245,7 @@
     {
       "id": "05d30e1c-9d16-4fd2-862d-610d6d3f6d30",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "dec4fb7f-f63e-40de-9b4a-c68fec8da904",
       "user": "system",
@@ -274,7 +258,7 @@
     {
       "id": "5c5a1582-28fd-4f3e-ba45-a351c75c92e1",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "e960276d-6783-4f52-8a28-961abcaaee42",
       "user": "system",
@@ -287,7 +271,7 @@
     {
       "id": "a8d65cb7-4ca5-4c3e-9221-004d590a4f96",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "135a990a-ece0-4580-b628-196233ba7719",
       "user": "system",
@@ -300,7 +284,7 @@
     {
       "id": "d5b6b48a-9791-49e3-83a5-d765d912168d",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "9c0ca2c6-e806-40d4-ab9f-0505979bf537",
       "user": "system",
@@ -313,7 +297,7 @@
     {
       "id": "be9273fa-d17c-4631-a525-723a643ad760",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "a9e8e88f-757f-4301-8f46-a10d4f653cbe",
       "user": "system",
@@ -326,7 +310,7 @@
     {
       "id": "bc0d6bad-b94b-4408-8691-efaf207ed4f5",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.462992+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "0b789cec-709c-43f2-be7a-db00fa5f5bad",
       "user": "system",
@@ -339,7 +323,7 @@
     {
       "id": "375d4655-ebcd-4cfd-bf1c-065226366b03",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "caabfdb3-4ea3-4dec-b19a-2b4f56feb1b4",
       "user": "system",
@@ -353,7 +337,7 @@
     {
       "id": "a94f204f-2523-4e23-8606-43e84db2093d",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": null,
       "user": "system",
@@ -366,7 +350,7 @@
     {
       "id": "e7be1d93-04df-43f2-b182-e150725d8fe4",
       "type": "plan_created",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "f727f768-e9e5-496c-946f-e638313b1e3c",
       "task_id": null,
       "user": "system",
@@ -379,7 +363,7 @@
     {
       "id": "de40bc06-6084-4e29-a6eb-10286d2c75a1",
       "type": "plan_started",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "f727f768-e9e5-496c-946f-e638313b1e3c",
       "task_id": null,
       "user": "system",
@@ -392,7 +376,7 @@
     {
       "id": "3559a152-e958-4927-a26f-5365cc56cca8",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "f727f768-e9e5-496c-946f-e638313b1e3c",
       "task_id": null,
       "user": "system",
@@ -405,7 +389,7 @@
     {
       "id": "17805800-6d2f-4e39-8249-765a52be3e27",
       "type": "plan_created",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": null,
       "user": "system",
@@ -418,7 +402,7 @@
     {
       "id": "4db47927-9599-4703-81c1-73e1391d3140",
       "type": "plan_started",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": null,
       "user": "system",
@@ -431,7 +415,7 @@
     {
       "id": "825fa87e-9422-4898-98eb-e0f3427bc2d5",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "efff8c90-3c54-4be1-a440-4d77470efd62",
       "user": "system",
@@ -444,7 +428,7 @@
     {
       "id": "ad1b19f2-2c59-47d0-ada3-7d97efacb880",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "750ee599-76bb-4222-b753-ed78b369437d",
       "user": "system",
@@ -457,7 +441,7 @@
     {
       "id": "ef9b7adf-c90b-4c14-9027-fdaff449ae75",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "3d1951c9-0358-452d-8740-ff842aebcc32",
       "user": "system",
@@ -470,7 +454,7 @@
     {
       "id": "85dbffac-07ec-4679-863b-403c043c06bb",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "2e015f6f-8fc2-4ab1-853b-2c5f4e325711",
       "user": "system",
@@ -483,7 +467,7 @@
     {
       "id": "c4fa63eb-d41f-413c-a1d4-6780a243259a",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "2c01ff65-8f4b-4697-9635-2cead66308aa",
       "user": "system",
@@ -496,7 +480,7 @@
     {
       "id": "0b79b6dd-ff19-40ff-b81c-c8a6b7251efd",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "efff8c90-3c54-4be1-a440-4d77470efd62",
       "user": "system",
@@ -510,7 +494,7 @@
     {
       "id": "cc9c2374-0956-4652-9bb4-cf5a6ea8936c",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "750ee599-76bb-4222-b753-ed78b369437d",
       "user": "system",
@@ -524,7 +508,7 @@
     {
       "id": "7e729b64-f71f-46f4-a7ff-449b405c451e",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "3d1951c9-0358-452d-8740-ff842aebcc32",
       "user": "system",
@@ -538,7 +522,7 @@
     {
       "id": "7d692689-758a-4518-86e2-28204d4babdf",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "2e015f6f-8fc2-4ab1-853b-2c5f4e325711",
       "user": "system",
@@ -552,7 +536,7 @@
     {
       "id": "923bd52f-d8e6-4c7d-8cc4-03caf15efd17",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "2c01ff65-8f4b-4697-9635-2cead66308aa",
       "user": "system",
@@ -566,7 +550,7 @@
     {
       "id": "101e82aa-c30c-4c68-94d8-7b5e36e39c6b",
       "type": "plan_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": null,
       "user": "system",
@@ -587,7 +571,7 @@
     {
       "id": "27b10cb3-5b3e-4aae-966b-ffe189b79fe9",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": null,
       "user": "system",
@@ -600,7 +584,7 @@
     {
       "id": "c6d41ec4-7374-41fb-b536-acb41f6eafed",
       "type": "plan_created",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": null,
       "user": "system",
@@ -613,7 +597,7 @@
     {
       "id": "ef20bd29-35ef-40fa-9949-e397f77b57c2",
       "type": "plan_started",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": null,
       "user": "system",
@@ -626,7 +610,7 @@
     {
       "id": "d83254e6-06ee-45b0-bc95-83872055c216",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "785f79e3-878f-4d10-902d-cc60d181fee1",
       "user": "system",
@@ -639,7 +623,7 @@
     {
       "id": "6e0b91fb-f73d-4c05-8340-dc4a49620278",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "9123b601-4ee2-4059-9b5d-83036c6409c9",
       "user": "system",
@@ -652,7 +636,7 @@
     {
       "id": "4fa1f8c9-ae57-4d63-8cff-2724ceae5672",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "5c2c1105-8c61-4f05-8df3-13b634c6668c",
       "user": "system",
@@ -665,7 +649,7 @@
     {
       "id": "198d51ee-1068-493b-9403-e6333074f56f",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "2793d71a-3418-46dc-bece-7d2ee221eb62",
       "user": "system",
@@ -678,7 +662,7 @@
     {
       "id": "adcbdd17-8e01-4fd7-8051-2513425b32cb",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "4f7929c4-706f-4e62-ae4f-26f112713034",
       "user": "system",
@@ -691,7 +675,7 @@
     {
       "id": "67872123-62a9-4bd9-bb0e-39eb017574a5",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "785f79e3-878f-4d10-902d-cc60d181fee1",
       "user": "system",
@@ -705,7 +689,7 @@
     {
       "id": "06558c4a-da41-4d61-b9cb-5377d205ebfa",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "9123b601-4ee2-4059-9b5d-83036c6409c9",
       "user": "system",
@@ -719,7 +703,7 @@
     {
       "id": "ae26698e-1c69-400c-9557-70a1e6a0661c",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "2793d71a-3418-46dc-bece-7d2ee221eb62",
       "user": "system",
@@ -733,7 +717,7 @@
     {
       "id": "cc6310c7-b9f9-4086-be54-91adbba32d5c",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "4f7929c4-706f-4e62-ae4f-26f112713034",
       "user": "system",
@@ -747,7 +731,7 @@
     {
       "id": "f42f23b0-594c-4e0c-8096-c192681715cb",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": null,
       "user": "system",
@@ -760,7 +744,7 @@
     {
       "id": "04eec269-ee3e-4c6a-a458-cca5099b352c",
       "type": "plan_created",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": null,
       "user": "system",
@@ -773,7 +757,7 @@
     {
       "id": "da3ceddc-9655-4874-bf7b-f90e285e2ce2",
       "type": "plan_started",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": null,
       "user": "system",
@@ -786,7 +770,7 @@
     {
       "id": "dd61522e-b37c-40dd-a0e4-0378b15a7a58",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "cae126f5-5b66-4402-9d72-6a967d3295bd",
       "user": "system",
@@ -799,7 +783,7 @@
     {
       "id": "1cb9a159-b158-4659-a6d0-41a28a8264fc",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "4eb610b2-8d35-429f-80c8-c6817ce36d4e",
       "user": "system",
@@ -812,7 +796,7 @@
     {
       "id": "615f8003-27cb-4507-8483-095440dec017",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "48bea68a-5599-43ac-ae05-b86a3fbc8c9c",
       "user": "system",
@@ -825,7 +809,7 @@
     {
       "id": "be9b1a3a-574b-464d-aae8-97026753a813",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "ed74ea55-63bf-4261-82ed-4c14edc44e8c",
       "user": "system",
@@ -838,7 +822,7 @@
     {
       "id": "809a6b1c-3880-43e0-96c6-ed213fb8317d",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "23c8d7e2-a967-47ca-a1a4-f12b297f9810",
       "user": "system",
@@ -851,7 +835,7 @@
     {
       "id": "e3964ec8-e959-4437-a26f-5929797d635d",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "96aaefd9-bdd9-448e-8b70-27ed4bea3208",
       "user": "system",
@@ -864,7 +848,7 @@
     {
       "id": "7be5e22e-a7a1-4110-925e-8358fa20c7d7",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "8f3dbc12-acf8-4d9f-af47-90fc5cd66e7e",
       "user": "system",
@@ -877,7 +861,7 @@
     {
       "id": "97f7295b-71a8-4010-a242-dfb35f219fb8",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "cae126f5-5b66-4402-9d72-6a967d3295bd",
       "user": "system",
@@ -891,7 +875,7 @@
     {
       "id": "6e617ff6-c96f-43ed-948a-fdbc83734f3f",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "c7e8aa61-d9f0-4bbf-9e31-be18f7bf03c9",
       "user": "system",
@@ -904,7 +888,7 @@
     {
       "id": "f5867e75-a6d6-455d-9375-08ed8e51286f",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "4eb610b2-8d35-429f-80c8-c6817ce36d4e",
       "user": "system",
@@ -918,7 +902,7 @@
     {
       "id": "b2fb38fa-74ac-4438-aacf-7b7dc816069e",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "48bea68a-5599-43ac-ae05-b86a3fbc8c9c",
       "user": "system",
@@ -932,7 +916,7 @@
     {
       "id": "0350e2f3-ed27-4cca-bdac-3d7c13ee3996",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "ed74ea55-63bf-4261-82ed-4c14edc44e8c",
       "user": "system",
@@ -946,7 +930,7 @@
     {
       "id": "802a64c0-ec55-4aff-a9d3-2e5a2fff90b7",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "23c8d7e2-a967-47ca-a1a4-f12b297f9810",
       "user": "system",
@@ -960,7 +944,7 @@
     {
       "id": "dfdef60f-6441-4a1f-acb9-fc33036e4247",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "96aaefd9-bdd9-448e-8b70-27ed4bea3208",
       "user": "system",
@@ -974,7 +958,7 @@
     {
       "id": "f17bde45-f804-4e14-a3e1-6fc43b80a350",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "8f3dbc12-acf8-4d9f-af47-90fc5cd66e7e",
       "user": "system",
@@ -988,7 +972,7 @@
     {
       "id": "a3eff691-9239-4e4f-ac3e-5a4190b276d4",
       "type": "task_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "c7e8aa61-d9f0-4bbf-9e31-be18f7bf03c9",
       "user": "system",
@@ -1002,7 +986,7 @@
     {
       "id": "c1cd859d-b95b-49b4-96bb-87ffc2c97781",
       "type": "plan_completed",
-      "timestamp": "2025-07-13T05:47:51.465005+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": null,
       "user": "system",
@@ -1023,7 +1007,7 @@
     {
       "id": "9e7dc1fd-b976-4787-b936-f5ce50e399eb",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T05:48:28.979938+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": null,
       "user": "system",
@@ -1036,7 +1020,7 @@
     {
       "id": "7ca1c6f4-9ce3-4df7-8c0a-0408d11aa4ae",
       "type": "plan_created",
-      "timestamp": "2025-07-13T05:48:29.059525+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": null,
       "user": "system",
@@ -1049,7 +1033,7 @@
     {
       "id": "0ab30e9e-03c4-41ed-b034-4eadad4f1f0b",
       "type": "plan_started",
-      "timestamp": "2025-07-13T05:48:29.059525+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": null,
       "user": "system",
@@ -1062,7 +1046,7 @@
     {
       "id": "85b676ec-0e29-4da8-83b4-0f8d9d716405",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:48:47.530395+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "b4117f98-02f2-4c6a-9294-aaf59632dcd0",
       "user": "system",
@@ -1075,7 +1059,7 @@
     {
       "id": "96ec204d-911a-42e9-b826-81e8a76ffcc8",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:48:47.903045+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "753477e5-6214-4f42-bd67-9440c701de6b",
       "user": "system",
@@ -1088,7 +1072,7 @@
     {
       "id": "be5298e5-f7a2-4944-9a0b-0dd4883afe4a",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:48:48.284806+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "0683997c-7ced-4787-a858-2abdaa6006c2",
       "user": "system",
@@ -1101,7 +1085,7 @@
     {
       "id": "6a1be4da-efcd-4be8-8056-41beedd91676",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:48:48.673558+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "8972e4ba-62bb-45c1-a4ca-f08f36d29260",
       "user": "system",
@@ -1114,7 +1098,7 @@
     {
       "id": "a1aebdab-1ad7-4763-8039-45bdf7a98e03",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:48:49.055665+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "e40c295c-fdf3-4719-a8ed-3156658892a0",
       "user": "system",
@@ -1127,7 +1111,7 @@
     {
       "id": "7c70b917-9518-49f3-b871-25d13bd5621b",
       "type": "task_added",
-      "timestamp": "2025-07-13T05:49:50.134804+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "09bd358b-e770-45f5-8989-9fcc09e9d360",
       "user": "system",
@@ -1140,7 +1124,7 @@
     {
       "id": "cde8b61c-03b3-4f37-a6b9-eda742c5f529",
       "type": "task_failed",
-      "timestamp": "2025-07-13T05:53:24.536661+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "b4117f98-02f2-4c6a-9294-aaf59632dcd0",
       "user": "system",
@@ -1154,7 +1138,7 @@
     {
       "id": "9db75785-6622-48d8-9404-3f3f13acdb29",
       "type": "task_failed",
-      "timestamp": "2025-07-13T06:00:34.558866+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "753477e5-6214-4f42-bd67-9440c701de6b",
       "user": "system",
@@ -1168,7 +1152,7 @@
     {
       "id": "cc91a200-4a05-4541-ac08-6309b21e2008",
       "type": "task_completed",
-      "timestamp": "2025-07-13T06:00:35.135205+09:00",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "753477e5-6214-4f42-bd67-9440c701de6b",
       "user": "system",
@@ -1178,12 +1162,208 @@
         "note": "워크플로우 명령어 테스트 완료"
       },
       "metadata": {}
+    },
+    {
+      "id": "fc384c70-5252-44ae-8894-182a02894365",
+      "type": "task_added",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
+      "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
+      "task_id": "c2a4f81b-39ce-4930-9be2-730d7a95bd84",
+      "user": "system",
+      "details": {
+        "title": "코드 구조 분석",
+        "description": "parse with snippet을 사용한 코드 분석"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "130622cf-3234-4809-a261-ed7add468119",
+      "type": "plan_archived",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
+      "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "워크플로우 이벤트 시스템 통합 테스트",
+        "archived_at": "2025-07-13T06:25:18.862397+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "e5471980-b9b5-48be-a941-aa6c839006bd",
+      "type": "plan_created",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
+      "plan_id": "087e392e-00cf-4d2a-aa7a-63e82e179880",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "code-analysis 코드 품질 분석 및 개선",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "1b94fd4d-80dd-492c-9d72-6304e85a9b50",
+      "type": "plan_started",
+      "timestamp": "2025-07-13T06:30:51.326272+09:00",
+      "plan_id": "087e392e-00cf-4d2a-aa7a-63e82e179880",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "code-analysis 코드 품질 분석 및 개선",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "b145e10c-a895-4eab-8713-3e9d6f57ee8d",
+      "type": "task_added",
+      "timestamp": "2025-07-13T06:31:24.239588+09:00",
+      "plan_id": "087e392e-00cf-4d2a-aa7a-63e82e179880",
+      "task_id": "6b485fd8-3d44-4730-bd89-dddb7060a9f2",
+      "user": "system",
+      "details": {
+        "title": "프로젝트 구조 및 파일 분석",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "eba04399-bc5c-4bb3-bbdf-86965bb3a2ab",
+      "type": "task_added",
+      "timestamp": "2025-07-13T06:31:24.282830+09:00",
+      "plan_id": "087e392e-00cf-4d2a-aa7a-63e82e179880",
+      "task_id": "08b6df0c-5e6e-419d-a493-c28819674750",
+      "user": "system",
+      "details": {
+        "title": "Python 코드 품질 검사 (문법, 스타일)",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "d55898af-0ea5-4faa-aa65-b23e9213a548",
+      "type": "plan_archived",
+      "timestamp": "2025-07-13T06:35:33.016937+09:00",
+      "plan_id": "087e392e-00cf-4d2a-aa7a-63e82e179880",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "code-analysis 코드 품질 분석 및 개선",
+        "archived_at": "2025-07-13T06:35:33.016937+09:00"
+      },
+      "metadata": {}
+    },
+    {
+      "id": "72c78ef4-968e-4893-8aae-9fcc32b3e308",
+      "type": "plan_created",
+      "timestamp": "2025-07-13T06:35:33.057181+09:00",
+      "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "parse_with_snippets 기반 코드 분석 시스템",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "869dd5eb-3fb0-4dc6-844b-480af6b25801",
+      "type": "plan_started",
+      "timestamp": "2025-07-13T06:35:33.058180+09:00",
+      "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "parse_with_snippets 기반 코드 분석 시스템",
+        "task_count": 0
+      },
+      "metadata": {}
+    },
+    {
+      "id": "2cd6e342-953c-4e9b-b96e-3fa374fc95d3",
+      "type": "task_added",
+      "timestamp": "2025-07-13T06:35:33.119364+09:00",
+      "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
+      "task_id": "a79bdf4e-ce94-4b19-9b2b-899948425171",
+      "user": "system",
+      "details": {
+        "title": "모든 Python 파일 parse_with_snippets 분석",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "990c00be-97a9-4337-bb1a-ebfd47276d97",
+      "type": "task_added",
+      "timestamp": "2025-07-13T06:35:33.183823+09:00",
+      "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
+      "task_id": "4fd73e21-d1f4-4b5e-b150-fe831bb9c68a",
+      "user": "system",
+      "details": {
+        "title": "함수/클래스 인벤토리 생성",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "30f71a52-86d9-4cfe-861f-d07f91ae6302",
+      "type": "task_added",
+      "timestamp": "2025-07-13T06:35:33.255245+09:00",
+      "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
+      "task_id": "e28f07d9-e8d9-405d-b322-62d64f6c8b94",
+      "user": "system",
+      "details": {
+        "title": "의존성 맵 작성",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "8404e8a6-1473-4cc0-8e68-a6e98974318b",
+      "type": "task_added",
+      "timestamp": "2025-07-13T06:35:33.307481+09:00",
+      "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
+      "task_id": "b095c3d3-fbe3-4135-a573-69cbbd1b95ca",
+      "user": "system",
+      "details": {
+        "title": "코드 품질 보고서 생성",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "6dde2188-71ee-443f-8800-70048633f31b",
+      "type": "task_added",
+      "timestamp": "2025-07-13T06:35:33.361057+09:00",
+      "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
+      "task_id": "a29f51ac-bd32-4a08-a907-dde88d854d7a",
+      "user": "system",
+      "details": {
+        "title": "분석 결과 문서화",
+        "description": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "cb039ce8-7866-49d6-9bab-75b07bd10e4d",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T06:35:33.582646+09:00",
+      "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
+      "task_id": "a79bdf4e-ce94-4b19-9b2b-899948425171",
+      "user": "system",
+      "details": {
+        "title": "모든 Python 파일 parse_with_snippets 분석",
+        "duration": null,
+        "note": "모든 Python 파일 parse_with_snippets 분석 완료! 총 10개 파일, 45개 함수, 4개 클래스 분석됨"
+      },
+      "metadata": {}
     }
   ],
   "version": "3.0.0",
-  "last_saved": "2025-07-12T21:00:35.237949+00:00",
+  "last_saved": "2025-07-12T21:35:33.655458+00:00",
   "metadata": {
-    "last_modified": "2025-07-12T21:00:35.253627+00:00",
+    "last_modified": "2025-07-12T21:35:33.663916+00:00",
     "project_name": "ai-coding-brain-mcp",
     "project_root": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp",
     "version": "3.0"

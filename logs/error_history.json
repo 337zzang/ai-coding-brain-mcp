@@ -1,0 +1,22 @@
+[
+  {
+    "error_id": "ERR_20250712_211936",
+    "occurred_at": "2025-07-12T21:19:36.881425",
+    "task_id": "test_task",
+    "task_title": "수동 테스트 태스크",
+    "error_type": "TestError",
+    "error_message": "이것은 수동 테스트 오류입니다",
+    "stack_trace": "Manual test stack trace",
+    "context": {
+      "plan_id": "test_plan",
+      "user": "system",
+      "workflow_stage": "testing"
+    },
+    "suggested_actions": [
+      "오류 메시지 분석",
+      "스택 트레이스 확인"
+    ],
+    "severity": "LOW",
+    "mcp_action_required": true
+  }
+]

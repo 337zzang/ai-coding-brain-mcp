@@ -231,6 +231,9 @@ class WorkflowStorage:
         # summary만 있는 데이터는 거부
         if len(data) == 1 and "summary" in data:
             logger.warning("Rejecting data with only 'summary' field")
+            # 스택 트레이스 출력으로 호출 위치 파악
+            import traceback
+            logger.warning(f"Call stack (last 5 frames):\n{''.join(traceback.format_stack()[-5:])}")
             return False
         
         # 필수 필드 확인 (적어도 하나는 있어야 함)
@@ -240,6 +243,15 @@ class WorkflowStorage:
         if not has_required and "version" not in data:
             logger.warning(f"Missing required workflow fields. Keys: {list(data.keys())}")
             return False
+        
+        # 추가 보호: 데이터 크기 확인
+        import json
+        data_size = len(json.dumps(data))
+        if data_size < 100:  # 100바이트 미만은 의심스러움
+            logger.warning(f"Suspiciously small workflow data: {data_size} bytes")
+            if "plans" not in data:
+                logger.error("Rejecting small data without plans")
+                return False
         
         return True
 

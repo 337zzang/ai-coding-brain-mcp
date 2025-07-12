@@ -124,7 +124,19 @@ class WorkflowManager:
     def get_instance(cls, project_name: str) -> 'WorkflowManager':
         """프로젝트별 싱글톤 인스턴스 반환"""
         if project_name not in cls._instances:
+            logger.info(f"Creating new WorkflowManager instance for {project_name}")
             cls._instances[project_name] = cls(project_name)
+        else:
+            # 캐시된 인스턴스가 있어도 파일이 변경되었는지 확인
+            instance = cls._instances[project_name]
+            if instance.storage.main_file.exists():
+                # 파일 수정 시간 확인
+                file_mtime = instance.storage.main_file.stat().st_mtime
+                if hasattr(instance, '_last_file_mtime'):
+                    if file_mtime > instance._last_file_mtime:
+                        logger.info(f"File changed for {project_name}, reloading...")
+                        instance.reload()
+                instance._last_file_mtime = file_mtime
         return cls._instances[project_name]
 
 

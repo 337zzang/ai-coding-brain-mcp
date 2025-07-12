@@ -7,6 +7,10 @@ from .helper_result import HelperResult
 from pathlib import Path
 import os
 import json
+import time
+
+# 전역 캐시
+_project_cache = {}
 
 def scan_directory_dict(directory: str = ".", 
                        include_hidden: bool = False,
@@ -176,3 +180,110 @@ def list_file_paths(directory: str = ".",
 scan_directory = scan_directory_dict  # 기존 함수명 호환
 list_directory = scan_directory_dict  # 기존 함수명 호환
 scan_dir = scan_directory_dict       # 짧은 별칭
+
+
+def cache_project_structure(project_path: str = ".", force_refresh: bool = False) -> HelperResult:
+    """
+    프로젝트 구조를 캐시에 저장
+    
+    Args:
+        project_path: 프로젝트 경로
+        force_refresh: 강제 새로고침 여부
+        
+    Returns:
+        HelperResult with cache status
+    """
+    global _project_cache
+    
+    cache_key = str(Path(project_path).resolve())
+    
+    # 캐시 확인
+    if not force_refresh and cache_key in _project_cache:
+        cache_data = _project_cache[cache_key]
+        if time.time() - cache_data['timestamp'] < 300:  # 5분 캐시
+            return HelperResult(True, data={
+                'status': 'cached',
+                'structure': cache_data['structure']
+            })
+    
+    # 새로 스캔
+    scan_result = scan_directory_dict(project_path, include_hidden=False, max_depth=10)
+    if not scan_result.ok:
+        return scan_result
+    
+    # 캐시 저장
+    _project_cache[cache_key] = {
+        'structure': scan_result.data,
+        'timestamp': time.time()
+    }
+    
+    return HelperResult(True, data={
+        'status': 'refreshed',
+        'structure': scan_result.data
+    })
+
+
+def get_project_structure(project_path: str = ".") -> HelperResult:
+    """
+    캐시된 프로젝트 구조 가져오기
+    
+    Args:
+        project_path: 프로젝트 경로
+        
+    Returns:
+        HelperResult with project structure
+    """
+    return cache_project_structure(project_path, force_refresh=False)
+
+
+def search_in_structure(pattern: str, structure: Optional[Dict] = None, 
+                       project_path: str = ".") -> HelperResult:
+    """
+    프로젝트 구조에서 파일 검색
+    
+    Args:
+        pattern: 검색 패턴
+        structure: 프로젝트 구조 (None이면 캐시에서 가져옴)
+        project_path: 프로젝트 경로
+        
+    Returns:
+        HelperResult with matching files
+    """
+    try:
+        # 구조 가져오기
+        if structure is None:
+            struct_result = get_project_structure(project_path)
+            if not struct_result.ok:
+                return struct_result
+            structure = struct_result.data['structure']
+        
+        # 패턴 매칭
+        matches = []
+        pattern_lower = pattern.lower()
+        
+        # 파일 검색
+        for file_info in structure.get('files', []):
+            if pattern_lower in file_info['name'].lower():
+                matches.append({
+                    'path': file_info['path'],
+                    'name': file_info['name'],
+                    'type': 'file'
+                })
+        
+        # 디렉토리 검색
+        for dir_info in structure.get('directories', []):
+            if pattern_lower in dir_info['name'].lower():
+                matches.append({
+                    'path': dir_info['path'],
+                    'name': dir_info['name'],
+                    'type': 'directory'
+                })
+        
+        return HelperResult(True, data={
+            'matches': matches,
+            'count': len(matches),
+            'pattern': pattern
+        })
+        
+    except Exception as e:
+        return HelperResult(False, error=f"Search failed: {str(e)}")

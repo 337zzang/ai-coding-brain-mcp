@@ -14,9 +14,12 @@ logger.setLevel(logging.INFO)
 # Helper Result - 가장 먼저 import
 from .helper_result import HelperResult
 
-# File 관련
-from .file import (
-    read_file, write_file, create_file, append_to_file
+# File 관련 - 통합 모듈에서 import
+from .file_unified import (
+    read_file, write_file, create_file, append_to_file,
+    delete_file, copy_file, move_file, file_exists,
+    get_file_info, read_lines, read_json, write_json,
+    read_yaml, write_yaml
 )
 
 # Git 관련
@@ -75,24 +78,19 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ build 모듈 로드 실패: {e}")
 
-# Code 관련
+# Code 관련 - 통합 모듈에서 import
 try:
+    from .code_unified import (
+        parse_code, replace_function, replace_class, replace_method,
+        add_function, add_method_to_class, get_code_snippet,
+        find_code_element, set_verbose as set_code_verbose
+    )
+    # Legacy compatibility
     from .code import (
-        ASTParser, EnhancedFunctionReplacer, FunctionReplacer,
-        ClassReplacer, BlockInsertTransformer, parse_with_snippets,
-        replace_block  # AST 기반 코드 블록 교체 함수 추가
+        replace_block, insert_block, parse_with_snippets
     )
 except ImportError as e:
     logger.warning(f"⚠️ code 모듈 로드 실패: {e}")
-
-# Code helpers - AST 기반 고급 기능
-try:
-    from .code_helpers import (
-        replace_function, replace_class_method, add_method_to_class,
-        update_function_signature, refactor_variable_name
-    )
-except ImportError as e:
-    logger.warning(f"⚠️ code_helpers 모듈 로드 실패: {e}")
 
 # Context 관련
 try:
@@ -199,6 +197,9 @@ __all__ = [
     
     # File operations
     'read_file', 'write_file', 'create_file', 'append_to_file',
+    'delete_file', 'copy_file', 'move_file', 'file_exists',
+    'get_file_info', 'read_lines', 'read_json', 'write_json',
+    'read_yaml', 'write_yaml',
     'scan_directory', 'scan_directory_dict',
     
     # Git operations
@@ -226,11 +227,12 @@ __all__ = [
 # Optional 모듈의 함수들도 __all__에 추가 (존재하는 경우에만)
 optional_exports = [
     # Compile
-    'check_syntax', 'compile_project', 'parse_code', 'parse_with_snippets',
+    'check_syntax', 'compile_project', 'parse_with_snippets',
     'replace_block', 'insert_block',
-    # Code helpers
-    'replace_function', 'replace_class_method', 'add_method_to_class',
-    'update_function_signature', 'refactor_variable_name', 'get_snippet_preview',
+    # Code operations
+    'parse_code', 'replace_function', 'replace_class', 'replace_method',
+    'add_function', 'add_method_to_class', 'get_code_snippet',
+    'find_code_element', 'set_code_verbose',
     
     # Build
     'build_project',

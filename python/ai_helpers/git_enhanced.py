@@ -121,7 +121,16 @@ def git_add(files='.'):
             'output': result['output']
         })
     else:
-        return HelperResult(False, f"Git add 실패: {result['error']}")
+        # 에러 메시지 개선: None이나 빈 문자열 대비
+        error_msg = result.get('error', '').strip()
+        if not error_msg:
+            # stderr가 비어있으면 stdout 확인
+            error_msg = result.get('output', '').strip()
+        if not error_msg:
+            # 그래도 없으면 기본 메시지
+            error_msg = f"Git add failed with return code {result.get('returncode', 'unknown')}"
+        
+        return HelperResult(False, f"Git add 실패: {error_msg}")
 
 
 def git_commit(message, files=None):

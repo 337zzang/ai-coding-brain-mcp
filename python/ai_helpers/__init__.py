@@ -33,7 +33,7 @@ from .file_unified import (
 from .git_enhanced import (
     git_status, git_add, git_commit, git_push, git_pull,
     git_branch, git_log, git_diff, git_stash, git_stash_pop,
-    git_commit_smart, git_branch_smart, is_git_repository, git_init,
+    git_commit_smart, is_git_repository, git_init,
     git_checkout, git_get_current_branch, git_get_remote_url,
     GIT_AVAILABLE
 )
@@ -229,7 +229,7 @@ __all__ = [
     # Git operations
     'git_status', 'git_add', 'git_commit', 'git_push', 'git_pull',
     'git_branch', 'git_log', 'git_diff', 'git_stash', 'git_stash_pop',
-    'git_commit_smart', 'git_branch_smart', 'is_git_repository', 'git_init',
+    'git_commit_smart',  'is_git_repository', 'git_init',
     'git_checkout', 'git_get_current_branch', 'git_get_remote_url',
     'GIT_AVAILABLE',
     

@@ -39,8 +39,8 @@ def safe_print(*args, **kwargs):
 if not hasattr(builtins, 'helpers'):
     try:
         from helpers_wrapper import HelpersWrapper
-        from ai_helpers import AIHelpers
-        builtins.helpers = HelpersWrapper(AIHelpers())
+        import ai_helpers
+        builtins.helpers = HelpersWrapper(ai_helpers)
         logger.info("Enhanced Flow에서 helpers 자동 주입 완료")
     except Exception as e:
         logger.warning(f"helpers 자동 주입 실패: {e}")

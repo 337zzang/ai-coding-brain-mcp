@@ -912,6 +912,26 @@ class WebAutomation:
 
 
 
+
+    def take_screenshot(self, filename: str = None) -> Dict[str, Any]:
+        """스크린샷 저장"""
+        try:
+            if not filename:
+                from datetime import datetime
+                filename = f"screenshot_{datetime.now():%Y%m%d_%H%M%S}.png"
+
+            self.page.screenshot(path=filename)
+
+            return {
+                'success': True,
+                'filename': filename,
+                'message': f'스크린샷 저장: {filename}'
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'스크린샷 실패: {str(e)}'
+            }
 # 테스트 코드 (모듈 직접 실행 시)
 if __name__ == "__main__":
     # 로깅 설정
@@ -941,3 +961,160 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"❌ 테스트 실패: {e}")
 
+
+
+# =============================================================================
+# Selenium 기반 크롬 자동화 헬퍼 함수들 (2025-07-13 추가)
+# =============================================================================
+
+def open_chrome_browser(headless=False, window_size="1920,1080"):
+    """
+    크롬 브라우저를 열고 WebDriver 객체를 반환합니다.
+
+    Args:
+        headless (bool): 헤드리스 모드 여부 (기본값: False)
+        window_size (str): 윈도우 크기 (기본값: "1920,1080")
+
+    Returns:
+        webdriver.Chrome: 크롬 WebDriver 객체
+    """
+    try:
+        from selenium import webdriver
+        from selenium.webdriver.chrome.service import Service
+        from selenium.webdriver.chrome.options import Options
+        from selenium.webdriver.common.by import By
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+        import time
+
+        print(f"🌐 크롬 브라우저 시작 중...")
+
+        # 크롬 옵션 설정
+        chrome_options = Options()
+
+        if headless:
+            chrome_options.add_argument("--headless")
+            print("  👁️ 헤드리스 모드")
+        else:
+            print("  🖥️ 일반 모드 (브라우저 창 표시)")
+
+        chrome_options.add_argument(f"--window-size={window_size}")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--remote-debugging-port=9222")
+
+        # User-Agent 설정 (봇 감지 방지)
+        chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+
+        # ChromeDriver 자동 관리
+        try:
+            from webdriver_manager.chrome import ChromeDriverManager
+            service = Service(ChromeDriverManager().install())
+            print("  ✅ ChromeDriver 자동 관리 사용")
+        except ImportError:
+            print("  ⚠️ webdriver-manager 없음, 시스템 ChromeDriver 사용")
+            service = Service()
+
+        # 브라우저 시작
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+
+        # 기본 설정
+        driver.implicitly_wait(10)  # 암시적 대기 10초
+
+        print(f"  ✅ 크롬 브라우저 시작 완료")
+        print(f"  🌐 세션 ID: {driver.session_id}")
+
+        return driver
+
+    except Exception as e:
+        print(f"  ❌ 크롬 브라우저 시작 실패: {e}")
+        raise
+
+def navigate_to_google(driver):
+    """
+    구글 홈페이지로 이동합니다.
+
+    Args:
+        driver: WebDriver 객체
+
+    Returns:
+        bool: 성공 여부
+    """
+    try:
+        from selenium.webdriver.common.by import By
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+
+        print("🔍 구글 홈페이지로 이동 중...")
+
+        # 구글 홈페이지 접속
+        driver.get("https://www.google.com")
+
+        # 페이지 로드 대기 (검색창이 나타날 때까지)
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.NAME, "q"))
+        )
+
+        print(f"  ✅ 구글 접속 성공")
+        print(f"  🌐 현재 URL: {driver.current_url}")
+        print(f"  📄 페이지 제목: {driver.title}")
+
+        return True
+
+    except Exception as e:
+        print(f"  ❌ 구글 접속 실패: {e}")
+        return False
+
+def close_browser(driver):
+    """
+    브라우저를 안전하게 종료합니다.
+
+    Args:
+        driver: WebDriver 객체
+    """
+    try:
+        if driver:
+            print("🔒 브라우저 종료 중...")
+            driver.quit()
+            print("  ✅ 브라우저 종료 완료")
+    except Exception as e:
+        print(f"  ❌ 브라우저 종료 오류: {e}")
+
+def demo_google_navigation():
+    """
+    구글 접속 데모 실행
+    """
+    driver = None
+    try:
+        print("🚀 구글 접속 데모 시작")
+        print("=" * 40)
+
+        # 브라우저 열기
+        driver = open_chrome_browser(headless=False)
+
+        if driver:
+            # 구글 접속
+            success = navigate_to_google(driver)
+
+            if success:
+                # 3초 대기 (사용자가 확인할 수 있도록)
+                import time
+                print("⏰ 3초 대기 중...")
+                time.sleep(3)
+
+                print("✅ 데모 완료!")
+                return True
+            else:
+                print("❌ 구글 접속 실패")
+                return False
+        else:
+            print("❌ 브라우저 시작 실패")
+            return False
+
+    except Exception as e:
+        print(f"❌ 데모 실행 오류: {e}")
+        return False
+    finally:
+        # 브라우저 종료
+        close_browser(driver)

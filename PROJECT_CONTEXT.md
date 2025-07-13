@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-13 11:31:47
+> 최종 업데이트: 2025-07-13 17:28:41
 
 ## 🎯 프로젝트 개요
 
@@ -23,7 +23,10 @@
 |---------|------|
 | `.pytest_cache/` | 프로젝트 관련 파일 |
 | `backup_deleted_modules/` | 프로젝트 관련 파일 |
+| `backup_workflow_20250713_114703/` | 프로젝트 관련 파일 |
 | `docs/` | 문서 |
+| `examples/` | 프로젝트 관련 파일 |
+| `generated_scripts/` | 프로젝트 관련 파일 |
 | `logs/` | 프로젝트 관련 파일 |
 | `memory/` | 캐시 및 상태 저장 |
 | `python/` | Python 스크립트 및 유틸리티 |
@@ -78,14 +81,50 @@ ai-coding-brain-mcp/
 │   ├── code_unified.py
 │   ├── compile.py
 │   └── ... (4 more files)
+├── backup_workflow_20250713_114703/
+│   └── v3/
+│       ├── api/
+│       │   ├── __init__.py
+│       │   ├── decorators.py
+│       │   ├── internal_api.py
+│       │   └── ... (1 more files)
+│       ├── commands/
+│       │   ├── __init__.py
+│       │   ├── auto_executor.py
+│       ├── listeners/
+│       │   ├── __init__.py
+│       │   ├── ai_instruction_base.py
+│       │   ├── automation_listeners.py
+│       │   └── ... (11 more files)
+│       └── tests/
+│           ├── test_event_publishing.py
+│       ├── __init__.py
+│       ├── ai_instruction_executor.py
+│       ├── code_integration.py
+│       └── ... (17 more files)
+│   ├── __init__.py
 ├── docs/
 │   ├── examples/
 │   │   ├── event_bus_example.py
 │   │   ├── workflow_context_bridge_example.py
 │   ├── tasks/
+│   │   ├── 20250713_task_11476be5.md
+│   │   ├── 20250713_task_1d6fed12.md
+│   │   ├── 20250713_task_292a78e7.md
+│   │   └── ... (13 more files)
 │   └── workflow_v2/
 │       ├── README.md
 │   ├── event_system_analysis.json
+│   ├── helper_result_practical_examples.md
+│   ├── helper_result_return_values.md
+│   └── ... (3 more files)
+├── examples/
+│   ├── web_automation_recording_examples.py
+├── generated_scripts/
+│   ├── naver_allstar_search_manual.py
+│   ├── naver_simple.py
+│   ├── README.md
+│   └── ... (2 more files)
 ├── logs/
 │   ├── file/
 │   ├── git/
@@ -116,6 +155,10 @@ ai-coding-brain-mcp/
 │   ├── backups/
 │   │   └── contexts/
 │   │       ├── ai-coding-brain-mcp_context_removed.json
+│   │   ├── workflow_backup_20250713_130522.json
+│   │   ├── workflow_backup_20250713_130650.json
+│   │   ├── workflow_backup_20250713_131841.json
+│   │   └── ... (17 more files)
 │   ├── cache/
 │   │   ├── cache_manifest.json
 │   │   ├── cache_metadata.json
@@ -143,95 +186,11 @@ ai-coding-brain-mcp/
 │   ├── ai_instructions.json
 │   ├── ai_instructions_mcp.json
 │   ├── context.json
-│   └── ... (8 more files)
-├── python/
-│   ├── ai_helpers/
-│   │   ├── api/
-│   │   │   ├── __init__.py
-│   │   │   ├── image.py
-│   │   │   ├── manager.py
-│   │   │   └── ... (2 more files)
-│   │   ├── removed/
-│   │   └── search/
-│   │       ├── __init__.py
-│   │       ├── code_search.py
-│   │       ├── core.py
-│   │       └── ... (3 more files)
-│   │   ├── __init__.py
-│   │   ├── base_api.py
-│   │   ├── code.py
-│   │   └── ... (9 more files)
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── image_generator.py
-│   │   ├── public.py
-│   │   └── ... (3 more files)
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── cache_manager.py
-│   │   ├── context_manager.py
-│   │   └── ... (3 more files)
-│   ├── events/
-│   │   ├── __init__.py
-│   │   ├── unified_event_types.py
-│   ├── tracking/
-│   │   ├── __init__.py
-│   │   ├── simple_tracker.py
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   ├── git_task_helpers.py
-│   │   ├── git_utils.py
-│   │   └── ... (4 more files)
-│   ├── vendor/
-│   │   ├── tree-sitter-javascript/
-│   │   │   └── bindings/
-│   │   └── tree-sitter-typescript/
-│   │       └── bindings/
-│   └── workflow/
-│       └── v3/
-│           ├── api/
-│           ├── commands/
-│           ├── listeners/
-│           └── tests/
-│           ├── __init__.py
-│           ├── ai_instruction_executor.py
-│           ├── code_integration.py
-│           └── ... (17 more files)
-│       ├── __init__.py
-│   ├── __init__.py
-│   ├── api_manager.py
-│   ├── debug_flow.py
-│   └── ... (15 more files)
-└── src/
-    ├── core/
-    │   ├── domain/
-    │   │   ├── entities/
-    │   │   └── repositories/
-    │   │   ├── index.ts
-    │   └── infrastructure/
-    │       └── filesystem/
-    │       ├── index.ts
-    │   ├── index.ts
-    ├── handlers/
-    │   ├── api-toggle-handler.ts
-    │   ├── backup-handler.ts
-    │   ├── build-handler.ts
-    │   └── ... (4 more files)
-    ├── services/
-    │   ├── logger.ts
-    ├── tools/
-    │   ├── tool-definitions.ts
-    ├── types/
-    │   ├── tool-interfaces.ts
-    └── utils/
-        ├── hybrid-helper-system.ts
-        ├── indent-helper.ts
-        ├── logger.ts
-        └── ... (1 more files)
-    ├── index.ts
+│   └── ... (12 more files)
+└── ... (3 more directories)
 ├── .ai-brain.config.json
 ├── .eslintrc.json
-├── base_api_fixed.py
+├── CLAUDE.md
 └── ... (6 more files)
 ```
 - `.ai-brain.config.json`: AI Coding Brain 설정
@@ -239,18 +198,17 @@ ai-coding-brain-mcp/
 - `tsconfig.json`: TypeScript 설정
 - `.env`: 환경 변수
 - `.gitignore`: Git 무시 파일
-- `requirements.txt`: Python 의존성
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 221개
-- **디렉토리 수**: 71개
+- **전체 파일 수**: 310개
+- **디렉토리 수**: 79개
 - **파일 타입 분포**:
-  - `.py`: 124개 (56.1%)
-  - `.json`: 49개 (22.2%)
-  - `.ts`: 28개 (12.7%)
-  - `.md`: 6개 (2.7%)
-  - `.jsonl`: 4개 (1.8%)
+  - `.py`: 167개 (53.9%)
+  - `.json`: 75개 (24.2%)
+  - `.md`: 29개 (9.4%)
+  - `.ts`: 28개 (9.0%)
+  - `.jsonl`: 4개 (1.3%)
 
 ## 🚀 빠른 시작
 
@@ -263,7 +221,6 @@ ai-coding-brain-mcp/
 2. **의존성 설치**
    ```bash
    npm install
-   pip install -r requirements.txt
    ```
 
 3. **환경 설정**

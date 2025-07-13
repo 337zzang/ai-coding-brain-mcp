@@ -378,24 +378,21 @@ class HelpersWrapper:
 
 
     def workflow(self, command: str) -> HelperResult:
-        """v3: 명령어 실행 (WorkflowManager 사용)"""
+        """v3: 명령어 실행 (ImprovedWorkflowManager 사용)"""
         try:
-            # 원본 ai_helpers의 workflow 함수 사용
-            if hasattr(self._helpers, 'workflow'):
-                return self._helpers.workflow(command)
+            # 워크플로우 매니저 인스턴스 가져오기 (캐싱)
+            if not hasattr(self, '_workflow_manager'):
+                import os
+                from python.workflow.improved_manager import ImprovedWorkflowManager
                 
-            # fallback: 직접 WorkflowManager 사용
-            import os
-            from python.workflow.manager import WorkflowManager
-            
-            # 현재 프로젝트 이름 가져오기
-            project_name = os.path.basename(os.getcwd())
-            
-            # WorkflowManager 인스턴스 가져오기
-            wm = WorkflowManager.get_instance(project_name)
+                # 현재 프로젝트 이름 가져오기
+                project_name = os.path.basename(os.getcwd())
+                
+                # ImprovedWorkflowManager 인스턴스 생성 및 캐싱
+                self._workflow_manager = ImprovedWorkflowManager(project_name)
             
             # 명령 처리
-            result = wm.process_command(command)
+            result = self._workflow_manager.process_command(command)
             
             # HelperResult로 변환
             if result.get('success'):

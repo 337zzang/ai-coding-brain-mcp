@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-13 23:35:49
+> 최종 업데이트: 2025-07-14 00:29:04
 
 ## 🎯 프로젝트 개요
 
@@ -24,13 +24,13 @@
 | `.pytest_cache/` | 프로젝트 관련 파일 |
 | `backup_deleted_modules/` | 프로젝트 관련 파일 |
 | `backup_workflow_20250713_114703/` | 프로젝트 관련 파일 |
+| `backup_workflow_legacy_20250713/` | 프로젝트 관련 파일 |
 | `docs/` | 문서 |
 | `examples/` | 프로젝트 관련 파일 |
 | `generated_scripts/` | 프로젝트 관련 파일 |
 | `logs/` | 프로젝트 관련 파일 |
 | `memory/` | 캐시 및 상태 저장 |
 | `python/` | Python 스크립트 및 유틸리티 |
-| `src/` | 소스 코드 |
 
 ## 📦 의존성
 
@@ -103,6 +103,14 @@ ai-coding-brain-mcp/
 │       ├── code_integration.py
 │       └── ... (17 more files)
 │   ├── __init__.py
+├── backup_workflow_legacy_20250713/
+│   └── python/
+│       └── workflow/
+│           ├── ai_automation/
+│           ├── core/
+│           └── messaging/
+│           ├── errors.py
+│           ├── manager.py
 ├── docs/
 │   ├── tasks/
 │   │   ├── 20250713_task_1b12e231.md
@@ -116,7 +124,7 @@ ai-coding-brain-mcp/
 │   ├── AI_HELPERS_GUIDE.md
 │   ├── event_system_analysis.json
 │   ├── helper_result_practical_examples.md
-│   └── ... (13 more files)
+│   └── ... (14 more files)
 ├── examples/
 │   ├── test_async_web.py
 │   ├── web_automation_recording_examples.py
@@ -134,18 +142,7 @@ ai-coding-brain-mcp/
 │   ├── active_errors.json
 │   ├── ai_instructions.json
 │   └── ... (4 more files)
-├── memory/
-│   ├── backups/
-│   │   ├── workflow_backup_20250713_181003.json
-│   │   ├── workflow_backup_20250713_181024.json
-│   │   ├── workflow_backup_20250713_181025.json
-│   │   └── ... (12 more files)
-│   └── cache/
-│   ├── ai_instructions.json
-│   ├── ai_instructions_mcp.json
-│   ├── context.json
-│   └── ... (12 more files)
-└── ... (3 more directories)
+└── ... (4 more directories)
 ├── .ai-brain.config.json
 ├── .eslintrc.json
 ├── CLAUDE.md
@@ -159,13 +156,13 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 276개
-- **디렉토리 수**: 67개
+- **전체 파일 수**: 294개
+- **디렉토리 수**: 72개
 - **파일 타입 분포**:
-  - `.py`: 143개 (51.8%)
-  - `.json`: 47개 (17.0%)
-  - `.md`: 41개 (14.9%)
-  - `.ts`: 28개 (10.1%)
+  - `.py`: 147개 (50.0%)
+  - `.json`: 59개 (20.1%)
+  - `.md`: 42개 (14.3%)
+  - `.ts`: 28개 (9.5%)
   - `.png`: 4개 (1.4%)
 
 ## 🚀 빠른 시작

@@ -95,9 +95,457 @@
         "average_task_duration": 0.0
       },
       "metadata": {}
+    },
+    {
+      "id": "b346422f-b833-426b-89c1-f7fa02e4219d",
+      "name": "통합 테스트 플랜",
+      "description": "ImprovedWorkflowManager 테스트",
+      "status": "draft",
+      "tasks": [
+        {
+          "id": "89822eb7-2468-4967-853b-cebb8e6514f5",
+          "title": "테스트 태스크 1",
+          "description": "설명 1",
+          "status": "in_progress",
+          "created_at": "2025-07-14T00:11:49.146337+09:00",
+          "updated_at": "2025-07-14T00:15:03.142212",
+          "started_at": "2025-07-14T00:15:03.142212",
+          "completed_at": "2025-07-14T00:11:49.192067",
+          "duration": null,
+          "notes": [
+            "[완료] 테스트 완료"
+          ],
+          "outputs": {}
+        },
+        {
+          "id": "1680b094-09e0-4ef2-b4f9-56962bfa7fd9",
+          "title": "테스트 태스크 2",
+          "description": "설명 2",
+          "status": "todo",
+          "created_at": "2025-07-14T00:11:49.166484+09:00",
+          "updated_at": "2025-07-14T00:11:49.166484+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "14b68607-847a-4e86-9825-57da4a22de86",
+          "title": "테스트 태스크 3",
+          "description": "설명 3",
+          "status": "todo",
+          "created_at": "2025-07-14T00:11:49.173478+09:00",
+          "updated_at": "2025-07-14T00:11:49.173478+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        }
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-14T00:11:49.146337+09:00",
+      "updated_at": "2025-07-14T00:11:49.146337+09:00",
+      "completed_at": null,
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
+    },
+    {
+      "id": "0759323d-c449-49e5-9808-24216ae371ec",
+      "name": "최종 테스트 플랜",
+      "description": "",
+      "status": "draft",
+      "tasks": [
+        {
+          "id": "f707c964-6b0d-4f96-a2c4-32330b0297d7",
+          "title": "레거시 코드 제거",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:16:50.203301+09:00",
+          "updated_at": "2025-07-14T00:16:50.203301+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "1448486f-a523-4481-a50b-d6f2981080ae",
+          "title": "통합 테스트",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:16:50.215283+09:00",
+          "updated_at": "2025-07-14T00:16:50.215283+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "6e30d6ab-fa71-4634-875a-727eb51d9747",
+          "title": "문서 업데이트",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:16:50.224819+09:00",
+          "updated_at": "2025-07-14T00:16:50.224819+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        }
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-14T00:16:50.194492+09:00",
+      "updated_at": "2025-07-14T00:16:50.194492+09:00",
+      "completed_at": null,
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
+    },
+    {
+      "id": "49efeb4d-5be3-4e54-bf71-bf13d67edc1c",
+      "name": "메시징 통합 테스트",
+      "description": "",
+      "status": "draft",
+      "tasks": [
+        {
+          "id": "bace81fb-95d6-4ebc-b840-2a09e3be8b39",
+          "title": "MessageController 통합 완료",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:22:20.814132+09:00",
+          "updated_at": "2025-07-14T00:22:20.814132+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        }
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-14T00:22:20.805610+09:00",
+      "updated_at": "2025-07-14T00:22:20.805610+09:00",
+      "completed_at": null,
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
+    },
+    {
+      "id": "20957196-87e2-4113-b7b6-0a841061ae8c",
+      "name": "종합 테스트 플랜",
+      "description": "",
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "f97be314-4ef0-476c-aebd-64e4ca96633f",
+          "title": "데이터베이스 설계",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-14T00:24:13.204783+09:00",
+          "updated_at": "2025-07-14T00:24:13.283572",
+          "started_at": "2025-07-14T00:24:13.274529",
+          "completed_at": "2025-07-14T00:24:13.283572",
+          "duration": null,
+          "notes": [
+            "[완료] 데이터베이스 설계 완료"
+          ],
+          "outputs": {}
+        },
+        {
+          "id": "e329576f-471f-4cca-84a3-07b49a31bdb9",
+          "title": "API 엔드포인트 구현",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-14T00:24:13.222331+09:00",
+          "updated_at": "2025-07-14T00:24:13.316752",
+          "started_at": "2025-07-14T00:24:13.297254",
+          "completed_at": "2025-07-14T00:24:13.316752",
+          "duration": null,
+          "notes": [
+            "[완료] 태스크 2 완료"
+          ],
+          "outputs": {}
+        },
+        {
+          "id": "088e076e-2811-4239-891d-57a81b502967",
+          "title": "프론트엔드 개발",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-14T00:24:13.243232+09:00",
+          "updated_at": "2025-07-14T00:24:13.332756",
+          "started_at": null,
+          "completed_at": "2025-07-14T00:24:13.332756",
+          "duration": null,
+          "notes": [
+            "[완료] 태스크 3 완료"
+          ],
+          "outputs": {}
+        },
+        {
+          "id": "adf5ab65-f206-441d-a9a7-5388545d2c55",
+          "title": "테스트 작성",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-14T00:24:13.251233+09:00",
+          "updated_at": "2025-07-14T00:24:13.346222",
+          "started_at": null,
+          "completed_at": "2025-07-14T00:24:13.346222",
+          "duration": null,
+          "notes": [
+            "[완료] 태스크 4 완료"
+          ],
+          "outputs": {}
+        },
+        {
+          "id": "b047cd36-b08a-4d22-80f1-be6766891ddd",
+          "title": "문서화",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-14T00:24:13.263925+09:00",
+          "updated_at": "2025-07-14T00:24:13.357031",
+          "started_at": null,
+          "completed_at": "2025-07-14T00:24:13.357031",
+          "duration": null,
+          "notes": [
+            "[완료] 마지막 태스크 완료!"
+          ],
+          "outputs": {}
+        }
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-14T00:24:13.204783+09:00",
+      "updated_at": "2025-07-14T00:24:13.204783+09:00",
+      "completed_at": "2025-07-14T00:24:13.357031",
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
+    },
+    {
+      "id": "6f2d0d71-6e62-41bb-aae6-45f34b8f1744",
+      "name": "빈 플랜 테스트",
+      "description": "",
+      "status": "archived",
+      "tasks": [
+        {
+          "id": "ea1d40ad-ad89-4433-bf28-8263a35dac6c",
+          "title": "중복 태스크",
+          "description": "",
+          "status": "error",
+          "created_at": "2025-07-14T00:24:45.568291+09:00",
+          "updated_at": "2025-07-14T00:41:16.879660",
+          "started_at": "2025-07-14T00:41:16.879660",
+          "completed_at": "2025-07-14T00:31:52.680698",
+          "duration": null,
+          "notes": [
+            "[완료] 태스크 중복 처리 테스트 완료"
+          ],
+          "outputs": {},
+          "error_at": "2025-07-14T00:41:16.889439",
+          "error_message": "네트워크 연결 실패"
+        },
+        {
+          "id": "a5c45e7b-10a3-4014-aabf-0133118c4775",
+          "title": "중복 태스크",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-14T00:24:45.582050+09:00",
+          "updated_at": "2025-07-14T00:34:51.463256",
+          "started_at": null,
+          "completed_at": "2025-07-14T00:34:51.463256",
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "4da9cefa-edc8-4852-a94a-3c51ab8ee106",
+          "title": "중복 태스크",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-14T00:24:45.591637+09:00",
+          "updated_at": "2025-07-14T00:41:16.843338",
+          "started_at": "2025-07-14T00:35:29.611934",
+          "completed_at": "2025-07-14T00:41:16.843338",
+          "duration": null,
+          "notes": [
+            "[완료] 자동 완료"
+          ],
+          "outputs": {}
+        },
+        {
+          "id": "c773ddb1-6128-460d-b395-88483e7f00e3",
+          "title": "테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트",
+          "description": "",
+          "status": "skipped",
+          "created_at": "2025-07-14T00:25:08.552602+09:00",
+          "updated_at": "2025-07-14T00:41:16.863189",
+          "started_at": "2025-07-14T00:41:16.863189",
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {},
+          "skipped_at": "2025-07-14T00:41:16.871626",
+          "skip_reason": "테스트를 위해 건너뜀"
+        }
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-14T00:24:45.561308+09:00",
+      "updated_at": "2025-07-14T00:24:45.561308+09:00",
+      "completed_at": null,
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
+    },
+    {
+      "id": "31f9658e-4c0d-4241-88bd-77261fe17162",
+      "name": "Python Helpers 함수 전체 검증 및 테스트",
+      "description": "",
+      "status": "draft",
+      "tasks": [
+        {
+          "id": "fffa83c2-71da-4e8c-9f71-dee3cc992e6f",
+          "title": "파일 시스템 함수 테스트 (read_file, create_file, write_file, scan_directory)",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:52:31.099683+09:00",
+          "updated_at": "2025-07-14T00:52:31.099683+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "7490a912-9207-4329-84a7-8d9d0959e118",
+          "title": "Git 함수 테스트 (git_status, git_diff, git_add, git_log)",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:52:31.118435+09:00",
+          "updated_at": "2025-07-14T00:52:31.118435+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "6d4fdde8-7ba6-4d0a-9558-de41fdd32029",
+          "title": "코드 분석 함수 테스트 (parse_with_snippets, find_function, find_class)",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:52:31.140247+09:00",
+          "updated_at": "2025-07-14T00:52:31.140247+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "c80153ad-4b6b-402d-b83d-9b398b620eb7",
+          "title": "프로젝트 관리 함수 테스트 (build_project_context, get_project_structure)",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:52:31.152340+09:00",
+          "updated_at": "2025-07-14T00:52:31.152340+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "f6aeb256-9629-4e96-ae73-6e9457fa192d",
+          "title": "검색 최적화 함수 테스트 (search_files, search_in_files, find_import)",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:52:31.164993+09:00",
+          "updated_at": "2025-07-14T00:52:31.164993+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "f2ca08cd-1421-4254-8dce-b9e72943394f",
+          "title": "API 관리 함수 테스트 (toggle_api, list_apis, check_api_enabled)",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:52:31.176007+09:00",
+          "updated_at": "2025-07-14T00:52:31.176007+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "5399fd1c-cbfc-4cb5-ab3c-a6eccd84288d",
+          "title": "유틸리티 함수 테스트 (update_context, get_project_context, lazy_import)",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:52:31.193014+09:00",
+          "updated_at": "2025-07-14T00:52:31.193014+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "31100467-680e-43a3-b5e5-43dd9e8270b3",
+          "title": "코드 편집 함수 테스트 (edit_block, replace_block, insert_block)",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:52:31.203050+09:00",
+          "updated_at": "2025-07-14T00:52:31.203050+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "befce6e2-4e11-4385-abaf-d2e76f7fda0e",
+          "title": "성능 측정 및 통계 함수 테스트 (get_tracking_statistics, measure_performance)",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:52:31.214623+09:00",
+          "updated_at": "2025-07-14T00:52:31.214623+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "3eabef53-0ee7-4f42-a905-8fcd4fb82c3f",
+          "title": "전체 테스트 결과 종합 및 문서화",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:52:31.232777+09:00",
+          "updated_at": "2025-07-14T00:52:31.232777+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        }
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-14T00:51:56.787383+09:00",
+      "updated_at": "2025-07-14T00:51:56.787383+09:00",
+      "completed_at": null,
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
     }
   ],
-  "active_plan_id": "08b58fa6-8f16-4498-9c20-749c4de865d7",
+  "active_plan_id": "31f9658e-4c0d-4241-88bd-77261fe17162",
   "events": [
     {
       "id": "3cde293a-795b-487e-9360-dcdb33ebc674",
@@ -3208,10 +3656,534 @@
         }
       },
       "metadata": {}
+    },
+    {
+      "type": "plan_created",
+      "entity_id": "b346422f-b833-426b-89c1-f7fa02e4219d",
+      "timestamp": "2025-07-14T00:11:49.146337",
+      "data": {
+        "name": "통합 테스트 플랜",
+        "description": "ImprovedWorkflowManager 테스트"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "89822eb7-2468-4967-853b-cebb8e6514f5",
+      "timestamp": "2025-07-14T00:11:49.146337",
+      "data": {
+        "title": "테스트 태스크 1",
+        "plan_id": "b346422f-b833-426b-89c1-f7fa02e4219d"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "1680b094-09e0-4ef2-b4f9-56962bfa7fd9",
+      "timestamp": "2025-07-14T00:11:49.166484",
+      "data": {
+        "title": "테스트 태스크 2",
+        "plan_id": "b346422f-b833-426b-89c1-f7fa02e4219d"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "14b68607-847a-4e86-9825-57da4a22de86",
+      "timestamp": "2025-07-14T00:11:49.173478",
+      "data": {
+        "title": "테스트 태스크 3",
+        "plan_id": "b346422f-b833-426b-89c1-f7fa02e4219d"
+      }
+    },
+    {
+      "type": "task_started",
+      "entity_id": "89822eb7-2468-4967-853b-cebb8e6514f5",
+      "timestamp": "2025-07-14T00:11:49.182064",
+      "data": {
+        "title": "테스트 태스크 1"
+      }
+    },
+    {
+      "type": "task_completed",
+      "entity_id": "89822eb7-2468-4967-853b-cebb8e6514f5",
+      "timestamp": "2025-07-14T00:11:49.192067",
+      "data": {
+        "title": "테스트 태스크 1",
+        "note": "테스트 완료"
+      }
+    },
+    {
+      "type": "task_started",
+      "entity_id": "89822eb7-2468-4967-853b-cebb8e6514f5",
+      "timestamp": "2025-07-14T00:14:20.372194",
+      "data": {
+        "title": "테스트 태스크 1"
+      }
+    },
+    {
+      "type": "task_started",
+      "entity_id": "89822eb7-2468-4967-853b-cebb8e6514f5",
+      "timestamp": "2025-07-14T00:15:03.142212",
+      "data": {
+        "title": "테스트 태스크 1"
+      }
+    },
+    {
+      "type": "plan_created",
+      "entity_id": "0759323d-c449-49e5-9808-24216ae371ec",
+      "timestamp": "2025-07-14T00:16:50.194492",
+      "data": {
+        "name": "최종 테스트 플랜",
+        "description": ""
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "f707c964-6b0d-4f96-a2c4-32330b0297d7",
+      "timestamp": "2025-07-14T00:16:50.203301",
+      "data": {
+        "title": "레거시 코드 제거",
+        "plan_id": "0759323d-c449-49e5-9808-24216ae371ec"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "1448486f-a523-4481-a50b-d6f2981080ae",
+      "timestamp": "2025-07-14T00:16:50.215283",
+      "data": {
+        "title": "통합 테스트",
+        "plan_id": "0759323d-c449-49e5-9808-24216ae371ec"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "6e30d6ab-fa71-4634-875a-727eb51d9747",
+      "timestamp": "2025-07-14T00:16:50.224819",
+      "data": {
+        "title": "문서 업데이트",
+        "plan_id": "0759323d-c449-49e5-9808-24216ae371ec"
+      }
+    },
+    {
+      "type": "workflow_created",
+      "entity_id": "49efeb4d-5be3-4e54-bf71-bf13d67edc1c",
+      "timestamp": "2025-07-14T00:22:20.805610",
+      "data": {
+        "name": "메시징 통합 테스트",
+        "description": ""
+      }
+    },
+    {
+      "type": "state_changed",
+      "entity_id": "49efeb4d-5be3-4e54-bf71-bf13d67edc1c",
+      "timestamp": "2025-07-14T00:22:20.805610",
+      "data": {
+        "from": "draft",
+        "to": "active",
+        "workflow_id": "49efeb4d-5be3-4e54-bf71-bf13d67edc1c"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "bace81fb-95d6-4ebc-b840-2a09e3be8b39",
+      "timestamp": "2025-07-14T00:22:20.814132",
+      "data": {
+        "title": "MessageController 통합 완료",
+        "workflow_id": "49efeb4d-5be3-4e54-bf71-bf13d67edc1c"
+      }
+    },
+    {
+      "type": "workflow_created",
+      "entity_id": "20957196-87e2-4113-b7b6-0a841061ae8c",
+      "timestamp": "2025-07-14T00:24:13.204783",
+      "data": {
+        "name": "종합 테스트 플랜",
+        "description": ""
+      }
+    },
+    {
+      "type": "state_changed",
+      "entity_id": "20957196-87e2-4113-b7b6-0a841061ae8c",
+      "timestamp": "2025-07-14T00:24:13.204783",
+      "data": {
+        "from": "draft",
+        "to": "active",
+        "workflow_id": "20957196-87e2-4113-b7b6-0a841061ae8c"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "f97be314-4ef0-476c-aebd-64e4ca96633f",
+      "timestamp": "2025-07-14T00:24:13.204783",
+      "data": {
+        "title": "데이터베이스 설계",
+        "workflow_id": "20957196-87e2-4113-b7b6-0a841061ae8c"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "e329576f-471f-4cca-84a3-07b49a31bdb9",
+      "timestamp": "2025-07-14T00:24:13.222331",
+      "data": {
+        "title": "API 엔드포인트 구현",
+        "workflow_id": "20957196-87e2-4113-b7b6-0a841061ae8c"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "088e076e-2811-4239-891d-57a81b502967",
+      "timestamp": "2025-07-14T00:24:13.243232",
+      "data": {
+        "title": "프론트엔드 개발",
+        "workflow_id": "20957196-87e2-4113-b7b6-0a841061ae8c"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "adf5ab65-f206-441d-a9a7-5388545d2c55",
+      "timestamp": "2025-07-14T00:24:13.251233",
+      "data": {
+        "title": "테스트 작성",
+        "workflow_id": "20957196-87e2-4113-b7b6-0a841061ae8c"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "b047cd36-b08a-4d22-80f1-be6766891ddd",
+      "timestamp": "2025-07-14T00:24:13.263925",
+      "data": {
+        "title": "문서화",
+        "workflow_id": "20957196-87e2-4113-b7b6-0a841061ae8c"
+      }
+    },
+    {
+      "type": "task_started",
+      "entity_id": "f97be314-4ef0-476c-aebd-64e4ca96633f",
+      "timestamp": "2025-07-14T00:24:13.274529",
+      "data": {
+        "title": "데이터베이스 설계"
+      }
+    },
+    {
+      "type": "task_completed",
+      "entity_id": "f97be314-4ef0-476c-aebd-64e4ca96633f",
+      "timestamp": "2025-07-14T00:24:13.283572",
+      "data": {
+        "title": "데이터베이스 설계",
+        "note": "데이터베이스 설계 완료"
+      }
+    },
+    {
+      "type": "task_started",
+      "entity_id": "e329576f-471f-4cca-84a3-07b49a31bdb9",
+      "timestamp": "2025-07-14T00:24:13.297254",
+      "data": {
+        "title": "API 엔드포인트 구현"
+      }
+    },
+    {
+      "type": "task_completed",
+      "entity_id": "e329576f-471f-4cca-84a3-07b49a31bdb9",
+      "timestamp": "2025-07-14T00:24:13.316752",
+      "data": {
+        "title": "API 엔드포인트 구현",
+        "note": "태스크 2 완료"
+      }
+    },
+    {
+      "type": "task_completed",
+      "entity_id": "088e076e-2811-4239-891d-57a81b502967",
+      "timestamp": "2025-07-14T00:24:13.332756",
+      "data": {
+        "title": "프론트엔드 개발",
+        "note": "태스크 3 완료"
+      }
+    },
+    {
+      "type": "task_completed",
+      "entity_id": "adf5ab65-f206-441d-a9a7-5388545d2c55",
+      "timestamp": "2025-07-14T00:24:13.346222",
+      "data": {
+        "title": "테스트 작성",
+        "note": "태스크 4 완료"
+      }
+    },
+    {
+      "type": "task_completed",
+      "entity_id": "b047cd36-b08a-4d22-80f1-be6766891ddd",
+      "timestamp": "2025-07-14T00:24:13.357031",
+      "data": {
+        "title": "문서화",
+        "note": "마지막 태스크 완료!"
+      }
+    },
+    {
+      "type": "plan_completed",
+      "entity_id": "20957196-87e2-4113-b7b6-0a841061ae8c",
+      "timestamp": "2025-07-14T00:24:13.357031",
+      "data": {
+        "name": "종합 테스트 플랜",
+        "task_count": 5
+      }
+    },
+    {
+      "type": "workflow_created",
+      "entity_id": "6f2d0d71-6e62-41bb-aae6-45f34b8f1744",
+      "timestamp": "2025-07-14T00:24:45.561308",
+      "data": {
+        "name": "빈 플랜 테스트",
+        "description": ""
+      }
+    },
+    {
+      "type": "state_changed",
+      "entity_id": "6f2d0d71-6e62-41bb-aae6-45f34b8f1744",
+      "timestamp": "2025-07-14T00:24:45.561308",
+      "data": {
+        "from": "draft",
+        "to": "active",
+        "workflow_id": "6f2d0d71-6e62-41bb-aae6-45f34b8f1744"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "ea1d40ad-ad89-4433-bf28-8263a35dac6c",
+      "timestamp": "2025-07-14T00:24:45.568291",
+      "data": {
+        "title": "중복 태스크",
+        "workflow_id": "6f2d0d71-6e62-41bb-aae6-45f34b8f1744"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "a5c45e7b-10a3-4014-aabf-0133118c4775",
+      "timestamp": "2025-07-14T00:24:45.582050",
+      "data": {
+        "title": "중복 태스크",
+        "workflow_id": "6f2d0d71-6e62-41bb-aae6-45f34b8f1744"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "4da9cefa-edc8-4852-a94a-3c51ab8ee106",
+      "timestamp": "2025-07-14T00:24:45.591637",
+      "data": {
+        "title": "중복 태스크",
+        "workflow_id": "6f2d0d71-6e62-41bb-aae6-45f34b8f1744"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "c773ddb1-6128-460d-b395-88483e7f00e3",
+      "timestamp": "2025-07-14T00:25:08.552602",
+      "data": {
+        "title": "테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트",
+        "workflow_id": "6f2d0d71-6e62-41bb-aae6-45f34b8f1744"
+      }
+    },
+    {
+      "type": "task_started",
+      "entity_id": "ea1d40ad-ad89-4433-bf28-8263a35dac6c",
+      "timestamp": "2025-07-14T00:31:04.980843",
+      "data": {
+        "title": "중복 태스크"
+      }
+    },
+    {
+      "type": "task_completed",
+      "entity_id": "ea1d40ad-ad89-4433-bf28-8263a35dac6c",
+      "timestamp": "2025-07-14T00:31:52.680698",
+      "data": {
+        "title": "중복 태스크",
+        "note": "태스크 중복 처리 테스트 완료"
+      }
+    },
+    {
+      "type": "task_completed",
+      "entity_id": "a5c45e7b-10a3-4014-aabf-0133118c4775",
+      "timestamp": "2025-07-14T00:34:51.463256",
+      "data": {
+        "title": "중복 태스크",
+        "note": ""
+      }
+    },
+    {
+      "type": "task_started",
+      "entity_id": "4da9cefa-edc8-4852-a94a-3c51ab8ee106",
+      "timestamp": "2025-07-14T00:35:29.611934",
+      "data": {
+        "title": "중복 태스크"
+      }
+    },
+    {
+      "type": "task_completed",
+      "entity_id": "4da9cefa-edc8-4852-a94a-3c51ab8ee106",
+      "timestamp": "2025-07-14T00:41:16.843338",
+      "data": {
+        "title": "중복 태스크",
+        "note": "자동 완료"
+      }
+    },
+    {
+      "type": "task_started",
+      "entity_id": "c773ddb1-6128-460d-b395-88483e7f00e3",
+      "timestamp": "2025-07-14T00:41:16.851375",
+      "data": {
+        "title": "테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트"
+      }
+    },
+    {
+      "type": "task_started",
+      "entity_id": "c773ddb1-6128-460d-b395-88483e7f00e3",
+      "timestamp": "2025-07-14T00:41:16.863189",
+      "data": {
+        "title": "테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트"
+      }
+    },
+    {
+      "type": "task_skipped",
+      "entity_id": "c773ddb1-6128-460d-b395-88483e7f00e3",
+      "timestamp": "2025-07-14T00:41:16.871626",
+      "data": {
+        "title": "테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트",
+        "reason": "테스트를 위해 건너뜀"
+      }
+    },
+    {
+      "type": "task_started",
+      "entity_id": "ea1d40ad-ad89-4433-bf28-8263a35dac6c",
+      "timestamp": "2025-07-14T00:41:16.879660",
+      "data": {
+        "title": "중복 태스크"
+      }
+    },
+    {
+      "type": "task_error",
+      "entity_id": "ea1d40ad-ad89-4433-bf28-8263a35dac6c",
+      "timestamp": "2025-07-14T00:41:16.889439",
+      "data": {
+        "title": "중복 태스크",
+        "error": "네트워크 연결 실패"
+      }
+    },
+    {
+      "type": "plan_archived",
+      "entity_id": "6f2d0d71-6e62-41bb-aae6-45f34b8f1744",
+      "timestamp": "2025-07-14T00:41:30.397588",
+      "data": {
+        "name": "빈 플랜 테스트"
+      }
+    },
+    {
+      "type": "workflow_created",
+      "entity_id": "31f9658e-4c0d-4241-88bd-77261fe17162",
+      "timestamp": "2025-07-14T00:51:56.787383",
+      "data": {
+        "name": "Python Helpers 함수 전체 검증 및 테스트",
+        "description": ""
+      }
+    },
+    {
+      "type": "state_changed",
+      "entity_id": "31f9658e-4c0d-4241-88bd-77261fe17162",
+      "timestamp": "2025-07-14T00:51:56.787383",
+      "data": {
+        "from": "draft",
+        "to": "active",
+        "workflow_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "fffa83c2-71da-4e8c-9f71-dee3cc992e6f",
+      "timestamp": "2025-07-14T00:52:31.099683",
+      "data": {
+        "title": "파일 시스템 함수 테스트 (read_file, create_file, write_file, scan_directory)",
+        "workflow_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "7490a912-9207-4329-84a7-8d9d0959e118",
+      "timestamp": "2025-07-14T00:52:31.118435",
+      "data": {
+        "title": "Git 함수 테스트 (git_status, git_diff, git_add, git_log)",
+        "workflow_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "6d4fdde8-7ba6-4d0a-9558-de41fdd32029",
+      "timestamp": "2025-07-14T00:52:31.140247",
+      "data": {
+        "title": "코드 분석 함수 테스트 (parse_with_snippets, find_function, find_class)",
+        "workflow_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "c80153ad-4b6b-402d-b83d-9b398b620eb7",
+      "timestamp": "2025-07-14T00:52:31.152340",
+      "data": {
+        "title": "프로젝트 관리 함수 테스트 (build_project_context, get_project_structure)",
+        "workflow_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "f6aeb256-9629-4e96-ae73-6e9457fa192d",
+      "timestamp": "2025-07-14T00:52:31.164993",
+      "data": {
+        "title": "검색 최적화 함수 테스트 (search_files, search_in_files, find_import)",
+        "workflow_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "f2ca08cd-1421-4254-8dce-b9e72943394f",
+      "timestamp": "2025-07-14T00:52:31.176007",
+      "data": {
+        "title": "API 관리 함수 테스트 (toggle_api, list_apis, check_api_enabled)",
+        "workflow_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "5399fd1c-cbfc-4cb5-ab3c-a6eccd84288d",
+      "timestamp": "2025-07-14T00:52:31.193014",
+      "data": {
+        "title": "유틸리티 함수 테스트 (update_context, get_project_context, lazy_import)",
+        "workflow_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "31100467-680e-43a3-b5e5-43dd9e8270b3",
+      "timestamp": "2025-07-14T00:52:31.203050",
+      "data": {
+        "title": "코드 편집 함수 테스트 (edit_block, replace_block, insert_block)",
+        "workflow_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "befce6e2-4e11-4385-abaf-d2e76f7fda0e",
+      "timestamp": "2025-07-14T00:52:31.214623",
+      "data": {
+        "title": "성능 측정 및 통계 함수 테스트 (get_tracking_statistics, measure_performance)",
+        "workflow_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
+      }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "3eabef53-0ee7-4f42-a905-8fcd4fb82c3f",
+      "timestamp": "2025-07-14T00:52:31.232777",
+      "data": {
+        "title": "전체 테스트 결과 종합 및 문서화",
+        "workflow_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
+      }
     }
   ],
   "version": "3.0.0",
-  "last_saved": "2025-07-13T11:02:04.171589+00:00",
+  "last_saved": "2025-07-14T00:52:31.232777",
   "metadata": {
     "last_modified": "2025-07-13T11:02:04.181585+00:00",
     "project_name": "ai-coding-brain-mcp",

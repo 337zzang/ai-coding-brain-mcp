@@ -1,24 +1,32 @@
 """
-Workflow System
-===============
-효율적인 상태 기반 워크플로우 시스템
+Improved Workflow System
+=======================
+단순화된 워크플로우 시스템 - 단일 파일 기반
 """
 
-# 기존 API 호환성을 위한 import
-from .manager import WorkflowManager
+from .improved_manager import ImprovedWorkflowManager
+from .models import (
+    Task, WorkflowPlan, WorkflowEvent,
+    TaskStatus, PlanStatus, EventType
+)
 
-# 새로운 컴포넌트들
-from .core import WorkflowEngine, StateManager, WorkflowState, TaskState
-from .messaging import MessageController
+# 기본 export
+WorkflowManager = ImprovedWorkflowManager  # 하위 호환성
 
 __all__ = [
-    # 기존 API (호환성)
-    'WorkflowManager',
+    # Manager
+    'ImprovedWorkflowManager',
+    'WorkflowManager',  # 별칭
 
-    # 새로운 API
-    'WorkflowEngine',
-    'StateManager', 
-    'WorkflowState',
-    'TaskState',
-    'MessageController'
+    # Models
+    'Task',
+    'WorkflowPlan', 
+    'WorkflowEvent',
+
+    # Enums
+    'TaskStatus',
+    'PlanStatus',
+    'EventType',
 ]
+
+__version__ = "3.1.0"

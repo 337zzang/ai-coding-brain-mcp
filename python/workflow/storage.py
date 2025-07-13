@@ -49,7 +49,7 @@ class WorkflowStorage:
         # 초기화
         self._ensure_file_exists()
 
-    def save(self, data: Dict[str, Any], create_backup: bool = True) -> bool:
+    def save(self, data: Dict[str, Any], create_backup: bool = False) -> bool:
         """데이터 저장 (원자적 쓰기)"""
         with self._lock:
             try:
@@ -263,7 +263,7 @@ class WorkflowStorage:
         return None
 
     def save_project_data(self, project_name: str, data: Dict[str, Any], 
-                         create_backup: bool = True) -> bool:
+                         create_backup: bool = False) -> bool:
         """프로젝트 데이터 저장 (호환성)"""
         if project_name == self.project_name:
             return self.save(data, create_backup)

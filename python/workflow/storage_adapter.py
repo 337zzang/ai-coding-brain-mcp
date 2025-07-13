@@ -35,7 +35,7 @@ class WorkflowStorage:
         self.auto_backup_interval = self.storage.auto_backup_interval
         self.last_backup_time = None
     
-    def save(self, data: Dict[str, Any], create_backup: bool = True) -> bool:
+    def save(self, data: Dict[str, Any], create_backup: bool = False) -> bool:
         """데이터 저장 (프로젝트별)
         
         Args:

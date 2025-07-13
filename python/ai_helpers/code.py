@@ -694,10 +694,7 @@ def replace_block(file_path: str, target_block: str, new_code: str, preserve_for
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
         
-        # 1-1. 백업 생성 (안전성 확보)
-        backup_path = f"{file_path}.{datetime.now():%Y%m%d%H%M%S}.bak"
-        shutil.copy2(file_path, backup_path)
-        _log(f"백업 생성: {backup_path}")
+        # 백업 생성 제거 (Git으로 관리)
         
         # 2. AST 파싱
         try:
@@ -774,7 +771,7 @@ def replace_block(file_path: str, target_block: str, new_code: str, preserve_for
                 ok=True,
                 data={
                     'message': f"{target_block} 교체 완료",
-                    'backup_path': backup_path,
+                    # 'backup_path': 제거됨,
                     'file_path': file_path,
                     'method': 'AST'
                 }
@@ -789,8 +786,7 @@ def replace_block(file_path: str, target_block: str, new_code: str, preserve_for
     except Exception as e:
         # 백업 경로 정보를 포함한 에러 메시지
         error_msg = f"{type(e).__name__} - {e}"
-        if 'backup_path' in locals():
-            error_msg += f"\n백업 파일: {backup_path}"
+        # 백업 파일 참조 제거
         
         return HelperResult(
             ok=False,
@@ -960,7 +956,7 @@ def _fallback_replace(file_path: str, target_block: str, new_code: str, content:
             ok=True,
             data={
                 'message': f"{target_block} 교체 완료 (폴백 방식)",
-                'backup_path': backup_path,
+                # 'backup_path': 제거됨,
                 'file_path': file_path,
                 'method': 'fallback',
                 'target_line': target_line + 1,  # 1-based line number

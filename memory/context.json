@@ -1,4 +1,11 @@
 {
   "last_modified": "2025-07-13T07:24:32.918345",
-  "project_name": "ai-coding-brain-mcp"
+  "project_name": "ai-coding-brain-mcp",
+  "helpers_patterns": {
+    "read_file_correct": "helpers.read_file(path).get_data({}).get('content', '')",
+    "read_file_safe": "helpers.read_file_safe(path)  # v48+ \uad8c\uc7a5",
+    "read_file_lines": "helpers.read_file_lines(path)  # \ub77c\uc778 \ub9ac\uc2a4\ud2b8\ub85c",
+    "scan_dir": "helpers.scan_directory(path).get_data({}).get('files', [])",
+    "git_status": "helpers.git_status()  # \uc9c1\uc811 dict \ubc18\ud658"
+  }
 }

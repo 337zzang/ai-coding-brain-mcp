@@ -787,3 +787,39 @@ except ImportError as e:
     print(f"⚠️ helpers_extension 자동 등록 실패: {e}")
 except Exception as e:
     print(f"❌ 예상치 못한 오류: {e}")
+
+# helpers 메서드 개선 - read_file wrapper
+
+def read_file_safe(self, path: str) -> str:
+    """
+    파일 내용을 문자열로 반환 (안전한 래퍼)
+
+    사용법:
+        content = helpers.read_file_safe('file.py')
+        lines = content.split('\n')
+
+    Returns:
+        str: 파일 내용 (문자열)
+    """
+    result = self.read_file(path)
+    data = result.get_data({})
+    return data.get('content', '')
+
+def read_file_lines(self, path: str) -> list:
+    """
+    파일을 라인 리스트로 반환
+
+    사용법:
+        lines = helpers.read_file_lines('file.py')
+        for line in lines:
+            print(line)
+
+    Returns:
+        list: 라인 리스트
+    """
+    content = self.read_file_safe(path)
+    return content.split('\n') if content else []
+
+# HelpersWrapper에 메서드 추가
+HelpersWrapper.read_file_safe = read_file_safe
+HelpersWrapper.read_file_lines = read_file_lines

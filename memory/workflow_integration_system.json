@@ -1,0 +1,40 @@
+{
+  "title": "워크플로우-Todo 통합 시스템",
+  "version": "2.0",
+  "created_date": "2025-07-13T13:16:30.094834",
+  "description": "Claude Code와 ai-coding-brain-mcp의 완전 통합된 워크플로우 관리 시스템",
+  "core_concepts": {
+    "hierarchy": {
+      "workflow_task": "상위 작업 단위 - 큰 기능 단위의 작업",
+      "todo_item": "하위 세부 작업 - 실제 실행 가능한 세부 단위",
+      "relationship": "1개 Task = 여러 Todo의 집합"
+    },
+    "synchronization": {
+      "task_to_todo": "Task를 세부 Todo로 자동 분해",
+      "todo_to_task": "Todo 완료 상태를 Task 진행률에 실시간 반영",
+      "bidirectional": "양방향 동기화로 일관성 보장"
+    }
+  },
+  "implementation": {
+    "class_name": "IntegratedWorkflowManager",
+    "key_methods": [
+      "create_workflow_with_todos()",
+      "decompose_task_to_todos()",
+      "get_task_progress()",
+      "sync_todos_to_workflow()"
+    ],
+    "integration_point": "Claude Code TodoWrite API"
+  },
+  "validated_features": [
+    "워크플로우 Task → Todo 자동 분해",
+    "Todo 완료 → Task 진행률 실시간 계산",
+    "Claude Code TodoWrite 완전 통합",
+    "계층적 작업 관리 구현",
+    "양방향 동기화 시스템"
+  ],
+  "usage_example": {
+    "workflow_creation": "manager.create_workflow_with_todos(plan)",
+    "progress_tracking": "manager.get_task_progress(task_id, todos)",
+    "synchronization": "manager.sync_todos_to_workflow(current_todos)"
+  }
+}

@@ -171,13 +171,13 @@ restart_json_repl(keep_helpers=False)  # 완전 초기화
     // ========== API 관리 도구 ==========
     {
         name: 'toggle_api',
-        description: 'API를 활성화하거나 비활성화합니다. 이미지 생성, 번역, 음성 합성 등 다양한 API를 on/off 할 수 있습니다.',
+        description: 'API를 활성화하거나 비활성화합니다. 이미지 생성(image), 웹 자동화(web_automation) 등 특수 기능 API를 on/off 할 수 있습니다.',
         inputSchema: {
             type: 'object',
             properties: {
                 api_name: {
                     type: 'string',
-                    description: 'API 이름 (예: image, translator, voice 등)'
+                    description: 'API 이름 (예: image, web_automation 등)'
                 },
                 enabled: {
                     type: 'boolean',
@@ -191,7 +191,7 @@ restart_json_repl(keep_helpers=False)  # 완전 초기화
 
     {
         name: 'list_apis',
-        description: '사용 가능한 API 목록과 활성화 상태를 조회합니다.',
+        description: '사용 가능한 특수 기능 API 목록과 활성화 상태를 조회합니다. (image, web_automation)',
         inputSchema: {
             type: 'object',
             properties: {},

@@ -78,3 +78,24 @@ def list_apis() -> Dict[str, bool]:
 def check_api_enabled(api_name: str) -> bool:
     """API 활성화 상태 확인"""
     return _api_manager.check_api_enabled(api_name)
+
+# Updated API management for special features only
+
+def get_available_apis():
+    """사용 가능한 특수 기능 API 목록"""
+    return ['image', 'web_automation']
+
+def list_apis():
+    """API 목록과 활성화 상태 반환"""
+    available = get_available_apis()
+    enabled = []
+
+    # 각 API의 활성화 상태 확인 (간단한 구현)
+    for api in available:
+        if check_api_enabled(api):
+            enabled.append(api)
+
+    return {
+        'available': available,
+        'enabled': enabled
+    }

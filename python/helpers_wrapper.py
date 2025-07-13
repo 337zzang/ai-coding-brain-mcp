@@ -14,7 +14,7 @@ import os
 # 프로젝트 루트 경로 중앙화
 ROOT = Path(__file__).resolve().parent.parent  # ai-coding-brain-mcp 루트
 
-from python.workflow.code_integration import WorkflowCodeIntegration
+# from python.workflow.context_integration import WorkflowContextIntegration  # v47 임시 주석처리
 def safe_helper(func: Callable) -> Callable:
     """헬퍼 함수를 안전하게 래핑하는 데코레이터"""
     @functools.wraps(func)
@@ -437,7 +437,7 @@ class HelpersWrapper:
     def workflow_done(self, notes: str = "") -> HelperResult:
         """v3: 태스크 완료"""
         try:
-            from workflow.v3 import WorkflowManager
+            from python.workflow.manager import WorkflowManager
             # V2 complete_current_task는 V3에서 다르게 처리됨
             manager = WorkflowManager("default")
             return manager.execute_command(f"/next {notes}")
@@ -447,7 +447,7 @@ class HelpersWrapper:
     def workflow_status(self) -> HelperResult:
         """v3: 상태 조회"""
         try:
-            from workflow.v3 import WorkflowManager
+            from python.workflow.manager import WorkflowManager
             # V2 get_status는 V3에서 다르게 처리됨
             manager = WorkflowManager("default")
             result = manager.execute_command("/status")

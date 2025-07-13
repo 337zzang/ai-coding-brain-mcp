@@ -57,6 +57,25 @@ class InputValidator:
     def validate_task_id(task_id: str) -> None:
         """태스크 ID 검증"""
         InputValidator.validate_non_empty_string(task_id, "Task ID")
+    
+    @staticmethod
+    def validate_title(title: str, field_name: str = "제목") -> str:
+        """제목 검증 및 정리"""
+        if not title or not title.strip():
+            raise ValidationError(f"{field_name}은 필수입니다")
+        
+        title = title.strip()
+        if len(title) > 200:
+            raise ValidationError(f"{field_name}은 200자를 초과할 수 없습니다")
+        
+        return title
+    
+    @staticmethod
+    def validate_description(description: Optional[str]) -> Optional[str]:
+        """설명 검증 및 정리"""
+        if description:
+            return description.strip()
+        return description
 
 
 # 기존 ErrorMessages 클래스는 제거 (사용 안함)

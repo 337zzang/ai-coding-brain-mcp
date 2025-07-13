@@ -18,8 +18,11 @@ from python.utils.io_helpers import write_json, atomic_write
 
 
 # 로깅 설정 - stderr로 출력하여 JSON 응답 오염 방지
+# 환경 변수로 디버그 모드 제어
+import os
+debug_mode = os.environ.get('FLOW_DEBUG', 'false').lower() == 'true'
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG if debug_mode else logging.WARNING,
     stream=sys.stderr,
     format='%(message)s'
 )
@@ -180,19 +183,19 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
         if workflow_status is None:
             workflow_status = {}
         
-        # DEBUG: 브리핑 함수 호출 전 로깅
-        logger.info(f"[DEBUG] 브리핑 함수 호출 전:")
-        logger.info(f"  - project_name: {project_name}")
-        logger.info(f"  - workflow_status type: {type(workflow_status)}")
-        logger.info(f"  - context keys: {list(context.keys()) if context else 'None'}")
+        # DEBUG 로그 제거 - 필요시 주석 해제
+        # logger.info(f"[DEBUG] 브리핑 함수 호출 전:")
+        # logger.info(f"  - project_name: {project_name}")
+        # logger.info(f"  - workflow_status type: {type(workflow_status)}")
+        # logger.info(f"  - context keys: {list(context.keys()) if context else 'None'}")
         
         # 브리핑 함수 호출 및 반환값 저장
         briefing_result = _print_project_briefing(project_name, workflow_status, context)
         
-        # DEBUG: 브리핑 함수 호출 후 로깅
-        logger.info(f"[DEBUG] 브리핑 함수 반환값:")
-        logger.info(f"  - type: {type(briefing_result)}")
-        logger.info(f"  - value: {briefing_result}")
+        # DEBUG 로그 제거 - 필요시 주석 해제
+        # logger.info(f"[DEBUG] 브리핑 함수 반환값:")
+        # logger.info(f"  - type: {type(briefing_result)}")
+        # logger.info(f"  - value: {briefing_result}")
         
         # 만약 다른 곳에서 briefing_result를 사용한다면 여기서 처리
         # 예: global briefing_cache 등
@@ -217,20 +220,20 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
             'workflow_status': workflow_status if workflow_status else {}  # None 방지
         }
         
-        # Workflow V3 dispatcher 업데이트
-        try:
-            from python.workflow.dispatcher import update_dispatcher_project
-            update_dispatcher_project(project_name)
-            logger.info(f"[WORKFLOW] V3 dispatcher를 '{project_name}' 프로젝트로 업데이트")
-        except Exception as e:
-            logger.warning(f"[WORKFLOW] V3 dispatcher 업데이트 실패: {e}")
+        # Workflow V3 dispatcher 업데이트 - dispatcher 모듈이 없으므로 주석 처리
+        # try:
+        #     from python.workflow.dispatcher import update_dispatcher_project
+        #     update_dispatcher_project(project_name)
+        #     logger.info(f"[WORKFLOW] V3 dispatcher를 '{project_name}' 프로젝트로 업데이트")
+        # except Exception as e:
+        #     logger.warning(f"[WORKFLOW] V3 dispatcher 업데이트 실패: {e}")
         
-        # DEBUG: 반환값 확인
-        logger.info(f"[DEBUG] cmd_flow_with_context 최종 반환값:")
-        logger.info(f"  - success: {return_data['success']}")
-        logger.info(f"  - context type: {type(return_data['context'])}")
-        logger.info(f"  - context is None: {return_data['context'] is None}")
-        logger.info(f"  - context keys: {list(return_data['context'].keys()) if return_data['context'] else 'None/Empty'}")
+        # DEBUG 로그 제거 - 필요시 주석 해제
+        # logger.info(f"[DEBUG] cmd_flow_with_context 최종 반환값:")
+        # logger.info(f"  - success: {return_data['success']}")
+        # logger.info(f"  - context type: {type(return_data['context'])}")
+        # logger.info(f"  - context is None: {return_data['context'] is None}")
+        # logger.info(f"  - context keys: {list(return_data['context'].keys()) if return_data['context'] else 'None/Empty'}")
         
         return return_data
 
@@ -534,8 +537,8 @@ def _save_context(ctx: Dict[str, Any]):
 
     try:
         os.makedirs('memory', exist_ok=True)
-        # atomic_write 사용으로 변경
-        write_json(context_file, ctx)
+        # write_json 사용 (data, path 순서)
+        write_json(ctx, context_file)
         logger.info("[OK] 컨텍스트 저장 완료")
     except Exception as e:
         logger.error(f"컨텍스트 저장 실패: {e}")
@@ -609,16 +612,9 @@ def _load_and_show_workflow() -> Dict[str, Any]:
         # 현재 프로젝트명
         current_project = Path.cwd().name
         
-        # WorkflowManager 인스턴스 가져오기 (캐시 무효화 포함)
-        try:
-            # 먼저 캐시 무효화하고 새로 로드
-            wm = WorkflowManager.invalidate_and_reload(current_project)
-            logger.info(f"[WORKFLOW] WorkflowManager 캐시 무효화 및 재로드 완료: {current_project}")
-        except Exception as e:
-            logger.warning(f"[WORKFLOW] invalidate_and_reload 실패, 일반 로드 시도: {e}")
-            # 실패 시 일반 로드
-            wm = WorkflowManager.get_instance(current_project)
-            wm.reload()  # 수동 리로드
+        # WorkflowManager 인스턴스 가져오기
+        wm = WorkflowManager.get_instance(current_project)
+        logger.info(f"[WORKFLOW] WorkflowManager 인스턴스 로드: {current_project}")
         
         # 상태 확인
         status_result = wm.get_status()
@@ -709,8 +705,9 @@ def _update_file_directory():
         if len(directories) > 50:
             content += f"... and {len(directories) - 50} more directories\n"
 
-        # 파일 쓰기 - atomic_write 사용
-        atomic_write('file_directory.md', content, mode='text')
+        # 파일 쓰기 - atomic_write 사용 (data, path 순서)
+        from pathlib import Path
+        atomic_write(content, Path('file_directory.md'))
 
         logger.info("[OK] file_directory.md 업데이트 완료")
 
@@ -777,11 +774,11 @@ def _print_project_briefing(project_name: str, workflow_status: Dict[str, Any], 
         "workflow_status": workflow_status,
     }
     
-    # DEBUG: 반환값 로깅
-    logger.info(f"[DEBUG] _print_project_briefing 반환값:")
-    logger.info(f"  - type: {type(return_value)}")
-    logger.info(f"  - keys: {list(return_value.keys())}")
-    logger.info(f"  - project_path: {return_value.get('project_path')}")
+    # DEBUG 로그 제거 - 필요시 주석 해제
+    # logger.info(f"[DEBUG] _print_project_briefing 반환값:")
+    # logger.info(f"  - type: {type(return_value)}")
+    # logger.info(f"  - keys: {list(return_value.keys())}")
+    # logger.info(f"  - project_path: {return_value.get('project_path')}")
     
     return return_value
 

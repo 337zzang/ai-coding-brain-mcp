@@ -1,167 +1,160 @@
 """
-Integrated Message Controller for Workflow
-=========================================
-메시지 출력과 필요한 처리를 한곳에서 수행
+워크플로우 메시지 컨트롤러 - AI 친화적 메시지 출력
 """
-
-from typing import Dict, Any, Optional
 import json
-import time
-import os
+import logging
 from datetime import datetime
+from typing import Dict, Any, Optional, List
 from contextlib import contextmanager
 
-
-class Logger:
-    """간단한 로거"""
-    def __init__(self, log_dir: str = None):
-        if log_dir is None:
-            project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            log_dir = os.path.join(project_root, 'memory', 'logs', 'workflow')
-
-        self.log_dir = log_dir
-        os.makedirs(self.log_dir, exist_ok=True)
-
-    def log(self, msg_type: str, entity_id: str, data: Dict):
-        """로그 기록"""
-        today = datetime.now().strftime('%Y%m%d')
-        log_file = os.path.join(self.log_dir, f'workflow_{today}.log')
-
-        log_entry = {
-            'timestamp': datetime.now().isoformat(),
-            'type': msg_type,
-            'entity_id': entity_id,
-            'data': data
-        }
-
-        with open(log_file, 'a', encoding='utf-8') as f:
-            f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
-
-
-class ErrorHandler:
-    """간단한 에러 핸들러"""
-    def __init__(self):
-        self.error_count = 0
-        self.errors = []
-
-    def handle(self, entity_id: str, error_data: Dict):
-        """에러 처리"""
-        self.error_count += 1
-        self.errors.append({
-            'entity_id': entity_id,
-            'error': error_data,
-            'timestamp': time.time()
-        })
-
-        # 에러 통계 출력
-        print(f"st:error_stats:system:{json.dumps({'total_errors': self.error_count})}")
-
-
-class GitService:
-    """Git 자동화 서비스"""
-    def __init__(self, auto_commit: bool = False):
-        self.auto_commit = auto_commit
-
-    def check_auto_commit(self, entity_id: str):
-        """자동 커밋 체크"""
-        if not self.auto_commit:
-            return
-
-        # Git 상태 체크 (helpers 사용)
-        try:
-            git_status = helpers.git_status()
-            modified_count = len(git_status.get('modified', []))
-
-            if modified_count > 0:
-                print(f"st:git_check:git:{json.dumps({'modified': modified_count})}")
-                # 여기서 실제 auto commit을 수행할 수 있음
-        except:
-            pass
-
-
 class MessageController:
-    """통합 메시지 컨트롤러"""
-
+    """
+    통합 메시지 컨트롤러
+    - stdout으로 메시지 출력 (AI가 볼 수 있도록)
+    - 로깅 시스템 연동
+    - 메시지 버퍼링 및 배치 처리
+    """
+    
     def __init__(self, config: Optional[Dict] = None):
         self.config = config or {}
         self.suppressed = False
-
-        # 서비스 초기화 (설정에 따라)
-        self.logger = Logger() if self.config.get('logging', True) else None
-        self.error_handler = ErrorHandler() if self.config.get('error_handling', True) else None
-        self.git_service = GitService(self.config.get('auto_commit', False))
-
+        self.logger = logging.getLogger("workflow.messages")
+        self.error_count = 0
+        self.message_buffer: List[str] = []
+        self.batch_mode = False
+        
     def emit(self, msg_type: str, entity_id: str, data: Dict[str, Any]):
-        """메시지 출력 및 처리"""
+        """AI가 인식하기 쉬운 형식으로 메시지 출력"""
         if self.suppressed:
             return
-
+            
+        # AI가 인식하기 쉬운 확장 형식
+        action = self._get_ai_action(msg_type, entity_id, data)
+        
+        # 확장된 메시지 형식 (AI용)
+        print(f"\n{'='*60}")
+        print(f"[WORKFLOW-MESSAGE] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"Type: {msg_type}")
+        print(f"Entity: {entity_id}")
+        print(f"AI Action: {action}")
+        print(f"Data: {json.dumps(data, indent=2, ensure_ascii=False)}")
+        print(f"{'='*60}\n")
+        
         # 1. 항상 stdout으로 출력 (AI가 볼 수 있도록)
         print(f"st:{msg_type}:{entity_id}:{json.dumps(data)}")
-
+        
         # 2. 로깅 (설정되어 있으면)
-        if self.logger:
-            self.logger.log(msg_type, entity_id, data)
-
-        # 3. 타입별 추가 처리
-        if msg_type == 'error_occurred' and self.error_handler:
-            self.error_handler.handle(entity_id, data)
-
-        elif msg_type in ['task_completed', 'plan_completed'] and self.git_service:
-            self.git_service.check_auto_commit(entity_id)
-
-    def emit_transition(self, entity_id: str, old_state: str, new_state: str, 
-                       context: Optional[Dict] = None):
+        if self.logger.isEnabledFor(logging.INFO):
+            self.logger.info(f"{msg_type}:{entity_id} - {data}")
+            
+        # 3. 배치 모드일 때는 버퍼에 저장
+        if self.batch_mode:
+            self.message_buffer.append(f"{msg_type}:{entity_id}:{json.dumps(data)}")
+            
+    def _get_ai_action(self, msg_type: str, entity_id: str, data: Dict) -> str:
+        """메시지 타입과 데이터에 따른 AI 액션 결정"""
+        if msg_type == "state_changed":
+            from_state = data.get("from")
+            to_state = data.get("to")
+            
+            if "task" in entity_id:
+                if to_state == "completed":
+                    return "Generate task completion report with results and next steps"
+                elif to_state == "in_progress":
+                    return "Create detailed design document with impact analysis"
+                elif to_state == "error":
+                    return "Analyze error logs and provide fix suggestions"
+            elif "plan" in entity_id and to_state == "completed":
+                return "Generate comprehensive phase completion report"
+                
+        elif msg_type == "error_occurred":
+            return "Analyze error cause and provide immediate fix"
+        elif msg_type == "task_summary":
+            status = data.get("status")
+            if status == "completed":
+                return "Document success factors and lessons learned"
+            elif status == "failed":
+                return "Analyze failure reasons and suggest alternatives"
+        elif msg_type == "progress_update":
+            return "Update project dashboard and timeline"
+            
+        return "Monitor and log event"
+            
+    def emit_transition(self, entity_id: str, old_state: str, new_state: str,
+                       metadata: Optional[Dict] = None):
         """상태 전이 메시지"""
-        self.emit(
-            msg_type='state_changed',
-            entity_id=entity_id,
-            data={
-                'from': old_state,
-                'to': new_state,
-                'context': context or {},
-                'timestamp': time.time()
-            }
-        )
-
-    def emit_error(self, entity_id: str, error_type: str, message: str):
+        data = {
+            "from": old_state,
+            "to": new_state,
+            **(metadata or {})
+        }
+        self.emit("state_changed", entity_id, data)
+        
+    def emit_error(self, entity_id: str, error_type: str, message: str, 
+                  context: Optional[Dict] = None):
         """에러 메시지"""
-        self.emit(
-            msg_type='error_occurred',
-            entity_id=entity_id,
-            data={
-                'error_type': error_type,
-                'message': message,
-                'timestamp': time.time()
-            }
-        )
-
+        self.error_count += 1
+        data = {
+            "error": error_type,
+            "message": message,
+            "context": context or {},
+            "timestamp": datetime.now().isoformat()
+        }
+        self.emit("error_occurred", entity_id, data)
+        
+        # 에러 통계
+        self.emit("error_stats", "system", {"total_errors": self.error_count})
+        
     def emit_summary(self, entity_id: str, status: str, stats: Dict):
-        """작업 완료 요약"""
-        self.emit(
-            msg_type='task_summary',
-            entity_id=entity_id,
-            data={
-                'status': status,
-                'stats': stats,
-                'timestamp': time.time()
-            }
-        )
-
+        """요약 메시지"""
+        data = {
+            "status": status,
+            **stats
+        }
+        self.emit("task_summary", entity_id, data)
+        
+    def emit_progress(self, plan_id: str, completed: int, total: int):
+        """진행률 메시지"""
+        percent = int((completed / total * 100)) if total > 0 else 0
+        data = {
+            "completed": completed,
+            "total": total,
+            "percent": percent
+        }
+        self.emit("progress_update", plan_id, data)
+        
     @contextmanager
     def suppress(self):
-        """메시지 발행 일시 중단"""
+        """메시지 출력 임시 중단"""
         old_state = self.suppressed
         self.suppressed = True
         try:
             yield
         finally:
             self.suppressed = old_state
+            
+    @contextmanager
+    def batch(self):
+        """배치 모드 - 메시지를 버퍼에 모았다가 한번에 처리"""
+        old_batch = self.batch_mode
+        self.batch_mode = True
+        self.message_buffer.clear()
+        try:
+            yield self.message_buffer
+        finally:
+            self.batch_mode = old_batch
+            # 배치 메시지 처리
+            if self.message_buffer and not self.suppressed:
+                print(f"\n[BATCH] {len(self.message_buffer)} messages")
+                
+    def get_error_count(self) -> int:
+        """에러 카운트 반환"""
+        return self.error_count
+        
+    def reset_error_count(self):
+        """에러 카운트 초기화"""
+        self.error_count = 0
 
 
-# 전역 인스턴스 (기본 설정)
-message_controller = MessageController({
-    'logging': True,
-    'error_handling': True,
-    'auto_commit': False  # 기본값은 False
-})
+# 싱글톤 인스턴스 (하위 호환성)
+message_controller = MessageController()

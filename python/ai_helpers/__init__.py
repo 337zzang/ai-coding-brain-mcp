@@ -9,7 +9,14 @@ from typing import Dict, Any, List, Optional
 
 # 로깅 설정
 logger = logging.getLogger("ai_helpers")
+# INFO 레벨로 유지하여 에러는 항상 출력되도록 함
 logger.setLevel(logging.INFO)
+
+# stderr 핸들러 추가 - 에러 메시지가 제대로 출력되도록
+if not logger.handlers:
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(logging.Formatter('%(message)s'))
+    logger.addHandler(handler)
 
 # Helper Result - 가장 먼저 import
 from .helper_result import HelperResult
@@ -71,13 +78,15 @@ try:
         replace_block, insert_block, get_snippet_preview
     )
 except ImportError as e:
-    logger.warning(f"⚠️ compile 모듈 로드 실패: {e}")
+    # logger.warning(f"⚠️ compile 모듈 로드 실패: {e}")
+    pass
 
 # Build 관련
 try:
     from .build import build_project
 except ImportError as e:
-    logger.warning(f"⚠️ build 모듈 로드 실패: {e}")
+    # logger.warning(f"⚠️ build 모듈 로드 실패: {e}")
+    pass
 
 # Code 관련 - 통합 모듈에서 import
 try:
@@ -127,7 +136,8 @@ try:
         get_verbose, set_verbose
     )
 except ImportError as e:
-    logger.warning(f"⚠️ legacy_replacements 모듈 로드 실패: {e}")
+    # logger.warning(f"⚠️ legacy_replacements 모듈 로드 실패: {e}")
+    pass
 
 # API 관련
 try:
@@ -144,8 +154,22 @@ def workflow(command: str):
         if parent_dir not in sys.path:
             sys.path.insert(0, parent_dir)
         
-        from python.workflow.dispatcher import execute_workflow_command
-        return execute_workflow_command(command)
+        # V3에서는 WorkflowManager를 직접 사용 (dispatcher 제거됨)
+        from python.workflow.manager import WorkflowManager
+        
+        # 현재 프로젝트명 가져오기
+        current_project = os.path.basename(os.getcwd())
+        wm = WorkflowManager.get_instance(current_project)
+        
+        # 명령 처리
+        result = wm.process_command(command)
+        
+        # HelperResult로 변환
+        if result.get('success'):
+            return HelperResult(True, data=result)
+        else:
+            return HelperResult(False, error=result.get('message', 'Unknown error'))
+            
     except Exception as e:
         return HelperResult(False, error=str(e))
 
@@ -161,6 +185,8 @@ def flow_project(project_name: str) -> Dict[str, Any]:
         result = cmd_flow_with_context(project_name)
         return HelperResult(ok=True, data=result, error=None)
     except Exception as e:
+        # stderr로 직접 출력
+        print(f"flow_project 실행 실패: {e}", file=sys.stderr)
         logger.error(f"flow_project 실행 실패: {e}")
         return HelperResult(ok=False, data=None, error=str(e))
 
@@ -299,7 +325,7 @@ try:
     ])
     
 except ImportError as e:
-    print(f"Web automation 모듈 로드 실패: {e}")
+    # print(f"Web automation 모듈 로드 실패: {e}")
     WEB_AUTOMATION_AVAILABLE = False
 
 

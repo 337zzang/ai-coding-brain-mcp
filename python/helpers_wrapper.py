@@ -378,10 +378,31 @@ class HelpersWrapper:
 
 
     def workflow(self, command: str) -> HelperResult:
-        """v3: 명령어 실행"""
+        """v3: 명령어 실행 (WorkflowManager 사용)"""
         try:
-            from python.workflow.dispatcher import execute_workflow_command
-            return execute_workflow_command(command)
+            # 원본 ai_helpers의 workflow 함수 사용
+            if hasattr(self._helpers, 'workflow'):
+                return self._helpers.workflow(command)
+                
+            # fallback: 직접 WorkflowManager 사용
+            import os
+            from python.workflow.manager import WorkflowManager
+            
+            # 현재 프로젝트 이름 가져오기
+            project_name = os.path.basename(os.getcwd())
+            
+            # WorkflowManager 인스턴스 가져오기
+            wm = WorkflowManager.get_instance(project_name)
+            
+            # 명령 처리
+            result = wm.process_command(command)
+            
+            # HelperResult로 변환
+            if result.get('success'):
+                return HelperResult(True, data=result)
+            else:
+                return HelperResult(False, error=result.get('message', 'Unknown error'))
+                
         except ImportError as e:
             return HelperResult(False, error=f"Workflow 모듈 import 실패: {str(e)}")
         except Exception as e:

@@ -74,13 +74,16 @@ class AIHelpers:
         self.git_stash_pop = git.git_stash_pop
         self.git_log = git.git_log
         
-        # Build 메서드들
-        from ai_helpers import build
-        self.find_executable = build.find_executable
-        self.detect_project_type = build.detect_project_type
-        self.run_command = build.run_command
-        self.build_project = build.build_project
-        self.install_dependencies = build.install_dependencies
+        # Build 메서드들 - build 모듈이 없으므로 주석 처리
+        # try:
+        #     from ai_helpers import build
+        #     self.find_executable = build.find_executable
+        #     self.detect_project_type = build.detect_project_type
+        #     self.run_command = build.run_command
+        #     self.build_project = build.build_project
+        #     self.install_dependencies = build.install_dependencies
+        # except ImportError:
+        #     pass
         
         # Context 메서드들
         from ai_helpers import context

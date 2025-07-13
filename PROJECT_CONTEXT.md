@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-13 20:23:30
+> 최종 업데이트: 2025-07-13 23:35:49
 
 ## 🎯 프로젝트 개요
 
@@ -104,15 +104,19 @@ ai-coding-brain-mcp/
 │       └── ... (17 more files)
 │   ├── __init__.py
 ├── docs/
-│   └── tasks/
-│       ├── 20250713_task_1b12e231.md
-│       ├── 20250713_task_21dfb9f3.md
-│       ├── 20250713_task_23799501.md
-│       └── ... (9 more files)
+│   ├── tasks/
+│   │   ├── 20250713_task_1b12e231.md
+│   │   ├── 20250713_task_21dfb9f3.md
+│   │   ├── 20250713_task_23799501.md
+│   │   └── ... (9 more files)
+│   └── workflow_reports/
+│       ├── ai-coding-brain-mcp_jwt_auth_error_ImportError_205451.md
+│       ├── ai-coding-brain-mcp_jwt_auth_system_jwt_token_design_v1.md
+│       ├── ai-coding-brain-mcp_jwt_auth_system_jwt_token_report_20250713.md
 │   ├── AI_HELPERS_GUIDE.md
 │   ├── event_system_analysis.json
 │   ├── helper_result_practical_examples.md
-│   └── ... (11 more files)
+│   └── ... (13 more files)
 ├── examples/
 │   ├── test_async_web.py
 │   ├── web_automation_recording_examples.py
@@ -145,7 +149,7 @@ ai-coding-brain-mcp/
 ├── .ai-brain.config.json
 ├── .eslintrc.json
 ├── CLAUDE.md
-└── ... (6 more files)
+└── ... (7 more files)
 ```
 - `.ai-brain.config.json`: AI Coding Brain 설정
 - `package.json`: Node.js 프로젝트 설정
@@ -155,14 +159,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 262개
-- **디렉토리 수**: 62개
+- **전체 파일 수**: 276개
+- **디렉토리 수**: 67개
 - **파일 타입 분포**:
-  - `.py`: 140개 (53.4%)
-  - `.json`: 45개 (17.2%)
-  - `.md`: 33개 (12.6%)
-  - `.ts`: 28개 (10.7%)
-  - `.png`: 4개 (1.5%)
+  - `.py`: 143개 (51.8%)
+  - `.json`: 47개 (17.0%)
+  - `.md`: 41개 (14.9%)
+  - `.ts`: 28개 (10.1%)
+  - `.png`: 4개 (1.4%)
 
 ## 🚀 빠른 시작
 

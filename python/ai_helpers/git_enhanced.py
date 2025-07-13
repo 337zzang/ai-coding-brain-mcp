@@ -41,8 +41,6 @@ try:
 except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError):
     GIT_AVAILABLE = False
 
-
-
 class GitEnhancer:
     """Git 명령어 실행을 위한 헬퍼 클래스"""
 
@@ -83,10 +81,8 @@ class GitEnhancer:
                 'returncode': -1
             }
 
-
 # GitEnhancer 인스턴스 생성
 _git_enhancer = GitEnhancer()
-
 
 def git_status():
     """Git 상태 조회"""
@@ -98,8 +94,12 @@ def git_status():
         added = [line[3:] for line in lines if line.startswith('A ')]
         untracked = [line[3:] for line in lines if line.startswith('??')]
 
+        # 브랜치 정보 조회
+        branch_result = _git_enhancer._run_git_command(['branch', '--show-current'])
+        current_branch = branch_result['output'].strip() if branch_result['success'] else 'unknown'
+
         return HelperResult(True, {
-            'branch': git_get_current_branch().data if git_get_current_branch().ok else 'unknown',
+            'branch': current_branch,
             'modified': modified,
             'added': added,
             'untracked': untracked,
@@ -107,8 +107,7 @@ def git_status():
             'clean': len(lines) == 0
         })
     else:
-        return HelperResult(False, f"Git status 실패: {result['error']}")
-
+        return HelperResult(False, error=f"Git status 실패: {result['error']}")
 
 def git_add(files='.'):
     """Git add 실행"""
@@ -130,8 +129,7 @@ def git_add(files='.'):
             # 그래도 없으면 기본 메시지
             error_msg = f"Git add failed with return code {result.get('returncode', 'unknown')}"
         
-        return HelperResult(False, f"Git add 실패: {error_msg}")
-
+        return HelperResult(False, error=f"Git add 실패: {error_msg}")
 
 def git_commit(message, files=None):
     """Git commit 실행"""
@@ -149,8 +147,7 @@ def git_commit(message, files=None):
             'output': result['output']
         })
     else:
-        return HelperResult(False, f"Git commit 실패: {result['error']}")
-
+        return HelperResult(False, error=f"Git commit 실패: {result['error']}")
 
 def git_push(remote='origin', branch=None):
     """Git push 실행"""
@@ -175,8 +172,7 @@ def git_push(remote='origin', branch=None):
             'output': result['output']
         })
     else:
-        return HelperResult(False, f"Git push 실패: {result['error']}")
-
+        return HelperResult(False, error=f"Git push 실패: {result['error']}")
 
 def git_pull(remote='origin', branch=None):
     """Git pull 실행"""
@@ -193,8 +189,7 @@ def git_pull(remote='origin', branch=None):
             'output': result['output']
         })
     else:
-        return HelperResult(False, f"Git pull 실패: {result['error']}")
-
+        return HelperResult(False, error=f"Git pull 실패: {result['error']}")
 
 def git_branch(branch_name=None, action='list'):
     """Git branch 관리"""
@@ -217,8 +212,7 @@ def git_branch(branch_name=None, action='list'):
                 'output': result['output']
             })
 
-    return HelperResult(False, f"Git branch {action} 실패")
-
+    return HelperResult(False, error=f"Git branch {action} 실패")
 
 def git_log(count=10):
     """Git log 조회"""
@@ -240,8 +234,7 @@ def git_log(count=10):
             'count': len(commits)
         })
     else:
-        return HelperResult(False, f"Git log 실패: {result['error']}")
-
+        return HelperResult(False, error=f"Git log 실패: {result['error']}")
 
 def git_diff(file_path=None, staged=False):
     """Git diff 조회"""
@@ -261,8 +254,7 @@ def git_diff(file_path=None, staged=False):
             'file_path': file_path
         })
     else:
-        return HelperResult(False, f"Git diff 실패: {result['error']}")
-
+        return HelperResult(False, error=f"Git diff 실패: {result['error']}")
 
 def git_stash(message=None):
     """Git stash 생성"""
@@ -278,8 +270,7 @@ def git_stash(message=None):
             'output': result['output']
         })
     else:
-        return HelperResult(False, f"Git stash 실패: {result['error']}")
-
+        return HelperResult(False, error=f"Git stash 실패: {result['error']}")
 
 def git_stash_pop(index=0):
     """Git stash pop 실행"""
@@ -295,15 +286,14 @@ def git_stash_pop(index=0):
             'output': result['output']
         })
     else:
-        return HelperResult(False, f"Git stash pop 실패: {result['error']}")
-
+        return HelperResult(False, error=f"Git stash pop 실패: {result['error']}")
 
 def git_commit_smart():
     """스마트 커밋 (자동 메시지 생성)"""
     # 변경사항 확인
     status = git_status()
     if not status.ok:
-        return HelperResult(False, "Git status 확인 실패")
+        return HelperResult(False, error="Git status 확인 실패")
 
     # 자동 메시지 생성
     data = status.data
@@ -316,21 +306,16 @@ def git_commit_smart():
     elif data['untracked']:
         message = f"Add new files: {len(data['untracked'])} files"
     else:
-        return HelperResult(False, "변경사항이 없습니다")
+        return HelperResult(False, error="변경사항이 없습니다")
 
     return git_commit(message)
 
-
-def git_branch_smart(branch_name):
-    """스마트 브랜치 생성 및 체크아웃"""
-    return git_branch(branch_name, 'create')
 
 
 def is_git_repository():
     """Git 저장소 여부 확인"""
     result = _git_enhancer._run_git_command(['rev-parse', '--git-dir'])
     return HelperResult(True, result['success'])
-
 
 def git_init(directory=None):
     """Git 저장소 초기화"""
@@ -346,8 +331,7 @@ def git_init(directory=None):
             'output': result['output']
         })
     else:
-        return HelperResult(False, f"Git init 실패: {result['error']}")
-
+        return HelperResult(False, error=f"Git init 실패: {result['error']}")
 
 def git_checkout(branch_or_file):
     """Git checkout 실행"""
@@ -359,8 +343,7 @@ def git_checkout(branch_or_file):
             'output': result['output']
         })
     else:
-        return HelperResult(False, f"Git checkout 실패: {result['error']}")
-
+        return HelperResult(False, error=f"Git checkout 실패: {result['error']}")
 
 def git_get_current_branch():
     """현재 브랜치 이름 조회"""
@@ -370,8 +353,7 @@ def git_get_current_branch():
         branch = result['output'].strip()
         return HelperResult(True, branch)
     else:
-        return HelperResult(False, f"브랜치 조회 실패: {result['error']}")
-
+        return HelperResult(False, error=f"브랜치 조회 실패: {result['error']}")
 
 def git_get_remote_url(remote='origin'):
     """리모트 URL 조회"""
@@ -381,36 +363,4 @@ def git_get_remote_url(remote='origin'):
         url = result['output'].strip()
         return HelperResult(True, url)
     else:
-        return HelperResult(False, f"리모트 URL 조회 실패: {result['error']}")
-
-
-# 레거시 호환성을 위한 추가 함수들
-def get_git_operations():
-    """사용 가능한 Git 작업 목록 반환"""
-    operations = [
-        'git_status', 'git_add', 'git_commit', 'git_push', 'git_pull',
-        'git_branch', 'git_log', 'git_diff', 'git_stash', 'git_stash_pop',
-        'git_commit_smart', 'git_branch_smart', 'is_git_repository', 'git_init',
-        'git_checkout', 'git_get_current_branch', 'git_get_remote_url'
-    ]
-
-    return HelperResult(True, operations)
-
-
-def get_git_metrics():
-    """Git 저장소 메트릭 조회"""
-    if not is_git_repository().data:
-        return HelperResult(False, "Git 저장소가 아닙니다")
-
-    status = git_status()
-    log = git_log(1)
-
-    metrics = {
-        'is_repo': True,
-        'branch': git_get_current_branch().data if git_get_current_branch().ok else 'unknown',
-        'modified_files': len(status.data.get('modified', [])) if status.ok else 0,
-        'untracked_files': len(status.data.get('untracked', [])) if status.ok else 0,
-        'last_commit': log.data['commits'][0] if log.ok and log.data['commits'] else None
-    }
-
-    return HelperResult(True, metrics)
+        return HelperResult(False, error=f"리모트 URL 조회 실패: {result['error']}")

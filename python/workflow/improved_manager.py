@@ -118,10 +118,22 @@ class ImprovedWorkflowManager:
         if not task:
             return False
         
+        # 이전 상태 저장
+        old_status = task.get("status", TaskStatus.TODO.value)
+        
         task["status"] = TaskStatus.IN_PROGRESS.value
         task["started_at"] = datetime.now().isoformat()
         task["updated_at"] = datetime.now().isoformat()
         
+        # state_changed 이벤트 발행 (AI가 설계서를 작성하도록)
+        self._add_event("state_changed", task_id, {
+            "from": old_status,
+            "to": TaskStatus.IN_PROGRESS.value,
+            "task_name": task["title"],
+            "task_description": task.get("description", "")
+        })
+        
+        # task_started 이벤트도 발행 (호환성 유지)
         self._add_event("task_started", task_id, {"title": task["title"]})
         self._save_workflow_file()
         return True
@@ -132,6 +144,9 @@ class ImprovedWorkflowManager:
         if not task:
             return False
         
+        # 이전 상태 저장
+        old_status = task.get("status", TaskStatus.IN_PROGRESS.value)
+        
         task["status"] = TaskStatus.COMPLETED.value
         task["completed_at"] = datetime.now().isoformat()
         task["updated_at"] = datetime.now().isoformat()
@@ -141,6 +156,16 @@ class ImprovedWorkflowManager:
                 task["notes"] = []
             task["notes"].append(f"[완료] {note}")
         
+        # state_changed 이벤트 발행 (AI가 완료 보고서를 작성하도록)
+        self._add_event("state_changed", task_id, {
+            "from": old_status,
+            "to": TaskStatus.COMPLETED.value,
+            "task_name": task["title"],
+            "note": note,
+            "duration": self._calculate_duration(task)
+        })
+        
+        # task_completed 이벤트도 발행 (호환성 유지)
         self._add_event("task_completed", task_id, {
             "title": task["title"],
             "note": note
@@ -208,10 +233,16 @@ class ImprovedWorkflowManager:
                 return {"success": False, "message": "태스크를 찾을 수 없습니다"}
             
             elif cmd == '/next':
-                # 현재 태스크 완료하고 다음 태스크로 이동
+                # 현재 태스크가 있는지 확인
                 current_task = self._get_current_task_object()
                 if current_task:
-                    self.complete_task(current_task["id"], "자동 완료")
+                    # 태스크가 아직 시작되지 않았으면 시작만 하고 설계서 작성 대기
+                    if current_task["status"] == TaskStatus.TODO.value:
+                        self.start_task(current_task["id"])
+                        return {"success": True, "message": f"태스크 시작됨: {current_task['title']}. 설계서 작성 후 계속 진행하세요."}
+                    # 이미 진행 중이면 완료하고 다음으로
+                    elif current_task["status"] == TaskStatus.IN_PROGRESS.value:
+                        self.complete_task(current_task["id"], "완료")
                 
                 # 다음 태스크 찾기
                 plan = self._get_plan(self.data["active_plan_id"])
@@ -219,7 +250,7 @@ class ImprovedWorkflowManager:
                     next_task = self._get_current_task(plan)
                     if next_task:
                         self.start_task(next_task["id"])
-                        return {"success": True, "message": f"다음 태스크 시작: {next_task['title']}"}
+                        return {"success": True, "message": f"다음 태스크 시작: {next_task['title']}. 설계서 작성이 필요합니다."}
                     else:
                         return {"success": True, "message": "모든 태스크가 완료되었습니다"}
                 return {"success": False, "message": "활성 플랜이 없습니다"}
@@ -389,12 +420,46 @@ class ImprovedWorkflowManager:
         )
         
         if all_completed and plan["status"] != PlanStatus.COMPLETED.value:
+            old_status = plan["status"]
             plan["status"] = PlanStatus.COMPLETED.value
             plan["completed_at"] = datetime.now().isoformat()
+            
+            # state_changed 이벤트 발행 (AI가 페이즈 완료 보고서를 작성하도록)
+            self._add_event("state_changed", plan["id"], {
+                "from": old_status,
+                "to": PlanStatus.COMPLETED.value,
+                "phase_name": plan["name"],
+                "total_tasks": len(plan.get("tasks", [])),
+                "completed_tasks": len([t for t in plan.get("tasks", []) if t["status"] == TaskStatus.COMPLETED.value])
+            })
+            
+            # plan_completed 이벤트도 발행 (호환성 유지)
             self._add_event("plan_completed", plan["id"], {
                 "name": plan["name"],
                 "task_count": len(plan.get("tasks", []))
             })
+    
+    def _calculate_duration(self, task: Dict) -> str:
+        """태스크 소요 시간 계산"""
+        if not task.get("started_at"):
+            return "알 수 없음"
+            
+        start = datetime.fromisoformat(task["started_at"].replace("Z", "+00:00"))
+        
+        # 완료 시간이 있으면 사용, 없으면 현재 시간
+        if task.get("completed_at"):
+            end = datetime.fromisoformat(task["completed_at"].replace("Z", "+00:00"))
+        else:
+            end = datetime.now()
+            
+        duration = end - start
+        hours = int(duration.total_seconds() // 3600)
+        minutes = int((duration.total_seconds() % 3600) // 60)
+        
+        if hours > 0:
+            return f"{hours}시간 {minutes}분"
+        else:
+            return f"{minutes}분"
     
     def _add_event(self, event_type: str, entity_id: str, data: Dict):
         """이벤트 추가 및 메시지 발행"""

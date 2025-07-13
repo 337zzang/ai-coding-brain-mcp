@@ -409,26 +409,32 @@
           "id": "fffa83c2-71da-4e8c-9f71-dee3cc992e6f",
           "title": "파일 시스템 함수 테스트 (read_file, create_file, write_file, scan_directory)",
           "description": "",
-          "status": "todo",
+          "status": "completed",
           "created_at": "2025-07-14T00:52:31.099683+09:00",
-          "updated_at": "2025-07-14T00:52:31.099683+09:00",
-          "started_at": null,
-          "completed_at": null,
+          "updated_at": "2025-07-14T01:04:48.837806",
+          "started_at": "2025-07-14T01:02:00.141189",
+          "completed_at": "2025-07-14T01:04:48.837806",
           "duration": null,
-          "notes": [],
+          "notes": [
+            "[완료] 자동 완료",
+            "[완료] 파일 시스템 함수 테스트 완료"
+          ],
           "outputs": {}
         },
         {
           "id": "7490a912-9207-4329-84a7-8d9d0959e118",
           "title": "Git 함수 테스트 (git_status, git_diff, git_add, git_log)",
           "description": "",
-          "status": "todo",
+          "status": "completed",
           "created_at": "2025-07-14T00:52:31.118435+09:00",
-          "updated_at": "2025-07-14T00:52:31.118435+09:00",
-          "started_at": null,
-          "completed_at": null,
+          "updated_at": "2025-07-14T06:14:32.321859",
+          "started_at": "2025-07-14T06:10:51.007913",
+          "completed_at": "2025-07-14T06:14:32.321859",
           "duration": null,
-          "notes": [],
+          "notes": [
+            "[완료] 추후 재실행 예정",
+            "[완료] Git 함수 테스트 완료. 모든 함수가 정상 작동하며 일부 개선점 발견"
+          ],
           "outputs": {}
         },
         {
@@ -529,6 +535,19 @@
           "status": "todo",
           "created_at": "2025-07-14T00:52:31.232777+09:00",
           "updated_at": "2025-07-14T00:52:31.232777+09:00",
+          "started_at": null,
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "16057789-afbd-4552-b883-d6ab74cc0b2e",
+          "title": "분석 후 불필요한 함수 및 모듈 삭제",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-14T00:59:54.429285+09:00",
+          "updated_at": "2025-07-14T00:59:54.429285+09:00",
           "started_at": null,
           "completed_at": null,
           "duration": null,
@@ -4180,10 +4199,102 @@
         "title": "전체 테스트 결과 종합 및 문서화",
         "workflow_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
       }
+    },
+    {
+      "type": "task_added",
+      "entity_id": "16057789-afbd-4552-b883-d6ab74cc0b2e",
+      "timestamp": "2025-07-14T00:59:54.429285",
+      "data": {
+        "title": "분석 후 불필요한 함수 및 모듈 삭제",
+        "workflow_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
+      }
+    },
+    {
+      "type": "task_completed",
+      "entity_id": "fffa83c2-71da-4e8c-9f71-dee3cc992e6f",
+      "timestamp": "2025-07-14T01:00:55.085218",
+      "data": {
+        "title": "파일 시스템 함수 테스트 (read_file, create_file, write_file, scan_directory)",
+        "note": "자동 완료"
+      }
+    },
+    {
+      "type": "task_started",
+      "entity_id": "7490a912-9207-4329-84a7-8d9d0959e118",
+      "timestamp": "2025-07-14T01:00:55.093269",
+      "data": {
+        "title": "Git 함수 테스트 (git_status, git_diff, git_add, git_log)"
+      }
+    },
+    {
+      "type": "task_completed",
+      "entity_id": "7490a912-9207-4329-84a7-8d9d0959e118",
+      "timestamp": "2025-07-14T01:02:00.131385",
+      "data": {
+        "title": "Git 함수 테스트 (git_status, git_diff, git_add, git_log)",
+        "note": "추후 재실행 예정"
+      }
+    },
+    {
+      "type": "task_started",
+      "entity_id": "fffa83c2-71da-4e8c-9f71-dee3cc992e6f",
+      "timestamp": "2025-07-14T01:02:00.141189",
+      "data": {
+        "title": "파일 시스템 함수 테스트 (read_file, create_file, write_file, scan_directory)"
+      }
+    },
+    {
+      "type": "task_completed",
+      "entity_id": "fffa83c2-71da-4e8c-9f71-dee3cc992e6f",
+      "timestamp": "2025-07-14T01:04:48.837806",
+      "data": {
+        "title": "파일 시스템 함수 테스트 (read_file, create_file, write_file, scan_directory)",
+        "note": "파일 시스템 함수 테스트 완료"
+      }
+    },
+    {
+      "type": "state_changed",
+      "entity_id": "7490a912-9207-4329-84a7-8d9d0959e118",
+      "timestamp": "2025-07-14T06:10:51.007913",
+      "data": {
+        "from": "completed",
+        "to": "in_progress",
+        "task_name": "Git 함수 테스트 (git_status, git_diff, git_add, git_log)",
+        "task_description": ""
+      }
+    },
+    {
+      "type": "task_started",
+      "entity_id": "7490a912-9207-4329-84a7-8d9d0959e118",
+      "timestamp": "2025-07-14T06:10:51.007913",
+      "data": {
+        "title": "Git 함수 테스트 (git_status, git_diff, git_add, git_log)"
+      }
+    },
+    {
+      "type": "state_changed",
+      "entity_id": "7490a912-9207-4329-84a7-8d9d0959e118",
+      "timestamp": "2025-07-14T06:14:32.321859",
+      "data": {
+        "from": "in_progress",
+        "to": "completed",
+        "task_name": "Git 함수 테스트 (git_status, git_diff, git_add, git_log)",
+        "note": "Git 함수 테스트 완료. 모든 함수가 정상 작동하며 일부 개선점 발견",
+        "duration": "3분"
+      }
+    },
+    {
+      "type": "task_completed",
+      "entity_id": "7490a912-9207-4329-84a7-8d9d0959e118",
+      "timestamp": "2025-07-14T06:14:32.322871",
+      "data": {
+        "title": "Git 함수 테스트 (git_status, git_diff, git_add, git_log)",
+        "note": "Git 함수 테스트 완료. 모든 함수가 정상 작동하며 일부 개선점 발견"
+      }
     }
   ],
   "version": "3.0.0",
-  "last_saved": "2025-07-14T00:52:31.232777",
+  "last_saved": "2025-07-14T06:14:32.322871",
   "metadata": {
     "last_modified": "2025-07-13T11:02:04.181585+00:00",
     "project_name": "ai-coding-brain-mcp",

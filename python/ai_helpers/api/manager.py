@@ -17,6 +17,8 @@ class APIManager:
         self._api_modules = {
             'image': 'ai_helpers.api.image',
             'web': 'ai_helpers.api.web_automation',
+            'web_automation': 'python.api.web_automation_repl',  # REPL 호환 버전
+            'browser': 'python.api.web_automation_repl',  # 별칭
             'structure': 'ai_helpers.api.structure_tools'
         }
     

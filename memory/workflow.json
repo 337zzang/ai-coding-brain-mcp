@@ -4,7 +4,7 @@
       "id": "62416255-d99f-49e6-9904-52e6035815cb",
       "name": "웹 오토메이션 기능 개발 - Playwright 액션을 파이썬 스크립트로 자동 생성하는 헬퍼 함수 확장",
       "description": "",
-      "status": "active",
+      "status": "completed",
       "tasks": [
         {
           "id": "4074b5c1-a930-4736-a852-10ad196d405b",
@@ -85,9 +85,22 @@
           "id": "6f6c205e-5c75-4a25-b5c8-220e6eb0446e",
           "title": "문서화 및 예제 작성",
           "description": "",
-          "status": "todo",
+          "status": "completed",
           "created_at": "2025-07-13T15:13:49.911967+09:00",
-          "updated_at": "2025-07-13T15:13:49.911967+09:00",
+          "updated_at": "2025-07-13T17:51:07.789540+09:00",
+          "started_at": null,
+          "completed_at": "2025-07-13T17:51:07.789540+09:00",
+          "duration": null,
+          "notes": [],
+          "outputs": {}
+        },
+        {
+          "id": "0a80caed-2dce-43dc-afdd-3ae7e52d5825",
+          "title": "complete 문서화 완료 - REPL용 web_automation 모듈 생성 및 통합",
+          "description": "",
+          "status": "todo",
+          "created_at": "2025-07-13T17:51:07.908186+09:00",
+          "updated_at": "2025-07-13T17:51:07.908186+09:00",
           "started_at": null,
           "completed_at": null,
           "duration": null,
@@ -95,12 +108,18 @@
           "outputs": {}
         }
       ],
-      "current_task_index": 4,
+      "current_task_index": 5,
       "created_at": "2025-07-13T15:13:49.776459+09:00",
-      "updated_at": "2025-07-13T07:35:02.306718+00:00",
-      "completed_at": null,
+      "updated_at": "2025-07-13T08:51:07.908186+00:00",
+      "completed_at": "2025-07-13T17:51:07.790537+09:00",
       "archived_at": null,
-      "stats": {},
+      "stats": {
+        "total_tasks": 6,
+        "completed_tasks": 6,
+        "completion_rate": 1.0,
+        "total_duration_seconds": 0,
+        "average_task_duration": 0.0
+      },
       "metadata": {}
     }
   ],
@@ -109,7 +128,7 @@
     {
       "id": "3cde293a-795b-487e-9360-dcdb33ebc674",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.298720+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": null,
       "user": "system",
@@ -122,7 +141,7 @@
     {
       "id": "8feeebc6-d7fe-4f9f-8b45-cc7d3bb962a1",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.298720+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": null,
       "user": "system",
@@ -135,7 +154,7 @@
     {
       "id": "4c78992d-f7ec-4c56-8259-f1588c5c7d80",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.298720+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": "57b29aa7-99a6-4365-8ebe-de2420eed701",
       "user": "system",
@@ -148,7 +167,7 @@
     {
       "id": "741d2083-3bfe-483f-abde-453aee5e71e5",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.298720+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": "67aa3793-3905-4920-b67b-1bcf638bc9a2",
       "user": "system",
@@ -161,7 +180,7 @@
     {
       "id": "e4890d1e-d25e-4569-8a0c-05dc069705a5",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.298720+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": "cd9caf30-f630-4648-b459-7a0ef202d43b",
       "user": "system",
@@ -174,7 +193,7 @@
     {
       "id": "99006352-d7b7-45e6-bf3e-1fb03995afe5",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.298720+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": "b2800bbb-039e-4406-91bb-2ee6baa04d02",
       "user": "system",
@@ -187,7 +206,7 @@
     {
       "id": "91ddc229-507c-4dd9-8cd9-4cd3f3709d9f",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.298720+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": "57b29aa7-99a6-4365-8ebe-de2420eed701",
       "user": "system",
@@ -201,7 +220,7 @@
     {
       "id": "72c6c461-3647-4b1d-b77d-44542def8f5f",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.298720+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "df51e705-ddc6-4a97-ae93-7490b3499a36",
       "task_id": null,
       "user": "system",
@@ -214,7 +233,7 @@
     {
       "id": "9c243831-e094-42d7-9358-0164b36e87f8",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.298720+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": null,
       "user": "system",
@@ -227,7 +246,7 @@
     {
       "id": "84f7dbc8-e2ac-49b3-832a-94d0c33e937b",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": null,
       "user": "system",
@@ -240,7 +259,7 @@
     {
       "id": "316b9e42-c571-449c-a1ec-746d4e3316b0",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "caabfdb3-4ea3-4dec-b19a-2b4f56feb1b4",
       "user": "system",
@@ -253,7 +272,7 @@
     {
       "id": "3af49715-c20a-4273-be8b-ded8d080acba",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "283d793a-692e-4382-860a-d1b182ff0467",
       "user": "system",
@@ -266,7 +285,7 @@
     {
       "id": "05d30e1c-9d16-4fd2-862d-610d6d3f6d30",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "dec4fb7f-f63e-40de-9b4a-c68fec8da904",
       "user": "system",
@@ -279,7 +298,7 @@
     {
       "id": "5c5a1582-28fd-4f3e-ba45-a351c75c92e1",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.745124+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "e960276d-6783-4f52-8a28-961abcaaee42",
       "user": "system",
@@ -292,7 +311,7 @@
     {
       "id": "a8d65cb7-4ca5-4c3e-9221-004d590a4f96",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "135a990a-ece0-4580-b628-196233ba7719",
       "user": "system",
@@ -305,7 +324,7 @@
     {
       "id": "d5b6b48a-9791-49e3-83a5-d765d912168d",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "9c0ca2c6-e806-40d4-ab9f-0505979bf537",
       "user": "system",
@@ -318,7 +337,7 @@
     {
       "id": "be9273fa-d17c-4631-a525-723a643ad760",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "a9e8e88f-757f-4301-8f46-a10d4f653cbe",
       "user": "system",
@@ -331,7 +350,7 @@
     {
       "id": "bc0d6bad-b94b-4408-8691-efaf207ed4f5",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "0b789cec-709c-43f2-be7a-db00fa5f5bad",
       "user": "system",
@@ -344,7 +363,7 @@
     {
       "id": "375d4655-ebcd-4cfd-bf1c-065226366b03",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": "caabfdb3-4ea3-4dec-b19a-2b4f56feb1b4",
       "user": "system",
@@ -358,7 +377,7 @@
     {
       "id": "a94f204f-2523-4e23-8606-43e84db2093d",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "7b78e3eb-8006-4b17-b2af-b650d0ab5dd6",
       "task_id": null,
       "user": "system",
@@ -371,7 +390,7 @@
     {
       "id": "e7be1d93-04df-43f2-b182-e150725d8fe4",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "f727f768-e9e5-496c-946f-e638313b1e3c",
       "task_id": null,
       "user": "system",
@@ -384,7 +403,7 @@
     {
       "id": "de40bc06-6084-4e29-a6eb-10286d2c75a1",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "f727f768-e9e5-496c-946f-e638313b1e3c",
       "task_id": null,
       "user": "system",
@@ -397,7 +416,7 @@
     {
       "id": "3559a152-e958-4927-a26f-5365cc56cca8",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "f727f768-e9e5-496c-946f-e638313b1e3c",
       "task_id": null,
       "user": "system",
@@ -410,7 +429,7 @@
     {
       "id": "17805800-6d2f-4e39-8249-765a52be3e27",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": null,
       "user": "system",
@@ -423,7 +442,7 @@
     {
       "id": "4db47927-9599-4703-81c1-73e1391d3140",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": null,
       "user": "system",
@@ -436,7 +455,7 @@
     {
       "id": "825fa87e-9422-4898-98eb-e0f3427bc2d5",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "efff8c90-3c54-4be1-a440-4d77470efd62",
       "user": "system",
@@ -449,7 +468,7 @@
     {
       "id": "ad1b19f2-2c59-47d0-ada3-7d97efacb880",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "750ee599-76bb-4222-b753-ed78b369437d",
       "user": "system",
@@ -462,7 +481,7 @@
     {
       "id": "ef9b7adf-c90b-4c14-9027-fdaff449ae75",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "3d1951c9-0358-452d-8740-ff842aebcc32",
       "user": "system",
@@ -475,7 +494,7 @@
     {
       "id": "85dbffac-07ec-4679-863b-403c043c06bb",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "2e015f6f-8fc2-4ab1-853b-2c5f4e325711",
       "user": "system",
@@ -488,7 +507,7 @@
     {
       "id": "c4fa63eb-d41f-413c-a1d4-6780a243259a",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "2c01ff65-8f4b-4697-9635-2cead66308aa",
       "user": "system",
@@ -501,7 +520,7 @@
     {
       "id": "0b79b6dd-ff19-40ff-b81c-c8a6b7251efd",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.746120+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "efff8c90-3c54-4be1-a440-4d77470efd62",
       "user": "system",
@@ -515,7 +534,7 @@
     {
       "id": "cc9c2374-0956-4652-9bb4-cf5a6ea8936c",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "750ee599-76bb-4222-b753-ed78b369437d",
       "user": "system",
@@ -529,7 +548,7 @@
     {
       "id": "7e729b64-f71f-46f4-a7ff-449b405c451e",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "3d1951c9-0358-452d-8740-ff842aebcc32",
       "user": "system",
@@ -543,7 +562,7 @@
     {
       "id": "7d692689-758a-4518-86e2-28204d4babdf",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "2e015f6f-8fc2-4ab1-853b-2c5f4e325711",
       "user": "system",
@@ -557,7 +576,7 @@
     {
       "id": "923bd52f-d8e6-4c7d-8cc4-03caf15efd17",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": "2c01ff65-8f4b-4697-9635-2cead66308aa",
       "user": "system",
@@ -571,7 +590,7 @@
     {
       "id": "101e82aa-c30c-4c68-94d8-7b5e36e39c6b",
       "type": "plan_completed",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": null,
       "user": "system",
@@ -592,7 +611,7 @@
     {
       "id": "27b10cb3-5b3e-4aae-966b-ffe189b79fe9",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "8aeec375-23a4-4316-b012-68ed6d89b5d2",
       "task_id": null,
       "user": "system",
@@ -605,7 +624,7 @@
     {
       "id": "c6d41ec4-7374-41fb-b536-acb41f6eafed",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": null,
       "user": "system",
@@ -618,7 +637,7 @@
     {
       "id": "ef20bd29-35ef-40fa-9949-e397f77b57c2",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": null,
       "user": "system",
@@ -631,7 +650,7 @@
     {
       "id": "d83254e6-06ee-45b0-bc95-83872055c216",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "785f79e3-878f-4d10-902d-cc60d181fee1",
       "user": "system",
@@ -644,7 +663,7 @@
     {
       "id": "6e0b91fb-f73d-4c05-8340-dc4a49620278",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "9123b601-4ee2-4059-9b5d-83036c6409c9",
       "user": "system",
@@ -657,7 +676,7 @@
     {
       "id": "4fa1f8c9-ae57-4d63-8cff-2724ceae5672",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "5c2c1105-8c61-4f05-8df3-13b634c6668c",
       "user": "system",
@@ -670,7 +689,7 @@
     {
       "id": "198d51ee-1068-493b-9403-e6333074f56f",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "2793d71a-3418-46dc-bece-7d2ee221eb62",
       "user": "system",
@@ -683,7 +702,7 @@
     {
       "id": "adcbdd17-8e01-4fd7-8051-2513425b32cb",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "4f7929c4-706f-4e62-ae4f-26f112713034",
       "user": "system",
@@ -696,7 +715,7 @@
     {
       "id": "67872123-62a9-4bd9-bb0e-39eb017574a5",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "785f79e3-878f-4d10-902d-cc60d181fee1",
       "user": "system",
@@ -710,7 +729,7 @@
     {
       "id": "06558c4a-da41-4d61-b9cb-5377d205ebfa",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "9123b601-4ee2-4059-9b5d-83036c6409c9",
       "user": "system",
@@ -724,7 +743,7 @@
     {
       "id": "ae26698e-1c69-400c-9557-70a1e6a0661c",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.747193+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "2793d71a-3418-46dc-bece-7d2ee221eb62",
       "user": "system",
@@ -738,7 +757,7 @@
     {
       "id": "cc6310c7-b9f9-4086-be54-91adbba32d5c",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.748219+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": "4f7929c4-706f-4e62-ae4f-26f112713034",
       "user": "system",
@@ -752,7 +771,7 @@
     {
       "id": "f42f23b0-594c-4e0c-8096-c192681715cb",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.748219+09:00",
       "plan_id": "524e2d9f-9ff5-4248-9759-2b3b37b60f56",
       "task_id": null,
       "user": "system",
@@ -765,7 +784,7 @@
     {
       "id": "04eec269-ee3e-4c6a-a458-cca5099b352c",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.748219+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": null,
       "user": "system",
@@ -778,7 +797,7 @@
     {
       "id": "da3ceddc-9655-4874-bf7b-f90e285e2ce2",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.748219+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": null,
       "user": "system",
@@ -791,7 +810,7 @@
     {
       "id": "dd61522e-b37c-40dd-a0e4-0378b15a7a58",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.299719+09:00",
+      "timestamp": "2025-07-13T17:28:25.748219+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "cae126f5-5b66-4402-9d72-6a967d3295bd",
       "user": "system",
@@ -804,7 +823,7 @@
     {
       "id": "1cb9a159-b158-4659-a6d0-41a28a8264fc",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.748219+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "4eb610b2-8d35-429f-80c8-c6817ce36d4e",
       "user": "system",
@@ -817,7 +836,7 @@
     {
       "id": "615f8003-27cb-4507-8483-095440dec017",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.748219+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "48bea68a-5599-43ac-ae05-b86a3fbc8c9c",
       "user": "system",
@@ -830,7 +849,7 @@
     {
       "id": "be9b1a3a-574b-464d-aae8-97026753a813",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.748219+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "ed74ea55-63bf-4261-82ed-4c14edc44e8c",
       "user": "system",
@@ -843,7 +862,7 @@
     {
       "id": "809a6b1c-3880-43e0-96c6-ed213fb8317d",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.748219+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "23c8d7e2-a967-47ca-a1a4-f12b297f9810",
       "user": "system",
@@ -856,7 +875,7 @@
     {
       "id": "e3964ec8-e959-4437-a26f-5929797d635d",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.748219+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "96aaefd9-bdd9-448e-8b70-27ed4bea3208",
       "user": "system",
@@ -869,7 +888,7 @@
     {
       "id": "7be5e22e-a7a1-4110-925e-8358fa20c7d7",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.748219+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "8f3dbc12-acf8-4d9f-af47-90fc5cd66e7e",
       "user": "system",
@@ -882,7 +901,7 @@
     {
       "id": "97f7295b-71a8-4010-a242-dfb35f219fb8",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.748219+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "cae126f5-5b66-4402-9d72-6a967d3295bd",
       "user": "system",
@@ -896,7 +915,7 @@
     {
       "id": "6e617ff6-c96f-43ed-948a-fdbc83734f3f",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.748219+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "c7e8aa61-d9f0-4bbf-9e31-be18f7bf03c9",
       "user": "system",
@@ -909,7 +928,7 @@
     {
       "id": "f5867e75-a6d6-455d-9375-08ed8e51286f",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.749159+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "4eb610b2-8d35-429f-80c8-c6817ce36d4e",
       "user": "system",
@@ -923,7 +942,7 @@
     {
       "id": "b2fb38fa-74ac-4438-aacf-7b7dc816069e",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.749159+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "48bea68a-5599-43ac-ae05-b86a3fbc8c9c",
       "user": "system",
@@ -937,7 +956,7 @@
     {
       "id": "0350e2f3-ed27-4cca-bdac-3d7c13ee3996",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.749159+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "ed74ea55-63bf-4261-82ed-4c14edc44e8c",
       "user": "system",
@@ -951,7 +970,7 @@
     {
       "id": "802a64c0-ec55-4aff-a9d3-2e5a2fff90b7",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.749159+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "23c8d7e2-a967-47ca-a1a4-f12b297f9810",
       "user": "system",
@@ -965,7 +984,7 @@
     {
       "id": "dfdef60f-6441-4a1f-acb9-fc33036e4247",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.749159+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "96aaefd9-bdd9-448e-8b70-27ed4bea3208",
       "user": "system",
@@ -979,7 +998,7 @@
     {
       "id": "f17bde45-f804-4e14-a3e1-6fc43b80a350",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.749159+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "8f3dbc12-acf8-4d9f-af47-90fc5cd66e7e",
       "user": "system",
@@ -993,7 +1012,7 @@
     {
       "id": "a3eff691-9239-4e4f-ac3e-5a4190b276d4",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.749159+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": "c7e8aa61-d9f0-4bbf-9e31-be18f7bf03c9",
       "user": "system",
@@ -1007,7 +1026,7 @@
     {
       "id": "c1cd859d-b95b-49b4-96bb-87ffc2c97781",
       "type": "plan_completed",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.749159+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": null,
       "user": "system",
@@ -1028,7 +1047,7 @@
     {
       "id": "9e7dc1fd-b976-4787-b936-f5ce50e399eb",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.749159+09:00",
       "plan_id": "b8e68609-9d38-48f1-b3b8-12dc2500a147",
       "task_id": null,
       "user": "system",
@@ -1041,7 +1060,7 @@
     {
       "id": "7ca1c6f4-9ce3-4df7-8c0a-0408d11aa4ae",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.749159+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": null,
       "user": "system",
@@ -1054,7 +1073,7 @@
     {
       "id": "0ab30e9e-03c4-41ed-b034-4eadad4f1f0b",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.749159+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": null,
       "user": "system",
@@ -1067,7 +1086,7 @@
     {
       "id": "85b676ec-0e29-4da8-83b4-0f8d9d716405",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.749159+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "b4117f98-02f2-4c6a-9294-aaf59632dcd0",
       "user": "system",
@@ -1080,7 +1099,7 @@
     {
       "id": "96ec204d-911a-42e9-b826-81e8a76ffcc8",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.749159+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "753477e5-6214-4f42-bd67-9440c701de6b",
       "user": "system",
@@ -1093,7 +1112,7 @@
     {
       "id": "be5298e5-f7a2-4944-9a0b-0dd4883afe4a",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "0683997c-7ced-4787-a858-2abdaa6006c2",
       "user": "system",
@@ -1106,7 +1125,7 @@
     {
       "id": "6a1be4da-efcd-4be8-8056-41beedd91676",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "8972e4ba-62bb-45c1-a4ca-f08f36d29260",
       "user": "system",
@@ -1119,7 +1138,7 @@
     {
       "id": "a1aebdab-1ad7-4763-8039-45bdf7a98e03",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "e40c295c-fdf3-4719-a8ed-3156658892a0",
       "user": "system",
@@ -1132,7 +1151,7 @@
     {
       "id": "7c70b917-9518-49f3-b871-25d13bd5621b",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "09bd358b-e770-45f5-8989-9fcc09e9d360",
       "user": "system",
@@ -1145,7 +1164,7 @@
     {
       "id": "cde8b61c-03b3-4f37-a6b9-eda742c5f529",
       "type": "task_failed",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "b4117f98-02f2-4c6a-9294-aaf59632dcd0",
       "user": "system",
@@ -1159,7 +1178,7 @@
     {
       "id": "9db75785-6622-48d8-9404-3f3f13acdb29",
       "type": "task_failed",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "753477e5-6214-4f42-bd67-9440c701de6b",
       "user": "system",
@@ -1173,7 +1192,7 @@
     {
       "id": "cc91a200-4a05-4541-ac08-6309b21e2008",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "753477e5-6214-4f42-bd67-9440c701de6b",
       "user": "system",
@@ -1187,7 +1206,7 @@
     {
       "id": "fc384c70-5252-44ae-8894-182a02894365",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": "c2a4f81b-39ce-4930-9be2-730d7a95bd84",
       "user": "system",
@@ -1200,7 +1219,7 @@
     {
       "id": "130622cf-3234-4809-a261-ed7add468119",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "4d13d585-c843-4813-abc9-2b0c583da3dd",
       "task_id": null,
       "user": "system",
@@ -1213,7 +1232,7 @@
     {
       "id": "e5471980-b9b5-48be-a941-aa6c839006bd",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "087e392e-00cf-4d2a-aa7a-63e82e179880",
       "task_id": null,
       "user": "system",
@@ -1226,7 +1245,7 @@
     {
       "id": "1b94fd4d-80dd-492c-9d72-6304e85a9b50",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "087e392e-00cf-4d2a-aa7a-63e82e179880",
       "task_id": null,
       "user": "system",
@@ -1239,7 +1258,7 @@
     {
       "id": "b145e10c-a895-4eab-8713-3e9d6f57ee8d",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "087e392e-00cf-4d2a-aa7a-63e82e179880",
       "task_id": "6b485fd8-3d44-4730-bd89-dddb7060a9f2",
       "user": "system",
@@ -1252,7 +1271,7 @@
     {
       "id": "eba04399-bc5c-4bb3-bbdf-86965bb3a2ab",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "087e392e-00cf-4d2a-aa7a-63e82e179880",
       "task_id": "08b6df0c-5e6e-419d-a493-c28819674750",
       "user": "system",
@@ -1265,7 +1284,7 @@
     {
       "id": "d55898af-0ea5-4faa-aa65-b23e9213a548",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "087e392e-00cf-4d2a-aa7a-63e82e179880",
       "task_id": null,
       "user": "system",
@@ -1278,7 +1297,7 @@
     {
       "id": "72c78ef4-968e-4893-8aae-9fcc32b3e308",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.750204+09:00",
       "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
       "task_id": null,
       "user": "system",
@@ -1291,7 +1310,7 @@
     {
       "id": "869dd5eb-3fb0-4dc6-844b-480af6b25801",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
       "task_id": null,
       "user": "system",
@@ -1304,7 +1323,7 @@
     {
       "id": "2cd6e342-953c-4e9b-b96e-3fa374fc95d3",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
       "task_id": "a79bdf4e-ce94-4b19-9b2b-899948425171",
       "user": "system",
@@ -1317,7 +1336,7 @@
     {
       "id": "990c00be-97a9-4337-bb1a-ebfd47276d97",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
       "task_id": "4fd73e21-d1f4-4b5e-b150-fe831bb9c68a",
       "user": "system",
@@ -1330,7 +1349,7 @@
     {
       "id": "30f71a52-86d9-4cfe-861f-d07f91ae6302",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
       "task_id": "e28f07d9-e8d9-405d-b322-62d64f6c8b94",
       "user": "system",
@@ -1343,7 +1362,7 @@
     {
       "id": "8404e8a6-1473-4cc0-8e68-a6e98974318b",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
       "task_id": "b095c3d3-fbe3-4135-a573-69cbbd1b95ca",
       "user": "system",
@@ -1356,7 +1375,7 @@
     {
       "id": "6dde2188-71ee-443f-8800-70048633f31b",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
       "task_id": "a29f51ac-bd32-4a08-a907-dde88d854d7a",
       "user": "system",
@@ -1369,7 +1388,7 @@
     {
       "id": "cb039ce8-7866-49d6-9bab-75b07bd10e4d",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.300722+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
       "task_id": "a79bdf4e-ce94-4b19-9b2b-899948425171",
       "user": "system",
@@ -1383,7 +1402,7 @@
     {
       "id": "46da0f99-631c-42d0-9461-e046c4f652b7",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
       "task_id": "4fd73e21-d1f4-4b5e-b150-fe831bb9c68a",
       "user": "system",
@@ -1397,7 +1416,7 @@
     {
       "id": "e2125fe3-7cba-45c4-8477-cf60f4102814",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "9c0d1f80-dc77-45ba-87ce-01ecd7d33064",
       "task_id": null,
       "user": "system",
@@ -1410,7 +1429,7 @@
     {
       "id": "093d2fea-8eb7-484c-84ac-13df5ce830f1",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "e8da881d-cab1-4e54-a9f5-e4c218bcaca7",
       "task_id": null,
       "user": "system",
@@ -1423,7 +1442,7 @@
     {
       "id": "153c02dd-033f-48e0-95b4-0642d7301d58",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "e8da881d-cab1-4e54-a9f5-e4c218bcaca7",
       "task_id": null,
       "user": "system",
@@ -1436,7 +1455,7 @@
     {
       "id": "5ee2fce2-6661-4d7a-8643-02f46f6ff142",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "e8da881d-cab1-4e54-a9f5-e4c218bcaca7",
       "task_id": "b19c4de9-7aac-4eeb-b0f3-e672a3706031",
       "user": "system",
@@ -1449,7 +1468,7 @@
     {
       "id": "e3ee8112-eb4c-4e4b-aa77-b98e05bb3e5a",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "e8da881d-cab1-4e54-a9f5-e4c218bcaca7",
       "task_id": "9b8473f0-8272-4b44-b251-1126fc38c8d4",
       "user": "system",
@@ -1462,7 +1481,7 @@
     {
       "id": "b9a21904-1bf9-408c-9f6a-baf381baa803",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "e8da881d-cab1-4e54-a9f5-e4c218bcaca7",
       "task_id": "f5e42278-9af3-456e-b1c5-21479225a8cf",
       "user": "system",
@@ -1475,7 +1494,7 @@
     {
       "id": "1a6631fe-e57e-4fcf-8a90-b4770d89a906",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "e8da881d-cab1-4e54-a9f5-e4c218bcaca7",
       "task_id": "de2f8b39-4ec2-4370-8c2f-754b990a0e1d",
       "user": "system",
@@ -1488,7 +1507,7 @@
     {
       "id": "f397290a-c1ba-4f0b-aef3-b26fb1d81ed9",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "e8da881d-cab1-4e54-a9f5-e4c218bcaca7",
       "task_id": "82e7f12b-ff3f-40ae-8b40-69b9198007a3",
       "user": "system",
@@ -1501,7 +1520,7 @@
     {
       "id": "bc0dfb19-6fb8-441b-b13d-85fc29b26199",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "e8da881d-cab1-4e54-a9f5-e4c218bcaca7",
       "task_id": "65abdd19-7f87-498e-8c28-a45632f9fee1",
       "user": "system",
@@ -1514,7 +1533,7 @@
     {
       "id": "f7432f84-66cd-45a0-aebc-5e69d5d91a9b",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "e8da881d-cab1-4e54-a9f5-e4c218bcaca7",
       "task_id": "b19c4de9-7aac-4eeb-b0f3-e672a3706031",
       "user": "system",
@@ -1528,7 +1547,7 @@
     {
       "id": "412dc244-9989-41ac-8995-692e89f500af",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "e8da881d-cab1-4e54-a9f5-e4c218bcaca7",
       "task_id": "9b8473f0-8272-4b44-b251-1126fc38c8d4",
       "user": "system",
@@ -1542,7 +1561,7 @@
     {
       "id": "25dee785-db6c-46e0-b9e0-8d06a8618523",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "e8da881d-cab1-4e54-a9f5-e4c218bcaca7",
       "task_id": "f5e42278-9af3-456e-b1c5-21479225a8cf",
       "user": "system",
@@ -1556,7 +1575,7 @@
     {
       "id": "16ddef49-4e40-4d2c-b678-dec912851291",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "e8da881d-cab1-4e54-a9f5-e4c218bcaca7",
       "task_id": null,
       "user": "system",
@@ -1569,7 +1588,7 @@
     {
       "id": "dd7b03ef-f1d2-46a8-9495-9b14f5084ba6",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "8c813b50-acac-4202-8570-e1b8ad5632f5",
       "task_id": null,
       "user": "system",
@@ -1582,7 +1601,7 @@
     {
       "id": "328eb779-4ae9-4e93-b8a8-d49e61e76f4a",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "8c813b50-acac-4202-8570-e1b8ad5632f5",
       "task_id": null,
       "user": "system",
@@ -1595,7 +1614,7 @@
     {
       "id": "f84c38fb-aa31-4014-9671-11ee2cf20ea8",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "8c813b50-acac-4202-8570-e1b8ad5632f5",
       "task_id": "d01ff463-b793-4bbc-958c-6249747bfb78",
       "user": "system",
@@ -1608,7 +1627,7 @@
     {
       "id": "007f2800-e621-4395-a519-ee2cebb8274c",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "8c813b50-acac-4202-8570-e1b8ad5632f5",
       "task_id": "d315482c-b398-459f-99aa-2ed689db611c",
       "user": "system",
@@ -1621,7 +1640,7 @@
     {
       "id": "48a79756-14c2-48e7-b96c-edbc21e95880",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "8c813b50-acac-4202-8570-e1b8ad5632f5",
       "task_id": "31c64a7b-8ac8-4235-9edc-1189941b84db",
       "user": "system",
@@ -1634,7 +1653,7 @@
     {
       "id": "beef7a79-8ce8-42c7-ac29-11ecc266a319",
       "type": "task_started",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "8c813b50-acac-4202-8570-e1b8ad5632f5",
       "task_id": "d01ff463-b793-4bbc-958c-6249747bfb78",
       "user": "system",
@@ -1646,7 +1665,7 @@
     {
       "id": "14784c6f-8791-4e78-90b1-3fbd51b11319",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "8c813b50-acac-4202-8570-e1b8ad5632f5",
       "task_id": "d01ff463-b793-4bbc-958c-6249747bfb78",
       "user": "system",
@@ -1660,7 +1679,7 @@
     {
       "id": "ef5f7464-b6a6-4d5a-b3af-6e74e68e5e5a",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "8c813b50-acac-4202-8570-e1b8ad5632f5",
       "task_id": "e31e335e-98d3-4216-8b3e-c968b5044bc5",
       "user": "system",
@@ -1673,7 +1692,7 @@
     {
       "id": "369cc062-9844-4562-a7f2-209d98eb6059",
       "type": "task_failed",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "8c813b50-acac-4202-8570-e1b8ad5632f5",
       "task_id": "e31e335e-98d3-4216-8b3e-c968b5044bc5",
       "user": "system",
@@ -1687,7 +1706,7 @@
     {
       "id": "00f340e9-216c-434b-9506-fe1f7211eca8",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "8c813b50-acac-4202-8570-e1b8ad5632f5",
       "task_id": null,
       "user": "system",
@@ -1700,7 +1719,7 @@
     {
       "id": "b0b4a7c1-33d2-48a0-a42b-b059ac3bd963",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "58c04110-b0fc-4c3f-902d-5558f9eaf96c",
       "task_id": null,
       "user": "system",
@@ -1713,7 +1732,7 @@
     {
       "id": "0555fc89-1ac3-4b44-9070-937619552531",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.751211+09:00",
       "plan_id": "58c04110-b0fc-4c3f-902d-5558f9eaf96c",
       "task_id": null,
       "user": "system",
@@ -1726,7 +1745,7 @@
     {
       "id": "3875c113-c9cb-44e8-ae60-e2a18209ede1",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "58c04110-b0fc-4c3f-902d-5558f9eaf96c",
       "task_id": "161f42d8-ec6d-4ae6-84d1-53dec7e2df17",
       "user": "system",
@@ -1739,7 +1758,7 @@
     {
       "id": "a4a3050d-4b7f-43f3-ba3e-8b42bd1a8940",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "58c04110-b0fc-4c3f-902d-5558f9eaf96c",
       "task_id": "c849fa92-6581-43ed-864a-e59f89bc640e",
       "user": "system",
@@ -1752,7 +1771,7 @@
     {
       "id": "a21a3add-35df-43de-9e73-aa5a28eb00e9",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "58c04110-b0fc-4c3f-902d-5558f9eaf96c",
       "task_id": "11476be5-a84e-499a-81dc-b92e8670cbb6",
       "user": "system",
@@ -1765,7 +1784,7 @@
     {
       "id": "9e365daf-212b-4396-b6f5-e7be1a2342ec",
       "type": "task_failed",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "58c04110-b0fc-4c3f-902d-5558f9eaf96c",
       "task_id": "161f42d8-ec6d-4ae6-84d1-53dec7e2df17",
       "user": "system",
@@ -1779,7 +1798,7 @@
     {
       "id": "0fbf87da-f323-461d-b12f-ee811660b5f2",
       "type": "task_started",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "58c04110-b0fc-4c3f-902d-5558f9eaf96c",
       "task_id": "c849fa92-6581-43ed-864a-e59f89bc640e",
       "user": "system",
@@ -1791,7 +1810,7 @@
     {
       "id": "1dea617b-fa4a-4b9f-8342-5785f5480ba1",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "58c04110-b0fc-4c3f-902d-5558f9eaf96c",
       "task_id": "c849fa92-6581-43ed-864a-e59f89bc640e",
       "user": "system",
@@ -1805,7 +1824,7 @@
     {
       "id": "b884fb4b-8fe1-4a28-beca-021c909401d2",
       "type": "task_started",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "58c04110-b0fc-4c3f-902d-5558f9eaf96c",
       "task_id": "11476be5-a84e-499a-81dc-b92e8670cbb6",
       "user": "system",
@@ -1817,7 +1836,7 @@
     {
       "id": "30521f3a-937d-4d11-8245-e8de483fe745",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "58c04110-b0fc-4c3f-902d-5558f9eaf96c",
       "task_id": "11476be5-a84e-499a-81dc-b92e8670cbb6",
       "user": "system",
@@ -1831,7 +1850,7 @@
     {
       "id": "56785fb2-f281-43d2-b496-da04b09e2558",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "58c04110-b0fc-4c3f-902d-5558f9eaf96c",
       "task_id": null,
       "user": "system",
@@ -1844,7 +1863,7 @@
     {
       "id": "42adb229-202c-4389-909b-408658ac607f",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "a60b874a-0cf8-4c1b-bbca-3af267eb71b6",
       "task_id": null,
       "user": "system",
@@ -1857,7 +1876,7 @@
     {
       "id": "a54e7738-eaee-44c8-82b8-207d8cdf0df6",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "a60b874a-0cf8-4c1b-bbca-3af267eb71b6",
       "task_id": null,
       "user": "system",
@@ -1870,7 +1889,7 @@
     {
       "id": "3dd75eed-9a0a-4f45-865a-8c5b020da237",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "a60b874a-0cf8-4c1b-bbca-3af267eb71b6",
       "task_id": "ddf7654d-70ab-46ab-a019-d6dc31f9d025",
       "user": "system",
@@ -1883,7 +1902,7 @@
     {
       "id": "eee1c96d-bb6f-4e68-8f36-6869b692c1e4",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "a60b874a-0cf8-4c1b-bbca-3af267eb71b6",
       "task_id": "d4518c07-ab73-42b5-b07f-a42ce38e9f9a",
       "user": "system",
@@ -1896,7 +1915,7 @@
     {
       "id": "5f96400e-6dcf-4b93-942f-b73e4e4a36ff",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "a60b874a-0cf8-4c1b-bbca-3af267eb71b6",
       "task_id": "f2ecbf64-16c7-4eb7-aa19-bb804d4679a9",
       "user": "system",
@@ -1909,7 +1928,7 @@
     {
       "id": "e3cbde89-f4ff-4333-958d-239f974eb55e",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.301720+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "a60b874a-0cf8-4c1b-bbca-3af267eb71b6",
       "task_id": null,
       "user": "system",
@@ -1922,7 +1941,7 @@
     {
       "id": "616a4e87-9a6e-44a2-b9f2-65f3d91a19c2",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "b7567105-7705-4b7a-b13e-2ea6910435e3",
       "task_id": null,
       "user": "system",
@@ -1935,7 +1954,7 @@
     {
       "id": "85671bee-488c-4bfd-8b58-da6f1d8d695a",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "b7567105-7705-4b7a-b13e-2ea6910435e3",
       "task_id": null,
       "user": "system",
@@ -1948,7 +1967,7 @@
     {
       "id": "eaecd8fb-05df-4815-b3bd-7c340355a6b8",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "b7567105-7705-4b7a-b13e-2ea6910435e3",
       "task_id": "ea0a3220-7204-4919-be1f-3372dde1a0bf",
       "user": "system",
@@ -1961,7 +1980,7 @@
     {
       "id": "774585c5-a874-4b5f-b655-32fd6ce897df",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "b7567105-7705-4b7a-b13e-2ea6910435e3",
       "task_id": "84e98c23-2297-4f98-aafb-d27043b3e751",
       "user": "system",
@@ -1974,7 +1993,7 @@
     {
       "id": "40b928a9-915c-4c86-ac51-44e9f825e1e6",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "b7567105-7705-4b7a-b13e-2ea6910435e3",
       "task_id": null,
       "user": "system",
@@ -1987,7 +2006,7 @@
     {
       "id": "133f5ea2-f452-4f15-ad6e-4f846704bb8b",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "9abd49b6-4479-49c3-bec3-e381275c127b",
       "task_id": null,
       "user": "system",
@@ -2000,7 +2019,7 @@
     {
       "id": "1edc3768-94f4-4424-abbc-aa3ce27b8531",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "9abd49b6-4479-49c3-bec3-e381275c127b",
       "task_id": null,
       "user": "system",
@@ -2013,7 +2032,7 @@
     {
       "id": "9a1ef97d-31cc-40e3-b6a4-38834ccd065d",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "9abd49b6-4479-49c3-bec3-e381275c127b",
       "task_id": "40abeee1-4ac4-4432-9ebd-7bb3d42e9f75",
       "user": "system",
@@ -2026,7 +2045,7 @@
     {
       "id": "aed97d8a-8163-4b97-b597-17696e0fdb2b",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "9abd49b6-4479-49c3-bec3-e381275c127b",
       "task_id": "541c6bea-227d-47c2-8627-c659cf112d62",
       "user": "system",
@@ -2039,7 +2058,7 @@
     {
       "id": "53f9dd96-8091-483c-95ca-b9d4beee700f",
       "type": "task_started",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "9abd49b6-4479-49c3-bec3-e381275c127b",
       "task_id": "40abeee1-4ac4-4432-9ebd-7bb3d42e9f75",
       "user": "system",
@@ -2051,7 +2070,7 @@
     {
       "id": "29966875-20e9-4224-80f5-59412680adc3",
       "type": "task_failed",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "9abd49b6-4479-49c3-bec3-e381275c127b",
       "task_id": "40abeee1-4ac4-4432-9ebd-7bb3d42e9f75",
       "user": "system",
@@ -2065,7 +2084,7 @@
     {
       "id": "5f3cb3c0-54b2-425c-98db-cf69ccba7a45",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "9abd49b6-4479-49c3-bec3-e381275c127b",
       "task_id": null,
       "user": "system",
@@ -2078,7 +2097,7 @@
     {
       "id": "e850ffac-c93c-4001-90a9-13acf033ce36",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "ae4fd089-deb7-4dc5-a591-4f9b56d1c45d",
       "task_id": null,
       "user": "system",
@@ -2091,7 +2110,7 @@
     {
       "id": "aca6662f-3661-413a-b9c4-379033fce157",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "ae4fd089-deb7-4dc5-a591-4f9b56d1c45d",
       "task_id": null,
       "user": "system",
@@ -2104,7 +2123,7 @@
     {
       "id": "bc68e4c2-ce3a-4cf7-957b-574eaf0bb646",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "ae4fd089-deb7-4dc5-a591-4f9b56d1c45d",
       "task_id": "363f7c68-a0f1-4602-8b90-fc2cccf88905",
       "user": "system",
@@ -2117,7 +2136,7 @@
     {
       "id": "8694cdca-d1ce-4728-8fd1-c03f4ad3c232",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "ae4fd089-deb7-4dc5-a591-4f9b56d1c45d",
       "task_id": "542b8311-8d51-4b42-8390-3446716fb1dd",
       "user": "system",
@@ -2130,7 +2149,7 @@
     {
       "id": "c9a9deff-2545-4782-a6fc-0653f5ec69c7",
       "type": "task_failed",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "ae4fd089-deb7-4dc5-a591-4f9b56d1c45d",
       "task_id": "363f7c68-a0f1-4602-8b90-fc2cccf88905",
       "user": "system",
@@ -2144,7 +2163,7 @@
     {
       "id": "a503e619-639e-482b-8720-6b8d9a58e1fd",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "8ce45d2a-b53c-4322-9688-44bc0840f86c",
       "task_id": "79662cd3-59e8-45f5-82a5-2d0553faba81",
       "user": "system",
@@ -2158,7 +2177,7 @@
     {
       "id": "3cc3344d-b6e0-4b9e-a40f-041a1f9b433d",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.752215+09:00",
       "plan_id": "8ce45d2a-b53c-4322-9688-44bc0840f86c",
       "task_id": null,
       "user": "system",
@@ -2171,7 +2190,7 @@
     {
       "id": "412290da-755a-4a03-bd0c-f3b430a37d42",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": null,
       "user": "system",
@@ -2184,7 +2203,7 @@
     {
       "id": "a926fcee-e67a-4a26-8a79-2a87fa91dd03",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": null,
       "user": "system",
@@ -2197,7 +2216,7 @@
     {
       "id": "ffa18543-e510-47b3-95fe-86ac75f95bbf",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": "b2b57dcd-57eb-4e39-9444-2596e7271424",
       "user": "system",
@@ -2210,7 +2229,7 @@
     {
       "id": "9275c2a9-4eac-4c67-8d0d-39d5afa71b74",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": "71626a26-9061-473b-9d9e-2fb47b0ee15e",
       "user": "system",
@@ -2223,7 +2242,7 @@
     {
       "id": "469f5337-599d-4163-9561-13ca84443b9a",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": "45558059-0f1b-4b6e-a426-1f6201d9611f",
       "user": "system",
@@ -2236,7 +2255,7 @@
     {
       "id": "bd13edcf-1346-4dd2-bde3-d37ca40be02a",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": "d40e4dc1-3459-4d7d-ac57-c2e60c93ab9d",
       "user": "system",
@@ -2249,7 +2268,7 @@
     {
       "id": "42f95a7b-c0dc-4bdb-b1a1-fbedae07b3cf",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": "bbec46ef-d43f-4c0f-9f78-3bda070843ec",
       "user": "system",
@@ -2262,7 +2281,7 @@
     {
       "id": "21ea8d07-dc85-4228-938b-43dc3a84e288",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": "bf7c9a31-9cf4-478b-9ad6-e9844e711572",
       "user": "system",
@@ -2275,7 +2294,7 @@
     {
       "id": "421a629a-baab-417f-8379-3115cd3af376",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": "ac72e75f-5b2a-456d-9ac1-ebac220113b1",
       "user": "system",
@@ -2288,7 +2307,7 @@
     {
       "id": "936dedfc-d071-4918-9c56-e2ee387ac6c8",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": "e3dd57b8-61d9-462f-866e-5d46359d7c71",
       "user": "system",
@@ -2301,7 +2320,7 @@
     {
       "id": "c0c138b8-f173-4bf4-a53c-0b0205e6847a",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": "2d9a1201-d7b7-4e57-877d-1aab1879fcac",
       "user": "system",
@@ -2314,7 +2333,7 @@
     {
       "id": "1062ead4-427b-49c0-b121-ce0d86339514",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": "b2b57dcd-57eb-4e39-9444-2596e7271424",
       "user": "system",
@@ -2328,7 +2347,7 @@
     {
       "id": "9329b138-0435-4ced-84e3-db6ff9b59ce6",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": "71626a26-9061-473b-9d9e-2fb47b0ee15e",
       "user": "system",
@@ -2342,7 +2361,7 @@
     {
       "id": "a184c80a-2dc2-48d1-8b3b-16bfcc83f577",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": "45558059-0f1b-4b6e-a426-1f6201d9611f",
       "user": "system",
@@ -2356,7 +2375,7 @@
     {
       "id": "538142db-0154-4764-96e1-61ba35e0aa07",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": "d40e4dc1-3459-4d7d-ac57-c2e60c93ab9d",
       "user": "system",
@@ -2370,7 +2389,7 @@
     {
       "id": "1743f678-6cfe-4850-8849-851eca8299e4",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "5a7e4609-6306-4754-9316-3fd74fc34502",
       "task_id": null,
       "user": "system",
@@ -2383,7 +2402,7 @@
     {
       "id": "79638a3f-9656-42c5-986c-1b1e965db047",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "6c2e7da8-94a5-4df2-9742-54253dbd9304",
       "task_id": null,
       "user": "system",
@@ -2396,7 +2415,7 @@
     {
       "id": "0b1afdd8-556c-430a-9ddf-8f7ee98b20c9",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "6c2e7da8-94a5-4df2-9742-54253dbd9304",
       "task_id": null,
       "user": "system",
@@ -2409,7 +2428,7 @@
     {
       "id": "32cb1591-f1bd-475e-a7a5-aaec93aed4ed",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "6c2e7da8-94a5-4df2-9742-54253dbd9304",
       "task_id": "2aa1e7b1-8f3a-42ee-929f-0f360b8f60b8",
       "user": "system",
@@ -2422,7 +2441,7 @@
     {
       "id": "bb452890-69e6-4564-aa0e-cf500f1ace9a",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "6c2e7da8-94a5-4df2-9742-54253dbd9304",
       "task_id": "22fed785-24de-4b64-8bd5-d7600ad3f809",
       "user": "system",
@@ -2435,7 +2454,7 @@
     {
       "id": "c238d9be-bf62-4b7c-9c3c-fa3627e83a3e",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "6c2e7da8-94a5-4df2-9742-54253dbd9304",
       "task_id": "4fb5436a-fefb-4ceb-a300-f63921eeadbf",
       "user": "system",
@@ -2448,7 +2467,7 @@
     {
       "id": "36c994b3-e221-4273-9492-b67ba115e2c3",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "6c2e7da8-94a5-4df2-9742-54253dbd9304",
       "task_id": "3af18e89-0cb5-43db-8305-faa5446ca4f2",
       "user": "system",
@@ -2461,7 +2480,7 @@
     {
       "id": "d140d29d-3cdc-4069-be67-998b3af2dbaf",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "6c2e7da8-94a5-4df2-9742-54253dbd9304",
       "task_id": "0cfdc058-5b19-448f-a664-43ace1a962b3",
       "user": "system",
@@ -2474,7 +2493,7 @@
     {
       "id": "28d6e2e3-3e04-48c1-9fd5-a5672f9f3b6d",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.302719+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "6c2e7da8-94a5-4df2-9742-54253dbd9304",
       "task_id": "26fef885-df89-435a-996c-5391a4f23594",
       "user": "system",
@@ -2487,7 +2506,7 @@
     {
       "id": "dfe47a83-adc2-4e29-8a4c-ab3553d6d207",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.303718+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "6c2e7da8-94a5-4df2-9742-54253dbd9304",
       "task_id": "5c515aca-2c65-45cf-b7dc-27678dd2fd45",
       "user": "system",
@@ -2500,7 +2519,7 @@
     {
       "id": "723d1dab-7ad5-425f-93ba-e197c865228e",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.303718+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "6c2e7da8-94a5-4df2-9742-54253dbd9304",
       "task_id": "6447cd48-e6e3-4c6b-8f7e-ba9bc0746b9e",
       "user": "system",
@@ -2513,7 +2532,7 @@
     {
       "id": "8ebb0782-a43c-4a45-984e-f5902b4a3718",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.303718+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "6c2e7da8-94a5-4df2-9742-54253dbd9304",
       "task_id": "b7028392-e142-4dbf-9c68-786ab813cc88",
       "user": "system",
@@ -2526,7 +2545,7 @@
     {
       "id": "2f2b0bb2-8c6f-44bc-a808-d9bc87a50101",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.303718+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "6c2e7da8-94a5-4df2-9742-54253dbd9304",
       "task_id": "2aa1e7b1-8f3a-42ee-929f-0f360b8f60b8",
       "user": "system",
@@ -2540,7 +2559,7 @@
     {
       "id": "d017051b-44c4-4e4c-9419-27c5617975a8",
       "type": "plan_archived",
-      "timestamp": "2025-07-13T16:35:02.303718+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "6c2e7da8-94a5-4df2-9742-54253dbd9304",
       "task_id": null,
       "user": "system",
@@ -2553,7 +2572,7 @@
     {
       "id": "276a8010-3f7c-4d22-b4de-51c575fb4346",
       "type": "plan_created",
-      "timestamp": "2025-07-13T16:35:02.303718+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
       "task_id": null,
       "user": "system",
@@ -2566,7 +2585,7 @@
     {
       "id": "eaefa96c-ba65-45de-96cf-de3cc28a969e",
       "type": "plan_started",
-      "timestamp": "2025-07-13T16:35:02.303718+09:00",
+      "timestamp": "2025-07-13T17:28:25.753424+09:00",
       "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
       "task_id": null,
       "user": "system",
@@ -2579,7 +2598,7 @@
     {
       "id": "02caa194-84b7-4fe8-881c-7152733e1a7d",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.303718+09:00",
+      "timestamp": "2025-07-13T17:28:25.754507+09:00",
       "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
       "task_id": "4074b5c1-a930-4736-a852-10ad196d405b",
       "user": "system",
@@ -2592,7 +2611,7 @@
     {
       "id": "fb18cd1a-ec72-4b00-a24c-d0b39fe3068a",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.303718+09:00",
+      "timestamp": "2025-07-13T17:28:25.754507+09:00",
       "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
       "task_id": "1d6fed12-3926-41b2-966f-f75cb9e2394d",
       "user": "system",
@@ -2605,7 +2624,7 @@
     {
       "id": "24cc6dab-cfd2-4bdc-ae72-98ae245ff086",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.303718+09:00",
+      "timestamp": "2025-07-13T17:28:25.754507+09:00",
       "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
       "task_id": "292a78e7-3ca1-4788-ab40-24c0e9ec811d",
       "user": "system",
@@ -2618,7 +2637,7 @@
     {
       "id": "41ed4a17-d146-469c-afc2-89b630db4f3c",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.303718+09:00",
+      "timestamp": "2025-07-13T17:28:25.754507+09:00",
       "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
       "task_id": "fbfb8bf0-79c3-467b-8b44-ba7aad649243",
       "user": "system",
@@ -2631,7 +2650,7 @@
     {
       "id": "f115138c-b258-4546-9778-24850b2b0623",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.303718+09:00",
+      "timestamp": "2025-07-13T17:28:25.754507+09:00",
       "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
       "task_id": "6cfd07c4-01ad-4cde-8a32-cff215a1a003",
       "user": "system",
@@ -2644,7 +2663,7 @@
     {
       "id": "98f746e9-3702-4f6a-afa7-35fcb2220192",
       "type": "task_added",
-      "timestamp": "2025-07-13T16:35:02.303718+09:00",
+      "timestamp": "2025-07-13T17:28:25.754507+09:00",
       "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
       "task_id": "6f6c205e-5c75-4a25-b5c8-220e6eb0446e",
       "user": "system",
@@ -2657,7 +2676,7 @@
     {
       "id": "ccc58f1e-d57b-495e-b152-e51aec5c5135",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.305726+09:00",
+      "timestamp": "2025-07-13T17:28:25.754507+09:00",
       "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
       "task_id": "4074b5c1-a930-4736-a852-10ad196d405b",
       "user": "system",
@@ -2671,7 +2690,7 @@
     {
       "id": "cca63821-e674-4b25-84a6-60a5c8d04819",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.305726+09:00",
+      "timestamp": "2025-07-13T17:28:25.754507+09:00",
       "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
       "task_id": "1d6fed12-3926-41b2-966f-f75cb9e2394d",
       "user": "system",
@@ -2685,7 +2704,7 @@
     {
       "id": "ee68b3f5-54a3-4bf3-abf8-4c4f6b54cda9",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.306718+09:00",
+      "timestamp": "2025-07-13T17:28:25.754507+09:00",
       "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
       "task_id": "292a78e7-3ca1-4788-ab40-24c0e9ec811d",
       "user": "system",
@@ -2699,7 +2718,7 @@
     {
       "id": "1bd6e67b-3966-4859-835d-90c09bcf78c1",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.306718+09:00",
+      "timestamp": "2025-07-13T17:28:25.754507+09:00",
       "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
       "task_id": "fbfb8bf0-79c3-467b-8b44-ba7aad649243",
       "user": "system",
@@ -2713,7 +2732,7 @@
     {
       "id": "22062be8-ca00-4343-8e9b-a026bc0f1a7c",
       "type": "task_completed",
-      "timestamp": "2025-07-13T16:35:02.306718+09:00",
+      "timestamp": "2025-07-13T17:28:25.754507+09:00",
       "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
       "task_id": "6cfd07c4-01ad-4cde-8a32-cff215a1a003",
       "user": "system",
@@ -2723,12 +2742,60 @@
         "note": "헬퍼 함수 통합 및 테스트 완료"
       },
       "metadata": {}
+    },
+    {
+      "id": "6cd7e708-6327-4210-ab2b-529c407250bb",
+      "type": "task_completed",
+      "timestamp": "2025-07-13T17:51:07.789540+09:00",
+      "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
+      "task_id": "6f6c205e-5c75-4a25-b5c8-220e6eb0446e",
+      "user": "system",
+      "details": {
+        "title": "문서화 및 예제 작성",
+        "duration": null,
+        "note": ""
+      },
+      "metadata": {}
+    },
+    {
+      "id": "909a79a3-5676-49a5-a29f-b95746d5c7fc",
+      "type": "plan_completed",
+      "timestamp": "2025-07-13T17:51:07.790537+09:00",
+      "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
+      "task_id": null,
+      "user": "system",
+      "details": {
+        "name": "웹 오토메이션 기능 개발 - Playwright 액션을 파이썬 스크립트로 자동 생성하는 헬퍼 함수 확장",
+        "total_tasks": 6,
+        "completed_tasks": 6,
+        "stats": {
+          "total_tasks": 6,
+          "completed_tasks": 6,
+          "completion_rate": 1.0,
+          "total_duration_seconds": 0,
+          "average_task_duration": 0.0
+        }
+      },
+      "metadata": {}
+    },
+    {
+      "id": "3b136050-607c-4ce0-97e2-6277f308511c",
+      "type": "task_added",
+      "timestamp": "2025-07-13T17:51:07.908186+09:00",
+      "plan_id": "62416255-d99f-49e6-9904-52e6035815cb",
+      "task_id": "0a80caed-2dce-43dc-afdd-3ae7e52d5825",
+      "user": "system",
+      "details": {
+        "title": "complete 문서화 완료 - REPL용 web_automation 모듈 생성 및 통합",
+        "description": ""
+      },
+      "metadata": {}
     }
   ],
   "version": "3.0.0",
-  "last_saved": "2025-07-13T07:35:02.306718+00:00",
+  "last_saved": "2025-07-13T08:51:07.909186+00:00",
   "metadata": {
-    "last_modified": "2025-07-13T07:35:02.323110+00:00",
+    "last_modified": "2025-07-13T08:51:07.939744+00:00",
     "project_name": "ai-coding-brain-mcp",
     "project_root": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp",
     "version": "3.0"

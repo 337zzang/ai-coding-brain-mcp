@@ -301,3 +301,33 @@ try:
 except ImportError as e:
     print(f"Web automation 모듈 로드 실패: {e}")
     WEB_AUTOMATION_AVAILABLE = False
+
+
+# REPL 호환 브라우저 자동화 메서드 추가
+try:
+    from python.api.web_automation_repl import REPLBrowser
+    _browser = REPLBrowser()
+    
+    # 메서드 바인딩
+    browser = _browser
+    browser_start = _browser.start
+    browser_goto = _browser.goto
+    browser_click = _browser.click
+    browser_type = _browser.type
+    browser_screenshot = _browser.screenshot
+    browser_wait = _browser.wait
+    browser_eval = _browser.eval
+    browser_get_content = _browser.get_content
+    browser_stop = _browser.stop
+    
+    # __all__에 추가
+    __all__.extend([
+        'browser', 'browser_start', 'browser_goto', 'browser_click',
+        'browser_type', 'browser_screenshot', 'browser_wait', 
+        'browser_eval', 'browser_get_content', 'browser_stop'
+    ])
+    
+    print("✅ REPL 브라우저 자동화 메서드 로드 완료")
+    
+except ImportError as e:
+    print(f"REPL 브라우저 모듈 로드 실패: {e}")

@@ -278,3 +278,26 @@ for name in optional_exports:
         __all__.append(name)
 
 logger.info(f"AI Helpers 초기화 완료 - {len(__all__)}개 함수 export")
+
+# Web Automation module
+try:
+    # 웹 자동화 레코딩 함수들 추가
+    from python.api.web_automation_helpers import (
+        web_automation_record_start,
+        web_automation_record_stop,
+        web_automation_record_status,
+        web_record_demo
+    )
+    WEB_AUTOMATION_AVAILABLE = True
+    
+    # __all__에 추가
+    __all__.extend([
+        'open_browser', 'navigate_to', 'search_google', 
+        'take_screenshot', 'close_browser', 'demo_google_search',
+        'web_automation_record_start', 'web_automation_record_stop',
+        'web_automation_record_status', 'web_record_demo'
+    ])
+    
+except ImportError as e:
+    print(f"Web automation 모듈 로드 실패: {e}")
+    WEB_AUTOMATION_AVAILABLE = False

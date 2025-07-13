@@ -1,0 +1,120 @@
+{
+  "project": "ai-coding-brain-mcp",
+  "description": "AI Coding Brain MCP 서버 - 워크플로우 기반 개발 도구",
+  "last_updated": "2025-01-13",
+  "preferred_tools": {
+    "primary": [
+      {
+        "tool": "mcp__ai-coding-brain-mcp__execute_code",
+        "description": "Python 코드 실행 (워크플로우 연동)",
+        "usage": "모든 코드 실행, 분석, 테스트에 사용",
+        "benefits": [
+          "워크플로우 자동 추적",
+          "컨텍스트 유지",
+          "helpers 자동 주입",
+          "변수 영속성"
+        ]
+      },
+      {
+        "tool": "mcp__ai-coding-brain-mcp__flow_project",
+        "description": "프로젝트 전환 및 컨텍스트 로드",
+        "usage": "프로젝트 시작 시 항상 실행",
+        "example": "flow_project('프로젝트명')"
+      },
+      {
+        "tool": "mcp__ai-coding-brain-mcp__start_project",
+        "description": "새 프로젝트 생성",
+        "usage": "새로운 프로젝트 시작 시 사용"
+      },
+      {
+        "tool": "mcp__ai-coding-brain-mcp__build_project_context",
+        "description": "프로젝트 컨텍스트 문서 자동 생성",
+        "usage": "README.md, PROJECT_CONTEXT.md 등 생성"
+      }
+    ],
+    "secondary": [
+      {
+        "tool": "mcp__ai-coding-brain-mcp__list_apis",
+        "description": "사용 가능한 API 목록 확인"
+      },
+      {
+        "tool": "mcp__ai-coding-brain-mcp__toggle_api",
+        "description": "API 활성화/비활성화"
+      }
+    ]
+  },
+  "workflow_patterns": {
+    "project_start": [
+      "1. flow_project('프로젝트명') - 컨텍스트 로드",
+      "2. execute_code로 상태 확인 (git_status, list_tasks 등)",
+      "3. 작업 진행"
+    ],
+    "code_development": [
+      "1. execute_code로 파일 읽기/검색",
+      "2. execute_code로 코드 작성/수정",
+      "3. execute_code로 테스트 실행",
+      "4. execute_code로 git 커밋"
+    ],
+    "analysis": [
+      "1. execute_code로 프로젝트 구조 분석",
+      "2. execute_code로 코드 패턴 검색",
+      "3. execute_code로 결과 정리"
+    ]
+  },
+  "helpers_functions": {
+    "file_operations": [
+      "read_file",
+      "write_file",
+      "create_file",
+      "delete_file",
+      "read_json",
+      "write_json",
+      "scan_directory"
+    ],
+    "git_operations": [
+      "git_status",
+      "git_add",
+      "git_commit",
+      "git_push",
+      "git_commit_smart",
+      "git_log",
+      "git_diff"
+    ],
+    "search_operations": [
+      "search_files",
+      "search_code",
+      "find_function",
+      "find_class",
+      "grep"
+    ],
+    "project_operations": [
+      "create_project",
+      "list_projects",
+      "quick_task",
+      "list_tasks",
+      "complete_task",
+      "get_context",
+      "update_context"
+    ]
+  },
+  "best_practices": [
+    "항상 flow_project로 시작하여 컨텍스트 로드",
+    "모든 코드 작업은 execute_code 사용 (자동 추적)",
+    "Desktop Commander보다 MCP 도구 우선 사용",
+    "helpers 함수로 파일/Git 작업 수행",
+    "워크플로우 상태는 자동으로 추적됨"
+  ],
+  "avoid": [
+    "Desktop Commander의 직접 파일 작업 (MCP가 추적 못함)",
+    "Bash 명령어로 git 작업 (helpers.git_* 사용)",
+    "Read/Write 도구 직접 사용 (execute_code + helpers 사용)"
+  ],
+  "quick_commands": {
+    "프로젝트 전환": "execute_code(\"helpers.flow_project('프로젝트명')\")",
+    "Git 상태": "execute_code(\"helpers.git_status()\")",
+    "파일 읽기": "execute_code(\"helpers.read_file('경로')\")",
+    "코드 검색": "execute_code(\"helpers.search_code('.', '패턴')\")",
+    "태스크 목록": "execute_code(\"helpers.list_tasks()\")",
+    "스마트 커밋": "execute_code(\"helpers.git_commit_smart()\")"
+  }
+}

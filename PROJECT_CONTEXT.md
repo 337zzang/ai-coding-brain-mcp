@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-13 06:30:54
+> 최종 업데이트: 2025-07-13 11:31:47
 
 ## 🎯 프로젝트 개요
 
@@ -22,15 +22,12 @@
 | 디렉토리 | 설명 |
 |---------|------|
 | `.pytest_cache/` | 프로젝트 관련 파일 |
-| `.vscode/` | 프로젝트 관련 파일 |
-| `backup/` | 프로젝트 관련 파일 |
-| `backups/` | 프로젝트 관련 파일 |
-| `chroma_db/` | 프로젝트 관련 파일 |
+| `backup_deleted_modules/` | 프로젝트 관련 파일 |
 | `docs/` | 문서 |
-| `legacy_cleanup_backup_20250712_222058/` | 프로젝트 관련 파일 |
 | `logs/` | 프로젝트 관련 파일 |
 | `memory/` | 캐시 및 상태 저장 |
 | `python/` | Python 스크립트 및 유틸리티 |
+| `src/` | 소스 코드 |
 
 ## 📦 의존성
 
@@ -61,120 +58,35 @@
 ```
 ai-coding-brain-mcp/
 ├── .pytest_cache/
-│   └── v/
-│       └── cache/
 │   ├── README.md
-├── .vscode/
-│   ├── settings.json
-├── backup/
-│   ├── dist_backup_20250706_165604/
-│   │   ├── core/
-│   │   │   ├── domain/
-│   │   │   └── infrastructure/
-│   │   │   ├── index.d.ts
-│   │   │   ├── index.js
-│   │   ├── handlers/
-│   │   │   ├── api-toggle-handler.d.ts
-│   │   │   ├── api-toggle-handler.js
-│   │   │   ├── backup-handler.d.ts
-│   │   │   └── ... (13 more files)
-│   │   ├── memory/
-│   │   │   ├── config.d.ts
-│   │   │   ├── config.js
-│   │   ├── services/
-│   │   │   ├── logger.d.ts
-│   │   │   ├── logger.js
-│   │   ├── tools/
-│   │   │   ├── tool-definitions.d.ts
-│   │   │   ├── tool-definitions.js
-│   │   ├── types/
-│   │   │   ├── tool-interfaces.d.ts
-│   │   │   ├── tool-interfaces.js
-│   │   └── utils/
-│   │       ├── hybrid-helper-system.d.ts
-│   │       ├── hybrid-helper-system.js
-│   │       ├── indent-helper.d.ts
-│   │       └── ... (5 more files)
-│   │   ├── index.d.ts
-│   │   ├── index.js
-│   └── workflow_backups/
-│   ├── context_backup_20250706_163020.json
-│   ├── workflow_backup_20250706_163020.json
-├── backups/
-│   ├── atomic_io_backup_20250710_122520/
-│   │   ├── atomic_io.py
-│   │   ├── utils_io_helpers.py
-│   ├── cache_api_integration_20250710_145158/
-│   ├── context_improvement_20250710_201108/
-│   │   ├── context.json
-│   │   ├── context_integration.py
-│   │   ├── context_manager.py
-│   │   └── ... (1 more files)
-│   ├── enhanced_flow_20250711_030102/
-│   │   ├── enhanced_flow.py
-│   ├── event_improvement_20250711_131439/
-│   │   ├── manager.py
-│   │   ├── models.py
-│   │   ├── workflow_event_adapter.py
-│   ├── event_system_20250712_151628/
-│   │   └── listeners/
-│   │       ├── base.py
-│   │       ├── context_listener.py
-│   │       ├── error_listener.py
+├── backup_deleted_modules/
+│   ├── events_backup_20250713_105544/
+│   │   ├── enhanced_event_bus.py
 │   │   ├── event_bus.py
-│   │   ├── event_helpers.py
-│   │   ├── event_types.py
+│   │   ├── event_bus_events.py
 │   │   └── ... (3 more files)
-│   ├── legacy_cleanup_20250709_120454/
-│   │   └── workflow_v2_data/
-│   │       ├── ai-coding-brain-mcp_workflow.json
-│   │       ├── final_test_workflow.json
-│   │   ├── context_manager_backup.py
-│   │   ├── helpers_wrapper_backup.py
-│   │   ├── storage_backup.py
-│   ├── path_utils_backup_20250710_121805/
-│   │   ├── core_path_utils.py
-│   │   ├── path_utils.py
-│   └── ... (11 more directories)
-│   ├── register_ai_listeners_20250712_222229.py
-│   ├── workflow_event_adapter_backup_20250712_152114.py
-├── chroma_db/
+│   ├── hooks_backup_20250713_110813/
+│   │   ├── git-security.js
+│   │   ├── git-tracker.js
+│   │   ├── mcp-context-manager.js
+│   └── workflow_logging_backup_20250713_111213/
+│       └── workflow_logging/
+│           ├── __init__.py
+│           ├── decorators.py
+│           ├── logger.py
+│   ├── build.py
+│   ├── code_unified.py
+│   ├── compile.py
+│   └── ... (4 more files)
 ├── docs/
-│   ├── architecture/
-│   │   ├── event_listener_design.md
-│   │   ├── workflow_context_integration.md
 │   ├── examples/
 │   │   ├── event_bus_example.py
 │   │   ├── workflow_context_bridge_example.py
-│   ├── fixes/
-│   │   ├── list_functions_error_fix.md
-│   ├── integrated/
-│   │   ├── summary_report_20250712_164427.md
-│   │   ├── summary_report_20250712_164541.md
-│   │   ├── task_4c36482a_complete.md
-│   │   └── ... (1 more files)
 │   ├── tasks/
-│   │   ├── import_fix_report.md
-│   │   ├── task1_atomic_save.md
-│   │   ├── task1_completion_report.md
-│   │   └── ... (8 more files)
-│   ├── workflow/
-│   │   ├── task_hooktest_20250712_173014.md
-│   ├── workflow_docs/
 │   └── workflow_v2/
-│       ├── API_REFERENCE.md
-│       ├── DEPLOYMENT_CHECKLIST.md
-│       ├── MIGRATION_GUIDE.md
-│       └── ... (2 more files)
-│   ├── ai_instruction_guide.md
-│   ├── circular_dependency_analysis.md
-│   ├── circular_dependency_fix_report.md
-│   └── ... (51 more files)
-├── legacy_cleanup_backup_20250712_222058/
-│   ├── cleanup_info.json
-│   ├── deletion_log.json
+│       ├── README.md
+│   ├── event_system_analysis.json
 ├── logs/
-│   ├── errors/
 │   ├── file/
 │   ├── git/
 │   ├── system/
@@ -183,11 +95,144 @@ ai-coding-brain-mcp/
 │   ├── active_errors.json
 │   ├── ai_instructions.json
 │   └── ... (4 more files)
-└── ... (10 more directories)
+├── memory/
+│   ├── backup/
+│   │   ├── active_backup_20250710_171855/
+│   │   │   ├── context.json
+│   │   │   ├── session_info.json
+│   │   │   ├── task_context.json
+│   │   ├── ai-coding-brain-mcp_20250704_195124/
+│   │   │   ├── context.json
+│   │   ├── ai-coding-brain-mcp_20250705_120052/
+│   │   │   ├── context.json
+│   │   │   ├── workflow_data.json
+│   │   ├── legacy_final_backup_20250710_095949/
+│   │   └── old_workflows/
+│   │       ├── workflow_before_cleanup_20250707_155640.json
+│   │   ├── context_ai-coding-brain-mcp_20250704_195124.json
+│   │   ├── context_ai-coding-brain-mcp_20250705_120052.json
+│   │   ├── unified_final_20250710_171104.json
+│   │   └── ... (1 more files)
+│   ├── backups/
+│   │   └── contexts/
+│   │       ├── ai-coding-brain-mcp_context_removed.json
+│   ├── cache/
+│   │   ├── cache_manifest.json
+│   │   ├── cache_metadata.json
+│   │   ├── file_directory.json
+│   ├── deprecated/
+│   │   ├── active_backup_20250710_180947/
+│   │   │   ├── context.json
+│   │   │   ├── session_info.json
+│   │   │   ├── task_context.json
+│   │   └── cleanup_20250710_182629/
+│   │       └── active/
+│   ├── projects/
+│   │   ├── ai-coding-brain-mcp/
+│   │   │   └── workflow_v3/
+│   │   ├── project-alpha/
+│   │   │   ├── context.json
+│   │   │   ├── workflow.json
+│   │   ├── project-beta/
+│   │   │   ├── context.json
+│   │   │   ├── workflow.json
+│   │   └── project-gamma/
+│   │       ├── context.json
+│   │       ├── workflow.json
+│   └── task_context_archive/
+│   ├── ai_instructions.json
+│   ├── ai_instructions_mcp.json
+│   ├── context.json
+│   └── ... (8 more files)
+├── python/
+│   ├── ai_helpers/
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── image.py
+│   │   │   ├── manager.py
+│   │   │   └── ... (2 more files)
+│   │   ├── removed/
+│   │   └── search/
+│   │       ├── __init__.py
+│   │       ├── code_search.py
+│   │       ├── core.py
+│   │       └── ... (3 more files)
+│   │   ├── __init__.py
+│   │   ├── base_api.py
+│   │   ├── code.py
+│   │   └── ... (9 more files)
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── image_generator.py
+│   │   ├── public.py
+│   │   └── ... (3 more files)
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── cache_manager.py
+│   │   ├── context_manager.py
+│   │   └── ... (3 more files)
+│   ├── events/
+│   │   ├── __init__.py
+│   │   ├── unified_event_types.py
+│   ├── tracking/
+│   │   ├── __init__.py
+│   │   ├── simple_tracker.py
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── git_task_helpers.py
+│   │   ├── git_utils.py
+│   │   └── ... (4 more files)
+│   ├── vendor/
+│   │   ├── tree-sitter-javascript/
+│   │   │   └── bindings/
+│   │   └── tree-sitter-typescript/
+│   │       └── bindings/
+│   └── workflow/
+│       └── v3/
+│           ├── api/
+│           ├── commands/
+│           ├── listeners/
+│           └── tests/
+│           ├── __init__.py
+│           ├── ai_instruction_executor.py
+│           ├── code_integration.py
+│           └── ... (17 more files)
+│       ├── __init__.py
+│   ├── __init__.py
+│   ├── api_manager.py
+│   ├── debug_flow.py
+│   └── ... (15 more files)
+└── src/
+    ├── core/
+    │   ├── domain/
+    │   │   ├── entities/
+    │   │   └── repositories/
+    │   │   ├── index.ts
+    │   └── infrastructure/
+    │       └── filesystem/
+    │       ├── index.ts
+    │   ├── index.ts
+    ├── handlers/
+    │   ├── api-toggle-handler.ts
+    │   ├── backup-handler.ts
+    │   ├── build-handler.ts
+    │   └── ... (4 more files)
+    ├── services/
+    │   ├── logger.ts
+    ├── tools/
+    │   ├── tool-definitions.ts
+    ├── types/
+    │   ├── tool-interfaces.ts
+    └── utils/
+        ├── hybrid-helper-system.ts
+        ├── indent-helper.ts
+        ├── logger.ts
+        └── ... (1 more files)
+    ├── index.ts
 ├── .ai-brain.config.json
 ├── .eslintrc.json
-├── check_syntax.py
-└── ... (60 more files)
+├── base_api_fixed.py
+└── ... (6 more files)
 ```
 - `.ai-brain.config.json`: AI Coding Brain 설정
 - `package.json`: Node.js 프로젝트 설정
@@ -198,14 +243,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 743개
-- **디렉토리 수**: 167개
+- **전체 파일 수**: 221개
+- **디렉토리 수**: 71개
 - **파일 타입 분포**:
-  - `.py`: 268개 (36.1%)
-  - `.json`: 175개 (23.6%)
-  - `.md`: 102개 (13.7%)
-  - `.ts`: 63개 (8.5%)
-  - `.map`: 60개 (8.1%)
+  - `.py`: 124개 (56.1%)
+  - `.json`: 49개 (22.2%)
+  - `.ts`: 28개 (12.7%)
+  - `.md`: 6개 (2.7%)
+  - `.jsonl`: 4개 (1.8%)
 
 ## 🚀 빠른 시작
 

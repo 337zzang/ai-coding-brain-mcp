@@ -14,7 +14,7 @@ import os
 # 프로젝트 루트 경로 중앙화
 ROOT = Path(__file__).resolve().parent.parent  # ai-coding-brain-mcp 루트
 
-from python.workflow.v3.code_integration import WorkflowCodeIntegration
+from python.workflow.code_integration import WorkflowCodeIntegration
 def safe_helper(func: Callable) -> Callable:
     """헬퍼 함수를 안전하게 래핑하는 데코레이터"""
     @functools.wraps(func)
@@ -380,7 +380,7 @@ class HelpersWrapper:
     def workflow(self, command: str) -> HelperResult:
         """v3: 명령어 실행"""
         try:
-            from python.workflow.v3.dispatcher import execute_workflow_command
+            from python.workflow.dispatcher import execute_workflow_command
             return execute_workflow_command(command)
         except ImportError as e:
             return HelperResult(False, error=f"Workflow 모듈 import 실패: {str(e)}")

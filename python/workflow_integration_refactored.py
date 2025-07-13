@@ -9,8 +9,8 @@ Workflow Integration - Event-Based
 import logging
 from typing import Optional
 
-from python.workflow.v3.event_bus import event_bus
-from python.workflow.v3.event_types import EventType, create_project_event
+from python.workflow.event_bus import event_bus
+from python.workflow.event_types import EventType, create_project_event
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +48,8 @@ def get_workflow_manager(project_name: str):
     이벤트 기반 아키텍처에서는 직접 호출보다
     이벤트를 통한 통신을 권장합니다.
     """
-    from python.workflow.v3.manager import WorkflowV3Manager
-    from python.workflow.v3.workflow_event_adapter import inject_event_publishing
+    from python.workflow.manager import WorkflowV3Manager
+    from python.workflow.workflow_event_adapter import inject_event_publishing
 
     if project_name not in _workflow_managers:
         # 새 인스턴스 생성

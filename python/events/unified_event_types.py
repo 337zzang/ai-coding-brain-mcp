@@ -61,6 +61,7 @@ class EventType(str, Enum):
     FILE_MODIFIED = "file_modified"        # 파일 수정
     FILE_DELETED = "file_deleted"          # 파일 삭제
     FILE_ACCESSED = "file_accessed"        # 파일 접근
+    CODE_MODIFIED = "code_modified"        # 코드 수정 (상세 추적용)
     
     # === Git 이벤트 ===
     GIT_COMMIT_CREATED = "git_commit_created"      # 커밋 생성
@@ -71,6 +72,7 @@ class EventType(str, Enum):
     SYSTEM_ERROR = "system_error"          # 시스템 오류
     SYSTEM_WARNING = "system_warning"      # 시스템 경고
     SYSTEM_INFO = "system_info"            # 시스템 정보
+    ERROR_OCCURRED = "error_occurred"      # 일반 에러 발생
 
 
 # 이전 EventTypes 클래스와의 호환성을 위한 매핑

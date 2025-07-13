@@ -14,8 +14,8 @@ from datetime import datetime
 from pathlib import Path
 
 # EventBus와 이벤트 타입 import
-from python.workflow.v3.event_bus import event_bus
-from python.workflow.v3.event_types import (
+from python.workflow.event_bus import event_bus
+from python.workflow.event_types import (
     EventType,
     create_project_event,
     create_context_event

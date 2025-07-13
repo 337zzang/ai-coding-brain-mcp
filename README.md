@@ -6,30 +6,29 @@
 
 - **버전**: 1.0.0
 - **언어**: TypeScript/JavaScript
-- **최종 업데이트**: 2025-07-13 06:30:54
+- **최종 업데이트**: 2025-07-13 11:31:47
 
 ## 📊 프로젝트 통계
 
-- **전체 파일**: 743개
-- **디렉토리**: 167개
+- **전체 파일**: 221개
+- **디렉토리**: 71개
 - **주요 언어**:
-  - Python: 268개 파일
-  - TypeScript: 63개 파일
-  - JavaScript: 31개 파일
+  - Python: 124개 파일
+  - TypeScript: 28개 파일
+  - JavaScript: 3개 파일
 
 ## 🗂️ 프로젝트 구조
 
 ```
 ai-coding-brain-mcp/
 ├── .pytest_cache/
-├── .vscode/
-├── backup/
-├── backups/
-├── chroma_db/
+├── backup_deleted_modules/
 ├── docs/
-├── legacy_cleanup_backup_20250712_222058/
 ├── logs/
-└── ... (외 10개)
+├── memory/
+├── python/
+├── src/
+└── ...
 ```
 
 ## 🚀 시작하기

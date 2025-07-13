@@ -352,14 +352,6 @@
         "execution_time": "0.5s",
         "memory_usage": "12MB"
       }
-    }
-  },
-  "summary": {
-    "total_tasks": 18,
-    "completed_tasks": 4,
-    "in_progress_tasks": 0,
-    "total_duration": 0,
-    "files_created": [],
-    "files_modified": []
-  }
-}
+    },
+    "d01ff463-b793-4bbc-958c-6249747bfb78": {
+      "started_at": 

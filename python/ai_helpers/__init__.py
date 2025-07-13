@@ -22,16 +22,17 @@ from .file_unified import (
     read_yaml, write_yaml
 )
 
-# Git 관련
-from .git import (
+# Git 관련 - 통합 모듈에서 import
+from .git_enhanced import (
     git_status, git_add, git_commit, git_push, git_pull,
     git_branch, git_log, git_diff, git_stash, git_stash_pop,
     git_commit_smart, git_branch_smart, is_git_repository, git_init,
+    git_checkout, git_get_current_branch, git_get_remote_url,
     GIT_AVAILABLE
 )
 
 # Search 관련 - 통합 모듈에서 import
-from .search_unified import (
+from .search_optimized import (
     search_files,
     search_code,
     find_symbol,
@@ -80,11 +81,11 @@ except ImportError as e:
 
 # Code 관련 - 통합 모듈에서 import
 try:
-    from .code_unified import (
-        parse_code, replace_function, replace_class, replace_method,
-        add_function, add_method_to_class, get_code_snippet,
-        find_code_element, set_verbose as set_code_verbose
-    )
+    # from .code_unified import (  # Removed - use code.py instead
+    #     parse_code, replace_function, replace_class, replace_method,
+    #     add_function, add_method_to_class, get_code_snippet,
+    #     find_code_element, set_verbose as set_code_verbose
+    # )
     # Legacy compatibility
     from .code import (
         replace_block, insert_block, parse_with_snippets
@@ -92,33 +93,30 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ code 모듈 로드 실패: {e}")
 
-# Context 관련
+# Project/Context 관련 - 통합 모듈에서 import
 try:
-    from .context import (
-        get_context, save_context, update_context, initialize_context,
-        get_project_context, track_operation
+    from .project_unified import (
+        get_current_project, create_project, list_projects,
+        quick_task, list_tasks, complete_task, get_project_progress,
+        create_standard_phases, get_current_phase, get_pending_tasks,
+        # Context management (legacy)
+        get_context, update_context, save_context, initialize_context
     )
 except ImportError as e:
-    logger.warning(f"⚠️ context 모듈 로드 실패: {e}")
+    logger.warning(f"⚠️ project_unified 모듈 로드 실패: {e}")
 
-# Project 관련
-try:
-    from .project import (
-        get_project_progress,
-        get_system_summary, get_current_project
-    )
-except ImportError as e:
-    logger.warning(f"⚠️ project 모듈 로드 실패: {e}")
+# Decorators functionality moved to utility_unified.py
 
-# Utils 관련
-try:
-    from .utils import (
-        create_standard_phases,
-        quick_task, task, complete, progress, reset_project, update_cache,
-        get_cache_value, track_file_access, get_value, safe_print, list_functions
-    )
-except ImportError as e:
-    logger.warning(f"⚠️ utils 모듈 로드 실패: {e}")
+# Utils functionality moved to utility_unified.py and project_unified.py
+
+
+# Utility 관련 - 통합 모듈에서 import
+from .utility_unified import (
+    track_operation, lazy_import, list_functions, safe_import,
+    get_tracking_statistics, reset_tracking,
+    # Legacy aliases
+    track_file_access, get_project_context
+)
 
 # Legacy replacements
 try:
@@ -206,6 +204,7 @@ __all__ = [
     'git_status', 'git_add', 'git_commit', 'git_push', 'git_pull',
     'git_branch', 'git_log', 'git_diff', 'git_stash', 'git_stash_pop',
     'git_commit_smart', 'git_branch_smart', 'is_git_repository', 'git_init',
+    'git_checkout', 'git_get_current_branch', 'git_get_remote_url',
     'GIT_AVAILABLE',
     
     # Search operations
@@ -219,9 +218,16 @@ __all__ = [
     
     # Workflow
     'workflow', 'flow_project', 'start_project', 'get_current_project',
+    'create_project', 'list_projects',
     
-    # Utilities
+        # Utilities
     'get_load_status',
+
+    # Utility Operations (새로 통합된 기능들)
+    'track_operation', 'lazy_import', 'list_functions', 'safe_import',
+    'get_tracking_statistics', 'reset_tracking',
+    # Legacy aliases
+    'track_file_access', 'get_project_context',
 ]
 
 # Optional 모듈의 함수들도 __all__에 추가 (존재하는 경우에만)

@@ -219,7 +219,7 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
         
         # Workflow V3 dispatcher 업데이트
         try:
-            from python.workflow.v3.dispatcher import update_dispatcher_project
+            from python.workflow.dispatcher import update_dispatcher_project
             update_dispatcher_project(project_name)
             logger.info(f"[WORKFLOW] V3 dispatcher를 '{project_name}' 프로젝트로 업데이트")
         except Exception as e:
@@ -604,7 +604,7 @@ def _load_and_show_workflow() -> Dict[str, Any]:
     """워크플로우 로드 및 상태 반환 - V3 독립 메모리 구조"""
     try:
         # WorkflowManager V3 사용
-        from python.workflow.v3.manager import WorkflowManager
+        from python.workflow.manager import WorkflowManager
         
         # 현재 프로젝트명
         current_project = Path.cwd().name

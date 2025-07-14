@@ -11,6 +11,19 @@ from ai_helpers.helper_result import HelperResult
 from pathlib import Path
 import os
 
+# Stdout Protocol v3.0 import
+try:
+    from ai_helpers.protocols import (
+        get_protocol, get_id_generator, get_tracker,
+        StdoutProtocol, ExecutionTracker, IDGenerator
+    )
+    PROTOCOL_AVAILABLE = True
+except ImportError:
+    PROTOCOL_AVAILABLE = False
+    get_protocol = None
+    get_id_generator = None
+    get_tracker = None
+
 # 프로젝트 루트 경로 중앙화
 ROOT = Path(__file__).resolve().parent.parent  # ai-coding-brain-mcp 루트
 
@@ -73,6 +86,37 @@ class HelpersWrapper:
 
         # v44: 특정 메서드들을 명시적으로 바인딩 (캐시 우선순위 문제 해결)
         self._bind_override_methods()
+
+        # Stdout Protocol v3.0 통합
+        if PROTOCOL_AVAILABLE:
+            self._bind_protocol_methods()
+
+    def _bind_protocol_methods(self):
+        """Stdout Protocol v3.0 메서드 바인딩"""
+        # 프로토콜 인스턴스
+        self.protocol = get_protocol()
+        self.id_generator = get_id_generator()
+        self.tracker = get_tracker()
+        
+        # 프로토콜 메서드 직접 바인딩
+        self.section = self.protocol.section
+        self.end_section = self.protocol.end_section
+        self.data = self.protocol.data
+        self.exec_start = self.protocol.exec_start
+        self.exec_end = self.protocol.exec_end
+        self.progress = self.protocol.progress
+        self.error = self.protocol.error
+        self.checkpoint = self.protocol.checkpoint
+        self.next_action = self.protocol.next_action
+        self.cache_hit = self.protocol.cache_hit
+        self.cache_miss = self.protocol.cache_miss
+        self.cache_save = self.protocol.cache_save
+        
+        # ID 조회 메서드
+        self.get_by_id = self.id_generator.get_by_id
+        
+        # 추적 데코레이터
+        self.track = self.tracker.track
 
     def _bind_override_methods(self):
         """클래스에 정의된 메서드들을 명시적으로 바인딩"""
@@ -378,21 +422,47 @@ class HelpersWrapper:
 
 
     def workflow(self, command: str) -> HelperResult:
-        """v3: 명령어 실행 (ImprovedWorkflowManager 사용)"""
+        """명령어 실행 (ImprovedWorkflowManager 사용)"""
         try:
-            # 워크플로우 매니저 인스턴스 가져오기 (캐싱)
-            if not hasattr(self, '_workflow_manager'):
-                import os
-                from python.workflow.improved_manager import ImprovedWorkflowManager
+            import os
+            from python.workflow.improved_manager import ImprovedWorkflowManager
+            
+            # 매번 현재 프로젝트명으로 새로운 인스턴스 생성
+            current_project = os.path.basename(os.getcwd())
+            
+            # enhanced_flow에서 전역 워크플로우 매니저를 사용할 수 있는지 시도
+            try:
+                from python.enhanced_flow import get_current_workflow_manager, current_workflow_manager
                 
-                # 현재 프로젝트 이름 가져오기
-                project_name = os.path.basename(os.getcwd())
-                
-                # ImprovedWorkflowManager 인스턴스 생성 및 캐싱
-                self._workflow_manager = ImprovedWorkflowManager(project_name)
+                # 전역 매니저가 현재 프로젝트와 일치하는지 확인
+                if current_workflow_manager and hasattr(current_workflow_manager, 'project_name'):
+                    if current_workflow_manager.project_name == current_project:
+                        workflow_manager = current_workflow_manager
+                    else:
+                        # 프로젝트가 다르면 새로 생성
+                        workflow_manager = ImprovedWorkflowManager(current_project)
+                        # 전역 변수 업데이트
+                        import python.enhanced_flow
+                        python.enhanced_flow.current_workflow_manager = workflow_manager
+                else:
+                    workflow_manager = get_current_workflow_manager()
+            except ImportError:
+                # enhanced_flow를 사용할 수 없으면 직접 생성
+                workflow_manager = ImprovedWorkflowManager(current_project)
             
             # 명령 처리
-            result = self._workflow_manager.process_command(command)
+            result = workflow_manager.process_command(command)
+            
+            # 자동 출력이 필요한 명령어들
+            auto_print_commands = ['/status', '/list', '/help', '/plan', '/task', 
+                                 '/complete', '/start', '/next', '/prev', '/focus',
+                                 '/pause', '/resume', '/skip', '/archive']
+            
+            # 명령어가 자동 출력 목록에 있으면 메시지 출력
+            cmd_base = command.split()[0] if command else ''
+            if any(cmd_base.startswith(cmd) for cmd in auto_print_commands):
+                if result.get('message'):
+                    print(result['message'])
             
             # HelperResult로 변환
             if result.get('success'):
@@ -453,22 +523,22 @@ class HelpersWrapper:
                 'message': '함수 목록을 가져올 수 없지만 helpers는 정상 작동합니다'
             })
     def workflow_done(self, notes: str = "") -> HelperResult:
-        """v3: 태스크 완료"""
+        """태스크 완료"""
         try:
-            from python.workflow.manager import WorkflowManager
-            # V2 complete_current_task는 V3에서 다르게 처리됨
-            manager = WorkflowManager("default")
-            return manager.execute_command(f"/next {notes}")
+            from python.workflow.improved_manager import ImprovedWorkflowManager
+            # ImprovedWorkflowManager 사용
+            manager = ImprovedWorkflowManager("default")
+            return manager.process_command(f"/complete {notes}")
         except Exception as e:
             return HelperResult(False, error=str(e))
 
     def workflow_status(self) -> HelperResult:
-        """v3: 상태 조회"""
+        """상태 조회"""
         try:
-            from python.workflow.manager import WorkflowManager
-            # V2 get_status는 V3에서 다르게 처리됨
-            manager = WorkflowManager("default")
-            result = manager.execute_command("/status")
+            from python.workflow.improved_manager import ImprovedWorkflowManager
+            # ImprovedWorkflowManager 사용
+            manager = ImprovedWorkflowManager("default")
+            result = manager.get_status()
             return HelperResult(True, result)
         except Exception as e:
             return HelperResult(False, error=str(e))
@@ -803,6 +873,31 @@ try:
     
 except ImportError as e:
     print(f"⚠️ helpers_extension 자동 등록 실패: {e}")
+except Exception as e:
+    print(f"❌ 예상치 못한 오류: {e}")
+
+
+# LLM 헬퍼 함수 자동 등록
+try:
+    from python.ai_helpers.llm_helper import (
+        ask_llm,
+        ask_code_review,
+        ask_design_help,
+        ask_error_help,
+        ask_optimize_code
+    )
+    
+    # HelpersWrapper 클래스에 LLM 메서드 추가
+    HelpersWrapper.ask_llm = lambda self, question, context=None, model="gpt-4-turbo-preview": safe_helper(lambda: ask_llm(question, context, model))()
+    HelpersWrapper.ask_code_review = lambda self, code, focus=None: safe_helper(lambda: ask_code_review(code, focus))()
+    HelpersWrapper.ask_design_help = lambda self, problem, constraints=None: safe_helper(lambda: ask_design_help(problem, constraints))()
+    HelpersWrapper.ask_error_help = lambda self, error, code=None: safe_helper(lambda: ask_error_help(error, code))()
+    HelpersWrapper.ask_optimize_code = lambda self, code, opt_type="performance": safe_helper(lambda: ask_optimize_code(code, opt_type))()
+    
+    print("✅ LLM 헬퍼 함수들이 helpers에 자동 등록되었습니다! (o3 모델 지원)")
+    
+except ImportError as e:
+    print(f"⚠️ LLM 헬퍼 자동 등록 실패: {e}")
 except Exception as e:
     print(f"❌ 예상치 못한 오류: {e}")
 

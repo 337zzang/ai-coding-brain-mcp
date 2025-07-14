@@ -1,4 +1,4 @@
 
 
-# V3 Workflow System
+# Workflow System
 from .workflow import WorkflowManager

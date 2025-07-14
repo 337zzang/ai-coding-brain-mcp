@@ -154,35 +154,51 @@ def workflow(command: str):
         if parent_dir not in sys.path:
             sys.path.insert(0, parent_dir)
         
-        # V3에서는 WorkflowManager를 직접 사용 (dispatcher 제거됨)
-        from python.workflow.manager import WorkflowManager
+        # ImprovedWorkflowManager 사용 (개선된 버전)
+        from python.workflow.improved_manager import ImprovedWorkflowManager
         
         # 현재 프로젝트명 가져오기
         current_project = os.path.basename(os.getcwd())
-        wm = WorkflowManager.get_instance(current_project)
+        wm = ImprovedWorkflowManager(current_project)
         
         # 명령 처리
         result = wm.process_command(command)
         
+        # 결과 출력 (무응답 문제 해결)
+        if isinstance(result, dict):
+            if result.get('message'):
+                print(result['message'])
+            elif result.get('output'):
+                print(result['output'])
+        elif isinstance(result, str):
+            print(result)
+        
         # HelperResult로 변환
-        if result.get('success'):
+        if isinstance(result, dict) and result.get('success'):
             return HelperResult(True, data=result)
         else:
-            return HelperResult(False, error=result.get('message', 'Unknown error'))
+            error_msg = result.get('message', 'Unknown error') if isinstance(result, dict) else str(result)
+            return HelperResult(False, error=error_msg)
             
     except Exception as e:
+        print(f"❌ 워크플로우 오류: {e}")
         return HelperResult(False, error=str(e))
 
 # Flow 관련 함수들
-def flow_project(project_name: str) -> Dict[str, Any]:
-    """프로젝트 전환"""
+def flow_project(project_name: str, auto_proceed: bool = False) -> Dict[str, Any]:
+    """프로젝트 전환
+    
+    Args:
+        project_name: 프로젝트 이름
+        auto_proceed: 자동 진행 여부 (False면 진행 중인 태스크가 있을 때 확인 요청)
+    """
     try:
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         if project_root not in sys.path:
             sys.path.insert(0, project_root)
             
         from enhanced_flow import cmd_flow_with_context
-        result = cmd_flow_with_context(project_name)
+        result = cmd_flow_with_context(project_name, auto_proceed)
         return HelperResult(ok=True, data=result, error=None)
     except Exception as e:
         # stderr로 직접 출력
@@ -357,3 +373,25 @@ try:
     
 except ImportError as e:
     print(f"REPL 브라우저 모듈 로드 실패: {e}")
+
+
+# LLM 헬퍼 함수 추가
+try:
+    from python.ai_helpers.llm_helper import (
+        ask_llm,
+        ask_code_review,
+        ask_design_help,
+        ask_error_help,
+        ask_optimize_code
+    )
+    
+    # __all__에 추가
+    __all__.extend([
+        'ask_llm', 'ask_code_review', 'ask_design_help',
+        'ask_error_help', 'ask_optimize_code'
+    ])
+    
+    print("✅ LLM 헬퍼 함수 로드 완료 (o3 모델 지원)")
+    
+except ImportError as e:
+    print(f"LLM 헬퍼 모듈 로드 실패: {e}")

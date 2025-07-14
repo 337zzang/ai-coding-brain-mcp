@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-14 00:29:04
+> 최종 업데이트: 2025-07-14 22:27:27
 
 ## 🎯 프로젝트 개요
 
@@ -24,13 +24,13 @@
 | `.pytest_cache/` | 프로젝트 관련 파일 |
 | `backup_deleted_modules/` | 프로젝트 관련 파일 |
 | `backup_workflow_20250713_114703/` | 프로젝트 관련 파일 |
+| `backup_workflow_cleanup_20250714_090616/` | 프로젝트 관련 파일 |
 | `backup_workflow_legacy_20250713/` | 프로젝트 관련 파일 |
 | `docs/` | 문서 |
 | `examples/` | 프로젝트 관련 파일 |
 | `generated_scripts/` | 프로젝트 관련 파일 |
 | `logs/` | 프로젝트 관련 파일 |
 | `memory/` | 캐시 및 상태 저장 |
-| `python/` | Python 스크립트 및 유틸리티 |
 
 ## 📦 의존성
 
@@ -103,6 +103,12 @@ ai-coding-brain-mcp/
 │       ├── code_integration.py
 │       └── ... (17 more files)
 │   ├── __init__.py
+├── backup_workflow_cleanup_20250714_090616/
+│   └── projects_backup/
+│       └── ai-coding-brain-mcp/
+│           └── workflow_data/
+│   ├── workflow_ai_state.json
+│   ├── workflow_backup_20250714_070008.json
 ├── backup_workflow_legacy_20250713/
 │   └── python/
 │       └── workflow/
@@ -112,19 +118,27 @@ ai-coding-brain-mcp/
 │           ├── errors.py
 │           ├── manager.py
 ├── docs/
+│   ├── design/
+│   │   ├── python_helpers_validation_task03_code_analysis_design_20250714.md
+│   ├── error/
+│   ├── report/
+│   │   ├── git_add_error_fix_report_20250714.md
+│   │   ├── git_module_cleanup_report_20250714.md
+│   │   ├── system_efficiency_evaluation_20250714.md
 │   ├── tasks/
 │   │   ├── 20250713_task_1b12e231.md
 │   │   ├── 20250713_task_21dfb9f3.md
 │   │   ├── 20250713_task_23799501.md
 │   │   └── ... (9 more files)
 │   └── workflow_reports/
-│       ├── ai-coding-brain-mcp_jwt_auth_error_ImportError_205451.md
-│       ├── ai-coding-brain-mcp_jwt_auth_system_jwt_token_design_v1.md
-│       ├── ai-coding-brain-mcp_jwt_auth_system_jwt_token_report_20250713.md
+│       ├── ai-coding-brain-mcp_commands_implementation_report_20250714_004244.md
+│       ├── ai-coding-brain-mcp_error_analysis_20250714_003640.md
+│       ├── ai-coding-brain-mcp_filesystem_test_report_20250714.md
+│       └── ... (9 more files)
 │   ├── AI_HELPERS_GUIDE.md
 │   ├── event_system_analysis.json
-│   ├── helper_result_practical_examples.md
-│   └── ... (14 more files)
+│   ├── execute_code_advanced_guide.md
+│   └── ... (21 more files)
 ├── examples/
 │   ├── test_async_web.py
 │   ├── web_automation_recording_examples.py
@@ -133,20 +147,11 @@ ai-coding-brain-mcp/
 │   ├── naver_simple.py
 │   ├── README.md
 │   └── ... (2 more files)
-├── logs/
-│   ├── file/
-│   ├── git/
-│   ├── system/
-│   └── workflow/
-│   ├── active_ai_instruction.json
-│   ├── active_errors.json
-│   ├── ai_instructions.json
-│   └── ... (4 more files)
-└── ... (4 more directories)
+└── ... (6 more directories)
 ├── .ai-brain.config.json
 ├── .eslintrc.json
-├── CLAUDE.md
-└── ... (7 more files)
+├── ai-coding-brain-mcp_7490a912_design_v2.md
+└── ... (9 more files)
 ```
 - `.ai-brain.config.json`: AI Coding Brain 설정
 - `package.json`: Node.js 프로젝트 설정
@@ -157,11 +162,11 @@ ai-coding-brain-mcp/
 ## 📊 프로젝트 통계
 
 - **전체 파일 수**: 294개
-- **디렉토리 수**: 72개
+- **디렉토리 수**: 75개
 - **파일 타입 분포**:
-  - `.py`: 147개 (50.0%)
-  - `.json`: 59개 (20.1%)
-  - `.md`: 42개 (14.3%)
+  - `.py`: 149개 (50.7%)
+  - `.md`: 64개 (21.8%)
+  - `.json`: 33개 (11.2%)
   - `.ts`: 28개 (9.5%)
   - `.png`: 4개 (1.4%)
 

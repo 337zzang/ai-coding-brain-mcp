@@ -51,12 +51,31 @@ if not hasattr(builtins, 'helpers'):
 # 전역 변수
 context = {}
 last_loaded_context = None
+current_workflow_manager = None  # 현재 프로젝트의 워크플로우 매니저
+
+def get_current_workflow_manager():
+    """현재 프로젝트의 워크플로우 매니저 반환"""
+    global current_workflow_manager
+    
+    if current_workflow_manager is None:
+        # 워크플로우 매니저가 없으면 현재 프로젝트로 새로 생성
+        from python.workflow.improved_manager import ImprovedWorkflowManager
+        current_project = Path.cwd().name
+        current_workflow_manager = ImprovedWorkflowManager(current_project)
+        logger.info(f"[WORKFLOW] 워크플로우 매니저 자동 생성: {current_project}")
+    
+    return current_workflow_manager
+
 
 # ==================== 프로젝트 관리 함수 ====================
 
-def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
+def cmd_flow_with_context(project_name: str, auto_proceed: bool = False) -> Dict[str, Any]:
     """프로젝트로 전환하고 전체 컨텍스트를 로드
 
+    Args:
+        project_name: 프로젝트 이름
+        auto_proceed: 자동 진행 여부 (False면 진행 중인 태스크가 있을 때 확인 요청)
+    
     기존 인터페이스 유지하면서 개선된 구조 적용
     """
     global context, last_loaded_context
@@ -162,6 +181,24 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
 
         # 7. 워크플로우 로드 및 표시
         workflow_status = _load_and_show_workflow()
+        
+        # 7-1. 전역 워크플로우 매니저 재설정
+        global current_workflow_manager
+        try:
+            from python.workflow.improved_manager import ImprovedWorkflowManager
+            current_workflow_manager = ImprovedWorkflowManager(project_name)
+            logger.info(f"[WORKFLOW] 전역 워크플로우 매니저를 '{project_name}'로 재설정")
+        except Exception as e:
+            logger.warning(f"[WORKFLOW] 전역 워크플로우 매니저 재설정 실패: {e}")
+        
+        # 7-2. helpers 객체의 캐시된 워크플로우 매니저 무효화
+        try:
+            if 'helpers' in globals() and hasattr(helpers, '_workflow_manager'):
+                delattr(helpers, '_workflow_manager')
+                logger.info("[WORKFLOW] helpers의 캐시된 워크플로우 매니저 제거")
+        except Exception as e:
+            logger.debug(f"[WORKFLOW] helpers 캐시 제거 중 오류 (무시): {e}")
+        
         # 종합 컨텍스트 구축 - 함수가 없으므로 주석 처리
         # comprehensive_ctx = _build_comprehensive_context(project_name, workflow_status)
         
@@ -190,7 +227,7 @@ def cmd_flow_with_context(project_name: str) -> Dict[str, Any]:
         # logger.info(f"  - context keys: {list(context.keys()) if context else 'None'}")
         
         # 브리핑 함수 호출 및 반환값 저장
-        briefing_result = _print_project_briefing(project_name, workflow_status, context)
+        briefing_result = _print_project_briefing(project_name, workflow_status, context, auto_proceed)
         
         # DEBUG 로그 제거 - 필요시 주석 해제
         # logger.info(f"[DEBUG] 브리핑 함수 반환값:")
@@ -604,17 +641,19 @@ def ensure_workflow_file(project_path: Path = None) -> Path:
 
 
 def _load_and_show_workflow() -> Dict[str, Any]:
-    """워크플로우 로드 및 상태 반환 - V3 독립 메모리 구조"""
+    """워크플로우 로드 및 상태 반환 - ImprovedWorkflowManager 사용"""
+    global current_workflow_manager
     try:
-        # WorkflowManager V3 사용
-        from python.workflow.manager import WorkflowManager
+        # ImprovedWorkflowManager 사용
+        from python.workflow.improved_manager import ImprovedWorkflowManager
         
         # 현재 프로젝트명
         current_project = Path.cwd().name
         
-        # WorkflowManager 인스턴스 가져오기
-        wm = WorkflowManager.get_instance(current_project)
-        logger.info(f"[WORKFLOW] WorkflowManager 인스턴스 로드: {current_project}")
+        # ImprovedWorkflowManager 인스턴스 생성
+        wm = ImprovedWorkflowManager(current_project)
+        current_workflow_manager = wm  # 전역 변수에 저장
+        logger.info(f"[WORKFLOW] ImprovedWorkflowManager 인스턴스 로드: {current_project}")
         
         # 상태 확인
         status_result = wm.get_status()
@@ -658,7 +697,7 @@ def _load_and_show_workflow() -> Dict[str, Any]:
                                 'plan_description': plan.get('description', ''),
                                 'total_tasks': len(tasks),
                                 'completed_tasks': completed,
-                                'progress_percent': (completed / len(tasks) * 100) if tasks else 0,
+                                'progress': (completed / len(tasks) * 100) if tasks else 0,
                                 'current_task': current_task
                             }
         except Exception as e2:
@@ -714,7 +753,51 @@ def _update_file_directory():
     except Exception as e:
         logger.warning(f"파일 디렉토리 업데이트 실패: {e}")
 
-def _print_project_briefing(project_name: str, workflow_status: Dict[str, Any], context: Dict[str, Any]):
+def _show_recent_events(project_name: str, limit: int = 5):
+    """최근 워크플로우 이벤트 표시"""
+    try:
+        events_file = Path("memory/workflow_events.json")
+        if events_file.exists():
+            with open(events_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                
+            events = data.get('events', [])
+            if events:
+                print(f"\n📋 최근 워크플로우 이벤트 (최근 {limit}개):")
+                for event in events[-limit:]:
+                    timestamp = event.get('timestamp', 'N/A')
+                    event_type = event.get('type', 'unknown')
+                    entity_id = event.get('entity_id', 'N/A')
+                    
+                    # 이벤트 타입에 따른 아이콘
+                    icon = {
+                        'state_changed': '🔄',
+                        'task_completed': '✅',
+                        'task_started': '▶️',
+                        'error_occurred': '❌',
+                        'plan_created': '📝',
+                        'task_added': '➕'
+                    }.get(event_type, '•')
+                    
+                    # 시간 포맷팅
+                    try:
+                        dt = datetime.fromisoformat(timestamp)
+                        time_str = dt.strftime('%H:%M:%S')
+                    except:
+                        time_str = timestamp
+                    
+                    print(f"   {icon} [{time_str}] {event_type}")
+                    
+                    # state_changed의 경우 상세 정보 표시
+                    if event_type == 'state_changed' and 'data' in event:
+                        from_state = event['data'].get('from', 'N/A')
+                        to_state = event['data'].get('to', 'N/A')
+                        print(f"      {from_state} → {to_state}")
+    except Exception as e:
+        logger.debug(f"이벤트 표시 중 오류: {e}")
+
+
+def _print_project_briefing(project_name: str, workflow_status: Dict[str, Any], context: Dict[str, Any], auto_proceed: bool = False):
     """프로젝트 브리핑 출력 - 개선된 버전"""
     print("\n" + "=" * 50)
     print(f"[START] 프로젝트 전환: {project_name}")
@@ -753,12 +836,37 @@ def _print_project_briefing(project_name: str, workflow_status: Dict[str, Any], 
     print("\n" + "=" * 50)
     if workflow_status and workflow_status.get('status') == 'active':
         print(f"[LIST] 워크플로우: {workflow_status.get('plan_name') if workflow_status else 'None'}")
-        print(f"[STAT] 진행률: {workflow_status.get('completed_tasks') if workflow_status else 0}/{workflow_status.get('total_tasks') if workflow_status else 0} 완료 ({workflow_status.get('progress_percent', 0):.0f}%)")
+        print(f"[STAT] 진행률: {workflow_status.get('completed_tasks') if workflow_status else 0}/{workflow_status.get('total_tasks') if workflow_status else 0} 완료 ({workflow_status.get('progress', 0):.0f}%)")
 
         if workflow_status and workflow_status.get('current_task'):
             task = workflow_status.get('current_task', {})
-            print(f"▶️  현재 작업: {task.get('title')}")
-            print("[TIP] /next로 다음 작업 진행")
+            task_status = task.get('status', 'unknown')
+            
+            # 태스크 상태에 따른 표시
+            if task_status == 'in_progress' and not auto_proceed:
+                print(f"🔄 진행 중: {task.get('title')}")
+                print("\n⚠️  주의: 현재 진행 중인 태스크가 있습니다!")
+                print("   계속하려면 다음 중 하나를 선택하세요:")
+                print("   - /continue : 현재 태스크 계속 진행")
+                print("   - /complete : 현재 태스크 완료 처리")
+                print("   - /pause : 태스크 일시 중지")
+                print("   - /status : 상세 상태 확인")
+                
+                # 최근 이벤트 표시
+                _show_recent_events(project_name, 3)
+                
+            elif task_status == 'in_progress' and auto_proceed:
+                print(f"🔄 진행 중: {task.get('title')}")
+                print("[AUTO] 자동 진행 모드 - 태스크 계속 진행")
+                
+            else:
+                print(f"▶️  다음 작업: {task.get('title')}")
+                print("[TIP] /next로 작업 시작")
+                
+        # 진행 중인 태스크가 있고 자동 진행이 비활성화되어 있으면 자동 진행 방지 메시지
+        if not auto_proceed and any(t.get('status') == 'in_progress' for t in workflow_status.get('tasks', [])):
+            print("\n💡 자동 진행 방지 모드가 활성화되었습니다.")
+            print("   작업을 진행하려면 명시적으로 명령을 입력하세요.")
     else:
         print("[LIST] 워크플로우: 활성 계획 없음")
         print("[TIP] /plan 명령으로 새 계획 생성")
@@ -860,9 +968,9 @@ def start_project(project_name: str, init_git: bool = True) -> Dict[str, Any]:
             'project_name': project_name
         }
 
-def flow_project(project_name: str):
+def flow_project(project_name: str, auto_proceed: bool = False):
     """helpers.flow_project() 래퍼"""
-    return cmd_flow_with_context(project_name)
+    return cmd_flow_with_context(project_name, auto_proceed)
 
 # helpers 바인딩 함수
 def bind_to_helpers(helpers_obj):

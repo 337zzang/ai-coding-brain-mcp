@@ -1,13 +1,9 @@
 {
-  "last_modified": "2025-07-13T07:24:32.918345",
   "project_name": "ai-coding-brain-mcp",
-  "helpers_patterns": {
-    "read_file_correct": "helpers.read_file(path).get_data({}).get('content', '')",
-    "read_file_safe": "helpers.read_file_safe(path)  # v48+ 권장",
-    "read_file_lines": "helpers.read_file_lines(path)  # 라인 리스트로",
-    "scan_dir": "helpers.scan_directory(path).get_data({}).get('files', [])",
-    "git_status": "helpers.git_status()  # 직접 dict 반환"
-  },
+  "created_at": "2025-07-14T06:52:42.821282",
+  "description": "ai-coding-brain-mcp 프로젝트",
+  "version": "1.0.0",
+  "last_modified": "2025-07-14T06:52:42.821282",
   "project_path": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp",
-  "last_updated": "2025-07-14T06:09:27.929810"
+  "last_updated": "2025-07-14T22:27:21.428931"
 }

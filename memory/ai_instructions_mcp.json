@@ -1,8 +1,0 @@
-{
-  "primary_tools": "ai-coding-brain-mcp MCP 도구 우선 사용",
-  "execute_code_first": "모든 코드 작업은 mcp__ai-coding-brain-mcp__execute_code 사용",
-  "workflow_tracking": "자동 워크플로우 추적 활용",
-  "context_aware": "flow_project로 프로젝트 컨텍스트 유지",
-  "helpers_usage": "파일/Git 작업은 helpers 함수 사용",
-  "avoid_direct_tools": "Read/Write/Bash 도구는 최소한으로 사용"
-}

@@ -18,6 +18,7 @@ class ImprovedWorkflowManager:
     def __init__(self, project_name: str):
         self.project_name = project_name
         self.workflow_file = os.path.join("memory", "workflow.json")
+        self.events_file = os.path.join("memory", "workflow_events.json")
         self.data = self._load_workflow_file()
         self._ensure_structure()
         
@@ -30,8 +31,9 @@ class ImprovedWorkflowManager:
             self.data["plans"] = []
         if "active_plan_id" not in self.data:
             self.data["active_plan_id"] = None
-        if "events" not in self.data:
-            self.data["events"] = []
+        # events는 별도 파일로 관리
+        if "events_file" not in self.data:
+            self.data["events_file"] = "workflow_events.json"
         if "version" not in self.data:
             self.data["version"] = "3.0.0"
         if "project_name" not in self.data:
@@ -183,11 +185,16 @@ class ImprovedWorkflowManager:
         if self.data["active_plan_id"]:
             active_plan = self._get_plan(self.data["active_plan_id"])
         
+        completed_tasks = 0
+        if active_plan and "tasks" in active_plan:
+            completed_tasks = len([t for t in active_plan["tasks"] if t.get("status") == TaskStatus.COMPLETED.value])
+        
         return {
             "status": "active" if active_plan else "idle",
             "plan_id": self.data["active_plan_id"],
             "plan_name": active_plan["name"] if active_plan else None,
             "total_tasks": len(active_plan.get("tasks", [])) if active_plan else 0,
+            "completed_tasks": completed_tasks,
             "current_task": self._get_current_task(active_plan) if active_plan else None,
             "progress": self._calculate_progress(active_plan) if active_plan else 0
         }
@@ -212,10 +219,29 @@ class ImprovedWorkflowManager:
             
             elif cmd == '/list':
                 tasks = self._list_current_tasks()
-                return {"success": True, "tasks": tasks}
+                output = "\n=== 📋 태스크 목록 ===\n"
+                if tasks:
+                    for i, task in enumerate(tasks, 1):
+                        status_icon = "✅" if task['status'] == 'completed' else "⏳" if task['status'] == 'in_progress' else "📋"
+                        output += f"{i}. {status_icon} {task['title']}\n"
+                else:
+                    output += "태스크가 없습니다"
+                return {"success": True, "tasks": tasks, "message": output}
             
             elif cmd == '/status':
-                return {"success": True, "status": self.get_status()}
+                status = self.get_status()
+                # 상태를 읽기 쉬운 형태로 포맷팅
+                output = f"\n=== 📊 워크플로우 상태 ===\n"
+                output += f"상태: {status['status']}\n"
+                if status['plan_name']:
+                    output += f"플랜: {status['plan_name']}\n"
+                    output += f"진행률: {status['progress']:.1f}% ({status.get('completed_tasks', 0)}/{status['total_tasks']})\n"
+                    if status['current_task']:
+                        output += f"현재 태스크: {status['current_task']['title']}\n"
+                        output += f"태스크 상태: {status['current_task']['status']}"
+                else:
+                    output += "활성 플랜 없음"
+                return {"success": True, "status": status, "message": output}
             
             elif cmd in ['/complete', '/c']:
                 current_task = self._get_current_task_object()
@@ -297,6 +323,40 @@ class ImprovedWorkflowManager:
                     return {"success": True, "message": f"에러 보고됨: {current_task['title']}"}
                 return {"success": False, "message": "진행 중인 태스크가 없습니다"}
             
+            elif cmd == '/pause':
+                # 현재 태스크 일시 중지
+                current_task = self._get_current_task_object()
+                if current_task and current_task["status"] == TaskStatus.IN_PROGRESS.value:
+                    # 일시 중지 상태로 변경 (메타데이터에 저장)
+                    if "metadata" not in current_task:
+                        current_task["metadata"] = {}
+                    current_task["metadata"]["paused"] = True
+                    current_task["metadata"]["paused_at"] = datetime.now().isoformat()
+                    current_task["metadata"]["pause_reason"] = args or "사용자가 일시 중지"
+                    
+                    self._add_event("task_paused", current_task["id"], {
+                        "title": current_task["title"],
+                        "reason": args or "사용자가 일시 중지"
+                    })
+                    self._save_workflow_file()
+                    return {"success": True, "message": f"태스크 일시 중지됨: {current_task['title']}"}
+                return {"success": False, "message": "진행 중인 태스크가 없습니다"}
+            
+            elif cmd == '/continue':
+                # 일시 중지된 태스크 재개
+                current_task = self._get_current_task_object()
+                if current_task and current_task.get("metadata", {}).get("paused"):
+                    # 일시 중지 상태 해제
+                    current_task["metadata"]["paused"] = False
+                    current_task["metadata"]["resumed_at"] = datetime.now().isoformat()
+                    
+                    self._add_event("task_resumed", current_task["id"], {
+                        "title": current_task["title"]
+                    })
+                    self._save_workflow_file()
+                    return {"success": True, "message": f"태스크 재개됨: {current_task['title']}"}
+                return {"success": False, "message": "일시 중지된 태스크가 없습니다"}
+            
             elif cmd == '/help':
                 help_text = """사용 가능한 워크플로우 명령어:
                 
@@ -307,6 +367,8 @@ class ImprovedWorkflowManager:
 /focus [번호] - 특정 태스크 시작
 /complete [메모] - 현재 태스크 완료
 /next - 다음 태스크로 이동
+/pause [이유] - 현재 태스크 일시 중지
+/continue - 일시 중지된 태스크 재개
 /skip [이유] - 현재 태스크 건너뛰기
 /error [메시지] - 에러 보고
 /reset - 워크플로우 초기화
@@ -470,14 +532,29 @@ class ImprovedWorkflowManager:
             "data": data
         }
         
-        if "events" not in self.data:
-            self.data["events"] = []
-        
-        self.data["events"].append(event)
-        
-        # 이벤트가 너무 많으면 오래된 것 제거 (최대 1000개)
-        if len(self.data["events"]) > 1000:
-            self.data["events"] = self.data["events"][-1000:]
+        # 이벤트를 별도 파일에 저장
+        try:
+            # 기존 이벤트 로드
+            events_data = {}
+            if os.path.exists(self.events_file):
+                with open(self.events_file, 'r', encoding='utf-8') as f:
+                    events_data = json.load(f)
+            
+            if "events" not in events_data:
+                events_data["events"] = []
+            
+            events_data["events"].append(event)
+            
+            # 이벤트가 너무 많으면 오래된 것 제거 (최대 1000개)
+            if len(events_data["events"]) > 1000:
+                events_data["events"] = events_data["events"][-1000:]
+            
+            # 파일에 저장
+            with open(self.events_file, 'w', encoding='utf-8') as f:
+                json.dump(events_data, f, ensure_ascii=False, indent=2)
+                
+        except Exception as e:
+            print(f"이벤트 저장 오류: {e}")
         
         # MessageController를 통해 AI용 메시지 발행
         self.msg_controller.emit(event_type, entity_id, data)

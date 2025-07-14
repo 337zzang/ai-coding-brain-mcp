@@ -34,11 +34,45 @@ if current_dir not in sys.path:
 
 # Wisdom 시스템 제거됨 (2025-06-30 리팩토링)
 
+# Stdout Protocol v3.0 import
+try:
+    from ai_helpers.protocols import (
+        get_protocol, get_id_generator, get_tracker,
+        StdoutProtocol, ExecutionTracker, IDGenerator
+    )
+    PROTOCOL_AVAILABLE = True
+    print("✅ Stdout Protocol v3.0 loaded successfully")
+except ImportError as e:
+    print(f"⚠️  Stdout Protocol not available: {e}")
+    PROTOCOL_AVAILABLE = False
+    get_protocol = None
+    get_id_generator = None
+    get_tracker = None
+
 # ============================================================================
 # 🌟 전역 변수 초기화
 # ============================================================================
 repl_globals = {}  # REPL 전역 네임스페이스
 execution_count = 0  # 실행 카운터
+
+# ============================================================================
+# 🎯 Stdout Protocol v3.0 글로벌 초기화
+# ============================================================================
+if PROTOCOL_AVAILABLE:
+    # 글로벌 프로토콜 인스턴스
+    protocol = get_protocol()
+    id_gen = get_id_generator()
+    tracker = get_tracker()
+    
+    # 시작 메시지
+    protocol.section("repl_session_start")
+    protocol.data("session_type", "JSON_REPL")
+    protocol.data("protocol_version", "3.0")
+    protocol.data("timestamp", dt.datetime.now().isoformat())
+    protocol.end_section()
+    
+    print("🎯 Stdout Protocol v3.0 initialized globally")
+    print("   Use: protocol.data(), protocol.section(), @tracker.track, etc.")
 
 # ============================================================================
 # 🛡️ AIHelpers - 네임스페이스 보호된 헬퍼 함수 모음
@@ -118,6 +152,38 @@ class AIHelpers:
         self.progress = progress
         self.complete = complete
         self.reset_project = reset_project
+        
+        # Stdout Protocol v3.0 메서드들
+        if PROTOCOL_AVAILABLE:
+            self.protocol = get_protocol()
+            self.id_generator = get_id_generator()
+            self.tracker = get_tracker()
+            
+            # 프로토콜 메서드 직접 바인딩
+            self.section = self.protocol.section
+            self.end_section = self.protocol.end_section
+            self.data = self.protocol.data
+            self.exec_start = self.protocol.exec_start
+            self.exec_end = self.protocol.exec_end
+            self.progress = self.protocol.progress
+            self.error = self.protocol.error
+            self.checkpoint = self.protocol.checkpoint
+            self.next_action = self.protocol.next_action
+            self.cache_hit = self.protocol.cache_hit
+            self.cache_miss = self.protocol.cache_miss
+            self.cache_save = self.protocol.cache_save
+            
+            # ID 조회 메서드
+            self.get_by_id = self.id_generator.get_by_id
+            
+            # 추적 데코레이터
+            self.track = self.tracker.track
+            
+            print("  ✅ Protocol methods bound to helpers")
+        else:
+            self.protocol = None
+            self.id_generator = None
+            self.tracker = None
         
         # File 메서드들
         from ai_helpers import file

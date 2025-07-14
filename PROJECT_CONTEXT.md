@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-14 23:29:53
+> 최종 업데이트: 2025-07-14 23:38:56
 
 ## 🎯 프로젝트 개요
 
@@ -23,14 +23,14 @@
 |---------|------|
 | `.pytest_cache/` | 프로젝트 관련 파일 |
 | `backup_deleted_modules/` | 프로젝트 관련 파일 |
-| `backup_workflow_20250713_114703/` | 프로젝트 관련 파일 |
-| `backup_workflow_cleanup_20250714_090616/` | 프로젝트 관련 파일 |
-| `backup_workflow_legacy_20250713/` | 프로젝트 관련 파일 |
+| `backup_legacy_workflow_20250714_233227/` | 프로젝트 관련 파일 |
 | `docs/` | 문서 |
 | `examples/` | 프로젝트 관련 파일 |
 | `generated_scripts/` | 프로젝트 관련 파일 |
 | `logs/` | 프로젝트 관련 파일 |
 | `memory/` | 캐시 및 상태 저장 |
+| `python/` | Python 스크립트 및 유틸리티 |
+| `src/` | 소스 코드 |
 
 ## 📦 의존성
 
@@ -81,42 +81,33 @@ ai-coding-brain-mcp/
 │   ├── code_unified.py
 │   ├── compile.py
 │   └── ... (4 more files)
-├── backup_workflow_20250713_114703/
-│   └── v3/
-│       ├── api/
-│       │   ├── __init__.py
-│       │   ├── decorators.py
-│       │   ├── internal_api.py
-│       │   └── ... (1 more files)
-│       ├── commands/
-│       │   ├── __init__.py
-│       │   ├── auto_executor.py
-│       ├── listeners/
-│       │   ├── __init__.py
-│       │   ├── ai_instruction_base.py
-│       │   ├── automation_listeners.py
-│       │   └── ... (11 more files)
-│       └── tests/
-│           ├── test_event_publishing.py
-│       ├── __init__.py
-│       ├── ai_instruction_executor.py
-│       ├── code_integration.py
-│       └── ... (17 more files)
-│   ├── __init__.py
-├── backup_workflow_cleanup_20250714_090616/
-│   └── projects_backup/
-│       └── ai-coding-brain-mcp/
-│           └── workflow_data/
-│   ├── workflow_ai_state.json
-│   ├── workflow_backup_20250714_070008.json
-├── backup_workflow_legacy_20250713/
-│   └── python/
-│       └── workflow/
-│           ├── ai_automation/
-│           ├── core/
-│           └── messaging/
-│           ├── errors.py
-│           ├── manager.py
+├── backup_legacy_workflow_20250714_233227/
+│   ├── backup_workflow_20250713_114703/
+│   │   └── v3/
+│   │       ├── api/
+│   │       ├── commands/
+│   │       ├── listeners/
+│   │       └── tests/
+│   │       ├── __init__.py
+│   │       ├── ai_instruction_executor.py
+│   │       ├── code_integration.py
+│   │       └── ... (17 more files)
+│   │   ├── __init__.py
+│   ├── backup_workflow_cleanup_20250714_090616/
+│   │   └── projects_backup/
+│   │       └── ai-coding-brain-mcp/
+│   │   ├── workflow_ai_state.json
+│   │   ├── workflow_backup_20250714_070008.json
+│   ├── backup_workflow_legacy_20250713/
+│   │   └── python/
+│   │       └── workflow/
+│   ├── memory/
+│   │   └── workflows/
+│   │       └── test_replacement_2/
+│   └── memory_workflows_backup/
+│       └── test_replacement_2/
+│           ├── workflow_WF_1752503303833_0001_7f6fcd.json
+│           ├── workflow_WF_1752503303839_0002_1d0c44.json
 ├── docs/
 │   ├── design/
 │   │   ├── python_helpers_validation_task03_code_analysis_design_20250714.md
@@ -138,7 +129,7 @@ ai-coding-brain-mcp/
 │   ├── AI_HELPERS_GUIDE.md
 │   ├── event_system_analysis.json
 │   ├── execute_code_advanced_guide.md
-│   └── ... (23 more files)
+│   └── ... (24 more files)
 ├── examples/
 │   ├── test_async_web.py
 │   ├── web_automation_recording_examples.py
@@ -147,7 +138,23 @@ ai-coding-brain-mcp/
 │   ├── naver_simple.py
 │   ├── README.md
 │   └── ... (2 more files)
-└── ... (6 more directories)
+├── logs/
+│   ├── file/
+│   ├── git/
+│   ├── system/
+│   └── workflow/
+│   ├── active_ai_instruction.json
+│   ├── active_errors.json
+│   ├── ai_instructions.json
+│   └── ... (3 more files)
+├── memory/
+│   └── workflows/
+│       └── unified_test_project/
+│           ├── workflow_WF_1752503643039_0001_e66123.json
+│   ├── context.json
+│   ├── workflow.json
+│   ├── workflow_events.json
+└── ... (5 more directories)
 ├── .ai-brain.config.json
 ├── .eslintrc.json
 ├── ai-coding-brain-mcp_7490a912_design_v2.md
@@ -161,14 +168,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 312개
-- **디렉토리 수**: 80개
+- **전체 파일 수**: 317개
+- **디렉토리 수**: 87개
 - **파일 타입 분포**:
-  - `.py`: 161개 (51.6%)
-  - `.md`: 66개 (21.2%)
-  - `.json`: 35개 (11.2%)
-  - `.ts`: 28개 (9.0%)
-  - `.png`: 4개 (1.3%)
+  - `.py`: 161개 (50.8%)
+  - `.md`: 67개 (21.1%)
+  - `.json`: 38개 (12.0%)
+  - `.ts`: 28개 (8.8%)
+  - `.txt`: 5개 (1.6%)
 
 ## 🚀 빠른 시작
 

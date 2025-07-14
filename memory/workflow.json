@@ -456,13 +456,15 @@
           "id": "c80153ad-4b6b-402d-b83d-9b398b620eb7",
           "title": "프로젝트 관리 함수 테스트 (build_project_context, get_project_structure)",
           "description": "",
-          "status": "in_progress",
+          "status": "completed",
           "created_at": "2025-07-14T00:52:31.152340+09:00",
-          "updated_at": "2025-07-14T08:56:25.761996",
+          "updated_at": "2025-07-14T23:55:43.472963",
           "started_at": "2025-07-14T08:56:25.761996",
-          "completed_at": null,
+          "completed_at": "2025-07-14T23:55:43.471966",
           "duration": null,
-          "notes": [],
+          "notes": [
+            "프로토콜 테스트 - 23:54:59"
+          ],
           "outputs": {},
           "metadata": {
             "paused": false,
@@ -475,13 +477,15 @@
           "id": "f6aeb256-9629-4e96-ae73-6e9457fa192d",
           "title": "검색 최적화 함수 테스트 (search_files, search_in_files, find_import)",
           "description": "",
-          "status": "todo",
+          "status": "in_progress",
           "created_at": "2025-07-14T00:52:31.164993+09:00",
-          "updated_at": "2025-07-14T00:52:31.164993+09:00",
-          "started_at": null,
+          "updated_at": "2025-07-15T00:08:26.723668",
+          "started_at": "2025-07-14T23:56:39.419409",
           "completed_at": null,
           "duration": null,
-          "notes": [],
+          "notes": [
+            "워크플로우-헬퍼 통합 완료 및 문서화"
+          ],
           "outputs": {}
         },
         {
@@ -583,5 +587,6 @@
     "version": "3.0"
   },
   "project_name": "ai-coding-brain-mcp",
-  "events_file": "workflow_events.json"
+  "events_file": "workflow_events.json",
+  "current_plan_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
 }

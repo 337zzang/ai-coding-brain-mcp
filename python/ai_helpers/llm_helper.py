@@ -127,18 +127,27 @@ class LLMHelper:
             error_msg: 에러 메시지
             code_context: 관련 코드
         """
-        question = f"""
-        다음 에러를 해결하는 방법을 알려주세요:
-        
-        에러: {error_msg}
-        
-        {f"관련 코드:\\n```python\\n{code_context}\\n```" if code_context else ""}
-        
-        구체적인 해결 방법과 코드 예시를 제공해주세요.
-        """
-        
+        # 에러 메시지 구성
+        question_parts = [
+            "다음 에러를 해결하는 방법을 알려주세요:",
+            "",
+            f"에러: {error_msg}",
+            ""
+        ]
+
+        if code_context:
+            question_parts.extend([
+                "관련 코드:",
+                "```python",
+                code_context,
+                "```",
+                ""
+            ])
+
+        question_parts.append("구체적인 해결 방법과 코드 예시를 제공해주세요.")
+        question = "\n".join(question_parts)
+
         return self.ask_o3(question)
-    
     def ask_for_optimization(self, code: str, optimization_type: str = "performance") -> Dict[str, Any]:
         """
         코드 최적화 제안 요청

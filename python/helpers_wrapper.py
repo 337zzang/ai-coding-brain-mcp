@@ -205,6 +205,116 @@ class HelpersWrapper:
         # 함수가 아닌 경우 그대로 반환
         return attr
 
+
+    # 워크플로우 통합 메서드들
+    def get_current_workflow(self):
+        """현재 워크플로우 상태 가져오기"""
+        try:
+            import json
+            workflow_path = os.path.join(self.project_root, "memory", "workflow.json")
+            with open(workflow_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            if data.get('current_plan_id'):
+                for plan in data.get('plans', []):
+                    if plan['id'] == data['current_plan_id']:
+                        tasks = plan.get('tasks', [])
+                        completed = sum(1 for t in tasks if t.get('status') == 'completed')
+                        progress = (completed / len(tasks) * 100) if tasks else 0
+                        return {
+                            'plan': plan,
+                            'progress': progress
+                        }
+            return {'plan': None, 'progress': 0}
+        except Exception as e:
+            return {'plan': None, 'progress': 0}
+
+    def get_current_task(self):
+        """현재 진행 중인 태스크 가져오기"""
+        workflow = self.get_current_workflow()
+        if workflow['plan']:
+            for task in workflow['plan'].get('tasks', []):
+                if task.get('status') == 'in_progress':
+                    return task
+        return None
+
+    def update_task_status(self, status, note=None):
+        """현재 태스크 상태 업데이트"""
+        from datetime import datetime
+        task = self.get_current_task()
+        if task:
+            try:
+                # workflow_integration 사용
+                from python.ai_helpers.workflow.workflow_integration import workflow_integration
+                updates = {'status': status}
+                if note:
+                    updates['notes'] = [note]
+                if status == 'completed':
+                    updates['completed_at'] = datetime.now().isoformat()
+
+                result = workflow_integration.update_task(task['id'], updates)
+                if result:
+                    print(f"✅ 태스크 상태 업데이트: {status}")
+                else:
+                    print(f"❌ 태스크 업데이트 실패")
+            except Exception as e:
+                print(f"❌ 업데이트 오류: {e}")
+        else:
+            print("⚠️ 현재 진행 중인 태스크가 없습니다.")
+
+    def show_workflow_status(self):
+        """워크플로우 상태 표시"""
+        workflow = self.get_current_workflow()
+        if workflow['plan']:
+            plan = workflow['plan']
+            print(f"\n📋 현재 워크플로우: {plan['name']}")
+            print(f"진행률: {workflow['progress']:.1f}%")
+
+            # 태스크 상태 요약
+            tasks = plan.get('tasks', [])
+            completed = sum(1 for t in tasks if t.get('status') == 'completed')
+            in_progress = sum(1 for t in tasks if t.get('status') == 'in_progress')
+            pending = len(tasks) - completed - in_progress
+
+            print(f"태스크: 완료 {completed} | 진행 중 {in_progress} | 대기 {pending}")
+
+            # 현재 태스크
+            current = self.get_current_task()
+            if current:
+                print(f"\n현재 작업: {current['title']}")
+        else:
+            print("\n📋 활성 워크플로우 없음")
+
+    def with_workflow_task(self, task_name=None):
+        """워크플로우 태스크 컨텍스트 매니저"""
+        class WorkflowTaskContext:
+            def __init__(self, helpers, task_name):
+                self.helpers = helpers
+                self.task_name = task_name
+                self.start_time = None
+
+            def __enter__(self):
+                import time
+                self.start_time = time.time()
+                if self.task_name:
+                    print(f"\n🔧 시작: {self.task_name}")
+                return self
+
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                import time
+                duration = time.time() - self.start_time
+
+                if exc_type is None:
+                    if self.task_name:
+                        print(f"✅ 완료: {self.task_name} ({duration:.2f}초)")
+                else:
+                    if self.task_name:
+                        print(f"❌ 실패: {self.task_name} - {exc_val}")
+
+                return False
+
+        return WorkflowTaskContext(self, task_name)
+
     def __dir__(self):
         """사용 가능한 메서드 목록 반환"""
         base_methods = dir(self._helpers)

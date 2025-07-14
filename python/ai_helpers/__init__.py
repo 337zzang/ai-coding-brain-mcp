@@ -6,6 +6,12 @@ import logging
 import sys
 import os
 from typing import Dict, Any, List, Optional
+from .workflow.workflow_integration import WorkflowIntegration, workflow_integration
+from .workflow_integrated_helpers import WorkflowIntegratedHelpers
+
+# from .workflow_aware_helpers import WorkflowAwareHelpers, workflow_helpers # 임시 비활성화
+from .usage_guide import show_helper_guide, HELPER_USAGE_GUIDE
+
 
 # 로깅 설정
 logger = logging.getLogger("ai_helpers")
@@ -20,6 +26,48 @@ if not logger.handlers:
 
 # Helper Result - 가장 먼저 import
 from .helper_result import HelperResult
+
+# 워크플로우 통합 헬퍼 시스템
+# 기존 helpers를 워크플로우 인식 버전으로 확장
+try:
+    # 원본 helpers 백업
+    _original_helpers = helpers
+    # 워크플로우 통합 버전으로 교체
+    helpers = WorkflowIntegratedHelpers(_original_helpers)
+except Exception as e:
+    print(f"⚠️ 워크플로우 통합 실패: {e}")
+    # 실패 시 원본 유지
+
+# helpers = workflow_helpers  # WorkflowAwareHelpers 인스턴스 # 임시 비활성화
+
+# 워크플로우 상태 표시 함수
+def show_workflow_status():
+    """현재 워크플로우 상태를 표시합니다."""
+    workflow_helpers.show_workflow_status()
+
+# 헬퍼 사용법 가이드
+def show_usage(category=None, function=None):
+    """
+    헬퍼 함수 사용법을 표시합니다.
+
+    사용법:
+    - show_usage(): 전체 카테고리 표시
+    - show_usage('파일 작업'): 카테고리별 함수 표시
+    - show_usage(function='read_file'): 특정 함수 사용법
+    """
+    show_helper_guide(category, function)
+
+# 자주 사용하는 헬퍼 함수들을 최상위로 노출
+read_file = helpers.read_file
+create_file = helpers.create_file
+write_file = helpers.write_file
+search_files = helpers.search_files
+git_status = helpers.git_status
+update_task_status = helpers.update_task_status
+
+# 컨텍스트 매니저
+workflow_task = helpers.with_workflow_task
+
 
 # File 관련 - 통합 모듈에서 import
 from .file_unified import (
@@ -185,26 +233,12 @@ def workflow(command: str):
         return HelperResult(False, error=str(e))
 
 # Flow 관련 함수들
-def flow_project(project_name: str, auto_proceed: bool = False) -> Dict[str, Any]:
-    """프로젝트 전환
-    
-    Args:
-        project_name: 프로젝트 이름
-        auto_proceed: 자동 진행 여부 (False면 진행 중인 태스크가 있을 때 확인 요청)
+def flow_project(project_name: str):
     """
-    try:
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        if project_root not in sys.path:
-            sys.path.insert(0, project_root)
-            
-        from enhanced_flow import cmd_flow_with_context
-        result = cmd_flow_with_context(project_name, auto_proceed)
-        return HelperResult(ok=True, data=result, error=None)
-    except Exception as e:
-        # stderr로 직접 출력
-        print(f"flow_project 실행 실패: {e}", file=sys.stderr)
-        logger.error(f"flow_project 실행 실패: {e}")
-        return HelperResult(ok=False, data=None, error=str(e))
+    통합된 flow_project 함수
+    프로젝트 전환과 워크플로우 상태를 동기화합니다.
+    """
+    return workflow_integration.flow_project(project_name)
 
 def start_project(project_name: str, init_git: bool = True) -> Dict[str, Any]:
     """새 프로젝트 생성"""
@@ -395,3 +429,35 @@ try:
     
 except ImportError as e:
     print(f"LLM 헬퍼 모듈 로드 실패: {e}")
+
+
+# 워크플로우 통합 함수들
+from .workflow_helper import workflow as _workflow_helper
+
+def show_workflow_status():
+    """현재 워크플로우 상태 표시"""
+    _workflow_helper.show_status()
+
+def update_task_status(status, note=None):
+    """현재 태스크 상태 업데이트"""
+    return _workflow_helper.update_task_status(status, note)
+
+def get_current_task():
+    """현재 진행 중인 태스크 가져오기"""
+    return _workflow_helper.get_current_task()
+
+def get_current_workflow():
+    """현재 워크플로우 상태 가져오기"""
+    return _workflow_helper.get_current_workflow()
+
+# helpers 객체에 워크플로우 메서드 추가 (있는 경우)
+if 'helpers' in locals():
+    try:
+        import types
+        helpers.show_workflow_status = show_workflow_status
+        helpers.update_task_status = update_task_status
+        helpers.get_current_task = get_current_task
+        helpers.get_current_workflow = get_current_workflow
+        helpers.workflow = _workflow_helper
+    except:
+        pass

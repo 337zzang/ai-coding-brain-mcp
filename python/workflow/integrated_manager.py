@@ -12,13 +12,13 @@ from enum import Enum
 
 # Stdout Protocol import
 try:
-    from ai_helpers.protocols import (
-        get_protocol, get_id_generator, get_tracker,
-        StdoutProtocol, ExecutionTracker, IDGenerator
+    # [REMOVED] from ai_helpers.protocols import (
+        # [REMOVED] get_protocol, get_id_generator, get_tracker,
+        # [REMOVED] StdoutProtocol, ExecutionTracker, IDGenerator
     )
-    PROTOCOL_AVAILABLE = True
+    # [REMOVED] PROTOCOL_AVAILABLE = True
 except ImportError:
-    PROTOCOL_AVAILABLE = False
+    # [REMOVED] PROTOCOL_AVAILABLE = False
     print("⚠️ Stdout Protocol not available, falling back to basic mode")
 
 from .models import Task, Plan, TaskStatus, PlanStatus
@@ -32,8 +32,8 @@ class IntegratedWorkflowManager:
         self.workflow_dir.mkdir(parents=True, exist_ok=True)
 
         # Protocol 초기화
-        if PROTOCOL_AVAILABLE:
-            self.protocol = get_protocol()
+        # [REMOVED] if PROTOCOL_AVAILABLE:
+            # [REMOVED] self.protocol = get_protocol()
             self.id_gen = get_id_generator()
             self.tracker = get_tracker()
         else:

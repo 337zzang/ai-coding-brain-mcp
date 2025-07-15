@@ -13,16 +13,16 @@ import os
 
 # Stdout Protocol v3.0 import
 try:
-    from ai_helpers.protocols import (
-        get_protocol, get_id_generator, get_tracker,
-        StdoutProtocol, ExecutionTracker, IDGenerator
+    # [REMOVED] from ai_helpers.protocols import (
+        # [REMOVED] get_protocol, get_id_generator, get_tracker,
+        # [REMOVED] StdoutProtocol, ExecutionTracker, IDGenerator
     )
-    PROTOCOL_AVAILABLE = True
+    # [REMOVED] PROTOCOL_AVAILABLE = True
 except ImportError:
-    PROTOCOL_AVAILABLE = False
-    get_protocol = None
-    get_id_generator = None
-    get_tracker = None
+    # [REMOVED] PROTOCOL_AVAILABLE = False
+    # [REMOVED] get_protocol = None
+    # [REMOVED] get_id_generator = None
+    # [REMOVED] get_tracker = None
 
 # 프로젝트 루트 경로 중앙화
 ROOT = Path(__file__).resolve().parent.parent  # ai-coding-brain-mcp 루트
@@ -88,15 +88,15 @@ class HelpersWrapper:
         self._bind_override_methods()
 
         # Stdout Protocol v3.0 통합
-        if PROTOCOL_AVAILABLE:
+        # [REMOVED] if PROTOCOL_AVAILABLE:
             self._bind_protocol_methods()
 
     def _bind_protocol_methods(self):
         """Stdout Protocol v3.0 메서드 바인딩"""
         # 프로토콜 인스턴스
-        self.protocol = get_protocol()
-        self.id_generator = get_id_generator()
-        self.tracker = get_tracker()
+        # [REMOVED] self.protocol = get_protocol()
+        # [REMOVED] self.id_generator = get_id_generator()
+        # [REMOVED] self.tracker = get_tracker()
         
         # 프로토콜 메서드 직접 바인딩
         self.section = self.protocol.section

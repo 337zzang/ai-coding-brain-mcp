@@ -68,13 +68,17 @@ def get_context_lines(lines: List[str], index: int, context: int = 2) -> List[st
 @track_execution
 def find_function(directory: str, function_name: str) -> List[Dict[str, Any]]:
     """함수 정의 찾기"""
-    pattern = f"def\s+{function_name}\s*\("
+    # 정규표현식 특수문자 이스케이프
+    escaped_name = re.escape(function_name)
+    pattern = rf"def\s+{escaped_name}\s*\("
     return search_code(directory, pattern, "*.py")
 
 @track_execution
 def find_class(directory: str, class_name: str) -> List[Dict[str, Any]]:
     """클래스 정의 찾기"""
-    pattern = f"class\s+{class_name}\s*[\(:]"
+    # 정규표현식 특수문자 이스케이프
+    escaped_name = re.escape(class_name)
+    pattern = rf"class\s+{escaped_name}\s*[\(:]"
     return search_code(directory, pattern, "*.py")
 
 @track_execution

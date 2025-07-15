@@ -104,33 +104,43 @@ files = helpers.scan_directory_dict("경로")
 # 코드 검색
 # 1. 파일명으로 검색
 results = helpers.search_files("경로", "*.py")
-# 반환: ['파일경로1', '파일경로2', ...]
+# 반환: List[str] - 파일 경로들의 리스트
+# 예시: ['.\\test.py', '.\\src\\main.py', ...]
 
 # 2. 코드 내용으로 검색
 results = helpers.search_code("경로", "def", "*.py")
-# 반환: [{'file': '파일', 'line_number': 줄, 'line': '내용', 'context': [주변]}, ...]
-results = helpers.grep("경로", "패턴")
+# 반환: List[Dict] - 각 매치에 대한 상세 정보
+# 각 요소: {'file': '파일경로', 'line_number': 줄번호, 'line': '매치된 라인', 'context': ['주변', '라인들']}
+results = helpers.grep("패턴", "경로", "*")  # grep(패턴, 경로, 파일패턴) 순서 주의!
 
-# 3. AI 친화적 구조화된 검색 (권장)
-results = search_files_advanced("경로", "*.py")
-# 반환: {'results': [{'path': '전체경로', 'name': '파일명', 'size': 크기}, ...]}
-
-results = search_code_content("경로", "검색어", "*.py")
-# 반환: {'results': [{'file': '파일경로', 'matches': [{'line': 줄번호, 'content': '내용'}, ...]}, ...]}
-func_info = helpers.find_function("함수명", "*.py")
-class_info = helpers.find_class("클래스명", "*.py")
+# 3. 함수/클래스 찾기 (매개변수 순서 주의!)
+func_info = helpers.find_function("경로", "함수명")  # find_function(디렉토리, 함수명)
+class_info = helpers.find_class("경로", "클래스명")  # find_class(디렉토리, 클래스명)
+# 반환: search_code와 동일한 구조 (List[Dict])
+# 특수문자가 있는 함수명/클래스명도 자동으로 이스케이프 처리됨
 
 # 코드 수정
 helpers.replace_block("파일.py", "기존코드", "새코드")
 helpers.insert_block("파일.py", "위치표시", "삽입할코드", position="after")
 
+# 고급 코드 작업
+# find_code_position - 코드 위치 찾기 (3개 매개변수 필요)
+position = helpers.find_code_position("파일.py", "검색할 텍스트", 시작위치)  # 시작위치는 보통 0
+# update_file_directory - 파일 디렉토리 업데이트
+helpers.update_file_directory("프로젝트경로")  # 프로젝트 경로 필수
+# find_fuzzy_match - 퍼지 매칭 (두 번째 매개변수는 문자열!)
+result = helpers.find_fuzzy_match("검색할 내용", "대상 텍스트")  # 리스트 X, 문자열 O
+# 반환: {'found': bool, 'matched_code': str, 'similarity': float, 'suggestion': str}
+
 # Git 작업
 status = helpers.git_status()
-helpers.git_add("파일경로")
+# 반환: {'success': bool, 'modified': [파일들], 'untracked': [파일들], 'staged': [파일들], 'clean': bool}
+helpers.git_add("파일경로")  # 또는 "." 로 전체 추가
 helpers.git_commit("커밋 메시지")
 helpers.git_push()
 helpers.git_pull()
 branch_info = helpers.git_branch()
+# 반환: {'current': '현재브랜치', 'branches': ['브랜치1', '브랜치2', ...]}
 
 # 프로젝트 구조 생성
 structure = {
@@ -187,9 +197,29 @@ for file in files['files']:
         # 처리...
 
 # 3. 코드 검색 및 수정
+# 3-1. TODO 항목 찾기
 results = helpers.search_code(".", "TODO", "*.py")
-for result in results['results']:
-    print(f"{result['file']}: {result['matches']} matches")
+for result in results:
+    print(f"{result['file']}:{result['line_number']} - {result['line']}")
+
+# 3-2. 특정 함수 찾아서 수정
+func_results = helpers.find_function(".", "old_function")
+if func_results:
+    file_path = func_results[0]['file']
+    old_code = func_results[0]['line']
+    # 함수 시그니처 변경
+    helpers.replace_block(file_path, old_code, "def new_function():")
+
+# 3-3. 클래스 찾기 (특수문자 있어도 OK)
+class_results = helpers.find_class(".", "MyAPI++Handler")
+for result in class_results:
+    print(f"Found class in: {result['file']}")
+
+# 3-4. 파일 검색 후 내용 확인
+py_files = helpers.search_files(".", "test_*.py")
+for file in py_files[:5]:  # 처음 5개만
+    content = helpers.read_file(file)
+    print(f"File: {file}, Lines: {len(content.splitlines())}")
 
 # 4. Git 작업
 helpers.git_add(".")

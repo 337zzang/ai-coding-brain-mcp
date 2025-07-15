@@ -242,6 +242,12 @@ def normalize_whitespace(code: str) -> str:
 
 def find_fuzzy_match(content: str, target: str) -> Dict[str, Any]:
     """퍼지 매칭으로 비슷한 코드 찾기"""
+    # 타입 검증 추가
+    if not isinstance(content, str):
+        raise TypeError(f"content must be a string, not {type(content).__name__}")
+    if not isinstance(target, str):
+        raise TypeError(f"target must be a string, not {type(target).__name__}")
+    
     lines = content.split('\n')
     target_lines = target.strip().split('\n')
 

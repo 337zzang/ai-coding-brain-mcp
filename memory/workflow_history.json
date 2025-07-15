@@ -741,5 +741,36 @@
     "action": "테스트 액션",
     "details": "테스트 상세",
     "conversation_id": "conv_20250715_1642"
+  },
+  {
+    "id": 94,
+    "timestamp": "2025-07-15 17:00:40",
+    "action": "부트스트랩 모듈 자동 로드 구현",
+    "details": "자주 사용하는 표준 라이브러리 모듈과 함수들을 세션 시작 시 자동 로드",
+    "conversation_id": "conv_20250715_1700",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_94.json"
+  },
+  {
+    "id": 95,
+    "timestamp": "2025-07-15 17:03:22",
+    "action": "tool_definitions.ts 업데이트 및 빌드",
+    "details": "부트스트랩 모듈 설명 추가, TypeScript 빌드 완료",
+    "conversation_id": "conv_20250715_1703"
+  },
+  {
+    "id": 96,
+    "timestamp": "2025-07-15 17:05:04",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: idle\n활성 플랜 없음",
+    "conversation_id": "conv_20250715_1705",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_96.json"
+  },
+  {
+    "id": 97,
+    "timestamp": "2025-07-15 17:13:28",
+    "action": "헬퍼 함수 분석",
+    "details": "모든 헬퍼 함수 테스트 및 효율성 평가 완료",
+    "conversation_id": "conv_20250715_1713",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_97.json"
   }
 ]

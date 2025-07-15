@@ -8,6 +8,16 @@ interface FlowProjectResult {
     path?: string;
     git_branch?: string;
     workflow_status?: any;
+    workflow_integration?: {
+        enabled: boolean;
+        events?: any[];
+        current_state?: string;
+        active_plan?: string | null;
+        plans_count?: number;
+        sync_status?: string;
+    };
+    briefing?: string | null;
+    timestamp?: string;
     error?: string;
     details?: any;
 }

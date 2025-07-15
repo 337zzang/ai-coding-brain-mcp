@@ -34,7 +34,30 @@ if current_dir not in sys.path:
 
 # Wisdom 시스템 제거됨 (2025-06-30 리팩토링)
 
-# Stdout Protocol v3.0 import
+# AI Helpers v2 통합
+try:
+    from ai_helpers_v2 import (
+        # File operations
+        read_file, write_file, create_file, file_exists, append_to_file,
+        read_json, write_json,
+        # Search operations
+        search_code, search_files, grep, find_function, find_class,
+        # Code operations
+        parse_with_snippets, insert_block, replace_block,
+        # Git operations
+        git_status, git_add, git_commit, git_branch, git_push, git_pull,
+        # Project operations
+        get_current_project, scan_directory_dict, create_project_structure,
+        # Core operations
+        get_metrics, clear_cache, get_execution_history
+    )
+    AI_HELPERS_V2_LOADED = True
+    print("✅ AI Helpers v2 로드 성공")
+except ImportError as e:
+    print(f"⚠️ AI Helpers v2 로드 실패: {e}")
+    AI_HELPERS_V2_LOADED = False
+
+# Stdout Protocol v3.0 import (선택적)
 try:
     from ai_helpers.protocols import (
         get_protocol, get_id_generator, get_tracker,
@@ -89,12 +112,168 @@ except ImportError as e:
     check_api_enabled = None
     ImageAPI = None
 
-class AIHelpers:
-    """AI Coding Brain 헬퍼 함수 네임스페이스"""
+class AIHelpersV2:
+    """AI Helpers v2 통합 래퍼"""
     
     def __init__(self):
-        self._load_helpers()
-        self._bind_modular_methods()
+        """AI Helpers v2 메서드들을 통합"""
+        if not AI_HELPERS_V2_LOADED:
+            print("⚠️ AI Helpers v2가 로드되지 않았습니다. 기능이 제한될 수 있습니다.")
+            return
+            
+        # File operations
+        self.read_file = read_file
+        self.write_file = write_file
+        self.create_file = create_file
+        self.file_exists = file_exists
+        self.exists = file_exists  # 별칭
+        self.append_to_file = append_to_file
+        self.read_json = read_json
+        self.write_json = write_json
+        
+        # Search operations
+        self.search_code = search_code
+        self.search_files = search_files
+        self.search_in_files = search_code  # 별칭
+        self.grep = grep
+        self.find_function = find_function
+        self.find_class = find_class
+        
+        # Code operations
+        self.parse_with_snippets = parse_with_snippets
+        self.insert_block = insert_block
+        self.replace_block = replace_block
+        
+        # Git operations
+        self.git_status = git_status
+        self.git_add = git_add
+        self.git_commit = git_commit
+        self.git_branch = git_branch
+        self.git_push = git_push
+        self.git_pull = git_pull
+        
+        # Project operations
+        self.get_current_project = get_current_project
+        self.scan_directory_dict = scan_directory_dict
+        self.create_project_structure = create_project_structure
+        
+        # Core operations
+        self.get_metrics = get_metrics
+        self.clear_cache = clear_cache
+        self.get_execution_history = get_execution_history
+        
+        # flow_project 구현
+        self.flow_project = self._flow_project
+        self.cmd_flow_with_context = self._flow_project  # 별칭
+        
+        # API 기능 (호환성)
+        self.toggle_api = api_toggle_api if api_toggle_api else self._not_implemented
+        self.list_apis = api_list_apis if api_list_apis else self._not_implemented
+
+        # LLM operations (llm_ops)
+        try:
+            from ai_helpers_v2.llm_ops import (
+                ask_o3, analyze_code, explain_error, generate_docstring
+            )
+            self.ask_o3 = ask_o3
+            self.analyze_code = analyze_code
+            self.explain_error = explain_error
+            self.generate_docstring = generate_docstring
+        except ImportError:
+            pass
+        
+    def _flow_project(self, project_name, auto_proceed=True):
+        """프로젝트 전환 및 컨텍스트 로드"""
+        import json
+        from datetime import datetime
+        
+        try:
+            # 프로젝트 디렉토리 생성
+            projects_dir = "projects"
+            if not os.path.exists(projects_dir):
+                os.makedirs(projects_dir)
+            
+            project_path = os.path.join(projects_dir, project_name)
+            if not os.path.exists(project_path):
+                os.makedirs(project_path)
+                print(f"✅ 새 프로젝트 디렉토리 생성: {project_path}")
+            
+            # 컨텍스트 업데이트
+            context_file = os.path.join(project_path, "context.json")
+            context = {
+                "project_name": project_name,
+                "switched_at": datetime.now().isoformat(),
+                "status": "active",
+                "workflow_status": {
+                    "phase": "initialized",
+                    "tasks": []
+                }
+            }
+            
+            if os.path.exists(context_file):
+                with open(context_file, 'r', encoding='utf-8') as f:
+                    existing = json.load(f)
+                    context.update(existing)
+                    context["switched_at"] = datetime.now().isoformat()
+            
+            with open(context_file, 'w', encoding='utf-8') as f:
+                json.dump(context, f, indent=2)
+            
+            # README 생성
+            readme_file = os.path.join(project_path, "README.md")
+            if not os.path.exists(readme_file):
+                with open(readme_file, 'w', encoding='utf-8') as f:
+                    f.write(f"# {project_name}\n\n프로젝트 생성일: {datetime.now()}\n")
+            
+            print(f"\n✅ 프로젝트 '{project_name}'로 전환 완료!")
+            return {
+                "success": True,
+                "project_name": project_name,
+                "path": os.path.abspath(project_path),
+                "context": context
+            }
+            
+        except Exception as e:
+            print(f"❌ flow_project 오류: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def _not_implemented(self, *args, **kwargs):
+        """구현되지 않은 메서드"""
+        return None
+    
+    def __getattr__(self, name):
+        """동적 속성 접근 - 호환성을 위해"""
+        if AI_HELPERS_V2_LOADED:
+            # v2 모듈에서 찾기
+            for module in ['file_ops', 'search_ops', 'code_ops', 'git_ops', 'project_ops', 'core']:
+                module_name = f'ai_helpers_v2.{module}'
+                if module_name in sys.modules:
+                    module_obj = sys.modules[module_name]
+                    if hasattr(module_obj, name):
+                        return getattr(module_obj, name)
+        
+        # 기본 동작
+        def not_implemented(*args, **kwargs):
+            print(f"⚠️ {name} 메서드는 아직 구현되지 않았습니다")
+            return None
+        return not_implemented
+    
+    def __dir__(self):
+        """사용 가능한 메서드 목록"""
+        base_attrs = list(self.__dict__.keys())
+        if AI_HELPERS_V2_LOADED:
+            # v2 모듈의 모든 공개 함수 추가
+            for module in ['file_ops', 'search_ops', 'code_ops', 'git_ops', 'project_ops', 'core']:
+                module_name = f'ai_helpers_v2.{module}'
+                if module_name in sys.modules:
+                    module_obj = sys.modules[module_name]
+                    base_attrs.extend([
+                        attr for attr in dir(module_obj) 
+                        if not attr.startswith('_') and callable(getattr(module_obj, attr))
+                    ])
+        return sorted(set(base_attrs))
+
+# 구 AIHelpers 클래스는 AIHelpersV2로 대체됨
     
     def _bind_modular_methods(self):
         """모듈화된 메서드들을 바인딩"""
@@ -455,13 +634,9 @@ def ensure_helpers_loaded_old():
 
 
 def ensure_helpers_loaded():
-    """helpers 모듈을 안전하게 로드하고 래핑"""
-    import importlib
+    """AI Helpers v2를 안전하게 로드"""
     import sys
     import pathlib
-    import logging
-    
-    logger = logging.getLogger(__name__)
     
     try:
         # 프로젝트 루트를 sys.path에 추가
@@ -469,22 +644,20 @@ def ensure_helpers_loaded():
         if str(project_root) not in sys.path:
             sys.path.insert(0, str(project_root))
         
-        # ai_helpers 모듈 import
-        raw = importlib.import_module("ai_helpers")
-        
-        # HelpersWrapper 적용
-        from helpers_wrapper import HelpersWrapper
-        wrapped_helpers = HelpersWrapper(raw)
-        
-        # 전역 변수에 설정
-        globals()["helpers"] = wrapped_helpers
-        globals()["helpers_original"] = raw
-        
-        logger.info("✅ helpers 로딩·래핑 완료")
-        return wrapped_helpers
-        
+        # AI Helpers v2 사용
+        if AI_HELPERS_V2_LOADED:
+            helpers = AIHelpersV2()
+            print("✅ AI Helpers v2 로드 완료!")
+            return helpers
+        else:
+            print("⚠️ AI Helpers v2 로드 실패 - 기능이 제한될 수 있습니다")
+            # 빈 helpers 객체 반환
+            return AIHelpersV2()
+    
     except Exception as e:
-        logger.error("❌ helpers 로딩 실패: %s", e)
+        print(f"❌ helpers 로딩 실패: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 def initialize_repl():
     """REPL 환경 초기화"""

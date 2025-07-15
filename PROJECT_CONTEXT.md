@@ -1,7 +1,7 @@
 # 프로젝트 컨텍스트: ai-coding-brain-mcp
 
 > 이 문서는 프로젝트의 상세 컨텍스트와 구조를 설명합니다.
-> 최종 업데이트: 2025-07-14 23:38:56
+> 최종 업데이트: 2025-07-15 00:54:57
 
 ## 🎯 프로젝트 개요
 
@@ -22,15 +22,15 @@
 | 디렉토리 | 설명 |
 |---------|------|
 | `.pytest_cache/` | 프로젝트 관련 파일 |
+| `backup_before_protocol_replace_20250715_003154/` | 프로젝트 관련 파일 |
 | `backup_deleted_modules/` | 프로젝트 관련 파일 |
 | `backup_legacy_workflow_20250714_233227/` | 프로젝트 관련 파일 |
+| `backup_protocol_migration_20250715_002449/` | 프로젝트 관련 파일 |
 | `docs/` | 문서 |
 | `examples/` | 프로젝트 관련 파일 |
 | `generated_scripts/` | 프로젝트 관련 파일 |
 | `logs/` | 프로젝트 관련 파일 |
 | `memory/` | 캐시 및 상태 저장 |
-| `python/` | Python 스크립트 및 유틸리티 |
-| `src/` | 소스 코드 |
 
 ## 📦 의존성
 
@@ -62,6 +62,11 @@
 ai-coding-brain-mcp/
 ├── .pytest_cache/
 │   ├── README.md
+├── backup_before_protocol_replace_20250715_003154/
+│   ├── __init__.py
+│   ├── context.json
+│   ├── helpers_wrapper.py
+│   └── ... (4 more files)
 ├── backup_deleted_modules/
 │   ├── events_backup_20250713_105544/
 │   │   ├── enhanced_event_bus.py
@@ -108,10 +113,22 @@ ai-coding-brain-mcp/
 │       └── test_replacement_2/
 │           ├── workflow_WF_1752503303833_0001_7f6fcd.json
 │           ├── workflow_WF_1752503303839_0002_1d0c44.json
+├── backup_protocol_migration_20250715_002449/
+│   ├── __init__.py
+│   ├── helpers_wrapper.py
+│   ├── workflow_aware_helpers.py
+│   └── ... (2 more files)
 ├── docs/
 │   ├── design/
 │   │   ├── python_helpers_validation_task03_code_analysis_design_20250714.md
+│   ├── diagnostics/
+│   │   ├── workflow_protocol_diagnostic_report.md
 │   ├── error/
+│   ├── integration/
+│   │   ├── flow_project_workflow_integration.md
+│   │   ├── workflow_helper_integration.md
+│   ├── protocol/
+│   │   ├── workflow_protocol_communication.md
 │   ├── report/
 │   │   ├── git_add_error_fix_report_20250714.md
 │   │   ├── git_module_cleanup_report_20250714.md
@@ -129,7 +146,7 @@ ai-coding-brain-mcp/
 │   ├── AI_HELPERS_GUIDE.md
 │   ├── event_system_analysis.json
 │   ├── execute_code_advanced_guide.md
-│   └── ... (24 more files)
+│   └── ... (26 more files)
 ├── examples/
 │   ├── test_async_web.py
 │   ├── web_automation_recording_examples.py
@@ -138,23 +155,7 @@ ai-coding-brain-mcp/
 │   ├── naver_simple.py
 │   ├── README.md
 │   └── ... (2 more files)
-├── logs/
-│   ├── file/
-│   ├── git/
-│   ├── system/
-│   └── workflow/
-│   ├── active_ai_instruction.json
-│   ├── active_errors.json
-│   ├── ai_instructions.json
-│   └── ... (3 more files)
-├── memory/
-│   └── workflows/
-│       └── unified_test_project/
-│           ├── workflow_WF_1752503643039_0001_e66123.json
-│   ├── context.json
-│   ├── workflow.json
-│   ├── workflow_events.json
-└── ... (5 more directories)
+└── ... (7 more directories)
 ├── .ai-brain.config.json
 ├── .eslintrc.json
 ├── ai-coding-brain-mcp_7490a912_design_v2.md
@@ -168,14 +169,14 @@ ai-coding-brain-mcp/
 
 ## 📊 프로젝트 통계
 
-- **전체 파일 수**: 317개
-- **디렉토리 수**: 87개
+- **전체 파일 수**: 362개
+- **디렉토리 수**: 96개
 - **파일 타입 분포**:
-  - `.py`: 161개 (50.8%)
-  - `.md`: 67개 (21.1%)
-  - `.json`: 38개 (12.0%)
-  - `.ts`: 28개 (8.8%)
-  - `.txt`: 5개 (1.6%)
+  - `.py`: 191개 (52.8%)
+  - `.md`: 73개 (20.2%)
+  - `.json`: 43개 (11.9%)
+  - `.ts`: 28개 (7.7%)
+  - `.txt`: 6개 (1.7%)
 
 ## 🚀 빠른 시작
 

@@ -1,0 +1,1 @@
+# test-v2-project 파일 구조\n\n생성일: 2025-07-15 08:59:56.155516\n\n```\ntest-v2-project/\n├── README.md\n├── context.json\n└── file_directory.md\n```\n

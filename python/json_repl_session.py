@@ -1,8 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+# NPM 빌드 헬퍼 (AI Coding Brain MCP)
+try:
+    from npm_helpers import (
+        NpmBuildError,
+        safe_npm_run,
+        npm_build,
+        npm_test,
+        npm_lint,
+        npm_type_check,
+        install_dependencies,
+        full_build_pipeline,
+        quick_build_test
+    )
+except ImportError:
+    pass  # NPM 헬퍼 사용 불가
+
 """
 🚀 JSON REPL Session for AI Coding Brain v6.0
 ==============================================
+
+# 안전한 실행 헬퍼 (구문 검사 포함)
+try:
+    from safe_exec_helpers import enhanced_safe_exec, quick_syntax_check
+    SAFE_EXEC_AVAILABLE = True
+except ImportError:
+    enhanced_safe_exec = None
+    quick_syntax_check = None
+    SAFE_EXEC_AVAILABLE = False
+
 
 Claude Desktop과 통신하는 통합 JSON REPL 세션
 - AI Helpers v2 완전 통합
@@ -25,9 +52,21 @@ import subprocess
 import builtins
 from pathlib import Path
 from typing import Dict, Any, Optional
-from contextlib import redirect_stdout, redirect_stderr
+from contextlib import contextmanager
 
 # 기본 경로 설정
+
+
+# Enhanced Safe Execution v2 - f-string 및 정규식 안전성 검사
+try:
+    from safe_execution_v2 import (
+        safe_exec as safe_exec_v2,
+        check_regex,
+        benchmark_regex_safety
+    )
+    SAFE_EXEC_V2_AVAILABLE = True
+except ImportError:
+    SAFE_EXEC_V2_AVAILABLE = False
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
@@ -55,21 +94,22 @@ except ImportError as e:
     print(f"⚠️ AI Helpers v2 로드 실패: {e}")
     AI_HELPERS_V2_LOADED = False
 
+
+
+# 실행 설정
+CONFIG = {
+    'use_safe_exec_v2': True,      # Enhanced Safe Execution v2 사용
+    'fstring_check': True,         # f-string 미정의 변수 검사
+    'regex_check': True,           # 정규식 안전성 검사
+    'redos_protection': True,      # ReDoS 패턴 경고
+    'show_warnings': True,         # 경고 메시지 표시
+}
+
 # ============================================================================
 # 🌟 전역 변수 초기화
 # ============================================================================
 repl_globals = {}  # REPL 전역 네임스페이스
 execution_count = 0  # 실행 카운터
-
-try:
-    from ai_helpers.api import toggle_api as api_toggle_api, list_apis as api_list_apis, check_api_enabled
-    from ai_helpers.api import ImageAPI
-except ImportError as e:
-    print(f"WARNING: API 모듈 로드 실패: {e}")
-    api_toggle_api = None
-    api_list_apis = None
-    check_api_enabled = None
-    ImageAPI = None
 
 class AIHelpersV2:
     """AI Helpers v2 통합 래퍼 - Workflow 시스템 포함"""
@@ -133,9 +173,7 @@ class AIHelpersV2:
         self.get_workflow_status = self._get_workflow_status
         self.update_file_directory = self._update_file_directory
         
-        # API 기능 (호환성)
-        self.toggle_api = api_toggle_api if api_toggle_api else self._not_implemented
-        self.list_apis = api_list_apis if api_list_apis else self._not_implemented
+
 
         # LLM operations (llm_ops)
         try:
@@ -670,59 +708,76 @@ def initialize_repl():
     except Exception as e:
         pass
     
-    # 5. Git Version Manager 초기화
-    try:
-        from git_version_manager import GitVersionManager
-        git_manager = GitVersionManager()
-        repl_globals['git_manager'] = git_manager
-    except Exception as e:
-        sys.stderr.write(f"⚠️ Git Manager 초기화 실패: {e}\n")
-        git_manager = None
+    # 5. Git Version Manager (제거됨 - 파일이 존재하지 않음)
+    # git_version_manager 모듈이 프로젝트에 없어 제거
+    git_manager = None
 
 # ============================================================================
 # 💻 코드 실행
 # ============================================================================
 
 def safe_exec(code: str, globals_dict: dict) -> tuple[bool, str]:
-    """안전한 코드 실행 - 들여쓰기 오류 시 자동 재시도
-    
-    Returns:
-        (성공 여부, 오류 메시지)
     """
-    from textwrap import dedent
-    
-    try:
-        # 1차 시도: 원본 코드 그대로 실행
-        exec(compile(code, '<repl>', 'exec'), globals_dict)
-        return True, ''
-    except IndentationError as e:
-        # 2차 시도: 자동 dedent 후 재시도
+    안전한 코드 실행 - Enhanced v2 통합
+
+    v2가 사용 가능하고 설정이 활성화되어 있으면 v2 사용,
+    그렇지 않으면 기존 방식 사용
+    """
+    # Enhanced Safe Execution v2 사용 (가능한 경우)
+    if SAFE_EXEC_V2_AVAILABLE and CONFIG.get('use_safe_exec_v2', True):
         try:
-            dedented_code = dedent(code)
-            exec(compile(dedented_code, '<repl>', 'exec'), globals_dict)
-            print("ℹ️ 들여쓰기 자동 정리 후 실행 성공")
-            return True, ''
-        except Exception as e2:
-            return False, f'{type(e2).__name__}: {e2}'
+            success, output = safe_exec_v2(code, globals_dict)
+            return success, output
+        except Exception as e:
+            # v2 실패 시 기존 방식으로 폴백
+            print(f"⚠️ Safe Execution v2 오류, 기본 모드로 전환: {e}")
+
+    # 기존 방식 (enhanced_safe_exec 또는 기본)
+    try:
+        return enhanced_safe_exec(code, globals_dict)
+    except NameError:
+        # enhanced_safe_exec가 import되지 않은 경우 계속 진행
+        pass
+
+    # 최종 폴백 - 기본 실행
+    from textwrap import dedent
+
+    try:
+        # 들여쓰기 정리
+        dedented_code = dedent(code).strip()
+
+        # 컴파일 단계 (구문 검사)
+        try:
+            compiled_code = compile(dedented_code, '<json_repl>', 'exec')
+        except SyntaxError as e:
+            error_msg = f"❌ 구문 오류: {e.msg}"
+            if e.lineno:
+                error_msg += f" (라인 {e.lineno})"
+            return False, error_msg
+
+        # 실행
+        exec(compiled_code, globals_dict)
+        return True, ""
+
     except Exception as e:
-        return False, f'{type(e).__name__}: {e}'
-
-
+        return False, f"❌ 런타임 오류: {type(e).__name__}: {str(e)}"
 def execute_code(code: str) -> Dict[str, Any]:
     """Python 코드 실행"""
     global execution_count
     
-    stdout_capture = io.StringIO()
-    stderr_capture = io.StringIO()
     start_time = time.time()
     
     try:
-        with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
-            # safe_exec를 사용하여 코드 실행
-            success, error_msg = safe_exec(code, repl_globals)
-            if not success:
-                # 오류를 stderr에 기록
-                print(error_msg, file=stderr_capture)
+        # safe_exec를 사용하여 코드 실행
+        # safe_exec는 이미 stdout을 캡처하여 반환함
+        success, output_or_error = safe_exec(code, repl_globals)
+        
+        if success:
+            stdout_output = output_or_error
+            stderr_output = ""
+        else:
+            stdout_output = ""
+            stderr_output = output_or_error
             
         execution_count += 1
         
@@ -739,13 +794,18 @@ def execute_code(code: str) -> Dict[str, Any]:
         
         return {
             "success": True,
-            "stdout": stdout_capture.getvalue(),
-            "stderr": stderr_capture.getvalue(),
+            "stdout": stdout_output,
+            "stderr": stderr_output,
             "execution_time": time.time() - start_time,
             "variable_count": len(user_vars),
             "execution_count": execution_count,
             "session_mode": "JSON_REPL",
-            "note": "JSON REPL Session - Variables persist"
+            "note": "JSON REPL Session - Variables persist between executions",
+            "debug_info": {
+                "repl_process_active": True,
+                "repl_ready": True,
+                "execution": "success"
+            }
         }
         
     except Exception as e:
@@ -753,14 +813,19 @@ def execute_code(code: str) -> Dict[str, Any]:
         
         return {
             "success": False,
-            "stdout": stdout_capture.getvalue(),
-            "stderr": stderr_capture.getvalue() + f"\n{type(e).__name__}: {str(e)}\n{traceback.format_exc()}",
+            "stdout": "",
+            "stderr": f"{type(e).__name__}: {str(e)}\n{traceback.format_exc()}",
             "execution_time": time.time() - start_time,
             "variable_count": len(repl_globals),
             "execution_count": execution_count,
             "error": str(e),
             "error_type": type(e).__name__,
-            "session_mode": "JSON_REPL"
+            "session_mode": "JSON_REPL",
+            "debug_info": {
+                "repl_process_active": True,
+                "repl_ready": True,
+                "execution": "error"
+            }
         }
 
 # ============================================================================

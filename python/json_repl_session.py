@@ -629,16 +629,65 @@ def initialize_repl():
     import numpy as np
     import pandas as pd
     
+    # 표준 라이브러리 추가 임포트
+    import re
+    import glob
+    import shutil
+    import subprocess
+    import random
+    import itertools
+    from collections import defaultdict, Counter
+    from datetime import datetime, date, timedelta
+    
     repl_globals.update({
         'os': os,
         'sys': sys,
         'json': json,
         'Path': Path,
-        'datetime': dt,
+        'datetime': dt,  # 기존 호환성 유지
+        'dt': dt,  # 명시적으로 dt도 추가
         'np': np,
         'pd': pd,
         'time': time,
+        # 새로 추가된 모듈들
+        're': re,
+        'glob': glob,
+        'shutil': shutil,
+        'subprocess': subprocess,
+        'random': random,
+        'itertools': itertools,
+        'defaultdict': defaultdict,
+        'Counter': Counter,
+        # datetime 관련
+        'datetime': datetime,  # datetime.datetime을 datetime으로도 사용 가능
+        'date': date,
+        'timedelta': timedelta,
     })
+    
+    # 자주 사용하는 함수들을 최상위로 노출
+    useful_funcs = {
+        'join': os.path.join,
+        'exists': os.path.exists,
+        'makedirs': os.makedirs,
+        'basename': os.path.basename,
+        'dirname': os.path.dirname,
+        'abspath': os.path.abspath,
+        'getcwd': os.getcwd,
+        'chdir': os.chdir,
+        'listdir': os.listdir,
+        'isfile': os.path.isfile,
+        'isdir': os.path.isdir,
+        # 이미 helpers에 있는 것과 충돌하지 않도록 주의
+        'copy': shutil.copy,
+        'copy2': shutil.copy2,
+        'move': shutil.move,
+        'rmtree': shutil.rmtree,
+    }
+    
+    # helpers의 함수와 충돌하지 않는 것만 추가
+    for name, func in useful_funcs.items():
+        if name not in critical_funcs and name not in repl_globals:
+            repl_globals[name] = func
     
     # 4. 프로젝트 자동 초기화 (현재 디렉토리)
     try:

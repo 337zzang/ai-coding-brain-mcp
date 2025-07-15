@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-🚀 JSON REPL Session for AI Coding Brain v5.0
+🚀 JSON REPL Session for AI Coding Brain v6.0
 ==============================================
 
-Claude Desktop과 통신하는 간소화된 JSON REPL 세션
-- claude_code_ai_brain과 직접 통합
+Claude Desktop과 통신하는 통합 JSON REPL 세션
+- AI Helpers v2 완전 통합
+- Workflow 시스템 통합
 - 네임스페이스 보호 (AIHelpers 클래스)
 - 최소 의존성, 핵심 기능만 유지
-- Wisdom 시스템 통합
 
-작성일: 2025-06-14
+작성일: 2025-07-15
 """
 
 import sys
@@ -31,8 +31,6 @@ from contextlib import redirect_stdout, redirect_stderr
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
-
-# Wisdom 시스템 제거됨 (2025-06-30 리팩토링)
 
 # AI Helpers v2 통합
 try:
@@ -57,22 +55,6 @@ except ImportError as e:
     print(f"⚠️ AI Helpers v2 로드 실패: {e}")
     AI_HELPERS_V2_LOADED = False
 
-# Stdout Protocol v3.0 import (선택적)
-try:
-    pass  # Protocol import removed
-    # [REMOVED] from ai_helpers.protocols import (
-        # [REMOVED] get_protocol, get_id_generator, get_tracker,
-        # [REMOVED] StdoutProtocol, ExecutionTracker, IDGenerator
-    # [REMOVED] )
-    # [REMOVED] PROTOCOL_AVAILABLE = True
-    # [REMOVED] print("✅ Stdout Protocol v3.0 loaded successfully")
-except ImportError as e:
-    print(f"⚠️  Stdout Protocol not available: {e}")
-    # [REMOVED] PROTOCOL_AVAILABLE = False
-    # [REMOVED] get_protocol = None
-    # [REMOVED] get_id_generator = None
-    # [REMOVED] get_tracker = None
-
 # ============================================================================
 # 🌟 전역 변수 초기화
 # ============================================================================
@@ -90,7 +72,7 @@ except ImportError as e:
     ImageAPI = None
 
 class AIHelpersV2:
-    """AI Helpers v2 통합 래퍼"""
+    """AI Helpers v2 통합 래퍼 - Workflow 시스템 포함"""
     
     def __init__(self):
         """AI Helpers v2 메서드들을 통합"""
@@ -143,6 +125,11 @@ class AIHelpersV2:
         self.flow_project = self._flow_project
         self.cmd_flow_with_context = self._flow_project  # 별칭
         
+        # Workflow 시스템 통합
+        self.execute_workflow_command = self._execute_workflow_command
+        self.get_workflow_status = self._get_workflow_status
+        self.update_file_directory = self._update_file_directory
+        
         # API 기능 (호환성)
         self.toggle_api = api_toggle_api if api_toggle_api else self._not_implemented
         self.list_apis = api_list_apis if api_list_apis else self._not_implemented
@@ -159,8 +146,11 @@ class AIHelpersV2:
         except ImportError:
             pass
         
+        # Workflow 매니저 초기화
+        self._workflow_manager = None
+        
     def _flow_project(self, project_name, auto_proceed=True):
-        """프로젝트 전환 및 컨텍스트 로드"""
+        """프로젝트 전환 및 컨텍스트 로드 (개선된 버전)"""
         import json
         from datetime import datetime
         
@@ -172,11 +162,31 @@ class AIHelpersV2:
             
             project_path = os.path.join(projects_dir, project_name)
             if not os.path.exists(project_path):
-                os.makedirs(project_path)
-                print(f"✅ 새 프로젝트 디렉토리 생성: {project_path}")
+                # 프로젝트 구조 생성
+                structure = {
+                    project_name: {
+                        "src": {},
+                        "docs": {
+                            "README.md": f"# {project_name}\n\n생성일: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                        },
+                        "tests": {},
+                        "memory": {
+                            "context.json": json.dumps({
+                                "name": project_name,
+                                "created_at": datetime.now().isoformat(),
+                                "tasks": [],
+                                "notes": []
+                            }, indent=2)
+                        }
+                    }
+                }
+                
+                # AI Helpers v2로 프로젝트 구조 생성
+                self.create_project_structure("projects", structure)
+                print(f"✅ 프로젝트 구조 생성 완료: {project_path}")
             
             # 컨텍스트 업데이트
-            context_file = os.path.join(project_path, "context.json")
+            context_file = os.path.join(project_path, "memory", "context.json")
             context = {
                 "project_name": project_name,
                 "switched_at": datetime.now().isoformat(),
@@ -196,13 +206,16 @@ class AIHelpersV2:
             with open(context_file, 'w', encoding='utf-8') as f:
                 json.dump(context, f, indent=2)
             
-            # README 생성
-            readme_file = os.path.join(project_path, "README.md")
-            if not os.path.exists(readme_file):
-                with open(readme_file, 'w', encoding='utf-8') as f:
-                    f.write(f"# {project_name}\n\n프로젝트 생성일: {datetime.now()}\n")
+            # file_directory.md 생성/업데이트
+            self._update_file_directory(project_path)
+            
+            # 현재 프로젝트 백업 (이전 프로젝트가 있었다면)
+            self._backup_current_context()
             
             print(f"\n✅ 프로젝트 '{project_name}'로 전환 완료!")
+            print(f"📁 경로: {os.path.abspath(project_path)}")
+            print(f"📄 file_directory.md 업데이트 완료")
+            
             return {
                 "success": True,
                 "project_name": project_name,
@@ -213,6 +226,99 @@ class AIHelpersV2:
         except Exception as e:
             print(f"❌ flow_project 오류: {e}")
             return {"success": False, "error": str(e)}
+    
+    def _update_file_directory(self, project_path: str):
+        """file_directory.md 업데이트"""
+        from datetime import datetime
+        
+        content = [
+            f"# File Directory - {os.path.basename(project_path)}",
+            f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            ""
+        ]
+        
+        # scan_directory_dict 사용하여 재귀적 스캔
+        def scan_recursive(path: str, level: int = 0):
+            scan_result = self.scan_directory_dict(path)
+            indent = "  " * level
+            
+            # 파일들
+            for file in sorted(scan_result.get('files', [])):
+                content.append(f"{indent}├── {file}")
+            
+            # 하위 디렉토리들
+            dirs = sorted(scan_result.get('directories', []))
+            for i, dir_name in enumerate(dirs):
+                if not dir_name.startswith('.'):
+                    is_last = (i == len(dirs) - 1)
+                    prefix = "└──" if is_last else "├──"
+                    content.append(f"{indent}{prefix} {dir_name}/")
+                    subdir_path = os.path.join(path, dir_name)
+                    scan_recursive(subdir_path, level + 1)
+        
+        scan_recursive(project_path)
+        
+        file_path = os.path.join(project_path, 'file_directory.md')
+        self.create_file(file_path, "\n".join(content))
+    
+    def _backup_current_context(self):
+        """현재 프로젝트 컨텍스트 백업"""
+        try:
+            current_project = self.get_current_project()
+            if not current_project or not current_project.get('name'):
+                return
+            
+            backup_data = {
+                'project': current_project['name'],
+                'timestamp': dt.datetime.now().isoformat(),
+                'session_data': {
+                    'execution_count': execution_count,
+                    'variables': len(repl_globals)
+                }
+            }
+            
+            backup_dir = os.path.join(os.getcwd(), 'memory', 'backups')
+            if not os.path.exists(backup_dir):
+                os.makedirs(backup_dir, exist_ok=True)
+            
+            backup_file = os.path.join(backup_dir, f"backup_{current_project['name']}_{int(time.time())}.json")
+            self.write_json(backup_file, backup_data)
+            print(f"💾 프로젝트 백업 완료: {backup_file}")
+        except Exception as e:
+            print(f"⚠️ 백업 실패: {e}")
+    
+    def _execute_workflow_command(self, command: str):
+        """워크플로우 명령 실행"""
+        try:
+            # Workflow 매니저 초기화 (lazy loading)
+            if self._workflow_manager is None:
+                from workflow.improved_manager import ImprovedWorkflowManager
+                project_name = self.get_current_project().get('name', 'default')
+                self._workflow_manager = ImprovedWorkflowManager(project_name)
+            
+            # 명령 실행
+            result = self._workflow_manager.process_command(command)
+            
+            # 성공 시 메시지 반환
+            if result.get('success'):
+                return result.get('message', '완료')
+            else:
+                return f"Error: {result.get('message', '알 수 없는 오류')}"
+                
+        except Exception as e:
+            return f"Error: {str(e)}"
+    
+    def _get_workflow_status(self):
+        """워크플로우 상태 조회"""
+        try:
+            if self._workflow_manager is None:
+                from workflow.improved_manager import ImprovedWorkflowManager
+                project_name = self.get_current_project().get('name', 'default')
+                self._workflow_manager = ImprovedWorkflowManager(project_name)
+            
+            return self._workflow_manager.get_status()
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
     
     def _not_implemented(self, *args, **kwargs):
         """구현되지 않은 메서드"""
@@ -248,9 +354,9 @@ class AIHelpersV2:
                         attr for attr in dir(module_obj) 
                         if not attr.startswith('_') and callable(getattr(module_obj, attr))
                     ])
+        # Workflow 메서드 추가
+        base_attrs.extend(['execute_workflow_command', 'get_workflow_status', 'update_file_directory'])
         return sorted(set(base_attrs))
-
- 
 
 
 def ensure_helpers_loaded():
@@ -282,9 +388,7 @@ def ensure_helpers_loaded():
     
 def initialize_repl():
     """REPL 환경 초기화"""
-    global repl_globals, wisdom, hooks
-    
-    # print("🚀 JSON REPL Session v5.0 초기화 중...")  # MCP JSON 응답 오염 방지
+    global repl_globals
     
     # 1. helpers 객체 생성
     helpers = ensure_helpers_loaded()
@@ -294,10 +398,8 @@ def initialize_repl():
         builtins.helpers = helpers
     else:
         sys.stderr.write('⚠️ helpers 로딩 실패\n')
-
-        # 실패해도 원본 helpers는 사용 가능
     
-    # 2. 자주 사용하는 함수들을 전역에도 노출 (선택적)
+    # 2. 자주 사용하는 함수들을 전역에도 노출
     critical_funcs = {}
     
     # 필수 함수들
@@ -305,28 +407,17 @@ def initialize_repl():
         critical_funcs['create_file'] = helpers.create_file
     if hasattr(helpers, 'read_file'):
         critical_funcs['read_file'] = helpers.read_file
-    if hasattr(helpers, 'backup_file'):
-        critical_funcs['backup_file'] = helpers.backup_file
     if hasattr(helpers, 'replace_block'):
         critical_funcs['replace_block'] = helpers.replace_block
     
-    # 명령어 함수들
-    if hasattr(helpers, 'cmd_flow'):
-        critical_funcs['cmd_flow'] = helpers.cmd_flow
-    if hasattr(helpers, 'cmd_plan'):
-        critical_funcs['cmd_plan'] = helpers.cmd_plan
-    if hasattr(helpers, 'cmd_task'):
-        critical_funcs['cmd_task'] = helpers.cmd_task
-    if hasattr(helpers, 'cmd_next'):
-        critical_funcs['cmd_next'] = helpers.cmd_next
-    if hasattr(helpers, 'cmd_flow_with_context'):
-        critical_funcs['cmd_flow_with_context'] = helpers.cmd_flow_with_context
-    elif hasattr(helpers, 'cmd_flow'):
-        critical_funcs['cmd_flow_with_context'] = helpers.cmd_flow
+    # Workflow 명령어 함수
+    if hasattr(helpers, 'execute_workflow_command'):
+        critical_funcs['workflow'] = helpers.execute_workflow_command
+        critical_funcs['wf'] = helpers.execute_workflow_command  # 짧은 별칭
     
-    # save_context가 있는 경우에만 추가
-    if hasattr(helpers, 'save_context'):
-        critical_funcs['save_context'] = helpers.save_context
+    # 프로젝트 전환
+    if hasattr(helpers, 'flow_project'):
+        critical_funcs['flow_project'] = helpers.flow_project
     
     for name, func in critical_funcs.items():
         if callable(func):
@@ -347,16 +438,7 @@ def initialize_repl():
         'time': time,
     })
     
-    # 4. context 연결 (optional)
-    try:
-        if hasattr(helpers, 'get_context'):
-            context = helpers.get_context()
-            if context:
-                repl_globals['context'] = context
-    except Exception:
-        pass  # context 로드 실패 시 무시
-    
-    # 5. 프로젝트 자동 초기화 (현재 디렉토리)
+    # 4. 프로젝트 자동 초기화 (현재 디렉토리)
     try:
         # 기본적으로 ai-coding-brain-mcp 프로젝트로 설정
         default_project = "ai-coding-brain-mcp"
@@ -383,36 +465,17 @@ def initialize_repl():
         if not project_path:
             project_path = Path.cwd()
             project_name = project_path.name
-        if hasattr(helpers, 'initialize_context'):
-            context = helpers.initialize_context(str(project_path))
-            repl_globals['context'] = context
-            # print(f"✅ 프로젝트 '{project_name}' 자동 초기화")  # MCP JSON 응답 오염 방지
     except Exception as e:
-        # print(f"⚠️ 프로젝트 자동 초기화 건너뜀: {e}")  # MCP JSON 응답 오염 방지
         pass
     
-    # 6. Git Version Manager 초기화
+    # 5. Git Version Manager 초기화
     try:
         from git_version_manager import GitVersionManager
         git_manager = GitVersionManager()
         repl_globals['git_manager'] = git_manager
-        # print("✅ Git Version Manager 초기화 완료")  # MCP JSON 응답 오염 방지
-        
-        # Git 상태 확인
-        status = git_manager.status()
-        # print(f"  - 브랜치: {status.get('branch', 'unknown')}")  # MCP JSON 응답 오염 방지
-        # print(f"  - 수정된 파일: {len(status.get('modified', []))}개")  # MCP JSON 응답 오염 방지
     except Exception as e:
         sys.stderr.write(f"⚠️ Git Manager 초기화 실패: {e}\n")
         git_manager = None
-    
-    
-    # helpers 로드 확인
-    ensure_helpers_loaded()
-    
-    # print("✅ REPL 초기화 완료!")  # MCP JSON 응답 오염 방지
-    # print("💡 사용법: helpers.create_file('test.py') 또는 h.read_file('test.py')")  # MCP JSON 응답 오염 방지
-    # print("📋 함수 목록: helpers.list_functions()")  # MCP JSON 응답 오염 방지
 
 # ============================================================================
 # 💻 코드 실행
@@ -466,7 +529,6 @@ def execute_code(code: str) -> Dict[str, Any]:
             try:
                 repl_globals['save_context']()
             except Exception:
-                # 컨텍스트 저장 실패는 무시 (세션 유지를 위해)
                 pass
         
         # 변수 개수 계산
@@ -549,27 +611,22 @@ def main():
         try:
             subprocess.run(['chcp', '65001'], shell=True, capture_output=True)
         except subprocess.SubprocessError:
-            # Windows 코드페이지 설정 실패 무시
             pass
     
     # 스트림 인코딩 설정
     if hasattr(sys.stdout, 'reconfigure'):
-        # Python 3.7+ 
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')
     else:
-        # 구버전 Python을 위한 대체 방법
         import codecs
         sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'replace')
     
     if hasattr(sys.stderr, 'reconfigure'):
-        # Python 3.7+
         sys.stderr.reconfigure(encoding='utf-8', errors='replace')
     else:
-        # 구버전 Python을 위한 대체 방법
         import codecs
         sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'replace')
     
-    # 기본 작업 디렉토리 설정 (MCP 시작 시 Claude 앱 디렉토리 문제 해결)
+    # 기본 작업 디렉토리 설정
     try:
         from pathlib import Path
         
@@ -588,7 +645,7 @@ def main():
                     os.chdir(str(default_project_path))
                     break
     except Exception:
-        pass  # 실패해도 계속 진행
+        pass
     
     # 초기화
     initialize_repl()
@@ -648,17 +705,12 @@ def main():
                 repl_globals['save_context']()
                 print("✅ 최종 컨텍스트 저장", file=sys.stderr)
         except Exception:
-            # 종료 시 저장 실패는 무시
             pass
 
 
 # ============================================================================
-# [TARGET] 실행
+# 실행
 # ============================================================================
 
 if __name__ == "__main__":
-    # 이미지 생성 관련 모듈은 helpers를 통해 사용
-    ImageGenerator = None
-    generate_ai_image = None
-    
     main()

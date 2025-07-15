@@ -1,7 +1,7 @@
 {
   "name": "ai-coding-brain-mcp",
-  "version": "1.0.0",
-  "description": "통합 AI 코딩 브레인 MCP - Memory Bank, Desktop Commander, Notebook, Claude Memory 통합",
+  "version": "3.0.0",
+  "description": "AI Coding Brain MCP - Simplified Python REPL with persistent helpers",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

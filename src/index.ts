@@ -18,9 +18,8 @@ import { toolDefinitions } from './tools/tool-definitions';
 
 // 핸들러 클래스들 import
 import { ExecuteCodeHandler } from './handlers/execute-code-handler';
-import { handleFlowProject } from './handlers/workflow-handlers';
 import { BackupHandler } from './handlers/backup-handler';
-import { handleBuildProjectContext, handleStartProject } from './handlers/project-handlers';
+import { } from './handlers/project-handlers';
 import { apiToggleHandler, listApisHandler } from './handlers/api-toggle-handler';
 
 // 로거 초기화
@@ -41,13 +40,10 @@ class AICodingBrainMCP {
         this.server = new Server(
             {
                 name: 'ai-coding-brain-mcp',
-                version: '2.0.0',
-            },
+                version: '2.0.0'},
             {
                 capabilities: {
-                    tools: {},
-                },
-            }
+                    tools: {}}}
         );
 
         this.setupToolHandlers();
@@ -61,8 +57,7 @@ class AICodingBrainMCP {
         // 도구 목록 제공
         this.server.setRequestHandler(ListToolsRequestSchema, async () => {
             return {
-                tools: toolDefinitions,
-            };
+                tools: toolDefinitions};
         });
 
         // 도구 실행 핸들러 (간소화된 라우팅)
@@ -108,10 +103,6 @@ class AICodingBrainMCP {
                             }
                         ]
                     };
-                } else if (name === 'flow_project') {
-                    return await handleFlowProject(args as { project_name: string });
-                } else if (name === 'start_project') {
-                    return await handleStartProject(args as { project_name: string; init_git?: boolean });
                 } else if (name === 'git_status') {
                     // Git 도구는 현재 구현되지 않음
                     return { success: false, error: 'Git tools not implemented yet' };
@@ -133,8 +124,7 @@ class AICodingBrainMCP {
                     return await apiToggleHandler.execute(args);
                 } else if (name === 'list_apis') {
                     return await listApisHandler.execute(args);
-                } else if (name === 'build_project_context') {
-                    return await handleBuildProjectContext(args as any);
+                    return await (args as any);
                 } else {
                     // TODO: Implement remaining tools
                     throw new McpError(
@@ -184,7 +174,7 @@ class AICodingBrainMCP {
         }
 
         logger.info('AI Coding Brain MCP server v2.0.0 started successfully');
-        logger.info('12 tools loaded: execute_code, restart_json_repl, backup_file, restore_backup, list_backups, flow_project, plan_project, task_manage, next_task, file_analyze, toggle_api, list_apis');
+        logger.info('9 tools loaded: execute_code, restart_json_repl, backup_file, restore_backup, list_backups, plan_project, task_manage, next_task, file_analyze, toggle_api, list_apis');
     }
 }
 

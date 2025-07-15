@@ -32,6 +32,27 @@ ai-coding-brain-mcp/
 └── ... (외 7개)
 ```
 
+
+
+## 🚀 최근 업데이트 (2025-07-15)
+
+### MCP 도구 → Execute Code 전환
+- `flow_project`, `start_project`, `build_project_context` MCP 도구 제거
+- 더 빠르고 안정적인 execute_code 기반 함수로 대체
+- Timeout 문제 완전 해결
+
+### 새로운 프로젝트 관리 함수
+execute_code에서 사용 가능한 함수들:
+- `project_switch(project_name)` - 프로젝트 전환
+- `safe_flow_project(project_name, timeout=30)` - 타임아웃 보호 전환
+- `project_create(project_name, init_git=True)` - 새 프로젝트 생성
+- `project_build_context()` - 문서 자동 생성
+- `check_project_status()` - 현재 프로젝트 상태 확인
+
+### 문서
+- [Execute Code 마이그레이션 가이드](docs/execute_code_migration_guide.md)
+- [프로젝트 관리 Quick Reference](docs/project_management_quick_ref.md)
+
 ## 🚀 시작하기
 
 ### 설치

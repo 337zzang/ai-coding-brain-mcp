@@ -1,0 +1,479 @@
+# AI Coding Brain 영속적 헬퍼 시스템 v1.0
+import time, random, json, os
+from datetime import datetime
+
+# ===== 핵심 헬퍼 함수 정의 =====
+
+# 1. 세션 관리
+def init_session():
+    """세션 초기화 또는 기존 세션 확인"""
+    global session_manager
+
+    if 'session_manager' not in globals():
+        session_manager = {
+            'session_id': f'ACB_{int(time.time())}_{random.randint(1000,9999)}',
+            'start_time': time.time(),
+            'state': {},
+            'cache': {},
+            'history': [],
+            'errors': [],
+            'performance': {}
+        }
+        print(f"🎉 새 세션 시작: {session_manager['session_id']}")
+        return 'new'
+    else:
+        elapsed = (time.time() - session_manager['start_time']) / 60
+        print(f"📍 기존 세션 계속: {session_manager['session_id']} ({elapsed:.1f}분 경과)")
+        return 'existing'
+
+def save_checkpoint(name, data):
+    """체크포인트 저장"""
+    if 'session_manager' not in globals():
+        init_session()
+
+    session_manager['state'][name] = {
+        'data': data,
+        'timestamp': time.time(),
+        'session_id': session_manager['session_id']
+    }
+    add_to_history('checkpoint_saved', {'name': name})
+    print(f"💾 체크포인트 저장: {name}")
+    return True
+
+def load_checkpoint(name):
+    """체크포인트 로드"""
+    if 'session_manager' not in globals():
+        return None
+
+    checkpoint = session_manager['state'].get(name)
+    if checkpoint:
+        add_to_history('checkpoint_loaded', {'name': name})
+        print(f"📂 체크포인트 로드: {name}")
+        return checkpoint['data']
+    return None
+
+def add_to_history(action, data, max_entries=100):
+    """히스토리 추가"""
+    if 'session_manager' not in globals():
+        init_session()
+
+    entry = {
+        'timestamp': time.time(),
+        'action': action,
+        'data': data
+    }
+
+    session_manager['history'].append(entry)
+
+    if len(session_manager['history']) > max_entries:
+        session_manager['history'] = session_manager['history'][-max_entries:]
+
+def show_history(n=10):
+    """최근 히스토리 표시"""
+    if 'session_manager' not in globals() or not session_manager['history']:
+        print("히스토리가 없습니다.")
+        return
+
+    print(f"\n📜 최근 히스토리 (최대 {n}개):")
+    for entry in session_manager['history'][-n:]:
+        time_str = datetime.fromtimestamp(entry['timestamp']).strftime('%H:%M:%S')
+        print(f"  [{time_str}] {entry['action']}: {entry['data']}")
+
+# 2. 캐싱 시스템
+def cached_operation(key, compute_func, ttl=300):
+    """캐싱된 작업 실행 (TTL 지원)"""
+    if 'session_manager' not in globals():
+        init_session()
+
+    cache = session_manager.get('cache', {})
+
+    if key in cache:
+        entry = cache[key]
+        age = time.time() - entry['timestamp']
+        if age < ttl:
+            print(f"🎯 캐시 히트: {key} (age: {age:.1f}s)")
+            add_to_history('cache_hit', {'key': key})
+            return entry['data']
+
+    print(f"💰 계산 실행: {key}")
+    start_time = time.time()
+    result = compute_func()
+    duration = time.time() - start_time
+
+    session_manager['cache'][key] = {
+        'data': result,
+        'timestamp': time.time(),
+        'compute_time': duration
+    }
+
+    add_to_history('cache_miss', {'key': key, 'compute_time': duration})
+    return result
+
+def clear_cache(key=None):
+    """캐시 삭제"""
+    if 'session_manager' not in globals():
+        return
+
+    if key:
+        if key in session_manager.get('cache', {}):
+            del session_manager['cache'][key]
+            print(f"🗑️ 캐시 삭제: {key}")
+    else:
+        session_manager['cache'] = {}
+        print("🗑️ 전체 캐시 초기화")
+
+# 3. 워크플로우 헬퍼
+def show_plan(tasks, require_confirmation=True):
+    """작업 계획 표시"""
+    print("\n" + "="*70)
+    print("📋 AI Coding Brain 작업 계획")
+    print("="*70)
+
+    total_time = 0
+    for i, task in enumerate(tasks, 1):
+        if isinstance(task, dict):
+            print(f"\n{i}. {task.get('name', '작업')}")
+            if 'desc' in task:
+                print(f"   설명: {task['desc']}")
+            if 'time' in task:
+                print(f"   예상: {task['time']}")
+                try:
+                    time_val = int(''.join(filter(str.isdigit, task['time'])))
+                    total_time += time_val
+                except:
+                    pass
+            if task.get('subtasks'):
+                for j, subtask in enumerate(task.get('subtasks', []), 1):
+                    print(f"   {i}.{j} {subtask}")
+        else:
+            print(f"{i}. {task}")
+
+    if total_time > 0:
+        print(f"\n⏱️ 총 예상 시간: {total_time}분")
+
+    if require_confirmation:
+        print("\n[USER_CONFIRMATION_REQUIRED]")
+        print("이 계획대로 진행하시겠습니까?")
+        print("수정이 필요하면 알려주세요.")
+
+    print("="*70)
+
+    add_to_history('plan_shown', {'tasks': len(tasks)})
+    return True
+
+def update_progress(task_name, percent):
+    """진행상황 업데이트"""
+    bar_length = 30
+    filled = int(bar_length * percent / 100)
+    bar = '█' * filled + '░' * (bar_length - filled)
+
+    print(f"\r📊 {task_name}: [{bar}] {percent}%", end='')
+    if percent >= 100:
+        print()
+
+    if 'session_manager' in globals():
+        session_manager['state']['current_progress'] = {
+            'task': task_name,
+            'percent': percent,
+            'timestamp': time.time()
+        }
+
+    return percent
+
+def request_feedback(message, options=None):
+    """사용자 피드백 요청"""
+    print(f"\n{'🔍 ' + '='*67}")
+    print("[FEEDBACK_NEEDED]")
+    print(message)
+
+    if options:
+        print("\n선택 옵션:")
+        for i, opt in enumerate(options, 1):
+            print(f"  {i}. {opt}")
+
+    print("="*70)
+
+    add_to_history('feedback_requested', {'message': message[:50]})
+    return True
+
+# 4. 대용량 처리
+def chunk_processor(data, process_func, chunk_size=100):
+    """대용량 데이터를 청크로 나누어 처리"""
+    if not data:
+        return []
+
+    total = len(data)
+    chunks = [data[i:i+chunk_size] for i in range(0, total, chunk_size)]
+    results = []
+
+    print(f"\n🔄 청크 처리 시작: {len(chunks)}개 청크 (각 {chunk_size}개)")
+
+    for i, chunk in enumerate(chunks):
+        progress = ((i + 1) / len(chunks)) * 100
+        update_progress(f"청크 처리", progress)
+
+        try:
+            chunk_result = process_func(chunk)
+            if isinstance(chunk_result, list):
+                results.extend(chunk_result)
+            else:
+                results.append(chunk_result)
+        except Exception as e:
+            print(f"\n❌ 청크 {i+1} 처리 오류: {e}")
+            continue
+
+        if (i + 1) % 10 == 0:
+            save_checkpoint(f"chunk_progress_{i+1}", {
+                'processed': i + 1,
+                'total': len(chunks),
+                'results_count': len(results)
+            })
+
+    print(f"\n✅ 청크 처리 완료: {len(results)}개 결과")
+    return results
+
+# 5. 오류 처리
+def safe_execute(func, *args, **kwargs):
+    """안전한 함수 실행 (오류 처리 포함)"""
+    try:
+        result = func(*args, **kwargs)
+        return result
+    except Exception as e:
+        error_info = {
+            'function': func.__name__ if hasattr(func, '__name__') else str(func),
+            'error': str(e),
+            'type': type(e).__name__,
+            'timestamp': time.time()
+        }
+
+        print(f"\n❌ 오류 발생: {error_info['type']}")
+        print(f"   함수: {error_info['function']}")
+        print(f"   메시지: {error_info['error']}")
+
+        if 'session_manager' in globals():
+            session_manager['errors'].append(error_info)
+
+            recent_errors = [e for e in session_manager['errors'] 
+                           if e['type'] == error_info['type']]
+            if len(recent_errors) >= 3:
+                print(f"   ⚠️ 경고: {error_info['type']} 오류가 {len(recent_errors)}번 반복됨")
+
+        add_to_history('error_occurred', error_info)
+        return None
+
+def try_execute_or_recover(operation_func):
+    """execute_code 실행 시도, 실패시 Desktop Commander로 복구 제안"""
+    try:
+        return operation_func()
+    except PermissionError as e:
+        print("\n❌ 권한 오류 - Desktop Commander 복구 필요")
+        print("[DESKTOP_COMMANDER_RECOVERY_NEEDED]")
+        print("다음 명령을 Desktop Commander로 실행해주세요:")
+        print(f"  chmod/icacls 명령으로 권한 수정")
+        return None
+    except (SystemError, OSError) as e:
+        print(f"\n❌ 시스템 오류: {e}")
+        print("[DESKTOP_COMMANDER_RECOVERY_NEEDED]")
+        return None
+    except Exception as e:
+        return safe_execute(operation_func)
+
+# 6. 시간 측정
+class measure_time:
+    """실행 시간 측정 컨텍스트 매니저"""
+    def __init__(self, name):
+        self.name = name
+        self.start = None
+
+    def __enter__(self):
+        self.start = time.time()
+        print(f"⏱️ {self.name} 시작...")
+        return self
+
+    def __exit__(self, *args):
+        duration = time.time() - self.start
+        print(f"⏱️ {self.name} 완료: {duration:.2f}초")
+
+        if 'session_manager' in globals():
+            if 'performance' not in session_manager:
+                session_manager['performance'] = {}
+
+            if self.name not in session_manager['performance']:
+                session_manager['performance'][self.name] = []
+
+            session_manager['performance'][self.name].append({
+                'duration': duration,
+                'timestamp': time.time()
+            })
+
+# 7. 세션 요약
+def show_session_summary():
+    """현재 세션 요약 정보 표시"""
+    if 'session_manager' not in globals():
+        print("세션이 시작되지 않았습니다.")
+        return
+
+    duration = (time.time() - session_manager['start_time']) / 60
+
+    print("\n" + "="*70)
+    print("📊 AI Coding Brain 세션 요약")
+    print("="*70)
+    print(f"세션 ID: {session_manager['session_id']}")
+    print(f"실행 시간: {duration:.1f}분")
+    print(f"체크포인트: {len(session_manager['state'])}개")
+    print(f"캐시 항목: {len(session_manager.get('cache', {}))}개")
+    print(f"히스토리: {len(session_manager['history'])}개")
+    print(f"오류 발생: {len(session_manager.get('errors', []))}회")
+
+    cache_hits = sum(1 for h in session_manager['history'] 
+                    if h['action'] == 'cache_hit')
+    cache_misses = sum(1 for h in session_manager['history'] 
+                      if h['action'] == 'cache_miss')
+    total_cache = cache_hits + cache_misses
+    if total_cache > 0:
+        print(f"캐시 효율: {(cache_hits/total_cache)*100:.1f}%")
+
+    print("="*70)
+
+# 8. 도움말 시스템
+def help_quick():
+    """빠른 헬퍼 참조"""
+    print("\n⚡ AI Coding Brain 주요 헬퍼 함수")
+    print("="*50)
+
+    helps = [
+        ("세션", [
+            "init_session() - 세션 시작/확인",
+            "save_checkpoint(name, data) - 상태 저장",
+            "load_checkpoint(name) - 상태 로드",
+            "show_history(n) - 히스토리 보기"
+        ]),
+        ("캐싱", [
+            "cached_operation(key, func) - 결과 캐싱",
+            "clear_cache(key) - 캐시 삭제"
+        ]),
+        ("워크플로우", [
+            "show_plan(tasks) - 계획 표시",
+            "update_progress(task, %) - 진행률",
+            "request_feedback(msg) - 피드백 요청"
+        ]),
+        ("처리", [
+            "chunk_processor(data, func) - 청크 처리",
+            "safe_execute(func) - 안전한 실행",
+            "measure_time(name) - 시간 측정"
+        ])
+    ]
+
+    for category, funcs in helps:
+        print(f"\n{category}:")
+        for func in funcs:
+            print(f"  • {func}")
+
+    print("\n💡 상세 도움말: show_helpers()")
+    print("💡 세션 요약: show_session_summary()")
+
+def show_helpers(category=None):
+    """상세 헬퍼 함수 도움말"""
+    categories = {
+        'session': {
+            'init_session': "세션을 시작하거나 기존 세션을 확인합니다.",
+            'save_checkpoint': "현재 상태를 체크포인트로 저장합니다.",
+            'load_checkpoint': "저장된 체크포인트를 로드합니다.",
+            'add_to_history': "작업 히스토리에 기록을 추가합니다.",
+            'show_history': "최근 작업 히스토리를 표시합니다."
+        },
+        'cache': {
+            'cached_operation': "함수 결과를 캐싱하여 반복 호출시 성능을 향상시킵니다.",
+            'clear_cache': "캐시를 삭제합니다."
+        },
+        'workflow': {
+            'show_plan': "작업 계획을 표시하고 사용자 확인을 요청합니다.",
+            'update_progress': "작업 진행률을 표시합니다.",
+            'request_feedback': "사용자에게 피드백을 요청합니다."
+        },
+        'utils': {
+            'chunk_processor': "대용량 데이터를 청크로 나누어 처리합니다.",
+            'safe_execute': "오류를 안전하게 처리하며 함수를 실행합니다.",
+            'try_execute_or_recover': "실행 실패시 Desktop Commander로 복구를 제안합니다.",
+            'measure_time': "코드 블록의 실행 시간을 측정합니다.",
+            'show_session_summary': "현재 세션의 요약 정보를 표시합니다."
+        }
+    }
+
+    print("\n📚 AI Coding Brain 헬퍼 함수 상세 도움말")
+    print("="*70)
+
+    if category:
+        if category in categories:
+            print(f"\n🏷️ {category.upper()}")
+            for func, desc in categories[category].items():
+                print(f"\n  📌 {func}")
+                print(f"     {desc}")
+        else:
+            print(f"'{category}' 카테고리를 찾을 수 없습니다.")
+    else:
+        for cat, funcs in categories.items():
+            print(f"\n🏷️ {cat.upper()}")
+            for func, desc in funcs.items():
+                print(f"\n  📌 {func}")
+                print(f"     {desc}")
+
+def search_helper(keyword):
+    """키워드로 헬퍼 함수 검색"""
+    print(f"\n🔍 '{keyword}' 검색 결과:")
+
+    found = []
+    for name, obj in globals().items():
+        if callable(obj) and not name.startswith('_'):
+            if keyword.lower() in name.lower():
+                found.append(name)
+
+    if found:
+        for func in found:
+            print(f"  • {func}()")
+    else:
+        print(f"  '{keyword}' 관련 헬퍼를 찾을 수 없습니다.")
+
+    return found
+
+# ===== 헬퍼 자동 로드 =====
+def _load_ai_coding_brain_helpers():
+    """모든 헬퍼 함수를 globals()에 로드"""
+    helpers = [
+        init_session, save_checkpoint, load_checkpoint, 
+        add_to_history, show_history,
+        cached_operation, clear_cache,
+        show_plan, update_progress, request_feedback,
+        chunk_processor, safe_execute, try_execute_or_recover,
+        measure_time, show_session_summary,
+        help_quick, show_helpers, search_helper
+    ]
+
+    for func in helpers:
+        globals()[func.__name__] = func
+
+    required_imports = ['time', 'random', 'json', 'os', 'datetime']
+    for module in required_imports:
+        if module not in globals():
+            if module == 'datetime':
+                from datetime import datetime
+                globals()['datetime'] = datetime
+            else:
+                globals()[module] = __import__(module)
+
+    return len(helpers)
+
+# 자동 로드 실행
+if 'AI_CODING_BRAIN_LOADED' not in globals():
+    num_loaded = _load_ai_coding_brain_helpers()
+    AI_CODING_BRAIN_LOADED = True
+    print(f"✅ {num_loaded}개의 헬퍼 함수가 로드되었습니다!")
+    print("\n사용법:")
+    print("  • help_quick() - 빠른 도움말")
+    print("  • show_helpers() - 상세 도움말")
+    print("  • init_session() - 세션 시작")
+else:
+    print("✅ AI Coding Brain 헬퍼가 이미 로드되어 있습니다.")
+
+# 자동으로 세션 초기화
+init_session()

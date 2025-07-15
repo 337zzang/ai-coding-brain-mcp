@@ -17,6 +17,47 @@ export const toolDefinitions: Tool[] = [
 - 세션이 재시작되어도 파일로 저장된 데이터는 보존됩니다
 - 각 프로젝트별로 독립적인 메모리 구조를 가집니다
 
+🚀 **부트스트랩 모듈 (세션 시작 시 자동 로드)**
+\`\`\`python
+# 날짜/시간 - import 없이 바로 사용
+datetime.now()              # from datetime import datetime 불필요
+date.today()               # from datetime import date 불필요
+timedelta(days=1)          # from datetime import timedelta 불필요
+
+# 파일 시스템 - os.path.* 함수들을 직접 사용
+join('folder', 'file.txt')  # os.path.join 대신
+exists('file.txt')         # os.path.exists 대신
+makedirs('new_folder')     # os.makedirs 대신
+basename('/path/file.txt') # os.path.basename 대신
+isfile('test.py')         # os.path.isfile 대신
+isdir('folder')           # os.path.isdir 대신
+
+# 정규표현식 - import re 없이
+re.search(r'패턴', '텍스트')
+re.findall(r'\d+', '123abc456')
+re.compile(r'[a-z]+')
+
+# 파일 패턴 매칭 - import glob 없이
+glob.glob('*.py')
+glob.glob('**/*.txt', recursive=True)
+
+# 파일 작업 - import shutil 없이
+shutil.copy('src.txt', 'dst.txt')
+shutil.move('old.txt', 'new.txt')
+copy('file1', 'file2')  # shutil.copy 직접 사용
+
+# 데이터 구조 - from collections import 없이
+Counter(['a', 'b', 'a'])
+defaultdict(list)
+
+# 기타 유용한 모듈
+random.randint(1, 10)      # import random 없이
+subprocess.run(['ls'])     # import subprocess 없이
+itertools.chain([1], [2])  # import itertools 없이
+
+# 이미 로드된 모듈: os, sys, json, time, Path, np (numpy), pd (pandas)
+\`\`\`
+
 📁 **프로젝트 관리**
 \`\`\`python
 # 프로젝트 생성/전환 (바탕화면에 생성)

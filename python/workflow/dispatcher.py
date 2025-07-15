@@ -3,7 +3,13 @@
 AI helpers에서 워크플로우 명령을 실행하기 위한 인터페이스
 """
 
+from pathlib import Path
 from .improved_manager import ImprovedWorkflowManager
+
+# workflow_helper import 추가
+import sys
+sys.path.append(str(Path(__file__).parent.parent))
+from workflow_helper import generate_docs_for_project
 
 # 전역 매니저 인스턴스
 _manager_instance = None
@@ -18,6 +24,13 @@ def get_manager():
 def execute_workflow_command(command: str):
     """워크플로우 명령 실행"""
     try:
+        # /a 명령 처리 추가
+        if command.strip() == "/a":
+            project_root = Path.cwd()
+            generate_docs_for_project(project_root)
+            return f"✅ {project_root}에 file_directory.md, README.md 생성 완료"
+        
+        # 기존 워크플로우 명령 처리
         manager = get_manager()
         result = manager.process_command(command)
 

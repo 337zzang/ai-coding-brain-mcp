@@ -412,16 +412,23 @@ Location: {"Desktop" if desktop else "Subproject"}
             # file_directory.md 업데이트
             self._update_file_directory(str(project_path))
             
+            # 프로젝트 문서 로드
+            project_docs = self._load_project_docs(project_path)
+            
             print(f"\n✅ 프로젝트 '{project_name}'로 전환 완료!")
             print(f"📁 경로: {project_path.absolute()}")
             print(f"💾 모든 데이터는 {project_path}/memory/에 저장됩니다")
+            
+            if project_docs['loaded']:
+                print(f"📄 프로젝트 문서 로드됨: {', '.join(project_docs['files'])}")
             
             return {
                 "success": True,
                 "project_name": project_name,
                 "path": str(project_path.absolute()),
                 "is_new": is_new,
-                "type": "desktop" if desktop else "subproject"
+                "type": "desktop" if desktop else "subproject",
+                "docs": project_docs
             }
             
         except Exception as e:
@@ -429,6 +436,47 @@ Location: {"Desktop" if desktop else "Subproject"}
             import traceback
             traceback.print_exc()
             return {"success": False, "error": str(e)}
+    
+    def _load_project_docs(self, project_path: Path) -> dict:
+        """프로젝트 문서(README.md, file_directory.md) 로드"""
+        docs = {
+            "loaded": False,
+            "files": [],
+            "readme": None,
+            "file_directory": None,
+            "parsed_tree": None
+        }
+        
+        try:
+            # README.md 읽기
+            readme_path = project_path / "README.md"
+            if readme_path.exists():
+                docs["readme"] = self.read_file(str(readme_path))
+                docs["files"].append("README.md")
+            
+            # file_directory.md 읽기
+            file_dir_path = project_path / "file_directory.md"
+            if file_dir_path.exists():
+                docs["file_directory"] = self.read_file(str(file_dir_path))
+                docs["files"].append("file_directory.md")
+                
+                # 구조 파싱 시도
+                try:
+                    from workflow_helper import parse_file_directory_md
+                    docs["parsed_tree"] = parse_file_directory_md(docs["file_directory"])
+                except Exception as e:
+                    print(f"⚠️ 파일 구조 파싱 실패: {e}")
+            
+            docs["loaded"] = len(docs["files"]) > 0
+            
+            # 전역 변수에 저장 (쉬운 접근을 위해)
+            if docs["loaded"]:
+                repl_globals["project_docs"] = docs
+                
+        except Exception as e:
+            print(f"⚠️ 프로젝트 문서 로드 실패: {e}")
+        
+        return docs
     
     def _update_file_directory(self, project_path: str):
         """file_directory.md 업데이트"""
@@ -493,39 +541,30 @@ Location: {"Desktop" if desktop else "Subproject"}
     def _execute_workflow_command(self, command: str):
         """워크플로우 명령 실행"""
         try:
-            # Workflow 매니저 초기화 (lazy loading)
-            if self._workflow_manager is None:
-                from workflow.improved_manager import ImprovedWorkflowManager
-                project_name = self.get_current_project().get('name', 'default')
-                self._workflow_manager = ImprovedWorkflowManager(project_name)
+            # dispatcher를 통해 명령 실행
+            from workflow.dispatcher import execute_workflow_command as dispatch_command
+            result_message = dispatch_command(command)
             
-            # 명령 실행
-            result = self._workflow_manager.process_command(command)
-            
-            # 히스토리에 기록
-            if result.get('success'):
-                # 히스토리 매니저 초기화
+            # 성공/실패 판단
+            if result_message.startswith("Error:"):
+                return result_message
+            else:
+                # 히스토리에 기록
                 if self._history_manager is None:
                     self._init_history_manager()
                 
                 # 워크플로우 명령을 히스토리에 추가
                 action_data = {
                     "command": command,
-                    "result": result,
-                    "workflow_status": self._workflow_manager.get_status()
+                    "result": result_message
                 }
                 self._history_manager.add_action(
                     f"워크플로우 명령: {command.split()[0]}",
-                    result.get('message', ''),
+                    result_message,
                     action_data
                 )
                 
-                # 워크플로우 데이터와 동기화
-                self._history_manager.sync_with_workflow(self._workflow_manager.data)
-                
-                return result.get('message', '완료')
-            else:
-                return f"Error: {result.get('message', '알 수 없는 오류')}"
+                return result_message
                 
         except Exception as e:
             return f"Error: {str(e)}"

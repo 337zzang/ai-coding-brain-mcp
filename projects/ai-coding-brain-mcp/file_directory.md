@@ -1,1 +1,2 @@
-# ai-coding-brain-mcp 파일 구조\n\n생성일: 2025-07-15 08:49:58.195729\n\n```\nai-coding-brain-mcp/\n├── README.md\n├── context.json\n└── file_directory.md\n```\n
+# File Directory - ai-coding-brain-mcp
+Generated: 2025-07-15 13:39:18

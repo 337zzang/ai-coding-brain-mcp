@@ -17,8 +17,15 @@ class ImprovedWorkflowManager:
     
     def __init__(self, project_name: str):
         self.project_name = project_name
-        self.workflow_file = os.path.join("memory", "workflow.json")
-        self.events_file = os.path.join("memory", "workflow_events.json")
+        
+        # 현재 프로젝트의 memory 폴더 사용
+        self.memory_dir = os.path.join(os.getcwd(), "memory")
+        os.makedirs(self.memory_dir, exist_ok=True)
+        
+        # 프로젝트별 파일 경로
+        self.workflow_file = os.path.join(self.memory_dir, "workflow.json")
+        self.events_file = os.path.join(self.memory_dir, "workflow_events.json")
+        
         self.data = self._load_workflow_file()
         self._ensure_structure()
         

@@ -1,0 +1,29 @@
+{
+  "command": "/task JSON REPL과 워크플로우 통합",
+  "result": {
+    "success": true,
+    "task_id": "a773bf14-84bc-4b04-ab99-0bce0e6da52e",
+    "message": "태스크 추가됨: JSON REPL과 워크플로우 통합"
+  },
+  "workflow_status": {
+    "status": "active",
+    "plan_id": "27019e1a-78c3-4c0b-a826-67f17211c865",
+    "plan_name": "영속적 히스토리 시스템 구축",
+    "total_tasks": 1,
+    "completed_tasks": 0,
+    "current_task": {
+      "id": "a773bf14-84bc-4b04-ab99-0bce0e6da52e",
+      "title": "JSON REPL과 워크플로우 통합",
+      "description": "",
+      "status": "todo",
+      "created_at": "2025-07-15T13:33:58.170110+09:00",
+      "updated_at": "2025-07-15T13:33:58.170110+09:00",
+      "started_at": null,
+      "completed_at": null,
+      "duration": null,
+      "notes": [],
+      "outputs": {}
+    },
+    "progress": 0.0
+  }
+}

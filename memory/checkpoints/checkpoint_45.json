@@ -1,0 +1,3 @@
+{
+  "summary": "\n✅ 대화 간 히스토리 연속성 구현 완료\n\n수정된 파일:\n1. python/persistent_history.py\n   - 세션 ID를 분 단위까지 포함 (conv_YYYYMMDD_HHMM)\n   - get_recent_context(): 최근 작업 컨텍스트 요약\n   - search_history(): 키워드 기반 히스토리 검색\n   - get_last_session_summary(): 마지막 세션 요약\n   - show_history(): 개선된 히스토리 표시\n\n2. python/json_repl_session.py\n   - REPL 시작 시 이전 작업 자동 표시\n   - continue_from_last() 제안 메시지\n\n주요 기능:\n- 새 대화 시작 시 이전 작업 요약 자동 표시\n- 세션별 작업 통계 및 주요 작업 추출\n- 히스토리 검색 기능\n- 더 정밀한 세션 추적\n"
+}

@@ -134,3 +134,9 @@ fix_*.py
 *_backup_*.py 
 commit_message.txt 
 *.backup2 
+
+# Additional backup and vendor patterns
+# Added by AI Coding Brain optimization
+*_backup*
+*_backup*/
+**/vendor/

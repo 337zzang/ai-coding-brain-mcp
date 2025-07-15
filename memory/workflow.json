@@ -574,12 +574,122 @@
       "archived_at": null,
       "stats": {},
       "metadata": {}
+    },
+    {
+      "id": "27019e1a-78c3-4c0b-a826-67f17211c865",
+      "name": "영속적 히스토리 시스템 구축",
+      "description": "",
+      "status": "draft",
+      "tasks": [
+        {
+          "id": "a773bf14-84bc-4b04-ab99-0bce0e6da52e",
+          "title": "JSON REPL과 워크플로우 통합",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-15T13:33:58.170110+09:00",
+          "updated_at": "2025-07-15T13:50:24.435970",
+          "started_at": "2025-07-15T13:33:58.214104",
+          "completed_at": "2025-07-15T13:50:24.435970",
+          "duration": null,
+          "notes": [
+            "[완료] JSON REPL과 워크플로우 통합 완료 - 프로젝트별 독립 메모리 구조 구현"
+          ],
+          "outputs": {}
+        },
+        {
+          "id": "96c92b26-e5f0-4e25-b8c0-5bb278ccd638",
+          "title": "대화 간 히스토리 연속성 구현",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-15T13:33:58.182102+09:00",
+          "updated_at": "2025-07-15T16:28:47.192502",
+          "started_at": null,
+          "completed_at": "2025-07-15T16:28:47.192502",
+          "duration": null,
+          "notes": [
+            "[완료] 코드 수정 완료 - 테스트 필요"
+          ],
+          "outputs": {}
+        },
+        {
+          "id": "4a5dec9c-854e-4b1b-ae00-ba37baee9ffe",
+          "title": "테스트 및 검증",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-15T13:33:58.194102+09:00",
+          "updated_at": "2025-07-15T16:36:26.263881",
+          "started_at": "2025-07-15T16:30:30.382827",
+          "completed_at": "2025-07-15T16:36:26.263881",
+          "duration": null,
+          "notes": [
+            "[완료] 테스트 완료"
+          ],
+          "outputs": {}
+        },
+        {
+          "id": "f7e1330f-f8c8-44b4-b9be-6819435ec124",
+          "title": "대화 간 히스토리 연속성 구현",
+          "description": "",
+          "status": "skipped",
+          "created_at": "2025-07-15T16:28:47.149501+09:00",
+          "updated_at": "2025-07-15T16:36:26.282917",
+          "started_at": "2025-07-15T16:36:26.282917",
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {},
+          "metadata": {
+            "paused": false,
+            "paused_at": "2025-07-15T16:36:26.302881",
+            "pause_reason": "잠시 중단",
+            "resumed_at": "2025-07-15T16:36:26.319881"
+          },
+          "skipped_at": "2025-07-15T16:36:52.041987",
+          "skip_reason": "다른 작업을 먼저 해야함"
+        },
+        {
+          "id": "7bdf0933-79ee-482c-8c04-05d5d9a8b1ab",
+          "title": "워크플로우 명령어 테스트",
+          "description": "",
+          "status": "error",
+          "created_at": "2025-07-15T16:36:15.035633+09:00",
+          "updated_at": "2025-07-15T16:36:52.018988",
+          "started_at": "2025-07-15T16:36:52.018988",
+          "completed_at": null,
+          "duration": null,
+          "notes": [],
+          "outputs": {},
+          "error_at": "2025-07-15T16:36:52.060987",
+          "error_message": "테스트 중 문제 발생"
+        }
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-15T13:33:58.157103+09:00",
+      "updated_at": "2025-07-15T13:33:58.157103+09:00",
+      "completed_at": null,
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
+    },
+    {
+      "id": "9caa947a-5a6b-4601-a2b8-abbf3bca8a29",
+      "name": "새로운 기능 개발",
+      "description": "",
+      "status": "archived",
+      "tasks": [],
+      "current_task_index": 0,
+      "created_at": "2025-07-15T16:36:52.097986+09:00",
+      "updated_at": "2025-07-15T16:36:52.097986+09:00",
+      "completed_at": null,
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
     }
   ],
-  "active_plan_id": "31f9658e-4c0d-4241-88bd-77261fe17162",
+  "active_plan_id": null,
   "events": [],
   "version": "3.0.0",
-  "last_saved": "2025-07-14T09:16:12.373287",
+  "last_saved": "2025-07-15T16:37:03.435151",
   "metadata": {
     "last_modified": "2025-07-13T11:02:04.181585+00:00",
     "project_name": "ai-coding-brain-mcp",

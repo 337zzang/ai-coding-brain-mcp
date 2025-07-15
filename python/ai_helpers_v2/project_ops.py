@@ -108,13 +108,17 @@ def scan_directory_dict(
     def count_items(items: Dict[str, Any]):
         nonlocal total_files, total_dirs, total_size
         for name, info in items.items():
-            if info['type'] == 'file':
-                total_files += 1
-                total_size += info.get('size', 0)
-            else:
-                total_dirs += 1
-                count_items(info.get('contents', {}))
-
+            # 타입 체크 추가
+            if isinstance(info, dict):
+                if info.get('type') == 'file':
+                    total_files += 1
+                    total_size += info.get('size', 0)
+                elif info.get('type') == 'directory':
+                    total_dirs += 1
+                    contents = info.get('contents', {})
+                    if isinstance(contents, dict):
+                        count_items(contents)
+    
     count_items(structure)
 
     return {

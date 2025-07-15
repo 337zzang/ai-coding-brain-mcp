@@ -1,0 +1,49 @@
+{
+  "command": "/status",
+  "result": {
+    "success": true,
+    "status": {
+      "status": "active",
+      "plan_id": "27019e1a-78c3-4c0b-a826-67f17211c865",
+      "plan_name": "영속적 히스토리 시스템 구축",
+      "total_tasks": 4,
+      "completed_tasks": 2,
+      "current_task": {
+        "id": "4a5dec9c-854e-4b1b-ae00-ba37baee9ffe",
+        "title": "테스트 및 검증",
+        "description": "",
+        "status": "in_progress",
+        "created_at": "2025-07-15T13:33:58.194102+09:00",
+        "updated_at": "2025-07-15T16:30:30.382827",
+        "started_at": "2025-07-15T16:30:30.382827",
+        "completed_at": null,
+        "duration": null,
+        "notes": [],
+        "outputs": {}
+      },
+      "progress": 50.0
+    },
+    "message": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 영속적 히스토리 시스템 구축\n진행률: 50.0% (2/4)\n현재 태스크: 테스트 및 검증\n태스크 상태: in_progress"
+  },
+  "workflow_status": {
+    "status": "active",
+    "plan_id": "27019e1a-78c3-4c0b-a826-67f17211c865",
+    "plan_name": "영속적 히스토리 시스템 구축",
+    "total_tasks": 4,
+    "completed_tasks": 2,
+    "current_task": {
+      "id": "4a5dec9c-854e-4b1b-ae00-ba37baee9ffe",
+      "title": "테스트 및 검증",
+      "description": "",
+      "status": "in_progress",
+      "created_at": "2025-07-15T13:33:58.194102+09:00",
+      "updated_at": "2025-07-15T16:30:30.382827",
+      "started_at": "2025-07-15T16:30:30.382827",
+      "completed_at": null,
+      "duration": null,
+      "notes": [],
+      "outputs": {}
+    },
+    "progress": 50.0
+  }
+}

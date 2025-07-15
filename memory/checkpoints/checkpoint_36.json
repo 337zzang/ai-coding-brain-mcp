@@ -1,0 +1,29 @@
+{
+  "command": "/task 대화 간 히스토리 연속성 구현",
+  "result": {
+    "success": true,
+    "task_id": "f7e1330f-f8c8-44b4-b9be-6819435ec124",
+    "message": "태스크 추가됨: 대화 간 히스토리 연속성 구현"
+  },
+  "workflow_status": {
+    "status": "active",
+    "plan_id": "27019e1a-78c3-4c0b-a826-67f17211c865",
+    "plan_name": "영속적 히스토리 시스템 구축",
+    "total_tasks": 4,
+    "completed_tasks": 1,
+    "current_task": {
+      "id": "96c92b26-e5f0-4e25-b8c0-5bb278ccd638",
+      "title": "대화 간 히스토리 연속성 구현",
+      "description": "",
+      "status": "todo",
+      "created_at": "2025-07-15T13:33:58.182102+09:00",
+      "updated_at": "2025-07-15T13:33:58.182102+09:00",
+      "started_at": null,
+      "completed_at": null,
+      "duration": null,
+      "notes": [],
+      "outputs": {}
+    },
+    "progress": 25.0
+  }
+}

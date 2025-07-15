@@ -1,0 +1,17 @@
+{
+  "command": "/list",
+  "result": {
+    "success": true,
+    "tasks": [],
+    "message": "\n=== 📋 태스크 목록 ===\n태스크가 없습니다"
+  },
+  "workflow_status": {
+    "status": "active",
+    "plan_id": "9caa947a-5a6b-4601-a2b8-abbf3bca8a29",
+    "plan_name": "새로운 기능 개발",
+    "total_tasks": 0,
+    "completed_tasks": 0,
+    "current_task": null,
+    "progress": 0.0
+  }
+}

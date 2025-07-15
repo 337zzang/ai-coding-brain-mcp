@@ -1,0 +1,8 @@
+{
+  "test_type": "integration",
+  "components": [
+    "json_repl",
+    "workflow",
+    "history"
+  ]
+}

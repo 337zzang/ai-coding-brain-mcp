@@ -1,0 +1,54 @@
+[
+  {
+    "id": 1,
+    "timestamp": "2025-07-15 13:20:56",
+    "action": "프로젝트 생성",
+    "details": "ai-coding-brain-mcp 초기화",
+    "conversation_id": "conv_20250715_13"
+  },
+  {
+    "id": 2,
+    "timestamp": "2025-07-15 13:20:56",
+    "action": "의존성 설치",
+    "details": "필수 패키지 설치 완료",
+    "conversation_id": "conv_20250715_13"
+  },
+  {
+    "id": 3,
+    "timestamp": "2025-07-15 13:20:56",
+    "action": "초기 설정 완료",
+    "details": "프로젝트 구조 생성",
+    "conversation_id": "conv_20250715_13",
+    "checkpoint": "checkpoints/checkpoint_3.json"
+  },
+  {
+    "id": 4,
+    "timestamp": "2025-07-15 13:20:56",
+    "action": "코드 생성",
+    "details": "헬퍼 함수 추가",
+    "conversation_id": "conv_20250715_13",
+    "checkpoint": "checkpoints/checkpoint_4.json"
+  },
+  {
+    "id": 5,
+    "timestamp": "2025-07-15 13:20:56",
+    "action": "테스트 작성",
+    "details": "단위 테스트 5개 작성",
+    "conversation_id": "conv_20250715_13"
+  },
+  {
+    "id": 6,
+    "timestamp": "2025-07-15 13:21:44",
+    "action": "프로젝트 분석 중단",
+    "details": "87/150 파일 완료 (58%)",
+    "conversation_id": "conv_20250715_13",
+    "checkpoint": "checkpoints/checkpoint_6.json"
+  },
+  {
+    "id": 7,
+    "timestamp": "2025-07-15 13:21:44",
+    "action": "프로젝트 분석 재개",
+    "details": "중단 지점(87개)부터 계속",
+    "conversation_id": "conv_20250715_13"
+  }
+]

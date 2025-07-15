@@ -1,5 +1,6 @@
 # AI Coding Brain 영속적 헬퍼 시스템 v1.0
 import time, random, json, os
+import os
 from datetime import datetime
 
 # ===== 핵심 헬퍼 함수 정의 =====

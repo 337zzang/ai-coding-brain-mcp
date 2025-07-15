@@ -79,6 +79,9 @@ class AIHelpersV2:
         if not AI_HELPERS_V2_LOADED:
             print("⚠️ AI Helpers v2가 로드되지 않았습니다. 기능이 제한될 수 있습니다.")
             return
+        
+        # 영속적 히스토리 매니저 추가
+        self._history_manager = None
             
         # File operations
         self.read_file = read_file
@@ -149,82 +152,244 @@ class AIHelpersV2:
         # Workflow 매니저 초기화
         self._workflow_manager = None
         
-    def _flow_project(self, project_name, auto_proceed=True):
-        """프로젝트 전환 및 컨텍스트 로드 (개선된 버전)"""
+        # 히스토리 관련 메서드 추가
+        self.add_history_action = self._add_history_action
+        self.get_history = self._get_history
+        self.continue_from_last = self._continue_from_last
+        self.show_history = self._show_history
+        
+        # 프로젝트 관리 메서드 추가
+        self.list_desktop_projects = self._list_desktop_projects
+        self.get_project_info = self._get_project_info
+        
+    def _add_history_action(self, action, details=None, data=None):
+        """히스토리에 액션 추가 (영속적 저장)"""
+        if self._history_manager is None:
+            self._init_history_manager()
+        return self._history_manager.add_action(action, details, data)
+    
+    def _get_history(self, limit=None):
+        """히스토리 조회"""
+        if self._history_manager is None:
+            self._init_history_manager()
+        history = self._history_manager._load_history()
+        if limit:
+            return history[-limit:] if len(history) > limit else history
+        return history
+    
+    def _continue_from_last(self):
+        """마지막 작업에서 이어서 시작"""
+        if self._history_manager is None:
+            self._init_history_manager()
+        return self._history_manager.continue_from_last()
+    
+    def _show_history(self, limit=10):
+        """히스토리 표시"""
+        if self._history_manager is None:
+            self._init_history_manager()
+        self._history_manager.show_history(limit)
+    
+    def _init_history_manager(self):
+        """히스토리 매니저 초기화"""
+        from persistent_history import PersistentHistoryManager
+        self._history_manager = PersistentHistoryManager()
+    
+    def _list_desktop_projects(self):
+        """바탕화면의 프로젝트 목록 조회"""
+        from pathlib import Path
+        desktop = Path.home() / "Desktop"
+        projects = []
+        
+        for item in desktop.iterdir():
+            if item.is_dir() and (item / "memory").exists():
+                # 프로젝트 메타데이터 확인
+                project_json = item / "memory" / "project.json"
+                if project_json.exists():
+                    try:
+                        import json
+                        with open(project_json, 'r', encoding='utf-8') as f:
+                            metadata = json.load(f)
+                            projects.append({
+                                "name": item.name,
+                                "path": str(item),
+                                "created": metadata.get("created_at", "Unknown"),
+                                "type": metadata.get("type", "unknown")
+                            })
+                    except:
+                        # project.json이 없어도 memory 폴더가 있으면 프로젝트로 간주
+                        projects.append({
+                            "name": item.name,
+                            "path": str(item),
+                            "created": "Unknown",
+                            "type": "legacy"
+                        })
+        
+        return projects
+    
+    def _get_project_info(self, project_name=None):
+        """프로젝트 정보 조회"""
+        from pathlib import Path
+        
+        if project_name is None:
+            # 현재 프로젝트 정보
+            project_path = Path.cwd()
+            project_name = project_path.name
+        else:
+            # 특정 프로젝트 정보
+            project_path = Path.home() / "Desktop" / project_name
+            if not project_path.exists():
+                return None
+        
+        memory_path = project_path / "memory"
+        if not memory_path.exists():
+            return None
+        
+        # 메모리 사용량 계산
+        total_size = 0
+        file_count = 0
+        for file in memory_path.rglob("*"):
+            if file.is_file():
+                total_size += file.stat().st_size
+                file_count += 1
+        
+        # 워크플로우 상태 확인
+        workflow_file = memory_path / "workflow.json"
+        has_active_workflow = False
+        if workflow_file.exists():
+            try:
+                import json
+                with open(workflow_file, 'r', encoding='utf-8') as f:
+                    workflow_data = json.load(f)
+                    has_active_workflow = bool(workflow_data.get("active_plan_id"))
+            except:
+                pass
+        
+        return {
+            "name": project_name,
+            "path": str(project_path),
+            "memory_files": file_count,
+            "memory_size_kb": total_size / 1024,
+            "has_workflow": workflow_file.exists(),
+            "has_active_workflow": has_active_workflow,
+            "has_history": (memory_path / "workflow_history.json").exists()
+        }
+        
+    def _flow_project(self, project_name, desktop=True):
+        """프로젝트 전환 및 컨텍스트 로드 (바탕화면 기반)"""
         import json
         from datetime import datetime
+        from pathlib import Path
         
         try:
-            # 프로젝트 디렉토리 생성
-            projects_dir = "projects"
-            if not os.path.exists(projects_dir):
-                os.makedirs(projects_dir)
+            # 바탕화면 또는 하위 프로젝트 경로 결정
+            if desktop:
+                # 바탕화면에 프로젝트 생성 (기본값)
+                project_path = Path.home() / "Desktop" / project_name
+            else:
+                # 기존 방식 (하위 프로젝트)
+                projects_dir = Path("projects")
+                projects_dir.mkdir(exist_ok=True)
+                project_path = projects_dir / project_name
             
-            project_path = os.path.join(projects_dir, project_name)
-            if not os.path.exists(project_path):
-                # 프로젝트 구조 생성
-                structure = {
-                    project_name: {
-                        "src": {},
-                        "docs": {
-                            "README.md": f"# {project_name}\n\n생성일: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-                        },
-                        "tests": {},
-                        "memory": {
-                            "context.json": json.dumps({
-                                "name": project_name,
-                                "created_at": datetime.now().isoformat(),
-                                "tasks": [],
-                                "notes": []
-                            }, indent=2)
-                        }
-                    }
+            # 현재 프로젝트 백업 (프로젝트별 memory에 저장)
+            if hasattr(self, 'get_current_project'):
+                current = self.get_current_project()
+                if current and current.get('name'):
+                    current_memory = Path(current['path']) / "memory"
+                    if current_memory.exists():
+                        # 현재 워크플로우 백업
+                        current_workflow = Path("memory/workflow.json")
+                        if current_workflow.exists():
+                            backup_path = current_memory / "workflow_backup.json"
+                            import shutil
+                            shutil.copy2(current_workflow, backup_path)
+                            print(f"💾 워크플로우 백업: {backup_path}")
+            
+            # 프로젝트 디렉토리 생성
+            is_new = not project_path.exists()
+            if is_new:
+                print(f"🆕 새 프로젝트 생성: {project_name}")
+                project_path.mkdir(parents=True, exist_ok=True)
+                
+                # 기본 구조 생성
+                (project_path / "src").mkdir(exist_ok=True)
+                (project_path / "docs").mkdir(exist_ok=True)
+                (project_path / "tests").mkdir(exist_ok=True)
+                (project_path / "memory").mkdir(exist_ok=True)
+                (project_path / "memory" / "checkpoints").mkdir(exist_ok=True)
+                
+                # README 생성
+                readme_content = f"""# {project_name}
+
+Created: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+Location: {"Desktop" if desktop else "Subproject"}
+
+## Structure
+- `src/` - Source code
+- `docs/` - Documentation  
+- `tests/` - Test files
+- `memory/` - Project memory and state
+  - `workflow.json` - Current workflow
+  - `workflow_history.json` - Action history
+  - `checkpoints/` - State snapshots
+"""
+                (project_path / "README.md").write_text(readme_content, encoding='utf-8')
+                
+                # 프로젝트 메타데이터
+                metadata = {
+                    "project_name": project_name,
+                    "created_at": datetime.now().isoformat(),
+                    "path": str(project_path),
+                    "type": "desktop" if desktop else "subproject"
                 }
                 
-                # AI Helpers v2로 프로젝트 구조 생성
-                self.create_project_structure("projects", structure)
-                print(f"✅ 프로젝트 구조 생성 완료: {project_path}")
+                (project_path / "memory" / "project.json").write_text(
+                    json.dumps(metadata, indent=2), encoding='utf-8'
+                )
+            else:
+                print(f"📂 기존 프로젝트로 전환: {project_name}")
             
-            # 컨텍스트 업데이트
-            context_file = os.path.join(project_path, "memory", "context.json")
-            context = {
-                "project_name": project_name,
-                "switched_at": datetime.now().isoformat(),
-                "status": "active",
-                "workflow_status": {
-                    "phase": "initialized",
-                    "tasks": []
-                }
-            }
+            # 작업 디렉토리 변경
+            os.chdir(str(project_path))
             
-            if os.path.exists(context_file):
-                with open(context_file, 'r', encoding='utf-8') as f:
-                    existing = json.load(f)
-                    context.update(existing)
-                    context["switched_at"] = datetime.now().isoformat()
+            # 프로젝트별 memory 디렉토리 확인
+            memory_dir = Path("memory")
+            memory_dir.mkdir(exist_ok=True)
             
-            with open(context_file, 'w', encoding='utf-8') as f:
-                json.dump(context, f, indent=2)
+            # 프로젝트별 워크플로우 로드
+            project_workflow = memory_dir / "workflow.json"
+            if project_workflow.exists():
+                # 전역 memory 폴더로 복사 (호환성 유지)
+                global_memory = Path("memory")
+                if not global_memory.samefile(memory_dir):
+                    global_memory.mkdir(exist_ok=True)
+                    import shutil
+                    shutil.copy2(project_workflow, global_memory / "workflow.json")
+                print(f"✅ 프로젝트 워크플로우 로드")
             
-            # file_directory.md 생성/업데이트
-            self._update_file_directory(project_path)
+            # 워크플로우/히스토리 매니저 재초기화
+            self._workflow_manager = None
+            self._history_manager = None
             
-            # 현재 프로젝트 백업 (이전 프로젝트가 있었다면)
-            self._backup_current_context()
+            # file_directory.md 업데이트
+            self._update_file_directory(str(project_path))
             
             print(f"\n✅ 프로젝트 '{project_name}'로 전환 완료!")
-            print(f"📁 경로: {os.path.abspath(project_path)}")
-            print(f"📄 file_directory.md 업데이트 완료")
+            print(f"📁 경로: {project_path.absolute()}")
+            print(f"💾 모든 데이터는 {project_path}/memory/에 저장됩니다")
             
             return {
                 "success": True,
                 "project_name": project_name,
-                "path": os.path.abspath(project_path),
-                "context": context
+                "path": str(project_path.absolute()),
+                "is_new": is_new,
+                "type": "desktop" if desktop else "subproject"
             }
             
         except Exception as e:
             print(f"❌ flow_project 오류: {e}")
+            import traceback
+            traceback.print_exc()
             return {"success": False, "error": str(e)}
     
     def _update_file_directory(self, project_path: str):
@@ -299,8 +464,27 @@ class AIHelpersV2:
             # 명령 실행
             result = self._workflow_manager.process_command(command)
             
-            # 성공 시 메시지 반환
+            # 히스토리에 기록
             if result.get('success'):
+                # 히스토리 매니저 초기화
+                if self._history_manager is None:
+                    self._init_history_manager()
+                
+                # 워크플로우 명령을 히스토리에 추가
+                action_data = {
+                    "command": command,
+                    "result": result,
+                    "workflow_status": self._workflow_manager.get_status()
+                }
+                self._history_manager.add_action(
+                    f"워크플로우 명령: {command.split()[0]}",
+                    result.get('message', ''),
+                    action_data
+                )
+                
+                # 워크플로우 데이터와 동기화
+                self._history_manager.sync_with_workflow(self._workflow_manager.data)
+                
                 return result.get('message', '완료')
             else:
                 return f"Error: {result.get('message', '알 수 없는 오류')}"
@@ -418,6 +602,24 @@ def initialize_repl():
     # 프로젝트 전환
     if hasattr(helpers, 'flow_project'):
         critical_funcs['flow_project'] = helpers.flow_project
+        critical_funcs['fp'] = helpers.flow_project  # 짧은 별칭
+    
+    # 프로젝트 관리
+    if hasattr(helpers, 'list_desktop_projects'):
+        critical_funcs['list_projects'] = helpers.list_desktop_projects
+        critical_funcs['lp'] = helpers.list_desktop_projects  # 짧은 별칭
+    
+    if hasattr(helpers, 'get_project_info'):
+        critical_funcs['project_info'] = helpers.get_project_info
+        critical_funcs['pi'] = helpers.get_project_info  # 짧은 별칭
+    
+    # 히스토리 관련 함수
+    if hasattr(helpers, 'add_history_action'):
+        critical_funcs['add_history_action'] = helpers.add_history_action
+        critical_funcs['add_history'] = helpers.add_history_action  # 짧은 별칭
+        critical_funcs['show_history'] = helpers.show_history
+        critical_funcs['continue_from_last'] = helpers.continue_from_last
+        critical_funcs['get_history'] = helpers.get_history
     
     for name, func in critical_funcs.items():
         if callable(func):
@@ -476,6 +678,33 @@ def initialize_repl():
     except Exception as e:
         sys.stderr.write(f"⚠️ Git Manager 초기화 실패: {e}\n")
         git_manager = None
+    
+    # 6. 이전 작업 컨텍스트 표시 (새로 추가)
+    try:
+        if hasattr(helpers, '_history_manager') and helpers._history_manager:
+            # 마지막 세션 요약 표시
+            summary = helpers._history_manager.get_last_session_summary()
+            if summary:
+                print("\n📋 이전 세션 요약:")
+                print(f"   마지막 작업: {summary['end_time']}")
+                print(f"   총 {summary['total_actions']}개 작업 수행")
+                if summary['major_actions']:
+                    print("   주요 작업:")
+                    for action in summary['major_actions'][:3]:
+                        print(f"     - {action['action']}")
+                
+                # 이어서 작업할지 제안
+                print("\n💡 이전 작업을 이어서 하려면 continue_from_last()를 실행하세요.")
+                
+            # 워크플로우 상태 확인
+            if hasattr(helpers, 'get_workflow_status'):
+                status = helpers.get_workflow_status()
+                if status and status.get('active_plan'):
+                    print(f"\n🚀 진행 중인 워크플로우: {status['active_plan']['name']}")
+                    print(f"   현재 태스크: {status.get('current_task', '없음')}")
+    except Exception as e:
+        # 초기화 중 오류는 무시 (사용자에게 혼란을 주지 않기 위해)
+        pass
 
 # ============================================================================
 # 💻 코드 실행
@@ -649,6 +878,22 @@ def main():
     
     # 초기화
     initialize_repl()
+    
+    # 이전 세션 정보 표시
+    try:
+        from persistent_history import PersistentHistoryManager
+        history_manager = PersistentHistoryManager()
+        sync_data = history_manager.get_workflow_sync_data()
+        
+        if sync_data['total_actions'] > 0:
+            print("\n📊 이전 세션 정보:")
+            print(f"   총 작업: {sync_data['total_actions']}개")
+            print(f"   대화 수: {sync_data['conversations']}개")
+            if sync_data['last_action']:
+                print(f"   마지막 작업: {sync_data['last_action']['action']} ({sync_data['last_action']['timestamp']})")
+            print("\n💡 continue_from_last()로 이전 작업을 이어갈 수 있습니다.")
+    except Exception:
+        pass
     
     # 준비 완료 신호
     print("__READY__", flush=True)

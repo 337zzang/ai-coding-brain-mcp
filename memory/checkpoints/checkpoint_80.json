@@ -1,0 +1,16 @@
+{
+  "command": "/error 테스트 중 문제 발생",
+  "result": {
+    "success": true,
+    "message": "에러 보고됨: 워크플로우 명령어 테스트"
+  },
+  "workflow_status": {
+    "status": "active",
+    "plan_id": "27019e1a-78c3-4c0b-a826-67f17211c865",
+    "plan_name": "영속적 히스토리 시스템 구축",
+    "total_tasks": 5,
+    "completed_tasks": 3,
+    "current_task": null,
+    "progress": 60.0
+  }
+}

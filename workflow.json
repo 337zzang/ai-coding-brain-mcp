@@ -1,0 +1,25 @@
+{
+  "name": "ai-coding-brain-mcp",
+  "version": "2.0",
+  "description": "영속적 헬퍼 시스템을 갖춘 AI 코딩 도구",
+  "persistent_features": {
+    "history_tracking": true,
+    "checkpoint_system": true,
+    "cross_conversation": true,
+    "auto_recovery": true
+  },
+  "protocols": {
+    "JSON_COMMUNICATION": {
+      "purpose": "execute_code 간 변수 공유",
+      "scope": "단일 대화 내"
+    },
+    "FILE_PERSISTENCE": {
+      "purpose": "대화 간 데이터 영속성",
+      "scope": "모든 대화에 걸쳐"
+    }
+  },
+  "usage_stats": {
+    "total_actions": 7,
+    "checkpoint_count": 3
+  }
+}

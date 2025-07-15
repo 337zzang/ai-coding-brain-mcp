@@ -145,6 +145,16 @@ try:
 except ImportError as e:
     logger.warning(f"⚠️ api 모듈 로드 실패: {e}")
 
+
+# Project Helpers (MCP 도구 대체)
+try:
+    from .project_helpers import (
+        project_switch, safe_flow_project, 
+        project_create, check_project_status
+    )
+except ImportError as e:
+    logger.warning(f"⚠️ project_helpers 모듈 로드 실패: {e}")
+
 # Workflow 함수 정의
 def workflow(command: str):
     """워크플로우 명령어 실행"""
@@ -270,6 +280,9 @@ __all__ = [
     'get_tracking_statistics', 'reset_tracking',
     # Legacy aliases
     'track_file_access', 'get_project_context',
+
+    # Project helpers (MCP 대체)
+    'project_switch', 'safe_flow_project', 'project_create', 'check_project_status',
 ]
 
 # Optional 모듈의 함수들도 __all__에 추가 (존재하는 경우에만)

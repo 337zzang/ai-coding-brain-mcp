@@ -11,4 +11,7 @@ from .core import get_metrics, clear_cache, get_execution_history
 
 __version__ = "2.0.0"
 
-print("🚀 AI Helpers V2 로드됨 - 프로토콜 기반 시스템")
+try:
+    print("🚀 AI Helpers V2 로드됨 - 프로토콜 기반 시스템")
+except UnicodeEncodeError:
+    print("AI Helpers V2 loaded - Protocol-based system")

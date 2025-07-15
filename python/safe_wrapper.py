@@ -1,5 +1,6 @@
 """
 Safe Wrapper - 헬퍼 함수를 안전하게 래핑하는 데코레이터 시스템
+중복 방지 버전
 """
 import functools
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -35,6 +36,8 @@ def safe_return(return_type: str = "auto"):
                     'error_type': type(e).__name__
                 }
 
+        # 안전한 함수임을 표시
+        wrapper._is_safe_wrapper = True
         return wrapper
     return decorator
 
@@ -192,113 +195,106 @@ def create_safe_helpers(helpers_obj):
 
     # 안전한 래퍼 함수들 정의
     @safe_return("parse")
-    def parse_file(filename):
+    def safe_parse_file(filename):
         """파일을 파싱하여 함수, 클래스 등을 추출"""
         return helpers_obj.parse_with_snippets(filename)
 
     @safe_return("search")
-    def search_code(path, pattern, file_pattern="*"):
+    def safe_search_code(path, pattern, file_pattern="*"):
         """코드에서 패턴 검색"""
         return helpers_obj.search_code(path, pattern, file_pattern)
 
     @safe_return("search")  
-    def find_function(path, name):
+    def safe_find_function(path, name):
         """함수 찾기"""
         return helpers_obj.find_function(path, name)
 
     @safe_return("search")
-    def find_class(path, name):
+    def safe_find_class(path, name):
         """클래스 찾기"""
         return helpers_obj.find_class(path, name)
 
     @safe_return("git")
-    def git_status():
+    def safe_git_status():
         """Git 상태 확인"""
         return helpers_obj.git_status()
 
     @safe_return("replace")
-    def replace_block(file, old_code, new_code):
+    def safe_replace_block(file, old_code, new_code):
         """코드 블록 교체"""
         return helpers_obj.replace_block(file, old_code, new_code)
 
     @safe_return("scan")
-    def scan_directory(path="."):
+    def safe_scan_directory(path="."):
         """디렉토리 스캔"""
         return helpers_obj.scan_directory_dict(path)
 
-    # 기타 안전한 래퍼들
-    def read_file(path):
-        """파일 읽기 (원본 그대로)"""
-        return helpers_obj.read_file(path)
-
-    def write_file(path, content):
-        """파일 쓰기 (원본 그대로)"""
-        return helpers_obj.write_file(path, content)
-
-    def create_file(path, content):
-        """파일 생성 (원본 그대로)"""
-        return helpers_obj.create_file(path, content)
-
-    # workflow는 원본 그대로
-    def workflow(command):
-        """워크플로우 명령"""
-        return helpers_obj.execute_workflow_command(command)
-
-    # git 명령들
-    def git_add(path):
-        """Git add"""
-        return helpers_obj.git_add(path)
-
-    def git_commit(message):
-        """Git commit"""
-        return helpers_obj.git_commit(message)
-
-    def git_push():
-        """Git push"""
-        return helpers_obj.git_push()
-
-    # 모든 안전한 함수들을 딕셔너리로 반환
+    # 안전한 함수들을 딕셔너리로 반환 (safe_ 접두사 포함)
     return {
-        # 파일 작업
-        'parse_file': parse_file,
-        'read_file': read_file,
-        'write_file': write_file,
-        'create_file': create_file,
-
-        # 검색
-        'search_code': search_code,
-        'find_function': find_function,
-        'find_class': find_class,
-
-        # 코드 수정
-        'replace_block': replace_block,
-
-        # Git
-        'git_status': git_status,
-        'git_add': git_add,
-        'git_commit': git_commit,
-        'git_push': git_push,
-
-        # 디렉토리
-        'scan_directory': scan_directory,
-
-        # 워크플로우
-        'workflow': workflow,
-        'wf': workflow,  # 단축 버전
+        # 파일 작업 - 새로운 이름으로만
+        'safe_parse_file': safe_parse_file,
+        'safe_search_code': safe_search_code,
+        'safe_find_function': safe_find_function,
+        'safe_find_class': safe_find_class,
+        'safe_replace_block': safe_replace_block,
+        'safe_git_status': safe_git_status,
+        'safe_scan_directory': safe_scan_directory,
     }
 
 def register_safe_helpers(helpers_obj, globals_dict):
-    """안전한 헬퍼들을 전역 네임스페이스에 등록"""
+    """안전한 헬퍼들을 전역 네임스페이스에 등록 (중복 방지)"""
     safe_funcs = create_safe_helpers(helpers_obj)
 
-    # 전역 네임스페이스에 등록
-    for name, func in safe_funcs.items():
-        globals_dict[name] = func
+    registered = []
+    skipped = []
+    replaced = []
 
-    # 사용 가능한 함수 목록 출력
-    print("✅ 안전한 헬퍼 함수 등록 완료:", file=sys.stderr)
-    for name in sorted(safe_funcs.keys()):
-        if not name.startswith('_'):
-            print(f"  - {name}()", file=sys.stderr)
+    # 우선순위 정의
+    priority_functions = {
+        'parse_file': 'safe_parse_file',
+        'search_code': 'safe_search_code', 
+        'find_function': 'safe_find_function',
+        'find_class': 'safe_find_class',
+        'replace_block': 'safe_replace_block',
+        'git_status': 'safe_git_status',
+        'scan_directory': 'safe_scan_directory',
+    }
+
+    # 기존 함수가 안전한 버전이 아닌 경우만 교체
+    for original_name, safe_name in priority_functions.items():
+        if safe_name in safe_funcs:
+            if original_name in globals_dict:
+                # 기존 함수가 안전한 버전인지 확인
+                existing_func = globals_dict[original_name]
+                if hasattr(existing_func, '_is_safe_wrapper'):
+                    skipped.append(original_name)
+                else:
+                    # 안전한 버전으로 교체
+                    globals_dict[original_name] = safe_funcs[safe_name]
+                    replaced.append(original_name)
+            else:
+                # 새로 등록
+                globals_dict[original_name] = safe_funcs[safe_name]
+                registered.append(original_name)
+
+    # safe_ 버전도 등록 (별칭으로)
+    for safe_name, func in safe_funcs.items():
+        if safe_name not in globals_dict:
+            globals_dict[safe_name] = func
+            registered.append(safe_name)
+
+    # 결과 출력
+    print("✅ Safe Helper 등록 완료:", file=sys.stderr)
+    if registered:
+        print(f"  새로 등록: {', '.join(registered)}", file=sys.stderr)
+    if replaced:
+        print(f"  교체됨: {', '.join(replaced)}", file=sys.stderr)
+    if skipped:
+        print(f"  건너뜀 (이미 안전): {', '.join(skipped)}", file=sys.stderr)
 
     return safe_funcs
+
+# 함수가 안전한 버전인지 확인하는 유틸리티
+def is_safe_function(func):
+    """함수가 안전한 래퍼인지 확인"""
+    return hasattr(func, '_is_safe_wrapper') and func._is_safe_wrapper

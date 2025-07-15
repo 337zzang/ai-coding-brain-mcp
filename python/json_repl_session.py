@@ -629,65 +629,16 @@ def initialize_repl():
     import numpy as np
     import pandas as pd
     
-    # 표준 라이브러리 추가 임포트
-    import re
-    import glob
-    import shutil
-    import subprocess
-    import random
-    import itertools
-    from collections import defaultdict, Counter
-    from datetime import datetime, date, timedelta
-    
     repl_globals.update({
         'os': os,
         'sys': sys,
         'json': json,
         'Path': Path,
-        'datetime': dt,  # 기존 호환성 유지
-        'dt': dt,  # 명시적으로 dt도 추가
+        'datetime': dt,
         'np': np,
         'pd': pd,
         'time': time,
-        # 새로 추가된 모듈들
-        're': re,
-        'glob': glob,
-        'shutil': shutil,
-        'subprocess': subprocess,
-        'random': random,
-        'itertools': itertools,
-        'defaultdict': defaultdict,
-        'Counter': Counter,
-        # datetime 관련
-        'datetime': datetime,  # datetime.datetime을 datetime으로도 사용 가능
-        'date': date,
-        'timedelta': timedelta,
     })
-    
-    # 자주 사용하는 함수들을 최상위로 노출
-    useful_funcs = {
-        'join': os.path.join,
-        'exists': os.path.exists,
-        'makedirs': os.makedirs,
-        'basename': os.path.basename,
-        'dirname': os.path.dirname,
-        'abspath': os.path.abspath,
-        'getcwd': os.getcwd,
-        'chdir': os.chdir,
-        'listdir': os.listdir,
-        'isfile': os.path.isfile,
-        'isdir': os.path.isdir,
-        # 이미 helpers에 있는 것과 충돌하지 않도록 주의
-        'copy': shutil.copy,
-        'copy2': shutil.copy2,
-        'move': shutil.move,
-        'rmtree': shutil.rmtree,
-    }
-    
-    # helpers의 함수와 충돌하지 않는 것만 추가
-    for name, func in useful_funcs.items():
-        if name not in critical_funcs and name not in repl_globals:
-            repl_globals[name] = func
     
     # 4. 프로젝트 자동 초기화 (현재 디렉토리)
     try:
@@ -727,33 +678,6 @@ def initialize_repl():
     except Exception as e:
         sys.stderr.write(f"⚠️ Git Manager 초기화 실패: {e}\n")
         git_manager = None
-    
-    # 6. 이전 작업 컨텍스트 표시 (새로 추가)
-    try:
-        if hasattr(helpers, '_history_manager') and helpers._history_manager:
-            # 마지막 세션 요약 표시
-            summary = helpers._history_manager.get_last_session_summary()
-            if summary:
-                print("\n📋 이전 세션 요약:")
-                print(f"   마지막 작업: {summary['end_time']}")
-                print(f"   총 {summary['total_actions']}개 작업 수행")
-                if summary['major_actions']:
-                    print("   주요 작업:")
-                    for action in summary['major_actions'][:3]:
-                        print(f"     - {action['action']}")
-                
-                # 이어서 작업할지 제안
-                print("\n💡 이전 작업을 이어서 하려면 continue_from_last()를 실행하세요.")
-                
-            # 워크플로우 상태 확인
-            if hasattr(helpers, 'get_workflow_status'):
-                status = helpers.get_workflow_status()
-                if status and status.get('active_plan'):
-                    print(f"\n🚀 진행 중인 워크플로우: {status['active_plan']['name']}")
-                    print(f"   현재 태스크: {status.get('current_task', '없음')}")
-    except Exception as e:
-        # 초기화 중 오류는 무시 (사용자에게 혼란을 주지 않기 위해)
-        pass
 
 # ============================================================================
 # 💻 코드 실행
@@ -884,6 +808,12 @@ def main():
     """메인 실행 루프"""
     global repl_globals
     
+    # 필요한 모듈 import
+    import sys
+    import platform
+    import subprocess
+    import os
+    
     # Windows UTF-8 설정
     if platform.system() == 'Windows':
         try:
@@ -927,6 +857,35 @@ def main():
     
     # 초기화
     initialize_repl()
+    
+    # ============================================================================
+    # 🛡️ Safe Wrapper 자동 로드
+    # ============================================================================
+    try:
+        # safe_wrapper 모듈 import
+        import sys
+        import os
+        
+        # 프로젝트 루트의 python 디렉토리를 경로에 추가  
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        python_dir = os.path.join(project_root, 'python')
+        if python_dir not in sys.path:
+            sys.path.insert(0, python_dir)
+        
+        from safe_wrapper import register_safe_helpers
+        
+        # helpers가 repl_globals에 있는지 확인
+        if 'helpers' in repl_globals:
+            # 안전한 헬퍼 함수들을 전역에 등록
+            register_safe_helpers(repl_globals['helpers'], repl_globals)
+            print("✅ Safe Helper 함수 로드 완료", file=sys.stderr)
+        else:
+            print("⚠️ helpers를 찾을 수 없어 Safe Helper 로드 건너뜀", file=sys.stderr)
+            
+    except Exception as e:
+        print(f"❌ Safe Helper 로드 실패: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
     
     # 이전 세션 정보 표시
     try:

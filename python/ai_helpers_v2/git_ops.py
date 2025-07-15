@@ -3,7 +3,7 @@ Git 작업 - 프로토콜 추적 포함
 """
 import subprocess
 import os
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from .core import track_execution
 
 def run_git_command(args: List[str], cwd: str = ".") -> Dict[str, Any]:
@@ -67,11 +67,14 @@ def git_status(cwd: str = ".") -> Dict[str, Any]:
     }
 
 @track_execution
-def git_add(files: List[str] = None, all: bool = False, cwd: str = ".") -> Dict[str, Any]:
+def git_add(files: Union[str, List[str]] = None, all: bool = False, cwd: str = ".") -> Dict[str, Any]:
     """파일을 스테이징"""
     if all:
         args = ['add', '-A']
     elif files:
+        # 문자열이면 리스트로 변환
+        if isinstance(files, str):
+            files = [files]
         args = ['add'] + files
     else:
         return {

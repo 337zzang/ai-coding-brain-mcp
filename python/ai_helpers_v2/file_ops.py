@@ -4,6 +4,8 @@
 import os
 import json
 import yaml
+import tempfile
+import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from .core import track_execution
@@ -17,7 +19,7 @@ def read_file(filepath: str, encoding: str = 'utf-8') -> str:
 @track_execution
 @track_execution
 def write_file(filepath: str, content: str, encoding: str = 'utf-8') -> bool:
-    """파일 쓰기 (경로 문제 수정됨)"""
+    """파일 쓰기 (원자적 저장으로 개선)"""
     # 빈 경로 체크
     if not filepath:
         raise ValueError("파일 경로가 비어있습니다")
@@ -32,9 +34,14 @@ def write_file(filepath: str, content: str, encoding: str = 'utf-8') -> bool:
     if dir_path and not os.path.exists(dir_path):
         os.makedirs(dir_path, exist_ok=True)
 
-    # 파일 쓰기
-    with open(abs_path, 'w', encoding=encoding) as f:
-        f.write(content)
+    # 원자적 쓰기: 임시 파일 생성 후 이동
+    with tempfile.NamedTemporaryFile('w', dir=dir_path, delete=False, encoding=encoding) as tmp:
+        tmp.write(content)
+        tmp.flush()
+        os.fsync(tmp.fileno())  # 디스크에 강제 동기화
+
+    # 원자적 이동
+    shutil.move(tmp.name, abs_path)
     return True
 def create_file(filepath: str, content: str, encoding: str = 'utf-8') -> bool:
     """파일 생성 (write_file과 동일)"""

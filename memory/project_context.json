@@ -1,0 +1,35 @@
+{
+  "analyzed_at": "2025-07-17 10:22:18",
+  "project_type": "typescript",
+  "tech_stack": [
+    "TypeScript",
+    "Node.js"
+  ],
+  "structure": {
+    "total_files": 555,
+    "source_files": 124,
+    "test_files": 53,
+    "directories": [
+      ".git",
+      ".pytest_cache",
+      "__pycache__",
+      "dist",
+      "docs",
+      "examples",
+      "generated_scripts",
+      "logs",
+      "memory",
+      "node_modules",
+      "projects",
+      "python",
+      "src",
+      "test_git_helpers",
+      "test_helpers",
+      "test_results",
+      "tests"
+    ]
+  },
+  "build_tools": [
+    "npm"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "command": "/start JSON REPL 출력 문제 해결",
+  "result": {
+    "success": true,
+    "plan_id": "3fab6f60-ae59-4b82-a9c5-b5d20fbc961a",
+    "message": "플랜 생성됨: JSON REPL 출력 문제 해결"
+  },
+  "workflow_status": {
+    "status": "active",
+    "plan_id": "3fab6f60-ae59-4b82-a9c5-b5d20fbc961a",
+    "plan_name": "JSON REPL 출력 문제 해결",
+    "total_tasks": 0,
+    "completed_tasks": 0,
+    "current_task": null,
+    "progress": 0.0
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "command": "/complete 15개 누락 함수, 8개 미문서화 함수 발견",
+  "result": {
+    "success": true,
+    "message": "태스크 완료: 문서와 구현 차이 분석"
+  },
+  "workflow_status": {
+    "status": "active",
+    "plan_id": "7092b9c2-b90a-4439-8194-7ee6517d127c",
+    "plan_name": "tool-definitions.ts 개선 및 빌드",
+    "total_tasks": 1,
+    "completed_tasks": 1,
+    "current_task": null,
+    "progress": 100.0
+  }
+}

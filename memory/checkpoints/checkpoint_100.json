@@ -1,0 +1,12 @@
+{
+  "original_size": 3456,
+  "new_size": 5188,
+  "improvements": [
+    "AI Coding Brain MCP v3.0.0",
+    "Safe Helper 함수",
+    "Helpers 객체 메서드",
+    "존재하지 않는 함수들",
+    "권장 사용 패턴",
+    "scan_directory_dict"
+  ]
+}

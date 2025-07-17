@@ -1,0 +1,16 @@
+{
+  "command": "/complete 76개 helpers 메서드 전체 문서화",
+  "result": {
+    "success": true,
+    "message": "태스크 완료: helpers 메서드 문서화"
+  },
+  "workflow_status": {
+    "status": "active",
+    "plan_id": "7092b9c2-b90a-4439-8194-7ee6517d127c",
+    "plan_name": "tool-definitions.ts 개선 및 빌드",
+    "total_tasks": 3,
+    "completed_tasks": 3,
+    "current_task": null,
+    "progress": 100.0
+  }
+}

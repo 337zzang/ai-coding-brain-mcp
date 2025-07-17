@@ -1,0 +1,10 @@
+{
+  "files_modified": [
+    "src/tools/tool-definitions.ts"
+  ],
+  "build_status": "success",
+  "issues_fixed": [
+    "pi() 함수 설명 수정",
+    "workflow-handlers.ts 경로 문제 해결"
+  ]
+}

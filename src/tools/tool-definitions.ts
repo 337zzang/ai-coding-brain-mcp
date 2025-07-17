@@ -1,153 +1,100 @@
 import { Tool } from '@modelcontextprotocol/sdk/types';
 
 /**
- * MCP 도구 정의
- * execute_code와 restart_json_repl 도구를 정의합니다.
+ * AI Coding Brain MCP - Tool Definitions
+ * 
+ * 영속적 Python REPL 세션과 프로젝트 관리를 위한 MCP 도구 모음
+ * 
+ * @version 4.0.0
+ * @updated 2025-07-16
+ * @author AI Coding Brain Team
  */
 
-export interface Tool {
-  name: string;
-  description: string;
-  inputSchema: {
-    type: 'object';
-    properties: Record<string, any>;
-    required?: string[];
-  };
-}
+// Tool schemas
+import { executeCodeSchema } from './schemas/execute-code';
+import { restartReplSchema } from './schemas/restart-repl';
 
+/**
+ * MCP 도구 정의 배열
+ * 각 도구는 name, description, inputSchema를 포함합니다.
+ */
 export const toolDefinitions: Tool[] = [
   {
     name: 'execute_code',
-    description: `Python 코드 실행 - 영속적 세션과 프로젝트 관리 도구
+    description: `Python 코드를 영속적 REPL 세션에서 실행합니다.
 
-🔄 **세션 특징**
-- 모든 변수가 execute_code 호출 간에 유지됩니다
-- 세션이 재시작되어도 파일로 저장된 데이터는 보존됩니다
-- 각 프로젝트별로 독립적인 메모리 구조를 가집니다
+핵심 기능:
+• 세션 간 변수 유지 - 모든 변수와 상태가 호출 간에 보존됩니다
+• 프로젝트별 격리 - 각 프로젝트는 독립적인 실행 환경을 가집니다
+• 검증된 헬퍼 함수 (20개) - 파일, JSON, Git, 검색, 디렉토리 작업
+• 정밀 코드 수정 - AST 기반 좌표로 정확한 수정 (NEW!)
 
-🚀 **부트스트랩 모듈 (자동 로드)**
-\`\`\`python
-# 날짜/시간 - import 없이 바로 사용
-datetime.now(), date.today(), timedelta(days=1)
+권장 헬퍼 함수:
+• 파일: read_file, write_file, create_file, append_to_file
+• JSON: read_json, write_json
+• Git: git_status, git_add, git_commit, git_push
+• 검색: search_files, search_code
+• 분석: parse_file (함수/클래스 위치 정보 제공)
 
-# 파일 시스템 - 직접 사용
-join('folder', 'file.txt')  # os.path.join 대신
-exists('file.txt'), makedirs('dir'), basename('path')
-isfile('test.py'), isdir('folder')
+코드 수정 권장 방법 (NEW!):
+• replace_function(filepath, func_name, new_code) - 함수 정밀 교체
+• replace_method(filepath, class_name, method_name, new_code) - 메서드 정밀 교체
+• extract_code_elements(filepath) - 정확한 좌표와 함께 코드 요소 추출
+• 기존 replace_block도 사용 가능 (레거시 호환)
 
-# 정규표현식, 파일 패턴, 유틸리티
-re.search(r'패턴', '텍스트')
-glob.glob('*.py')
-shutil.copy('src', 'dst')
-random.randint(1, 10)
-Counter(['a', 'b', 'a'])
-\`\`\`
-
-🎯 **핵심 헬퍼 함수 (안전한 버전 - 모든 반환값이 dict/list[dict])**
-\`\`\`python
-# 1. 코드 분석 - AST 기반 (가장 강력)
-result = parse_file("file.py")
-# 반환: {'success': bool, 'functions': [], 'classes': [], 'methods': []}
-
-# 2. 코드 검색
-results = search_code(".", "TODO", "*.py")
-# 반환: [{'file': str, 'line': int, 'text': str, 'context': []}]
-
-# 3. 코드 수정 - 안전한 블록 교체
-result = replace_block("file.py", old_code, new_code)
-# 반환: {'success': bool, 'file': str, 'backup': str, 'changes': int}
-
-# 4. Git 작업
-status = git_status()
-# 반환: {'success': bool, 'is_clean': bool, 'modified': [], 'untracked': []}
-
-# 5. 디렉토리 스캔
-scan = scan_directory(".")
-# 반환: {'files': [], 'dirs': [], 'total_files': int, 'total_dirs': int}
-\`\`\`
-
-📁 **프로젝트 관리**
-\`\`\`python
-flow_project("프로젝트명")  # 또는 fp("프로젝트명")
-list_projects()  # 또는 lp()
-project_info()   # 또는 pi()
-\`\`\`
-
-📋 **워크플로우**
-\`\`\`python
-workflow('/start 작업명')
-workflow('/task 세부작업')
-workflow('/complete 메모')
-\`\`\`
-
-⚡ **최적 사용 패턴**
-1. **parse_file + replace_block 콤보**
-   \`\`\`python
-   parsed = parse_file("main.py")
-   for func in parsed['functions']:
-       if 'TODO' in func['code']:
-           replace_block("main.py", func['code'], new_code)
-   \`\`\`
-
-2. **변수로 상태 유지**
-   \`\`\`python
-   task_context = {'phase': 1, 'files': [], 'results': []}
-   # 다음 execute_code에서도 task_context 사용 가능
-   \`\`\`
-
-3. **stdout 기반 작업 체인**
-   \`\`\`python
-   print("[NEXT_ACTION]: ANALYZE_CODE")
-   print("[CONTEXT]: task_context 변수 참조")
-   \`\`\``,
-    inputSchema: {
-      type: 'object',
-      properties: {
-        code: {
-          type: 'string',
-          description: '실행할 Python 코드'
-        },
-        language: {
-          type: 'string',
-          enum: ['python'],
-          default: 'python',
-          description: '프로그래밍 언어'
-        }
-      },
-      required: ['code']
-    }
+주의: 이제 중복 코드가 있어도 정확한 위치를 찾아 수정합니다!`,
+    inputSchema: executeCodeSchema
   },
   {
     name: 'restart_json_repl',
-    description: `JSON REPL 세션 재시작
+    description: `Python REPL 세션을 재시작합니다.
 
-세션에 문제가 발생했거나 초기화가 필요할 때 사용합니다.
-파일로 저장된 데이터(워크플로우, 히스토리)는 유지됩니다.
+주요 특징:
+• 메모리 초기화 - 누적된 변수와 상태를 정리합니다
+• 선택적 보존 - helpers 객체는 선택적으로 유지 가능합니다
+• 파일 데이터 유지 - 디스크에 저장된 데이터는 영향받지 않습니다
+• 프로젝트 컨텍스트 유지 - 현재 프로젝트 설정은 보존됩니다
 
-\`\`\`python
-restart_json_repl()              # 기본 사용 (helpers 유지)
-restart_json_repl(keep_helpers=False)  # 완전 초기화
-restart_json_repl(reason="메모리 정리")  # 이유 명시
-\`\`\`
-
-재시작 후에도:
-- 프로젝트별 memory/ 폴더의 데이터는 유지됩니다
-- continue_from_last()로 이전 작업을 복원할 수 있습니다`,
-    inputSchema: {
-      type: 'object',
-      properties: {
-        keep_helpers: {
-          type: 'boolean',
-          default: true,
-          description: 'helpers 객체 유지 여부'
-        },
-        reason: {
-          type: 'string',
-          default: '세션 새로고침',
-          description: '재시작 이유'
-        }
-      },
-      required: []
-    }
+사용 시나리오:
+- 메모리 부족 시 정리
+- 새로운 작업 시작 전 환경 초기화
+- 오류 상태에서 복구
+- 테스트를 위한 깨끗한 환경 준비`,
+    inputSchema: restartReplSchema
   }
 ];
+
+/**
+ * 도구 이름으로 도구 정의를 찾습니다
+ * @param name 도구 이름
+ * @returns 도구 정의 또는 undefined
+ */
+export function getToolByName(name: string): Tool | undefined {
+  return toolDefinitions.find(tool => tool.name === name);
+}
+
+/**
+ * 모든 도구 이름 목록을 반환합니다
+ * @returns 도구 이름 배열
+ */
+export function getToolNames(): string[] {
+  return toolDefinitions.map(tool => tool.name);
+}
+
+/**
+ * 도구 정의를 검증합니다
+ * @param tool 검증할 도구
+ * @returns 유효성 여부
+ */
+export function validateTool(tool: Tool): boolean {
+  return !!(
+    tool.name &&
+    tool.description &&
+    tool.inputSchema &&
+    typeof tool.inputSchema === 'object'
+  );
+}
+
+// Type exports for use in handlers
+export type ToolName = 'execute_code' | 'restart_json_repl';
+export type ToolDefinition = typeof toolDefinitions[number];

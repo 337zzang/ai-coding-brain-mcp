@@ -1,0 +1,16 @@
+{
+  "files_created": [
+    "python/workflow_kanban_extension.py",
+    "python/workflow_kanban_integration.py",
+    "docs/kanban_workflow_guide.md"
+  ],
+  "commands": [
+    "start",
+    "plan",
+    "task",
+    "next",
+    "status",
+    "focus"
+  ],
+  "test_status": "passed"
+}

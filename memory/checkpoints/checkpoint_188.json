@@ -1,0 +1,9 @@
+{
+  "task": "q함수 사용 방식 개선",
+  "problem": "q_tools.qp() 형태로 사용해야 하는 불편함",
+  "solution": "from q_tools import *로 global namespace에 로드",
+  "result": "34개 q함수 직접 사용 가능",
+  "functions_loaded": 34,
+  "startup_script": "startup_script.py 생성",
+  "usage_improved": "REPL 친화적 사용법 확립"
+}

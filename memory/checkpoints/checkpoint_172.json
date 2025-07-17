@@ -1,0 +1,11 @@
+{
+  "commands": [
+    "/start",
+    "/plan",
+    "/task",
+    "/next",
+    "/status",
+    "/focus"
+  ],
+  "file": "python/workflow_extension.py"
+}

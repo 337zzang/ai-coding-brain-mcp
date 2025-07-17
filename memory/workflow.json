@@ -684,12 +684,354 @@
       "archived_at": null,
       "stats": {},
       "metadata": {}
+    },
+    {
+      "id": "7092b9c2-b90a-4439-8194-7ee6517d127c",
+      "name": "tool-definitions.ts 개선 및 빌드",
+      "description": "",
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "65f04750-7a4f-47f1-a752-4ab7e1d421f1",
+          "title": "문서와 구현 차이 분석",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-15T22:27:17.125738+09:00",
+          "updated_at": "2025-07-15T22:27:17.190660",
+          "started_at": null,
+          "completed_at": "2025-07-15T22:27:17.190660",
+          "duration": null,
+          "notes": [
+            "[완료] 15개 누락 함수, 8개 미문서화 함수 발견"
+          ],
+          "outputs": {}
+        },
+        {
+          "id": "3d9eb5aa-dd73-4871-bc47-fa262daa6ab2",
+          "title": "Safe Helper 시스템 문서화",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-15T22:27:17.276451+09:00",
+          "updated_at": "2025-07-15T22:27:17.339408",
+          "started_at": null,
+          "completed_at": "2025-07-15T22:27:17.339408",
+          "duration": null,
+          "notes": [
+            "[완료] Safe Helper 함수 완전 문서화 추가"
+          ],
+          "outputs": {}
+        },
+        {
+          "id": "746cad96-1661-44fc-8941-a4b477a1ff2d",
+          "title": "helpers 메서드 문서화",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-15T22:27:17.399545+09:00",
+          "updated_at": "2025-07-15T22:27:17.445763",
+          "started_at": null,
+          "completed_at": "2025-07-15T22:27:17.445763",
+          "duration": null,
+          "notes": [
+            "[완료] 76개 helpers 메서드 전체 문서화"
+          ],
+          "outputs": {}
+        },
+        {
+          "id": "ed3163ee-3e88-451f-a3ae-9af21a28d8c5",
+          "title": "API 구조 업데이트",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-15T22:27:17.491193+09:00",
+          "updated_at": "2025-07-15T22:27:17.542768",
+          "started_at": null,
+          "completed_at": "2025-07-15T22:27:17.542768",
+          "duration": null,
+          "notes": [
+            "[완료] scan_directory_dict 새 구조 반영"
+          ],
+          "outputs": {}
+        },
+        {
+          "id": "5a0ccfe7-0057-42ac-89b1-6ac99fd0a7cc",
+          "title": "파일 교체 및 빌드 준비",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-15T22:27:17.585804+09:00",
+          "updated_at": "2025-07-15T22:27:17.626374",
+          "started_at": null,
+          "completed_at": "2025-07-15T22:27:17.626374",
+          "duration": null,
+          "notes": [
+            "[완료] 5188 bytes 새 파일로 교체 완료"
+          ],
+          "outputs": {}
+        }
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-15T22:27:17.064091+09:00",
+      "updated_at": "2025-07-15T22:27:17.064091+09:00",
+      "completed_at": "2025-07-15T22:27:17.207500",
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
+    },
+    {
+      "id": "bac863c1-b82a-4202-95ef-0902c1f7f480",
+      "name": "컴파일 테스트 시스템 구축",
+      "description": "",
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "00730401-c53e-414f-94ac-c912e1364123",
+          "title": "안전한 NPM 빌드 시스템 구현 완료",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-15T23:15:50.709054+09:00",
+          "updated_at": "2025-07-15T23:21:04.879964",
+          "started_at": null,
+          "completed_at": "2025-07-15T23:21:04.879964",
+          "duration": null,
+          "notes": [
+            "[완료] NPM 빌드 시스템 구현 및 영구 등록 완료"
+          ],
+          "outputs": {}
+        }
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-15T23:07:45.962646+09:00",
+      "updated_at": "2025-07-15T23:07:45.962646+09:00",
+      "completed_at": "2025-07-15T23:21:04.888797",
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
+    },
+    {
+      "id": "da71b731-a3c2-44a8-ae42-bff832e64f5c",
+      "name": "AI Coding Brain MCP 작업",
+      "description": "",
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "28069e27-c1be-4cd4-bff2-526a01c9c784",
+          "title": "Pylance 에러 수정",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-15T23:33:24.413998+09:00",
+          "updated_at": "2025-07-15T23:35:07.891404",
+          "started_at": null,
+          "completed_at": "2025-07-15T23:35:07.891404",
+          "duration": null,
+          "notes": [
+            "[완료] Pylance 에러 3개 수정 완료"
+          ],
+          "outputs": {}
+        }
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-15T23:31:02.164161+09:00",
+      "updated_at": "2025-07-15T23:31:02.164161+09:00",
+      "completed_at": "2025-07-15T23:35:07.893414",
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
+    },
+    {
+      "id": "5599b94e-7ae4-49e4-8d87-60358ce215cf",
+      "name": "안전한 REPL 시스템 테스트",
+      "description": "",
+      "status": "completed",
+      "tasks": [
+        {
+          "id": "21804893-41ac-4f96-8865-7dccf47587b5",
+          "title": "pi 함수 개선 - 타입 안전성 및 사용성 향상",
+          "description": "",
+          "status": "completed",
+          "created_at": "2025-07-15T23:46:21.211060+09:00",
+          "updated_at": "2025-07-15T23:47:23.555854",
+          "started_at": null,
+          "completed_at": "2025-07-15T23:47:23.555854",
+          "duration": null,
+          "notes": [
+            "[완료] pi 함수 개선 - 타입 안전성 및 사용성 향상 완료"
+          ],
+          "outputs": {}
+        }
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-15T23:39:46.152449+09:00",
+      "updated_at": "2025-07-15T23:39:46.152449+09:00",
+      "completed_at": "2025-07-15T23:47:23.562616",
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
+    },
+    {
+      "id": "9dc54bf7-67f3-429c-978f-33f0220a0d32",
+      "name": "AI Coding Brain MCP 프로젝트 분석",
+      "description": "",
+      "status": "draft",
+      "tasks": [],
+      "current_task_index": 0,
+      "created_at": "2025-07-16T00:12:01.799412+09:00",
+      "updated_at": "2025-07-16T00:12:01.799412+09:00",
+      "completed_at": null,
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
+    },
+    {
+      "id": "3fab6f60-ae59-4b82-a9c5-b5d20fbc961a",
+      "name": "JSON REPL 출력 문제 해결",
+      "description": "",
+      "status": "draft",
+      "tasks": [],
+      "current_task_index": 0,
+      "created_at": "2025-07-16T00:15:30.196981+09:00",
+      "updated_at": "2025-07-16T00:15:30.196981+09:00",
+      "completed_at": null,
+      "archived_at": null,
+      "stats": {},
+      "metadata": {}
+    },
+    {
+      "id": "kanban_1752595415",
+      "name": "AI Coding Brain 개선",
+      "description": "칸반 스타일 워크플로우",
+      "status": "active",
+      "tasks": [
+        {
+          "id": "task_1",
+          "title": "칸반 워크플로우 설계",
+          "description": "",
+          "status": "진행중",
+          "created_at": "2025-07-16T01:03:35.339623",
+          "updated_at": "2025-07-16T01:03:35.356622",
+          "metadata": {
+            "kanban_column": "진행중"
+          },
+          "started_at": "2025-07-16T01:03:35.356622"
+        },
+        {
+          "id": "task_2",
+          "title": "6개 명령어 구현",
+          "description": "",
+          "status": "백로그",
+          "created_at": "2025-07-16T01:03:35.343621",
+          "updated_at": "2025-07-16T01:03:35.343621",
+          "metadata": {
+            "kanban_column": "백로그"
+          }
+        },
+        {
+          "id": "task_3",
+          "title": "통합 테스트 작성",
+          "description": "",
+          "status": "백로그",
+          "created_at": "2025-07-16T01:03:35.349632",
+          "updated_at": "2025-07-16T01:03:35.349632",
+          "metadata": {
+            "kanban_column": "백로그"
+          }
+        },
+        {
+          "id": "task_4",
+          "title": "문서화 업데이트",
+          "description": "",
+          "status": "백로그",
+          "created_at": "2025-07-16T01:03:35.352632",
+          "updated_at": "2025-07-16T01:03:35.352632",
+          "metadata": {
+            "kanban_column": "백로그"
+          }
+        }
+      ],
+      "current_task_index": 0,
+      "created_at": "2025-07-16T01:03:35.324621",
+      "updated_at": "2025-07-16T01:03:35.361625",
+      "metadata": {
+        "kanban_mode": true,
+        "columns": [
+          "백로그",
+          "진행중",
+          "검토",
+          "완료"
+        ],
+        "focus": "워크플로우 개선"
+      }
+    },
+    {
+      "id": "plan_1752595732",
+      "name": "통합 테스트",
+      "status": "active",
+      "tasks": [
+        {
+          "id": "t1",
+          "title": "첫 번째 작업",
+          "status": "진행",
+          "created_at": "2025-07-16T01:08:52.505742"
+        },
+        {
+          "id": "t2",
+          "title": "두 번째 작업",
+          "status": "준비",
+          "created_at": "2025-07-16T01:08:52.509725"
+        }
+      ],
+      "created_at": "2025-07-16T01:08:52.499675",
+      "metadata": {
+        "stages": [
+          "준비",
+          "진행",
+          "완료"
+        ]
+      }
+    },
+    {
+      "id": "plan_1752595813",
+      "name": "AI Coding Brain 개선 작업",
+      "status": "active",
+      "tasks": [
+        {
+          "id": "t1",
+          "title": "기존 코드 분석",
+          "status": "진행",
+          "created_at": "2025-07-16T01:10:13.682840"
+        },
+        {
+          "id": "t2",
+          "title": "워크플로우 명령어 구현",
+          "status": "준비",
+          "created_at": "2025-07-16T01:10:13.687842"
+        },
+        {
+          "id": "t3",
+          "title": "통합 테스트",
+          "status": "준비",
+          "created_at": "2025-07-16T01:10:13.691839"
+        },
+        {
+          "id": "t4",
+          "title": "README 업데이트",
+          "status": "준비",
+          "created_at": "2025-07-16T01:10:13.694839"
+        }
+      ],
+      "created_at": "2025-07-16T01:10:13.675842",
+      "metadata": {
+        "stages": [
+          "분석",
+          "구현",
+          "테스트",
+          "문서화"
+        ],
+        "focus": "사용자 편의성 개선"
+      }
     }
   ],
-  "active_plan_id": null,
+  "active_plan_id": "plan_1752595813",
   "events": [],
   "version": "3.0.0",
-  "last_saved": "2025-07-15T16:37:03.435151",
+  "last_saved": "2025-07-16T01:03:35.361625",
   "metadata": {
     "last_modified": "2025-07-13T11:02:04.181585+00:00",
     "project_name": "ai-coding-brain-mcp",

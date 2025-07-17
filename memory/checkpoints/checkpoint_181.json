@@ -1,0 +1,19 @@
+{
+  "files": [
+    "python/ai_helpers_v2/ez_code.py",
+    "python/ai_helpers_v2/__init__.py",
+    "docs/ez_code_guide.md"
+  ],
+  "functions": [
+    "ez_parse",
+    "ez_replace",
+    "ez_view"
+  ],
+  "lines_of_code": 75,
+  "benefits": [
+    "662줄 → 75줄로 코드 단순화 (89% 감소)",
+    "자동 백업 기능",
+    "REPL에서 즉시 사용 가능",
+    "복잡한 객체 없이 단순한 dict 사용"
+  ]
+}

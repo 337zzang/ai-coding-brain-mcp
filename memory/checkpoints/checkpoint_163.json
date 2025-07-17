@@ -1,0 +1,17 @@
+{
+  "command": "/start AI Coding Brain MCP 프로젝트 분석",
+  "result": {
+    "success": true,
+    "plan_id": "9dc54bf7-67f3-429c-978f-33f0220a0d32",
+    "message": "플랜 생성됨: AI Coding Brain MCP 프로젝트 분석"
+  },
+  "workflow_status": {
+    "status": "active",
+    "plan_id": "9dc54bf7-67f3-429c-978f-33f0220a0d32",
+    "plan_name": "AI Coding Brain MCP 프로젝트 분석",
+    "total_tasks": 0,
+    "completed_tasks": 0,
+    "current_task": null,
+    "progress": 0.0
+  }
+}

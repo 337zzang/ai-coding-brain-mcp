@@ -1,0 +1,11 @@
+{
+  "files_created": [
+    "info_ops.py"
+  ],
+  "improvements": [
+    "ProjectInfo dataclass 추가",
+    "타입 힌트 적용",
+    "안전한 래퍼 함수 제공",
+    "IDE 자동완성 지원"
+  ]
+}

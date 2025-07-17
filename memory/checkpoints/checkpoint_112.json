@@ -1,0 +1,29 @@
+{
+  "command": "/task helpers 메서드 문서화",
+  "result": {
+    "success": true,
+    "task_id": "746cad96-1661-44fc-8941-a4b477a1ff2d",
+    "message": "태스크 추가됨: helpers 메서드 문서화"
+  },
+  "workflow_status": {
+    "status": "active",
+    "plan_id": "7092b9c2-b90a-4439-8194-7ee6517d127c",
+    "plan_name": "tool-definitions.ts 개선 및 빌드",
+    "total_tasks": 3,
+    "completed_tasks": 2,
+    "current_task": {
+      "id": "746cad96-1661-44fc-8941-a4b477a1ff2d",
+      "title": "helpers 메서드 문서화",
+      "description": "",
+      "status": "todo",
+      "created_at": "2025-07-15T22:27:17.399545+09:00",
+      "updated_at": "2025-07-15T22:27:17.399545+09:00",
+      "started_at": null,
+      "completed_at": null,
+      "duration": null,
+      "notes": [],
+      "outputs": {}
+    },
+    "progress": 66.66666666666666
+  }
+}

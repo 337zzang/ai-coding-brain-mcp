@@ -1,0 +1,29 @@
+{
+  "command": "/task 파일 교체 및 빌드 준비",
+  "result": {
+    "success": true,
+    "task_id": "5a0ccfe7-0057-42ac-89b1-6ac99fd0a7cc",
+    "message": "태스크 추가됨: 파일 교체 및 빌드 준비"
+  },
+  "workflow_status": {
+    "status": "active",
+    "plan_id": "7092b9c2-b90a-4439-8194-7ee6517d127c",
+    "plan_name": "tool-definitions.ts 개선 및 빌드",
+    "total_tasks": 5,
+    "completed_tasks": 4,
+    "current_task": {
+      "id": "5a0ccfe7-0057-42ac-89b1-6ac99fd0a7cc",
+      "title": "파일 교체 및 빌드 준비",
+      "description": "",
+      "status": "todo",
+      "created_at": "2025-07-15T22:27:17.585804+09:00",
+      "updated_at": "2025-07-15T22:27:17.585804+09:00",
+      "started_at": null,
+      "completed_at": null,
+      "duration": null,
+      "notes": [],
+      "outputs": {}
+    },
+    "progress": 80.0
+  }
+}

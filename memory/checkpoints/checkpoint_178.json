@@ -1,0 +1,13 @@
+{
+  "implementation": "PreciseCodeModifier",
+  "features": [
+    "정확한 좌표 기반 수정",
+    "LSP 호환 TextEdit",
+    "원자적 파일 갱신",
+    "캐시 자동 관리"
+  ],
+  "files_created": [
+    "precise_code_modifier.py",
+    "precise_code_modifier_guide.md"
+  ]
+}

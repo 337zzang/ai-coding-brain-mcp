@@ -1,0 +1,9 @@
+{
+  "file": "python/ai_helpers_v2/file_ops.py",
+  "added_imports": [
+    "tempfile",
+    "shutil"
+  ],
+  "error_fixed": "NameError: name 'tempfile' is not defined",
+  "solution": "누락된 import 문 추가"
+}

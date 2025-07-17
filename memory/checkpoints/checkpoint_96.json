@@ -1,0 +1,25 @@
+{
+  "command": "/status",
+  "result": {
+    "success": true,
+    "status": {
+      "status": "idle",
+      "plan_id": null,
+      "plan_name": null,
+      "total_tasks": 0,
+      "completed_tasks": 0,
+      "current_task": null,
+      "progress": 0
+    },
+    "message": "\n=== 📊 워크플로우 상태 ===\n상태: idle\n활성 플랜 없음"
+  },
+  "workflow_status": {
+    "status": "idle",
+    "plan_id": null,
+    "plan_name": null,
+    "total_tasks": 0,
+    "completed_tasks": 0,
+    "current_task": null,
+    "progress": 0
+  }
+}

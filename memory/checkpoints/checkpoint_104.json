@@ -1,0 +1,29 @@
+{
+  "command": "/task 문서와 구현 차이 분석",
+  "result": {
+    "success": true,
+    "task_id": "65f04750-7a4f-47f1-a752-4ab7e1d421f1",
+    "message": "태스크 추가됨: 문서와 구현 차이 분석"
+  },
+  "workflow_status": {
+    "status": "active",
+    "plan_id": "7092b9c2-b90a-4439-8194-7ee6517d127c",
+    "plan_name": "tool-definitions.ts 개선 및 빌드",
+    "total_tasks": 1,
+    "completed_tasks": 0,
+    "current_task": {
+      "id": "65f04750-7a4f-47f1-a752-4ab7e1d421f1",
+      "title": "문서와 구현 차이 분석",
+      "description": "",
+      "status": "todo",
+      "created_at": "2025-07-15T22:27:17.125738+09:00",
+      "updated_at": "2025-07-15T22:27:17.125738+09:00",
+      "started_at": null,
+      "completed_at": null,
+      "duration": null,
+      "notes": [],
+      "outputs": {}
+    },
+    "progress": 0.0
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "command": "/start 컴파일 테스트 시스템 구축",
+  "result": {
+    "success": true,
+    "plan_id": "bac863c1-b82a-4202-95ef-0902c1f7f480",
+    "message": "플랜 생성됨: 컴파일 테스트 시스템 구축"
+  },
+  "workflow_status": {
+    "status": "active",
+    "plan_id": "bac863c1-b82a-4202-95ef-0902c1f7f480",
+    "plan_name": "컴파일 테스트 시스템 구축",
+    "total_tasks": 0,
+    "completed_tasks": 0,
+    "current_task": null,
+    "progress": 0.0
+  }
+}

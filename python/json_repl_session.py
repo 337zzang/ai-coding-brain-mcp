@@ -1,21 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# NPM 빌드 헬퍼 (AI Coding Brain MCP)
-try:
-    from npm_helpers import (
-        NpmBuildError,
-        safe_npm_run,
-        npm_build,
-        npm_test,
-        npm_lint,
-        npm_type_check,
-        install_dependencies,
-        full_build_pipeline,
-        quick_build_test
-    )
-except ImportError:
-    pass  # NPM 헬퍼 사용 불가
 
 """
 🚀 JSON REPL Session for AI Coding Brain v6.0
@@ -42,6 +27,14 @@ Claude Desktop과 통신하는 통합 JSON REPL 세션
 
 import sys
 import os
+
+# Windows에서 UTF-8 출력 강제 설정
+if sys.platform == 'win32':
+    import locale
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+
 import json
 import io
 import traceback
@@ -409,9 +402,50 @@ Location: {"Desktop" if desktop else "Subproject"}
             self._workflow_manager = None
             self._history_manager = None
             
-            # file_directory.md 업데이트
-            self._update_file_directory(str(project_path))
+            # 분석 파일 확인 및 제안
+            analysis_files = {
+                "file_directory.md": project_path / "file_directory.md",
+                "project_context": project_path / "memory" / "project_context.json"
+            }
+
+            missing_files = []
+            for name, filepath in analysis_files.items():
+                if not filepath.exists():
+                    missing_files.append(name)
+
+            if missing_files:
+                print(f"\n⚠️ 다음 분석 파일이 없습니다:")
+                for file in missing_files:
+                    print(f"  - {file}")
+                print(f"\n💡 프로젝트 분석을 실행하시겠습니까?")
+                print(f"   👉 helpers.workflow('/a') 또는 /a 명령어를 실행하세요")
+                print(f"   - file_directory.md 생성/업데이트")
+                print(f"   - project_context.json 생성")
+                print(f"   - 프로젝트 구조 분석")
             
+            # project_context.json 로드 및 표시
+            if analysis_files["project_context"].exists():
+                try:
+                    with open(analysis_files["project_context"], 'r', encoding='utf-8') as f:
+                        project_context = json.load(f)
+
+                    print(f"\n📊 프로젝트 컨텍스트 정보:")
+                    print(f"  - 분석일시: {project_context.get('analyzed_at', 'N/A')}")
+                    print(f"  - 프로젝트 타입: {project_context.get('project_type', 'N/A')}")
+
+                    tech_stack = project_context.get('tech_stack', [])
+                    if tech_stack:
+                        print(f"  - 기술 스택: {', '.join(tech_stack)}")
+
+                    structure = project_context.get('structure', {})
+                    if structure:
+                        print(f"  - 전체 파일: {structure.get('total_files', 0)}개")
+                        print(f"  - 소스 파일: {structure.get('source_files', 0)}개")
+                        print(f"  - 테스트 파일: {structure.get('test_files', 0)}개")
+
+                except Exception as e:
+                    print(f"  ⚠️ project_context.json 로드 오류: {e}")
+
             # 프로젝트 문서 로드
             project_docs = self._load_project_docs(project_path)
             
@@ -421,7 +455,60 @@ Location: {"Desktop" if desktop else "Subproject"}
             
             if project_docs['loaded']:
                 print(f"📄 프로젝트 문서 로드됨: {', '.join(project_docs['files'])}")
-            
+
+            # 자동 프로젝트 정보 표시
+            print("\n" + "="*60)
+            print("📊 프로젝트 정보 자동 분석")
+            print("="*60)
+
+            # 1. 프로젝트 기본 정보
+            try:
+                if hasattr(self, 'pi'):
+                    info = self.pi()
+                    if info:
+                        print("\n📋 프로젝트 상태:")
+                        print(f"  - 메모리 파일: {info.get('memory_files', 0)}개")
+                        print(f"  - 메모리 크기: {info.get('memory_size_kb', 0)/1024:.2f} MB")
+                        print(f"  - 활성 워크플로우: {info.get('has_active_workflow', False)}")
+            except:
+                pass
+
+            # 2. 워크플로우 상태 (간단히)
+            try:
+                if hasattr(self, '_workflow_manager') and self._workflow_manager:
+                    from .workflow.improved_manager import WorkflowStatus
+                    status = self._workflow_manager.get_status()
+                    if status:
+                        print(f"\n📊 워크플로우: {status.get('project_name', 'N/A')}")
+                        print(f"  - 작업: {status.get('total_tasks', 0)}개 (완료: {status.get('completed_tasks', 0)}개)")
+            except:
+                pass
+
+            # 3. 최근 히스토리 (간단히)
+            try:
+                if hasattr(self, '_history_manager') and self._history_manager:
+                    history = self._history_manager.get_history(limit=3)
+                    if history:
+                        print("\n📜 최근 작업:")
+                        for item in history[:3]:
+                            print(f"  - {item.get('name', 'N/A')}")
+            except:
+                pass
+
+            # 4. README 첫 줄
+            try:
+                readme_path = project_path / "README.md"
+                if readme_path.exists():
+                    readme = readme_path.read_text(encoding='utf-8')
+                    first_line = readme.split('\n')[0].strip()
+                    if first_line:
+                        print(f"\n📄 {first_line}")
+            except:
+                pass
+
+            print("\n🚀 프로젝트 준비 완료!")
+            print("="*60)
+
             return {
                 "success": True,
                 "project_name": project_name,
@@ -444,7 +531,8 @@ Location: {"Desktop" if desktop else "Subproject"}
             "files": [],
             "readme": None,
             "file_directory": None,
-            "parsed_tree": None
+            "parsed_tree": None,
+            "project_context": None
         }
         
         try:
@@ -660,49 +748,69 @@ def initialize_repl():
     else:
         sys.stderr.write('⚠️ helpers 로딩 실패\n')
     
-    # 2. 자주 사용하는 함수들을 전역에도 노출
-    critical_funcs = {}
+    # 2. 핵심 기능들만 전역에 노출 (q_tools와 중복 제거)
+    essential_funcs = {}
     
-    # 필수 함수들
-    if hasattr(helpers, 'create_file'):
-        critical_funcs['create_file'] = helpers.create_file
-    if hasattr(helpers, 'read_file'):
-        critical_funcs['read_file'] = helpers.read_file
-    if hasattr(helpers, 'replace_block'):
-        critical_funcs['replace_block'] = helpers.replace_block
-    
-    # Workflow 명령어 함수
+    # 워크플로우 관리 (최우선 - q_tools에 없음)
     if hasattr(helpers, 'execute_workflow_command'):
-        critical_funcs['workflow'] = helpers.execute_workflow_command
-        critical_funcs['wf'] = helpers.execute_workflow_command  # 짧은 별칭
+        essential_funcs['workflow'] = helpers.execute_workflow_command
+        essential_funcs['wf'] = helpers.execute_workflow_command
     
-    # 프로젝트 전환
+    # 프로젝트 관리 (최우선 - q_tools에 없음)
     if hasattr(helpers, 'flow_project'):
-        critical_funcs['flow_project'] = helpers.flow_project
-        critical_funcs['fp'] = helpers.flow_project  # 짧은 별칭
+        essential_funcs['flow_project'] = helpers.flow_project
+        essential_funcs['fp'] = helpers.flow_project
     
-    # 프로젝트 관리
     if hasattr(helpers, 'list_desktop_projects'):
-        critical_funcs['list_projects'] = helpers.list_desktop_projects
-        critical_funcs['lp'] = helpers.list_desktop_projects  # 짧은 별칭
+        essential_funcs['list_projects'] = helpers.list_desktop_projects
+        essential_funcs['lp'] = helpers.list_desktop_projects
     
     if hasattr(helpers, 'get_project_info'):
-        critical_funcs['project_info'] = helpers.get_project_info
-        critical_funcs['pi'] = helpers.get_project_info  # 짧은 별칭
+        essential_funcs['project_info'] = helpers.get_project_info
+        essential_funcs['pi'] = helpers.get_project_info
     
-    # 히스토리 관련 함수
+    # 히스토리 관리 (최우선 - q_tools에 없음)
     if hasattr(helpers, 'add_history_action'):
-        critical_funcs['add_history_action'] = helpers.add_history_action
-        critical_funcs['add_history'] = helpers.add_history_action  # 짧은 별칭
-        critical_funcs['show_history'] = helpers.show_history
-        critical_funcs['continue_from_last'] = helpers.continue_from_last
-        critical_funcs['get_history'] = helpers.get_history
+        essential_funcs['add_history_action'] = helpers.add_history_action
+        essential_funcs['add_history'] = helpers.add_history_action
+        essential_funcs['show_history'] = helpers.show_history
+        essential_funcs['continue_from_last'] = helpers.continue_from_last
+        essential_funcs['get_history'] = helpers.get_history
     
-    for name, func in critical_funcs.items():
+    # Git 고급 기능 (q_tools에 없는 것들)
+    if hasattr(helpers, 'git_add'):
+        essential_funcs['git_add'] = helpers.git_add
+    if hasattr(helpers, 'git_push'):
+        essential_funcs['git_push'] = helpers.git_push
+    if hasattr(helpers, 'git_pull'):
+        essential_funcs['git_pull'] = helpers.git_pull
+    
+    # 고급 파일 관리 (q_tools에 없는 것들)
+    if hasattr(helpers, 'scan_directory_dict'):
+        essential_funcs['scan_directory_dict'] = helpers.scan_directory_dict
+    if hasattr(helpers, 'get_file_info'):
+        essential_funcs['get_file_info'] = helpers.get_file_info
+    if hasattr(helpers, 'create_directory'):
+        essential_funcs['create_directory'] = helpers.create_directory
+    if hasattr(helpers, 'move_file'):
+        essential_funcs['move_file'] = helpers.move_file
+    if hasattr(helpers, 'insert_block'):
+        essential_funcs['insert_block'] = helpers.insert_block
+    
+    # 전역에 추가
+    for name, func in essential_funcs.items():
         if callable(func):
             repl_globals[name] = func
     
+    print(f"✅ 핵심 helpers 기능 로드 완료: {len(essential_funcs)}개 (중복 제거)")
+    
     # 3. 기본 모듈들
+    import os
+    import sys
+    import json
+    import time
+    from pathlib import Path
+    import datetime as dt
     import numpy as np
     import pandas as pd
     
@@ -750,6 +858,36 @@ def initialize_repl():
     # 5. Git Version Manager (제거됨 - 파일이 존재하지 않음)
     # git_version_manager 모듈이 프로젝트에 없어 제거
     git_manager = None
+
+    # 6. q_tools 자동 로드 (추가됨)
+    try:
+        import sys
+        import os
+        
+        # q_tools 경로 추가
+        current_dir = os.getcwd()
+        python_path = os.path.join(current_dir, "python")
+        if python_path not in sys.path:
+            sys.path.insert(0, python_path)
+        
+        # q_tools 모든 함수 로드
+        import q_tools
+        q_functions = {}
+        for name in dir(q_tools):
+            if not name.startswith('_') and callable(getattr(q_tools, name)):
+                q_functions[name] = getattr(q_tools, name)
+        
+        # repl_globals에 q_tools 함수들 추가
+        repl_globals.update(q_functions)
+        
+        # builtins에도 추가 (글로벌 접근 가능)
+        for name, func in q_functions.items():
+            setattr(builtins, name, func)
+        
+        print(f"✅ q_tools 로드 완료! {len(q_functions)}개 함수 사용 가능")
+        
+    except Exception as e:
+        print(f"❌ q_tools 로드 실패: {e}")
 
 # ============================================================================
 # 💻 코드 실행

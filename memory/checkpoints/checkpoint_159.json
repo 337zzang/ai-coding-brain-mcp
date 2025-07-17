@@ -1,0 +1,9 @@
+{
+  "features": [
+    "f-string 미정의 변수 검사",
+    "정규식 컴파일 오류 사전 감지",
+    "ReDoS 패턴 탐지",
+    "성능 벤치마크 기능"
+  ],
+  "file": "safe_execution_v2.py"
+}

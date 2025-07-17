@@ -8,6 +8,7 @@ from .git_ops import *
 from .project_ops import *
 from .llm_ops import *
 from .core import get_metrics, clear_cache, get_execution_history
+from .ez_code import ez_parse, ez_replace, ez_view
 
 __version__ = "2.0.0"
 

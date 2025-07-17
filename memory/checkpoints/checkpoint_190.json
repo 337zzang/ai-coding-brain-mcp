@@ -1,0 +1,21 @@
+{
+  "task": "helpers v2 로드 최적화",
+  "removed_functions": [
+    "create_file",
+    "read_file",
+    "replace_block"
+  ],
+  "added_functions": [
+    "git_add",
+    "git_push",
+    "git_pull",
+    "scan_directory_dict",
+    "get_file_info",
+    "create_directory",
+    "move_file",
+    "insert_block"
+  ],
+  "optimization": "essential_funcs 구조로 선택적 로드",
+  "performance_gain": "중복 제거 및 핵심 기능 강화",
+  "git_commit": "feat: helpers v2 로드 최적화 - 중복 기능 제거 및 핵심 기능 강화"
+}

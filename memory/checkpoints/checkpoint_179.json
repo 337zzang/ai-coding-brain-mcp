@@ -1,0 +1,19 @@
+{
+  "file_modified": "python/ai_helpers_v2/code_ops.py",
+  "new_functions": [
+    "extract_code_elements",
+    "replace_element",
+    "replace_function",
+    "replace_method",
+    "make_text_edit",
+    "apply_text_edit",
+    "write_file_atomic"
+  ],
+  "improvements": [
+    "AST end_lineno/end_col_offset 활용",
+    "LSP TextEdit 형식 지원",
+    "원자적 파일 갱신",
+    "중복 코드 정확한 위치 지정"
+  ],
+  "backward_compatible": true
+}

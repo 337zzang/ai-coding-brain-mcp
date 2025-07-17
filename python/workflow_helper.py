@@ -114,8 +114,166 @@ def generate_docs_for_project(root: Path):
         """).strip()
         safe_write(str(readme_path), tmpl)
         print(f"✅ {readme_path} 생성 완료")
+
+    # ─ project_context.json 생성 ─
+    memory_dir = root / "memory"
+    memory_dir.mkdir(exist_ok=True)
+    context_path = memory_dir / "project_context.json"
+
+    print(f"📊 프로젝트 분석 중...")
+
+    # 프로젝트 타입 감지
+    project_type = "unknown"
+    tech_stack = []
+
+    # 파일 확장자 기반 분석
+    file_extensions = {}
+    source_files = 0
+    test_files = 0
+    total_files = 0
+
+    for item in root.rglob('*'):
+        if item.is_file() and not any(part.startswith('.') for part in item.parts):
+            total_files += 1
+            ext = item.suffix.lower()
+            if ext:
+                file_extensions[ext] = file_extensions.get(ext, 0) + 1
+
+            # 소스 파일 카운트
+            if ext in ['.py', '.js', '.ts', '.java', '.cpp', '.cs', '.go', '.rs']:
+                source_files += 1
+
+            # 테스트 파일 카운트
+            if 'test' in item.name.lower() or 'spec' in item.name.lower():
+                test_files += 1
+
+    # 주요 파일로 프로젝트 타입 결정
+    if (root / "package.json").exists():
+        project_type = "javascript"
+        tech_stack.append("Node.js")
+        if (root / "tsconfig.json").exists():
+            project_type = "typescript"
+            tech_stack.append("TypeScript")
+    elif (root / "requirements.txt").exists() or (root / "setup.py").exists():
+        project_type = "python"
+        tech_stack.append("Python")
+    elif (root / "pom.xml").exists():
+        project_type = "java"
+        tech_stack.append("Java")
+        tech_stack.append("Maven")
+    elif (root / "Cargo.toml").exists():
+        project_type = "rust"
+        tech_stack.append("Rust")
+
+    # 프레임워크 감지
+    if (root / "package.json").exists():
+        try:
+            import json
+            with open(root / "package.json", 'r', encoding='utf-8') as f:
+                pkg = json.load(f)
+                deps = list(pkg.get('dependencies', {}).keys()) + list(pkg.get('devDependencies', {}).keys())
+                if 'react' in deps:
+                    tech_stack.append("React")
+                if 'vue' in deps:
+                    tech_stack.append("Vue")
+                if 'express' in deps:
+                    tech_stack.append("Express")
+        except:
+            pass
+
+    # 디렉토리 목록
+    directories = [d.name for d in root.iterdir() if d.is_dir() and not d.name.startswith('.')]
+
+    # 컨텍스트 데이터 생성
+    context_data = {
+        "analyzed_at": timestamp,
+        "project_type": project_type,
+        "tech_stack": tech_stack,
+        "structure": {
+            "total_files": total_files,
+            "source_files": source_files,
+            "test_files": test_files,
+            "directories": directories[:20]  # 최대 20개
+        },
+        "file_extensions": dict(sorted(file_extensions.items(), key=lambda x: x[1], reverse=True)[:10])  # 상위 10개
+    }
+
+    # JSON 저장
+    import json
+    with open(context_path, 'w', encoding='utf-8') as f:
+        json.dump(context_data, f, indent=2, ensure_ascii=False)
+
+    print(f"✅ {context_path} 생성 완료")
+    print(f"  - 프로젝트 타입: {project_type}")
+    print(f"  - 기술 스택: {', '.join(tech_stack) if tech_stack else 'N/A'}")
+    print(f"  - 파일 수: {total_files}개")
     else:
         print(f"ℹ️ {readme_path}는 이미 존재합니다 (건너뜀)")
+    # ─ project_context.json 생성 ─
+    context_path = root / "memory" / "project_context.json"
+
+    # memory 디렉토리 생성
+    context_path.parent.mkdir(exist_ok=True)
+
+    # 프로젝트 타입 감지
+    project_type = "unknown"
+    tech_stack = []
+
+    if (root / "package.json").exists():
+        project_type = "node"
+        if (root / "tsconfig.json").exists():
+            project_type = "typescript"
+            tech_stack.append("TypeScript")
+        tech_stack.append("Node.js")
+    elif (root / "requirements.txt").exists():
+        project_type = "python"
+        tech_stack.append("Python")
+    elif (root / "pom.xml").exists():
+        project_type = "java-maven"
+        tech_stack.append("Java")
+
+    # 파일 수 계산
+    total_files = 0
+    source_files = 0
+    test_files = 0
+    directories = []
+
+    for item in root.rglob("*"):
+        if item.is_file() and not any(skip in str(item) for skip in ['.git', '__pycache__', 'node_modules']):
+            total_files += 1
+            if 'test' in str(item).lower():
+                test_files += 1
+            elif item.suffix in ['.py', '.js', '.ts', '.java']:
+                source_files += 1
+        elif item.is_dir() and item.parent == root:
+            directories.append(item.name)
+
+    # 컨텍스트 생성
+    context = {
+        "analyzed_at": timestamp,
+        "project_type": project_type,
+        "tech_stack": tech_stack,
+        "structure": {
+            "total_files": total_files,
+            "source_files": source_files,
+            "test_files": test_files,
+            "directories": sorted(directories)
+        },
+        "build_tools": []
+    }
+
+    # 빌드 도구 감지
+    if (root / "package.json").exists():
+        context["build_tools"].append("npm")
+    if (root / "requirements.txt").exists():
+        context["build_tools"].append("pip")
+    if (root / "pom.xml").exists():
+        context["build_tools"].append("maven")
+
+    # JSON 저장
+    import json
+    safe_write(str(context_path), json.dumps(context, indent=2, ensure_ascii=False))
+    print(f"✅ {context_path} 생성 완료")
 
 def update_file_directory(root: Path = None):
     """file_directory.md만 업데이트 (README는 건드리지 않음)"""

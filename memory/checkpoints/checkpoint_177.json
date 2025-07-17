@@ -1,0 +1,12 @@
+{
+  "validated_method": "parse_file + line-based modification",
+  "key_findings": [
+    "replace_block 헬퍼는 작동하지 않음",
+    "라인 번호 기반 수정이 가장 안정적",
+    "REPL 세션 특성을 활용한 효율적 수정 가능"
+  ],
+  "documents_created": [
+    "recommended_helpers.md",
+    "code_modification_guide.md"
+  ]
+}

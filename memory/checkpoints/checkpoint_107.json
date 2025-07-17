@@ -1,0 +1,734 @@
+{
+  "workflow_snapshot": {
+    "plans": [
+      {
+        "id": "08b58fa6-8f16-4498-9c20-749c4de865d7",
+        "name": "워크플로우 메시지 시스템 리팩토링 - 효율적 상태 기반 구조로 전환",
+        "description": "",
+        "status": "completed",
+        "tasks": [
+          {
+            "id": "21dfb9f3-ac62-4069-bcd4-330b5c8ea779",
+            "title": "Phase 1: 메시지 인프라 구축 - MessageController, Buffer, Queue",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-13T19:52:40.411655+09:00",
+            "updated_at": "2025-07-13T19:57:34.155873+09:00",
+            "started_at": null,
+            "completed_at": "2025-07-13T19:57:34.155873+09:00",
+            "duration": null,
+            "notes": [
+              "[완료] Phase 1 완료: MessageController 통합 구현. 파서/이벤트버스 제거하여 단순화"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "ac583af0-2fad-48c6-be41-b74377f04518",
+            "title": "Phase 2: 워크플로우 엔진 구현 - StateManager, WorkflowEngine",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-13T19:52:40.436656+09:00",
+            "updated_at": "2025-07-13T19:59:14.662402+09:00",
+            "started_at": null,
+            "completed_at": "2025-07-13T19:59:14.662402+09:00",
+            "duration": null,
+            "notes": [
+              "[완료] Phase 2 완료: WorkflowEngine, StateManager, Storage 구현. 기존 API 호환성 어댑터 추가"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "1b12e231-4bec-40c1-aeb0-88e418038b6b",
+            "title": "Phase 3: 핸들러 통합 - 14개 리스너를 3개 핸들러로",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-13T19:52:40.470653+09:00",
+            "updated_at": "2025-07-13T20:00:30.860834+09:00",
+            "started_at": null,
+            "completed_at": "2025-07-13T20:00:30.860834+09:00",
+            "duration": null,
+            "notes": [
+              "[완료] Phase 3 완료: MessageController에 이미 3개 서비스 통합되어 있음"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "39f7486a-270f-4352-bd85-a0152d216588",
+            "title": "Phase 4: 기존 시스템 제거 - 불필요한 파일 정리",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-13T19:52:40.496652+09:00",
+            "updated_at": "2025-07-13T20:02:04.076587+09:00",
+            "started_at": null,
+            "completed_at": "2025-07-13T20:02:04.076587+09:00",
+            "duration": null,
+            "notes": [
+              "[완료] Phase 4 완료: 30개 파일 삭제. 37개→10개로 73% 감소"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "abdbaf7d-a3ce-4f64-bcfc-6104f8aca0c2",
+            "title": "Phase 5: 테스트 및 문서화",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-13T19:52:40.519652+09:00",
+            "updated_at": "2025-07-13T20:02:04.171589+09:00",
+            "started_at": null,
+            "completed_at": "2025-07-13T20:02:04.171589+09:00",
+            "duration": null,
+            "notes": [
+              "[완료] Phase 5 완료: 테스트 및 문서화 완료. 리팩토링 성공!"
+            ],
+            "outputs": {}
+          }
+        ],
+        "current_task_index": 4,
+        "created_at": "2025-07-13T19:52:40.389677+09:00",
+        "updated_at": "2025-07-13T20:02:04.171589+09:00",
+        "completed_at": "2025-07-13T20:02:04.171589+09:00",
+        "archived_at": null,
+        "stats": {
+          "total_tasks": 5,
+          "completed_tasks": 5,
+          "completion_rate": 1.0,
+          "total_duration_seconds": 0,
+          "average_task_duration": 0.0
+        },
+        "metadata": {}
+      },
+      {
+        "id": "b346422f-b833-426b-89c1-f7fa02e4219d",
+        "name": "통합 테스트 플랜",
+        "description": "ImprovedWorkflowManager 테스트",
+        "status": "draft",
+        "tasks": [
+          {
+            "id": "89822eb7-2468-4967-853b-cebb8e6514f5",
+            "title": "테스트 태스크 1",
+            "description": "설명 1",
+            "status": "in_progress",
+            "created_at": "2025-07-14T00:11:49.146337+09:00",
+            "updated_at": "2025-07-14T00:15:03.142212",
+            "started_at": "2025-07-14T00:15:03.142212",
+            "completed_at": "2025-07-14T00:11:49.192067",
+            "duration": null,
+            "notes": [
+              "[완료] 테스트 완료"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "1680b094-09e0-4ef2-b4f9-56962bfa7fd9",
+            "title": "테스트 태스크 2",
+            "description": "설명 2",
+            "status": "todo",
+            "created_at": "2025-07-14T00:11:49.166484+09:00",
+            "updated_at": "2025-07-14T00:11:49.166484+09:00",
+            "started_at": null,
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {}
+          },
+          {
+            "id": "14b68607-847a-4e86-9825-57da4a22de86",
+            "title": "테스트 태스크 3",
+            "description": "설명 3",
+            "status": "todo",
+            "created_at": "2025-07-14T00:11:49.173478+09:00",
+            "updated_at": "2025-07-14T00:11:49.173478+09:00",
+            "started_at": null,
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {}
+          }
+        ],
+        "current_task_index": 0,
+        "created_at": "2025-07-14T00:11:49.146337+09:00",
+        "updated_at": "2025-07-14T00:11:49.146337+09:00",
+        "completed_at": null,
+        "archived_at": null,
+        "stats": {},
+        "metadata": {}
+      },
+      {
+        "id": "0759323d-c449-49e5-9808-24216ae371ec",
+        "name": "최종 테스트 플랜",
+        "description": "",
+        "status": "draft",
+        "tasks": [
+          {
+            "id": "f707c964-6b0d-4f96-a2c4-32330b0297d7",
+            "title": "레거시 코드 제거",
+            "description": "",
+            "status": "todo",
+            "created_at": "2025-07-14T00:16:50.203301+09:00",
+            "updated_at": "2025-07-14T00:16:50.203301+09:00",
+            "started_at": null,
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {}
+          },
+          {
+            "id": "1448486f-a523-4481-a50b-d6f2981080ae",
+            "title": "통합 테스트",
+            "description": "",
+            "status": "todo",
+            "created_at": "2025-07-14T00:16:50.215283+09:00",
+            "updated_at": "2025-07-14T00:16:50.215283+09:00",
+            "started_at": null,
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {}
+          },
+          {
+            "id": "6e30d6ab-fa71-4634-875a-727eb51d9747",
+            "title": "문서 업데이트",
+            "description": "",
+            "status": "todo",
+            "created_at": "2025-07-14T00:16:50.224819+09:00",
+            "updated_at": "2025-07-14T00:16:50.224819+09:00",
+            "started_at": null,
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {}
+          }
+        ],
+        "current_task_index": 0,
+        "created_at": "2025-07-14T00:16:50.194492+09:00",
+        "updated_at": "2025-07-14T00:16:50.194492+09:00",
+        "completed_at": null,
+        "archived_at": null,
+        "stats": {},
+        "metadata": {}
+      },
+      {
+        "id": "49efeb4d-5be3-4e54-bf71-bf13d67edc1c",
+        "name": "메시징 통합 테스트",
+        "description": "",
+        "status": "draft",
+        "tasks": [
+          {
+            "id": "bace81fb-95d6-4ebc-b840-2a09e3be8b39",
+            "title": "MessageController 통합 완료",
+            "description": "",
+            "status": "todo",
+            "created_at": "2025-07-14T00:22:20.814132+09:00",
+            "updated_at": "2025-07-14T00:22:20.814132+09:00",
+            "started_at": null,
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {}
+          }
+        ],
+        "current_task_index": 0,
+        "created_at": "2025-07-14T00:22:20.805610+09:00",
+        "updated_at": "2025-07-14T00:22:20.805610+09:00",
+        "completed_at": null,
+        "archived_at": null,
+        "stats": {},
+        "metadata": {}
+      },
+      {
+        "id": "20957196-87e2-4113-b7b6-0a841061ae8c",
+        "name": "종합 테스트 플랜",
+        "description": "",
+        "status": "completed",
+        "tasks": [
+          {
+            "id": "f97be314-4ef0-476c-aebd-64e4ca96633f",
+            "title": "데이터베이스 설계",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-14T00:24:13.204783+09:00",
+            "updated_at": "2025-07-14T00:24:13.283572",
+            "started_at": "2025-07-14T00:24:13.274529",
+            "completed_at": "2025-07-14T00:24:13.283572",
+            "duration": null,
+            "notes": [
+              "[완료] 데이터베이스 설계 완료"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "e329576f-471f-4cca-84a3-07b49a31bdb9",
+            "title": "API 엔드포인트 구현",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-14T00:24:13.222331+09:00",
+            "updated_at": "2025-07-14T00:24:13.316752",
+            "started_at": "2025-07-14T00:24:13.297254",
+            "completed_at": "2025-07-14T00:24:13.316752",
+            "duration": null,
+            "notes": [
+              "[완료] 태스크 2 완료"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "088e076e-2811-4239-891d-57a81b502967",
+            "title": "프론트엔드 개발",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-14T00:24:13.243232+09:00",
+            "updated_at": "2025-07-14T00:24:13.332756",
+            "started_at": null,
+            "completed_at": "2025-07-14T00:24:13.332756",
+            "duration": null,
+            "notes": [
+              "[완료] 태스크 3 완료"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "adf5ab65-f206-441d-a9a7-5388545d2c55",
+            "title": "테스트 작성",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-14T00:24:13.251233+09:00",
+            "updated_at": "2025-07-14T00:24:13.346222",
+            "started_at": null,
+            "completed_at": "2025-07-14T00:24:13.346222",
+            "duration": null,
+            "notes": [
+              "[완료] 태스크 4 완료"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "b047cd36-b08a-4d22-80f1-be6766891ddd",
+            "title": "문서화",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-14T00:24:13.263925+09:00",
+            "updated_at": "2025-07-14T00:24:13.357031",
+            "started_at": null,
+            "completed_at": "2025-07-14T00:24:13.357031",
+            "duration": null,
+            "notes": [
+              "[완료] 마지막 태스크 완료!"
+            ],
+            "outputs": {}
+          }
+        ],
+        "current_task_index": 0,
+        "created_at": "2025-07-14T00:24:13.204783+09:00",
+        "updated_at": "2025-07-14T00:24:13.204783+09:00",
+        "completed_at": "2025-07-14T00:24:13.357031",
+        "archived_at": null,
+        "stats": {},
+        "metadata": {}
+      },
+      {
+        "id": "6f2d0d71-6e62-41bb-aae6-45f34b8f1744",
+        "name": "빈 플랜 테스트",
+        "description": "",
+        "status": "archived",
+        "tasks": [
+          {
+            "id": "ea1d40ad-ad89-4433-bf28-8263a35dac6c",
+            "title": "중복 태스크",
+            "description": "",
+            "status": "error",
+            "created_at": "2025-07-14T00:24:45.568291+09:00",
+            "updated_at": "2025-07-14T00:41:16.879660",
+            "started_at": "2025-07-14T00:41:16.879660",
+            "completed_at": "2025-07-14T00:31:52.680698",
+            "duration": null,
+            "notes": [
+              "[완료] 태스크 중복 처리 테스트 완료"
+            ],
+            "outputs": {},
+            "error_at": "2025-07-14T00:41:16.889439",
+            "error_message": "네트워크 연결 실패"
+          },
+          {
+            "id": "a5c45e7b-10a3-4014-aabf-0133118c4775",
+            "title": "중복 태스크",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-14T00:24:45.582050+09:00",
+            "updated_at": "2025-07-14T00:34:51.463256",
+            "started_at": null,
+            "completed_at": "2025-07-14T00:34:51.463256",
+            "duration": null,
+            "notes": [],
+            "outputs": {}
+          },
+          {
+            "id": "4da9cefa-edc8-4852-a94a-3c51ab8ee106",
+            "title": "중복 태스크",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-14T00:24:45.591637+09:00",
+            "updated_at": "2025-07-14T00:41:16.843338",
+            "started_at": "2025-07-14T00:35:29.611934",
+            "completed_at": "2025-07-14T00:41:16.843338",
+            "duration": null,
+            "notes": [
+              "[완료] 자동 완료"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "c773ddb1-6128-460d-b395-88483e7f00e3",
+            "title": "테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트 테스트",
+            "description": "",
+            "status": "skipped",
+            "created_at": "2025-07-14T00:25:08.552602+09:00",
+            "updated_at": "2025-07-14T00:41:16.863189",
+            "started_at": "2025-07-14T00:41:16.863189",
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {},
+            "skipped_at": "2025-07-14T00:41:16.871626",
+            "skip_reason": "테스트를 위해 건너뜀"
+          }
+        ],
+        "current_task_index": 0,
+        "created_at": "2025-07-14T00:24:45.561308+09:00",
+        "updated_at": "2025-07-14T00:24:45.561308+09:00",
+        "completed_at": null,
+        "archived_at": null,
+        "stats": {},
+        "metadata": {}
+      },
+      {
+        "id": "31f9658e-4c0d-4241-88bd-77261fe17162",
+        "name": "Python Helpers 함수 전체 검증 및 테스트",
+        "description": "",
+        "status": "draft",
+        "tasks": [
+          {
+            "id": "fffa83c2-71da-4e8c-9f71-dee3cc992e6f",
+            "title": "파일 시스템 함수 테스트 (read_file, create_file, write_file, scan_directory)",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-14T00:52:31.099683+09:00",
+            "updated_at": "2025-07-14T01:04:48.837806",
+            "started_at": "2025-07-14T01:02:00.141189",
+            "completed_at": "2025-07-14T01:04:48.837806",
+            "duration": null,
+            "notes": [
+              "[완료] 자동 완료",
+              "[완료] 파일 시스템 함수 테스트 완료"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "7490a912-9207-4329-84a7-8d9d0959e118",
+            "title": "Git 함수 테스트 (git_status, git_diff, git_add, git_log)",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-14T00:52:31.118435+09:00",
+            "updated_at": "2025-07-14T06:14:32.321859",
+            "started_at": "2025-07-14T06:10:51.007913",
+            "completed_at": "2025-07-14T06:14:32.321859",
+            "duration": null,
+            "notes": [
+              "[완료] 추후 재실행 예정",
+              "[완료] Git 함수 테스트 완료. 모든 함수가 정상 작동하며 일부 개선점 발견"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "6d4fdde8-7ba6-4d0a-9558-de41fdd32029",
+            "title": "코드 분석 함수 테스트 (parse_with_snippets, find_function, find_class)",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-14T00:52:31.140247+09:00",
+            "updated_at": "2025-07-14T08:56:25.729998",
+            "started_at": "2025-07-14T08:56:16.630086",
+            "completed_at": "2025-07-14T08:56:25.729998",
+            "duration": null,
+            "notes": [
+              "[완료] 테스트 완료"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "c80153ad-4b6b-402d-b83d-9b398b620eb7",
+            "title": "프로젝트 관리 함수 테스트 (build_project_context, get_project_structure)",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-14T00:52:31.152340+09:00",
+            "updated_at": "2025-07-14T23:55:43.472963",
+            "started_at": "2025-07-14T08:56:25.761996",
+            "completed_at": "2025-07-14T23:55:43.471966",
+            "duration": null,
+            "notes": [
+              "프로토콜 테스트 - 23:54:59"
+            ],
+            "outputs": {},
+            "metadata": {
+              "paused": false,
+              "paused_at": "2025-07-14T09:16:12.342287",
+              "pause_reason": "설계서 작성을 위해 일시 중지",
+              "resumed_at": "2025-07-14T09:16:12.356289"
+            }
+          },
+          {
+            "id": "f6aeb256-9629-4e96-ae73-6e9457fa192d",
+            "title": "검색 최적화 함수 테스트 (search_files, search_in_files, find_import)",
+            "description": "",
+            "status": "in_progress",
+            "created_at": "2025-07-14T00:52:31.164993+09:00",
+            "updated_at": "2025-07-15T00:08:26.723668",
+            "started_at": "2025-07-14T23:56:39.419409",
+            "completed_at": null,
+            "duration": null,
+            "notes": [
+              "워크플로우-헬퍼 통합 완료 및 문서화"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "f2ca08cd-1421-4254-8dce-b9e72943394f",
+            "title": "API 관리 함수 테스트 (toggle_api, list_apis, check_api_enabled)",
+            "description": "",
+            "status": "todo",
+            "created_at": "2025-07-14T00:52:31.176007+09:00",
+            "updated_at": "2025-07-14T00:52:31.176007+09:00",
+            "started_at": null,
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {}
+          },
+          {
+            "id": "5399fd1c-cbfc-4cb5-ab3c-a6eccd84288d",
+            "title": "유틸리티 함수 테스트 (update_context, get_project_context, lazy_import)",
+            "description": "",
+            "status": "todo",
+            "created_at": "2025-07-14T00:52:31.193014+09:00",
+            "updated_at": "2025-07-14T00:52:31.193014+09:00",
+            "started_at": null,
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {}
+          },
+          {
+            "id": "31100467-680e-43a3-b5e5-43dd9e8270b3",
+            "title": "코드 편집 함수 테스트 (edit_block, replace_block, insert_block)",
+            "description": "",
+            "status": "todo",
+            "created_at": "2025-07-14T00:52:31.203050+09:00",
+            "updated_at": "2025-07-14T00:52:31.203050+09:00",
+            "started_at": null,
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {}
+          },
+          {
+            "id": "befce6e2-4e11-4385-abaf-d2e76f7fda0e",
+            "title": "성능 측정 및 통계 함수 테스트 (get_tracking_statistics, measure_performance)",
+            "description": "",
+            "status": "todo",
+            "created_at": "2025-07-14T00:52:31.214623+09:00",
+            "updated_at": "2025-07-14T00:52:31.214623+09:00",
+            "started_at": null,
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {}
+          },
+          {
+            "id": "3eabef53-0ee7-4f42-a905-8fcd4fb82c3f",
+            "title": "전체 테스트 결과 종합 및 문서화",
+            "description": "",
+            "status": "todo",
+            "created_at": "2025-07-14T00:52:31.232777+09:00",
+            "updated_at": "2025-07-14T00:52:31.232777+09:00",
+            "started_at": null,
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {}
+          },
+          {
+            "id": "16057789-afbd-4552-b883-d6ab74cc0b2e",
+            "title": "분석 후 불필요한 함수 및 모듈 삭제",
+            "description": "",
+            "status": "todo",
+            "created_at": "2025-07-14T00:59:54.429285+09:00",
+            "updated_at": "2025-07-14T00:59:54.429285+09:00",
+            "started_at": null,
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {}
+          }
+        ],
+        "current_task_index": 0,
+        "created_at": "2025-07-14T00:51:56.787383+09:00",
+        "updated_at": "2025-07-14T00:51:56.787383+09:00",
+        "completed_at": null,
+        "archived_at": null,
+        "stats": {},
+        "metadata": {}
+      },
+      {
+        "id": "27019e1a-78c3-4c0b-a826-67f17211c865",
+        "name": "영속적 히스토리 시스템 구축",
+        "description": "",
+        "status": "draft",
+        "tasks": [
+          {
+            "id": "a773bf14-84bc-4b04-ab99-0bce0e6da52e",
+            "title": "JSON REPL과 워크플로우 통합",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-15T13:33:58.170110+09:00",
+            "updated_at": "2025-07-15T13:50:24.435970",
+            "started_at": "2025-07-15T13:33:58.214104",
+            "completed_at": "2025-07-15T13:50:24.435970",
+            "duration": null,
+            "notes": [
+              "[완료] JSON REPL과 워크플로우 통합 완료 - 프로젝트별 독립 메모리 구조 구현"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "96c92b26-e5f0-4e25-b8c0-5bb278ccd638",
+            "title": "대화 간 히스토리 연속성 구현",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-15T13:33:58.182102+09:00",
+            "updated_at": "2025-07-15T16:28:47.192502",
+            "started_at": null,
+            "completed_at": "2025-07-15T16:28:47.192502",
+            "duration": null,
+            "notes": [
+              "[완료] 코드 수정 완료 - 테스트 필요"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "4a5dec9c-854e-4b1b-ae00-ba37baee9ffe",
+            "title": "테스트 및 검증",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-15T13:33:58.194102+09:00",
+            "updated_at": "2025-07-15T16:36:26.263881",
+            "started_at": "2025-07-15T16:30:30.382827",
+            "completed_at": "2025-07-15T16:36:26.263881",
+            "duration": null,
+            "notes": [
+              "[완료] 테스트 완료"
+            ],
+            "outputs": {}
+          },
+          {
+            "id": "f7e1330f-f8c8-44b4-b9be-6819435ec124",
+            "title": "대화 간 히스토리 연속성 구현",
+            "description": "",
+            "status": "skipped",
+            "created_at": "2025-07-15T16:28:47.149501+09:00",
+            "updated_at": "2025-07-15T16:36:26.282917",
+            "started_at": "2025-07-15T16:36:26.282917",
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {},
+            "metadata": {
+              "paused": false,
+              "paused_at": "2025-07-15T16:36:26.302881",
+              "pause_reason": "잠시 중단",
+              "resumed_at": "2025-07-15T16:36:26.319881"
+            },
+            "skipped_at": "2025-07-15T16:36:52.041987",
+            "skip_reason": "다른 작업을 먼저 해야함"
+          },
+          {
+            "id": "7bdf0933-79ee-482c-8c04-05d5d9a8b1ab",
+            "title": "워크플로우 명령어 테스트",
+            "description": "",
+            "status": "error",
+            "created_at": "2025-07-15T16:36:15.035633+09:00",
+            "updated_at": "2025-07-15T16:36:52.018988",
+            "started_at": "2025-07-15T16:36:52.018988",
+            "completed_at": null,
+            "duration": null,
+            "notes": [],
+            "outputs": {},
+            "error_at": "2025-07-15T16:36:52.060987",
+            "error_message": "테스트 중 문제 발생"
+          }
+        ],
+        "current_task_index": 0,
+        "created_at": "2025-07-15T13:33:58.157103+09:00",
+        "updated_at": "2025-07-15T13:33:58.157103+09:00",
+        "completed_at": null,
+        "archived_at": null,
+        "stats": {},
+        "metadata": {}
+      },
+      {
+        "id": "9caa947a-5a6b-4601-a2b8-abbf3bca8a29",
+        "name": "새로운 기능 개발",
+        "description": "",
+        "status": "archived",
+        "tasks": [],
+        "current_task_index": 0,
+        "created_at": "2025-07-15T16:36:52.097986+09:00",
+        "updated_at": "2025-07-15T16:36:52.097986+09:00",
+        "completed_at": null,
+        "archived_at": null,
+        "stats": {},
+        "metadata": {}
+      },
+      {
+        "id": "7092b9c2-b90a-4439-8194-7ee6517d127c",
+        "name": "tool-definitions.ts 개선 및 빌드",
+        "description": "",
+        "status": "completed",
+        "tasks": [
+          {
+            "id": "65f04750-7a4f-47f1-a752-4ab7e1d421f1",
+            "title": "문서와 구현 차이 분석",
+            "description": "",
+            "status": "completed",
+            "created_at": "2025-07-15T22:27:17.125738+09:00",
+            "updated_at": "2025-07-15T22:27:17.190660",
+            "started_at": null,
+            "completed_at": "2025-07-15T22:27:17.190660",
+            "duration": null,
+            "notes": [
+              "[완료] 15개 누락 함수, 8개 미문서화 함수 발견"
+            ],
+            "outputs": {}
+          }
+        ],
+        "current_task_index": 0,
+        "created_at": "2025-07-15T22:27:17.064091+09:00",
+        "updated_at": "2025-07-15T22:27:17.064091+09:00",
+        "completed_at": "2025-07-15T22:27:17.207500",
+        "archived_at": null,
+        "stats": {},
+        "metadata": {}
+      }
+    ],
+    "active_plan_id": "7092b9c2-b90a-4439-8194-7ee6517d127c",
+    "events": [],
+    "version": "3.0.0",
+    "last_saved": "2025-07-15T22:27:17.223440",
+    "metadata": {
+      "last_modified": "2025-07-13T11:02:04.181585+00:00",
+      "project_name": "ai-coding-brain-mcp",
+      "project_root": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp",
+      "version": "3.0"
+    },
+    "project_name": "ai-coding-brain-mcp",
+    "events_file": "workflow_events.json",
+    "current_plan_id": "31f9658e-4c0d-4241-88bd-77261fe17162"
+  }
+}

@@ -26,22 +26,21 @@ export const toolDefinitions: Tool[] = [
 핵심 기능:
 • 세션 간 변수 유지 - 모든 변수와 상태가 호출 간에 보존됩니다
 • 프로젝트별 격리 - 각 프로젝트는 독립적인 실행 환경을 가집니다
-• 검증된 헬퍼 함수 - 파일, JSON, Git, 검색, 디렉토리 작업
-• 정밀 코드 수정 - AST 기반 좌표로 정확한 수정
+• 검증된 헬퍼 함수 (20개) - 파일, JSON, Git, 검색, 디렉토리 작업
+• 정밀 코드 수정 - AST 기반 좌표로 정확한 수정 (NEW!)
 
 권장 헬퍼 함수:
-• 파일: read_file, write_file, create_file, append_to_file, file_exists
+• 파일: read_file, write_file, create_file, append_to_file
 • JSON: read_json, write_json
-• Git: git_status, git_add, git_commit, git_push, git_branch
-• 검색: search_files, search_code (search_in_files는 deprecated)
-• 분석: parse_file, scan_directory
-• 프로젝트: fp(project_name), get_current_project (flow_project는 deprecated)
-• AI: ask_o3(prompt) - AI 도우미 (explain_error, generate_docstring 대체)
+• Git: git_status, git_add, git_commit, git_push
+• 검색: search_files, search_code
+• 분석: parse_file (함수/클래스 위치 정보 제공)
 
-코드 수정 권장 방법:
-• replace_block(filepath, old_code, new_code) - 안전한 코드 블록 교체
+코드 수정 권장 방법 (NEW!):
 • replace_function(filepath, func_name, new_code) - 함수 정밀 교체
 • replace_method(filepath, class_name, method_name, new_code) - 메서드 정밀 교체
+• extract_code_elements(filepath) - 정확한 좌표와 함께 코드 요소 추출
+• 기존 replace_block도 사용 가능 (레거시 호환)
 
 주의: 이제 중복 코드가 있어도 정확한 위치를 찾아 수정합니다!`,
     inputSchema: executeCodeSchema

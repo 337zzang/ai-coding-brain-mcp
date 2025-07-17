@@ -11,7 +11,7 @@ from .improved_manager import ImprovedWorkflowManager
 # workflow_helper import 추가
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
-from workflow_helper import generate_docs_for_project
+from workflow_helper import generate_docs_for_project, flow_project
 
 # 전역 매니저 인스턴스
 _manager_instance = None
@@ -43,26 +43,39 @@ def get_manager():
 def execute_workflow_command(command: str):
     """워크플로우 명령 실행"""
     try:
-        # /a 명령 처리 추가
-        if command.strip() == "/a":
-            project_root = Path.cwd()
-            generate_docs_for_project(project_root)
-            return f"✅ {project_root}에 file_directory.md, README.md 생성 완료"
-        
-        # 기존 워크플로우 명령 처리
+        # /flow 명령 처리 (프로젝트 전환)
+        if command.startswith("/flow"):
+            parts = command.split(None, 1)
+            if len(parts) > 1:
+                project_name = parts[1]
+                # flow_project 함수 import 필요
+                from workflow_helper import flow_project
+                result = flow_project(project_name)
+                if result.get("success"):
+                    return f"✅ 프로젝트 '{project_name}'로 전환 완료"
+                else:
+                    return f"Error: 프로젝트 전환 실패"
+            else:
+                return "Error: 프로젝트명을 지정해주세요. 예: /flow my-project"
+
+        # generate_docs_for_project 명령 처리
+        elif command == "/analyze" or command == "/a":
+            print("\n📊 프로젝트 분석 시작...")
+            generate_docs_for_project(Path.cwd())
+            return "✅ 프로젝트 분석 완료"
+
+        # 워크플로우 매니저로 명령 전달
         manager = get_manager()
         result = manager.process_command(command)
 
-        # 성공 시 문자열 반환
-        if result.get('success'):
-            return result.get('message', '완료')
+        # 결과 포맷팅
+        if result.get("success"):
+            return result.get("message", "완료")
         else:
-            # 실패 시 Error: 접두사 추가
             return f"Error: {result.get('message', '알 수 없는 오류')}"
 
     except Exception as e:
         return f"Error: {str(e)}"
-
 # 추가 헬퍼 함수들
 def get_workflow_status():
     """워크플로우 상태 조회"""

@@ -1548,5 +1548,53 @@
     "details": "✅ C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp에 file_directory.md, README.md 생성 완료",
     "conversation_id": "conv_20250717_1047",
     "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_194.json"
+  },
+  {
+    "id": 195,
+    "timestamp": "2025-07-17 13:03:25",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: AI Coding Brain 개선 작업\n진행률: 0.0% (0/4)\n",
+    "conversation_id": "conv_20250717_1303",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_195.json"
+  },
+  {
+    "id": 196,
+    "timestamp": "2025-07-17 13:03:25",
+    "action": "워크플로우 명령: /help",
+    "details": "사용 가능한 워크플로우 명령어:\n                \n/start [플랜명] - 새 워크플로우 시작\n/task [태스크명] - 태스크 추가\n/list - 현재 태스크 목록\n/status - 워크플로우 상태 확인\n/focus [번호] - 특정 태스크 시작\n/complete [메모] - 현재 태스크 완료\n/next - 다음 태스크로 이동\n/pause [이유] - 현재 태스크 일시 중지\n/continue - 일시 중지된 태스크 재개\n/skip [이유] - 현재 태스크 건너뛰기\n/error [메시지] - 에러 보고\n/reset - 워크플로우 초기화\n/help - 이 도움말 표시",
+    "conversation_id": "conv_20250717_1303",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_196.json"
+  },
+  {
+    "id": 197,
+    "timestamp": "2025-07-17 13:03:25",
+    "action": "워크플로우 명령: /list",
+    "details": "\n=== 📋 태스크 목록 ===\n1. 📋 기존 코드 분석\n2. 📋 워크플로우 명령어 구현\n3. 📋 통합 테스트\n4. 📋 README 업데이트\n",
+    "conversation_id": "conv_20250717_1303",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_197.json"
+  },
+  {
+    "id": 198,
+    "timestamp": "2025-07-17 13:03:26",
+    "action": "워크플로우 명령: /start",
+    "details": "플랜 생성됨: 테스트 작업",
+    "conversation_id": "conv_20250717_1303",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_198.json"
+  },
+  {
+    "id": 199,
+    "timestamp": "2025-07-17 13:03:26",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: 첫 번째 태스크",
+    "conversation_id": "conv_20250717_1303",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_199.json"
+  },
+  {
+    "id": 200,
+    "timestamp": "2025-07-17 13:03:26",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 테스트 작업\n진행률: 0.0% (0/1)\n현재 태스크: 첫 번째 태스크\n태스크 상태: todo",
+    "conversation_id": "conv_20250717_1303",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_200.json"
   }
 ]

@@ -114,6 +114,8 @@ def generate_docs_for_project(root: Path):
         """).strip()
         safe_write(str(readme_path), tmpl)
         print(f"✅ {readme_path} 생성 완료")
+    else:
+        print(f"ℹ️ {readme_path}는 이미 존재합니다 (건너뜀)")
 
     # ─ project_context.json 생성 ─
     memory_dir = root / "memory"
@@ -207,36 +209,6 @@ def generate_docs_for_project(root: Path):
     print(f"  - 프로젝트 타입: {project_type}")
     print(f"  - 기술 스택: {', '.join(tech_stack) if tech_stack else 'N/A'}")
     print(f"  - 파일 수: {total_files}개")
-    else:
-        print(f"ℹ️ {readme_path}는 이미 존재합니다 (건너뜀)")
-    # ─ project_context.json 생성 ─
-    context_path = root / "memory" / "project_context.json"
-
-    # memory 디렉토리 생성
-    context_path.parent.mkdir(exist_ok=True)
-
-    # 프로젝트 타입 감지
-    project_type = "unknown"
-    tech_stack = []
-
-    if (root / "package.json").exists():
-        project_type = "node"
-        if (root / "tsconfig.json").exists():
-            project_type = "typescript"
-            tech_stack.append("TypeScript")
-        tech_stack.append("Node.js")
-    elif (root / "requirements.txt").exists():
-        project_type = "python"
-        tech_stack.append("Python")
-    elif (root / "pom.xml").exists():
-        project_type = "java-maven"
-        tech_stack.append("Java")
-
-    # 파일 수 계산
-    total_files = 0
-    source_files = 0
-    test_files = 0
-    directories = []
 
     for item in root.rglob("*"):
         if item.is_file() and not any(skip in str(item) for skip in ['.git', '__pycache__', 'node_modules']):

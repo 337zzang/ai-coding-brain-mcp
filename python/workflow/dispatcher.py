@@ -3,6 +3,8 @@
 AI helpers에서 워크플로우 명령을 실행하기 위한 인터페이스
 """
 
+import os
+import json
 from pathlib import Path
 from .improved_manager import ImprovedWorkflowManager
 
@@ -18,7 +20,24 @@ def get_manager():
     """워크플로우 매니저 싱글톤 인스턴스 반환"""
     global _manager_instance
     if _manager_instance is None:
-        _manager_instance = ImprovedWorkflowManager()
+        # 현재 프로젝트명 감지
+        project_name = None
+        
+        # 1. workflow.json에서 읽기 시도
+        workflow_file = os.path.join(os.getcwd(), "memory", "workflow.json")
+        if os.path.exists(workflow_file):
+            try:
+                with open(workflow_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    project_name = data.get('project_name')
+            except:
+                pass
+        
+        # 2. 없으면 현재 디렉토리명 사용
+        if not project_name:
+            project_name = os.path.basename(os.getcwd())
+        
+        _manager_instance = ImprovedWorkflowManager(project_name)
     return _manager_instance
 
 def execute_workflow_command(command: str):

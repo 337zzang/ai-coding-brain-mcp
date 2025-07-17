@@ -1,6 +1,6 @@
 # 📁 프로젝트 파일·디렉터리 구조
 
-생성일시: 2025-07-17 10:22:18
+생성일시: 2025-07-17 10:47:42
 
 ```
 ai-coding-brain-mcp/
@@ -360,6 +360,8 @@ ai-coding-brain-mcp/
 │   │   ├── checkpoint_19.json
 │   │   ├── checkpoint_190.json
 │   │   ├── checkpoint_191.json
+│   │   ├── checkpoint_192.json
+│   │   ├── checkpoint_193.json
 │   │   ├── checkpoint_2.json
 │   │   ├── checkpoint_20.json
 │   │   ├── checkpoint_21.json
@@ -448,6 +450,7 @@ ai-coding-brain-mcp/
 │   │   └── checkpoint_99.json
 │   ├── cleanup_plan.json
 │   ├── context.json
+│   ├── project_context.json
 │   ├── protocol_test_report.json
 │   ├── refactoring_analysis.json
 │   ├── session_state.json
@@ -528,6 +531,7 @@ ai-coding-brain-mcp/
 │   ├── essential_helpers.py
 │   ├── info_ops.py
 │   ├── json_repl_session.py
+│   ├── json_repl_session.py.backup_context
 │   ├── npm_builder.py
 │   ├── npm_helpers.py
 │   ├── persistent_history.py

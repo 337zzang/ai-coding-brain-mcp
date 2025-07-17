@@ -1,12 +1,12 @@
 {
-  "analyzed_at": "2025-07-17 10:22:18",
+  "analyzed_at": "2025-07-17 10:47:42",
   "project_type": "typescript",
   "tech_stack": [
     "TypeScript",
     "Node.js"
   ],
   "structure": {
-    "total_files": 555,
+    "total_files": 559,
     "source_files": 124,
     "test_files": 53,
     "directories": [

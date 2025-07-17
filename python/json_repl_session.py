@@ -164,6 +164,14 @@ class AIHelpersV2:
         # Workflow 시스템 통합
         self.execute_workflow_command = self._execute_workflow_command
         self.get_workflow_status = self._get_workflow_status
+
+        # workflow 메서드 별칭 추가
+        def workflow(command=None, *args, **kwargs):
+            if command:
+                return self._execute_workflow_command(command, *args, **kwargs)
+            else:
+                return self._get_workflow_status()
+        self.workflow = workflow
         self.update_file_directory = self._update_file_directory
         
 
@@ -379,6 +387,29 @@ Location: {"Desktop" if desktop else "Subproject"}
                 )
             else:
                 print(f"📂 기존 프로젝트로 전환: {project_name}")
+
+                # 기존 프로젝트의 경우 project_context.json을 먼저 표시
+                context_file = project_path / "memory" / "project_context.json"
+                if context_file.exists():
+                    try:
+                        with open(context_file, 'r', encoding='utf-8') as f:
+                            project_context = json.load(f)
+
+                        print(f"\n📊 프로젝트 컨텍스트 정보:")
+                        print(f"  - 분석일시: {project_context.get('analyzed_at', 'N/A')}")
+                        print(f"  - 프로젝트 타입: {project_context.get('project_type', 'N/A')}")
+
+                        tech_stack = project_context.get('tech_stack', [])
+                        if tech_stack:
+                            print(f"  - 기술 스택: {', '.join(tech_stack)}")
+
+                        structure = project_context.get('structure', {})
+                        if structure:
+                            print(f"  - 전체 파일: {structure.get('total_files', 0)}개")
+                            print(f"  - 소스 파일: {structure.get('source_files', 0)}개")
+                            print(f"  - 테스트 파일: {structure.get('test_files', 0)}개")
+                    except Exception as e:
+                        print(f"  ⚠️ project_context.json 로드 오류: {e}")
             
             # 작업 디렉토리 변경
             os.chdir(str(project_path))
@@ -402,29 +433,30 @@ Location: {"Desktop" if desktop else "Subproject"}
             self._workflow_manager = None
             self._history_manager = None
             
-            # 분석 파일 확인 및 제안
-            analysis_files = {
-                "file_directory.md": project_path / "file_directory.md",
-                "project_context": project_path / "memory" / "project_context.json"
-            }
+            # 분석 파일 확인 및 제안 (새 프로젝트일 때만)
+            if is_new:
+                analysis_files = {
+                    "file_directory.md": project_path / "file_directory.md",
+                    "project_context": project_path / "memory" / "project_context.json"
+                }
 
-            missing_files = []
-            for name, filepath in analysis_files.items():
-                if not filepath.exists():
-                    missing_files.append(name)
+                missing_files = []
+                for name, filepath in analysis_files.items():
+                    if not filepath.exists():
+                        missing_files.append(name)
 
-            if missing_files:
-                print(f"\n⚠️ 다음 분석 파일이 없습니다:")
-                for file in missing_files:
-                    print(f"  - {file}")
-                print(f"\n💡 프로젝트 분석을 실행하시겠습니까?")
-                print(f"   👉 helpers.workflow('/a') 또는 /a 명령어를 실행하세요")
-                print(f"   - file_directory.md 생성/업데이트")
-                print(f"   - project_context.json 생성")
-                print(f"   - 프로젝트 구조 분석")
+                if missing_files:
+                    print(f"\n⚠️ 다음 분석 파일이 없습니다:")
+                    for file in missing_files:
+                        print(f"  - {file}")
+                    print(f"\n💡 프로젝트 분석을 실행하시겠습니까?")
+                    print(f"   👉 helpers.workflow('/a') 또는 /a 명령어를 실행하세요")
+                    print(f"   - file_directory.md 생성/업데이트")
+                    print(f"   - project_context.json 생성")
+                    print(f"   - 프로젝트 구조 분석")
             
-            # project_context.json 로드 및 표시
-            if analysis_files["project_context"].exists():
+            # project_context.json 로드 및 표시 (새 프로젝트일 때만)
+            if is_new and "project_context" in locals() and analysis_files["project_context"].exists():
                 try:
                     with open(analysis_files["project_context"], 'r', encoding='utf-8') as f:
                         project_context = json.load(f)

@@ -1636,5 +1636,45 @@
     "details": "✅ 프로젝트 분석 완료",
     "conversation_id": "conv_20250717_1307",
     "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_205.json"
+  },
+  {
+    "id": 206,
+    "timestamp": "2025-07-17 13:55:30",
+    "action": "워크플로우 명령: /flow",
+    "details": "✅ 프로젝트 'sales_ocr'로 전환 완료\n📁 경로: C:\\Users\\Administrator\\Desktop\\sales_ocr",
+    "conversation_id": "conv_20250717_1355",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_206.json"
+  },
+  {
+    "id": 207,
+    "timestamp": "2025-07-17 13:56:10",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: idle\n활성 플랜 없음",
+    "conversation_id": "conv_20250717_1356",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_207.json"
+  },
+  {
+    "id": 208,
+    "timestamp": "2025-07-17 17:55:29",
+    "action": "워크플로우 명령: /flow",
+    "details": "✅ 프로젝트 'ai-coding-brain-mcp'로 전환 완료\n📁 경로: C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp",
+    "conversation_id": "conv_20250717_1755",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_208.json"
+  },
+  {
+    "id": 209,
+    "timestamp": "2025-07-17 17:57:03",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 테스트 작업\n진행률: 0.0% (0/1)\n현재 태스크: 첫 번째 태스크\n태스크 상태: todo",
+    "conversation_id": "conv_20250717_1757",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_209.json"
+  },
+  {
+    "id": 210,
+    "timestamp": "2025-07-17 18:01:08",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 테스트 작업\n진행률: 0.0% (0/1)\n현재 태스크: 첫 번째 태스크\n태스크 상태: todo",
+    "conversation_id": "conv_20250717_1801",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_210.json"
   }
 ]

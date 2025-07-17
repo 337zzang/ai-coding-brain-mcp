@@ -15,27 +15,46 @@ from typing import Dict, Any, Optional, Tuple
 
 def enhanced_safe_exec(code: str, globals_dict: dict) -> Tuple[bool, str]:
     """
-    기존 safe_exec를 개선한 버전
-    compile() 단계를 추가하여 구문 오류를 사전에 검출
-
-    Returns:
-        (성공 여부, 에러 메시지 또는 빈 문자열)
+    향상된 안전한 코드 실행 함수
+    - Expression과 Module 노드 타입 문제 해결
+    - 더 나은 오류 처리
     """
-    # 1. 들여쓰기 정리
+    import ast
+    import sys
+    from io import StringIO
     import textwrap
+    from typing import Tuple
+
+    # 1. 코드 전처리
     code = textwrap.dedent(code).strip()
+    if not code:
+        return True, ""
 
-    # 2. 컴파일 단계 (구문 검사)
+    # stdout 캡처 준비
+    old_stdout = sys.stdout
+    captured_output = StringIO()
+
+    # 2. 컴파일 및 실행
     try:
-        # mode 결정 (단일 표현식 vs 문장)
-        try:
-            ast.parse(code, mode='eval')
-            mode = 'eval'
-        except:
-            mode = 'exec'
+        sys.stdout = captured_output
 
-        # 컴파일
-        code_obj = compile(code, '<json_repl>', mode)
+        # 먼저 exec 모드로 시도 (가장 안전)
+        try:
+            # exec 모드는 모든 Python 코드를 처리할 수 있음
+            code_obj = compile(code, '<json_repl>', 'exec')
+            exec(code_obj, globals_dict)
+
+        except SyntaxError:
+            # exec 모드 실패 시 eval 모드 시도 (단순 표현식)
+            try:
+                code_obj = compile(code, '<json_repl>', 'eval')
+                result = eval(code_obj, globals_dict)
+                # eval 결과가 있으면 출력
+                if result is not None:
+                    print(repr(result))
+            except:
+                # 두 모드 모두 실패
+                raise
 
     except SyntaxError as e:
         # 구문 오류 포맷팅
@@ -45,41 +64,20 @@ def enhanced_safe_exec(code: str, globals_dict: dict) -> Tuple[bool, str]:
             if e.offset:
                 error_msg += f", 위치 {e.offset}"
             error_msg += ")"
-
-        # 에러 위치 표시
-        if e.text:
-            error_msg += f"\n    {e.text}"
-            if e.offset:
-                error_msg += f"    {' ' * (e.offset - 1)}^"
-
         return False, error_msg
 
     except Exception as e:
-        return False, f"❌ 컴파일 오류: {type(e).__name__}: {str(e)}"
-
-    # 3. 실행 단계
-    try:
-        if mode == 'eval':
-            result = eval(code_obj, globals_dict)
-            # eval 결과를 출력
-            if result is not None:
-                print(repr(result))
-        else:
-            exec(code_obj, globals_dict)
-
-        return True, ""
-
-    except Exception as e:
-        # 런타임 오류 포맷팅
-        tb = traceback.format_exc()
+        # 런타임 오류
         error_msg = f"❌ 런타임 오류: {type(e).__name__}: {str(e)}"
-
-        # 상세 트레이스백은 디버그 모드에서만
-        if globals_dict.get('DEBUG', False):
-            error_msg += f"\n\n{tb}"
-
         return False, error_msg
 
+    finally:
+        # stdout 복원
+        sys.stdout = old_stdout
+        output = captured_output.getvalue()
+        captured_output.close()
+
+    return True, output
 # 빠른 구문 검사 (실행 없이)
 def quick_syntax_check(code: str) -> Dict[str, Any]:
     """

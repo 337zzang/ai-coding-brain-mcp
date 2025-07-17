@@ -1676,5 +1676,13 @@
     "details": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 테스트 작업\n진행률: 0.0% (0/1)\n현재 태스크: 첫 번째 태스크\n태스크 상태: todo",
     "conversation_id": "conv_20250717_1801",
     "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_210.json"
+  },
+  {
+    "id": 211,
+    "timestamp": "2025-07-17 18:24:01",
+    "action": "워크플로우 명령: /complete",
+    "details": "태스크 완료: 첫 번째 태스크",
+    "conversation_id": "conv_20250717_1824",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_211.json"
   }
 ]

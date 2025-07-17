@@ -1031,17 +1031,17 @@
       "id": "3baccfbc-c25e-4a05-993e-0aafe8b1bd32",
       "name": "테스트 작업",
       "description": "",
-      "status": "draft",
+      "status": "completed",
       "tasks": [
         {
           "id": "a4ba04ad-e87d-4635-b03f-2bd678cc25f7",
           "title": "첫 번째 태스크",
           "description": "",
-          "status": "todo",
+          "status": "completed",
           "created_at": "2025-07-17T13:03:26.022615+09:00",
-          "updated_at": "2025-07-17T13:03:26.022615+09:00",
+          "updated_at": "2025-07-17T18:24:01.899873",
           "started_at": null,
-          "completed_at": null,
+          "completed_at": "2025-07-17T18:24:01.899873",
           "duration": null,
           "notes": [],
           "outputs": {}
@@ -1050,7 +1050,7 @@
       "current_task_index": 0,
       "created_at": "2025-07-17T13:03:26.000586+09:00",
       "updated_at": "2025-07-17T13:03:26.000586+09:00",
-      "completed_at": null,
+      "completed_at": "2025-07-17T18:24:01.909872",
       "archived_at": null,
       "stats": {},
       "metadata": {}
@@ -1059,7 +1059,7 @@
   "active_plan_id": "3baccfbc-c25e-4a05-993e-0aafe8b1bd32",
   "events": [],
   "version": "3.0.0",
-  "last_saved": "2025-07-17T13:03:26.024615",
+  "last_saved": "2025-07-17T18:24:01.912871",
   "metadata": {
     "last_modified": "2025-07-13T11:02:04.181585+00:00",
     "project_name": "ai-coding-brain-mcp",

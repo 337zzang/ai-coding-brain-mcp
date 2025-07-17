@@ -11,7 +11,7 @@ from .improved_manager import ImprovedWorkflowManager
 # workflow_helper import 추가
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
-from workflow_helper import generate_docs_for_project, flow_project
+from workflow_helper import generate_docs_for_project
 
 # 전역 매니저 인스턴스
 _manager_instance = None
@@ -48,13 +48,16 @@ def execute_workflow_command(command: str):
             parts = command.split(None, 1)
             if len(parts) > 1:
                 project_name = parts[1]
-                # flow_project 함수 import 필요
-                from workflow_helper import flow_project
-                result = flow_project(project_name)
-                if result.get("success"):
-                    return f"✅ 프로젝트 '{project_name}'로 전환 완료"
+                # 프로젝트 전환 로직 직접 구현
+                project_path = os.path.join(os.path.dirname(os.getcwd()), project_name)
+                if os.path.exists(project_path):
+                    os.chdir(project_path)
+                    # 새 매니저 인스턴스 생성을 위해 기존 인스턴스 제거
+                    global _manager_instance
+                    _manager_instance = None
+                    return f"✅ 프로젝트 '{project_name}'로 전환 완료\n📁 경로: {project_path}"
                 else:
-                    return f"Error: 프로젝트 전환 실패"
+                    return f"Error: 프로젝트 디렉토리가 존재하지 않습니다: {project_path}"
             else:
                 return "Error: 프로젝트명을 지정해주세요. 예: /flow my-project"
 

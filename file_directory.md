@@ -1,6 +1,6 @@
 # 📁 프로젝트 파일·디렉터리 구조
 
-생성일시: 2025-07-17 10:47:42
+생성일시: 2025-07-17 13:07:19
 
 ```
 ai-coding-brain-mcp/
@@ -362,8 +362,19 @@ ai-coding-brain-mcp/
 │   │   ├── checkpoint_191.json
 │   │   ├── checkpoint_192.json
 │   │   ├── checkpoint_193.json
+│   │   ├── checkpoint_194.json
+│   │   ├── checkpoint_195.json
+│   │   ├── checkpoint_196.json
+│   │   ├── checkpoint_197.json
+│   │   ├── checkpoint_198.json
+│   │   ├── checkpoint_199.json
 │   │   ├── checkpoint_2.json
 │   │   ├── checkpoint_20.json
+│   │   ├── checkpoint_200.json
+│   │   ├── checkpoint_201.json
+│   │   ├── checkpoint_202.json
+│   │   ├── checkpoint_203.json
+│   │   ├── checkpoint_204.json
 │   │   ├── checkpoint_21.json
 │   │   ├── checkpoint_22.json
 │   │   ├── checkpoint_23.json
@@ -501,10 +512,11 @@ ai-coding-brain-mcp/
 │   │   ├── README.md
 │   │   ├── src/
 │   │   └── tests/
-│   └── test-v2-project/
-│       ├── context.json
-│       ├── file_directory.md
-│       └── README.md
+│   ├── test-v2-project/
+│   │   ├── context.json
+│   │   ├── file_directory.md
+│   │   └── README.md
+│   └── test_flow_project/
 ├── pyproject.toml
 ├── python/
 │   ├── __init__.py
@@ -532,6 +544,7 @@ ai-coding-brain-mcp/
 │   ├── info_ops.py
 │   ├── json_repl_session.py
 │   ├── json_repl_session.py.backup_context
+│   ├── json_repl_session.py.backup_v7
 │   ├── npm_builder.py
 │   ├── npm_helpers.py
 │   ├── persistent_history.py
@@ -544,6 +557,7 @@ ai-coding-brain-mcp/
 │   ├── workflow/
 │   │   ├── __init__.py
 │   │   ├── dispatcher.py
+│   │   ├── dispatcher.py.backup_20250717_130438
 │   │   ├── improved_manager.py
 │   │   ├── messaging/
 │   │   │   ├── __init__.py
@@ -639,6 +653,8 @@ ai-coding-brain-mcp/
 ├── threaded_test.png
 ├── tmpwo0ybiyt
 ├── tsconfig.json
+├── userpreference_v7_final.md
+├── userpreference_v7_update.md
 ├── workflow.json
 └── workflow_history.json
 ```

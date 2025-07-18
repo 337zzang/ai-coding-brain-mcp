@@ -5,6 +5,7 @@
 from typing import Dict, List, Any, Optional
 from .ez_code import ez_parse, ez_replace, ez_view
 from .core import track_execution
+from .helper_result import ParseResult
 
 
 class CodeSnippet:

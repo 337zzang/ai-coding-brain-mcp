@@ -1,9 +1,9 @@
 
 # HelperResult 패턴 import
 try:
-    from python.helper_result import SearchResult, FileResult, ParseResult, HelperResult
+    from ai_helpers_v2.helper_result import SearchResult, FileResult, ParseResult, HelperResult
 except ImportError:
-    from helper_result import SearchResult, FileResult, ParseResult, HelperResult
+    from ai_helpers_v2.helper_result import SearchResult, FileResult, ParseResult, HelperResult
 
 """
 REPL 친화적 code_ops 도구 모음 - 리팩토링 버전

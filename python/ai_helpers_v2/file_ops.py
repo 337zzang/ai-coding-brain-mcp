@@ -60,11 +60,19 @@ def file_exists(filepath: str) -> bool:
     return os.path.exists(filepath) and os.path.isfile(filepath)
 
 @track_execution
-def read_json(filepath: str) -> Dict[str, Any]:
-    """JSON 파일 읽기"""
-    content = read_file(filepath)
-    return json.loads(content)
+def read_json(filepath: str) -> FileResult:
+    """JSON 파일 읽기
 
+    Returns:
+        FileResult: 파싱된 JSON 데이터를 포함한 결과 객체
+    """
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return FileResult(content=data, path=filepath, success=True)
+    except Exception as e:
+        return FileResult(content=None, path=filepath, success=False,
+                         error=str(e), error_type=type(e).__name__)
 @track_execution
 def write_json(filepath: str, data: Dict[str, Any], indent: int = 2) -> bool:
     """JSON 파일 쓰기"""

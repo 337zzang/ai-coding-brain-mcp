@@ -7,7 +7,7 @@ import glob
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Pattern
 from .core import track_execution
-from .search_result import SearchResult, make_search_result
+from .helper_result import SearchResult, make_search_result
 
 @track_execution
 def search_files(

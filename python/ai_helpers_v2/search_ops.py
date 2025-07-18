@@ -7,6 +7,7 @@ import glob
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Pattern
 from .core import track_execution
+from .search_result import SearchResult, make_search_result
 
 @track_execution
 def search_files(
@@ -31,7 +32,7 @@ def search_code(
     pattern: str,
     file_pattern: str = "*.py",
     case_sensitive: bool = True
-) -> List[Dict[str, Any]]:
+) -> SearchResult:
     """코드 내용 검색"""
     results = []
     regex_flags = 0 if case_sensitive else re.IGNORECASE
@@ -57,7 +58,26 @@ def search_code(
             # 읽을 수 없는 파일은 무시
             pass
 
-    return results
+    return SearchResult(results)
+
+
+@track_execution
+def safe_search_code(
+    directory: str,
+    pattern: str,
+    file_pattern: str = "*.py",
+    case_sensitive: bool = True,
+    max_results: int = 1000
+) -> SearchResult:
+    """항상 SearchResult를 반환하는 안전한 검색
+
+    예외가 발생해도 빈 SearchResult 반환
+    """
+    try:
+        return search_code(directory, pattern, file_pattern, case_sensitive)
+    except Exception as e:
+        print(f"검색 중 오류 발생: {e}")
+        return SearchResult([])
 
 def get_context_lines(lines: List[str], index: int, context: int = 2) -> List[str]:
     """주변 컨텍스트 라인 가져오기"""

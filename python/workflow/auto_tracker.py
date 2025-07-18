@@ -16,6 +16,8 @@ class AutoTracker:
     """작업 중 생성된 산출물 자동 추적"""
 
     def __init__(self):
+        # 순환 import 방지
+        from .helper import get_manager
         self.manager = get_manager()
         self.tracking_enabled = True
         self.tracked_files: Set[str] = set()

@@ -36,10 +36,10 @@ class WorkflowV2Manager:
 
     def _get_workflow_path(self) -> Path:
         """v2 워크플로우 파일 경로"""
-        # v2는 별도 파일로 저장
-        memory_dir = Path("memory/v2")
+        # v2는 memory 폴더에 단순하게 저장
+        memory_dir = Path("memory")
         memory_dir.mkdir(parents=True, exist_ok=True)
-        return memory_dir / f"workflow_{self.project_name}.json"
+        return memory_dir / "workflow_v2.json"
 
     def _load_or_create(self) -> WorkflowV2:
         """워크플로우 로드 또는 생성"""

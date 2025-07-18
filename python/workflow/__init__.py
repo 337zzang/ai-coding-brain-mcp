@@ -38,6 +38,11 @@ def init():
     from .helper import init_workflow_v2
     return init_workflow_v2()
 
+def check_v2_files():
+    """v2 파일 위치 확인"""
+    from .integration import check_v2_files as _check
+    return _check()
+
 def help():
     """WorkflowV2 사용법 안내"""
     return """
@@ -66,12 +71,12 @@ def help():
    파일 생성/수정과 Git 커밋이 자동으로 추적됩니다.
 
 4. 데이터 위치:
-   memory/v2/workflow_[프로젝트명].json
+   memory/workflow_v2.json
 """
 
 # 필요시 명시적으로 import할 수 있도록
 __all__ = [
-    'task', 'start', 'done', 'status', 'report', 'wf', 'init', 'help'
+    'task', 'start', 'done', 'status', 'report', 'wf', 'init', 'help', 'check_v2_files'
 ]
 
 # 자동 초기화 시도 (오류 무시)

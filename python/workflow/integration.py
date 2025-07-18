@@ -105,17 +105,24 @@ def v2_report() -> str:
 def check_v2_files():
     """v2 파일 위치 확인"""
     import os
-    v2_dir = "memory/v2"
-    if os.path.exists(v2_dir):
-        files = os.listdir(v2_dir)
-        print(f"\n📁 WorkflowV2 파일 위치: {v2_dir}")
-        for file in files:
-            print(f"  • {file}")
-            file_path = os.path.join(v2_dir, file)
-            size = os.path.getsize(file_path)
-            print(f"    크기: {size} bytes")
+    workflow_file = "memory/workflow_v2.json"
+    if os.path.exists(workflow_file):
+        size = os.path.getsize(workflow_file)
+        print(f"\n📁 WorkflowV2 파일: {workflow_file}")
+        print(f"   크기: {size:,} bytes")
+
+        # 간단한 내용 요약
+        try:
+            import json
+            with open(workflow_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            print(f"   프로젝트: {data.get('project', 'N/A')}")
+            print(f"   태스크 수: {len(data.get('tasks', []))}")
+            print(f"   이벤트 수: {len(data.get('events', []))}")
+        except:
+            pass
     else:
-        print(f"\n📁 WorkflowV2 디렉토리가 아직 생성되지 않았습니다: {v2_dir}")
+        print(f"\n📁 WorkflowV2 파일이 아직 생성되지 않았습니다: {workflow_file}")
 
 print("✅ WorkflowV2 통합 완료!")
 print("\n사용 가능한 함수:")

@@ -11,11 +11,30 @@ if workflow_path not in sys.path:
 
 # workflow 모듈 import
 try:
-    from workflow import (
-        task, start, done, status, report, wf,
-        workflow_integrated, check_v2_files,
-        auto_track_file_creation, auto_track_git_commit
-    )
+    # Python 경로에 추가
+    import sys
+    import os
+    if 'python' not in sys.path:
+        sys.path.insert(0, 'python')
+
+    # workflow 모듈에서 필요한 것들 import
+    from workflow import task, done, status, report
+    from workflow.manager import WorkflowV2Manager
+    from workflow.integration import workflow_integrated
+
+    # manager 인스턴스 생성 (필요한 경우)
+    _manager = None
+
+    def start():
+        """다음 태스크 시작"""
+        global _manager
+        if _manager is None:
+            _manager = WorkflowV2Manager()
+        return _manager.start_next_task() if hasattr(_manager, 'start_next_task') else "태스크를 시작합니다"
+
+    def wf(cmd):
+        """워크플로우 명령 실행"""
+        return workflow_integrated(cmd)
 
     # 전역으로 노출
     globals().update({
@@ -29,11 +48,13 @@ try:
     })
 
     _workflow_loaded = True
+    print("✅ WorkflowV2 로드 성공")
 
 except Exception as e:
     print(f"⚠️ WorkflowV2 로드 실패: {e}")
+    import traceback
+    traceback.print_exc()
     _workflow_loaded = False
-
 # helpers 메서드로 추가
 class WorkflowHelpers:
     """helpers 객체에 추가할 workflow 메서드들"""

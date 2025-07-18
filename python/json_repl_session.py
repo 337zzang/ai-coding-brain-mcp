@@ -508,7 +508,6 @@ Location: {"Desktop" if desktop else "Subproject"}
             # 2. 워크플로우 상태 (간단히)
             try:
                 if hasattr(self, '_workflow_manager') and self._workflow_manager:
-                    from .workflow.improved_manager import WorkflowStatus
                     status = self._workflow_manager.get_status()
                     if status:
                         print(f"\n📊 워크플로우: {status.get('project_name', 'N/A')}")
@@ -582,7 +581,6 @@ Location: {"Desktop" if desktop else "Subproject"}
                 
                 # 구조 파싱 시도
                 try:
-                    from workflow_helper import parse_file_directory_md
                     docs["parsed_tree"] = parse_file_directory_md(docs["file_directory"])
                 except Exception as e:
                     print(f"⚠️ 파일 구조 파싱 실패: {e}")
@@ -662,8 +660,12 @@ Location: {"Desktop" if desktop else "Subproject"}
         """워크플로우 명령 실행"""
         try:
             # dispatcher를 통해 명령 실행
-            from workflow.dispatcher import execute_workflow_command as dispatch_command
-            result_message = dispatch_command(command)
+            # workflow_wrapper의 workflow 함수 사용
+            try:
+                from workflow_wrapper import workflow as wf_command
+                result_message = wf_command(command)
+            except ImportError:
+                result_message = "Error: 워크플로우 시스템을 로드할 수 없습니다"
             
             # 성공/실패 판단
             if result_message.startswith("Error:"):
@@ -693,7 +695,6 @@ Location: {"Desktop" if desktop else "Subproject"}
         """워크플로우 상태 조회"""
         try:
             if self._workflow_manager is None:
-                from workflow.improved_manager import ImprovedWorkflowManager
                 project_name = self.get_current_project().get('name', 'default')
                 self._workflow_manager = ImprovedWorkflowManager(project_name)
             

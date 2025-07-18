@@ -86,7 +86,7 @@ def get_context_lines(lines: List[str], index: int, context: int = 2) -> List[st
     return [lines[i].rstrip() for i in range(start, end)]
 
 @track_execution
-def find_function(directory: str, function_name: str) -> List[Dict[str, Any]]:
+def find_function(directory: str, function_name: str) -> SearchResult:
     """함수 정의 찾기"""
     # 정규표현식 특수문자 이스케이프
     escaped_name = re.escape(function_name)
@@ -94,7 +94,7 @@ def find_function(directory: str, function_name: str) -> List[Dict[str, Any]]:
     return search_code(directory, pattern, "*.py")
 
 @track_execution
-def find_class(directory: str, class_name: str) -> List[Dict[str, Any]]:
+def find_class(directory: str, class_name: str) -> SearchResult:
     """클래스 정의 찾기"""
     # 정규표현식 특수문자 이스케이프
     escaped_name = re.escape(class_name)
@@ -111,3 +111,30 @@ __all__ = [
     'search_files', 'search_code', 
     'find_function', 'find_class', 'grep'
 ]
+
+
+@track_execution
+def safe_find_function(directory: str, function_name: str) -> SearchResult:
+    """함수 찾기 - 안전한 버전
+
+    예외가 발생해도 빈 SearchResult 반환
+    """
+    try:
+        return find_function(directory, function_name)
+    except Exception as e:
+        print(f"함수 검색 중 오류: {e}")
+        return SearchResult([])
+
+
+@track_execution
+def safe_find_class(directory: str, class_name: str) -> SearchResult:
+    """클래스 찾기 - 안전한 버전
+
+    예외가 발생해도 빈 SearchResult 반환
+    """
+    try:
+        return find_class(directory, class_name)
+    except Exception as e:
+        print(f"클래스 검색 중 오류: {e}")
+        return SearchResult([])
+

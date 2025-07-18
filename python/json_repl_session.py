@@ -709,7 +709,7 @@ Location: {"Desktop" if desktop else "Subproject"}
         """동적 속성 접근 - 호환성을 위해"""
         if AI_HELPERS_V2_LOADED:
             # v2 모듈에서 찾기
-            for module in ['file_ops', 'search_ops', 'code_ops', 'git_ops', 'project_ops', 'core']:
+            for module in ['file_ops', 'search_ops', 'code_ops', 'git_ops', 'project_ops', 'llm_ops', 'core']:
                 module_name = f'ai_helpers_v2.{module}'
                 if module_name in sys.modules:
                     module_obj = sys.modules[module_name]

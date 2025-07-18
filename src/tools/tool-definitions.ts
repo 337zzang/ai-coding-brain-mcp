@@ -5,8 +5,8 @@ import { Tool } from '@modelcontextprotocol/sdk/types';
  * 
  * 영속적 Python REPL 세션과 프로젝트 관리를 위한 MCP 도구 모음
  * 
- * @version 4.0.0
- * @updated 2025-07-16
+ * @version 4.1.0
+ * @updated 2025-07-17
  * @author AI Coding Brain Team
  */
 
@@ -26,22 +26,41 @@ export const toolDefinitions: Tool[] = [
 핵심 기능:
 • 세션 간 변수 유지 - 모든 변수와 상태가 호출 간에 보존됩니다
 • 프로젝트별 격리 - 각 프로젝트는 독립적인 실행 환경을 가집니다
-• 검증된 헬퍼 함수 - 파일, JSON, Git, 검색, 디렉토리 작업
-• 정밀 코드 수정 - AST 기반 좌표로 정확한 수정
+• 검증된 헬퍼 함수 (20개+) - 파일, JSON, Git, 검색, 디렉토리 작업
+• 정밀 코드 수정 - AST 기반 좌표로 정확한 수정 (NEW!)
+• HelperResult 패턴 - 표준화된 결과 반환 (NEW!)
 
 권장 헬퍼 함수:
 • 파일: read_file, write_file, create_file, append_to_file, file_exists
 • JSON: read_json, write_json
 • Git: git_status, git_add, git_commit, git_push, git_branch
-• 검색: search_files, search_code (search_in_files는 deprecated)
-• 분석: parse_file, scan_directory
-• 프로젝트: fp(project_name), get_current_project (flow_project는 deprecated)
-• AI: ask_o3(prompt) - AI 도우미 (explain_error, generate_docstring 대체)
+• 검색: search_files, search_code (SearchResult 반환)
+• 분석: parse_file (ParseResult 반환), scan_directory
+• 프로젝트: fp(project_name), get_current_project
+• AI: ask_o3(prompt) - AI 도우미
 
-코드 수정 권장 방법:
-• replace_block(filepath, old_code, new_code) - 안전한 코드 블록 교체
+NEW! HelperResult 패턴:
+• SearchResult - 검색 결과 (count, files(), by_file() 메서드)
+• FileResult - 파일 작업 결과 (lines, size 속성)
+• ParseResult - 파싱 결과 (functions, classes 속성)
+
+NEW! 안전한 헬퍼 함수:
+• safe_search_code() - 예외 없이 SearchResult 반환
+• safe_read_file() - 예외 없이 FileResult 반환
+• safe_parse_file() - 예외 없이 ParseResult 반환
+
+NEW! Quick 함수 (REPL 친화적):
+• qs(pattern) - 코드 검색, SearchResult 반환
+• qfind(path, pattern) - 파일 검색, SearchResult 반환
+• qc(pattern) - 현재 디렉토리 검색
+• qv(file, func) - 함수 코드 보기
+• qproj() - 프로젝트 정보 표시
+
+코드 수정 권장 방법 (NEW!):
 • replace_function(filepath, func_name, new_code) - 함수 정밀 교체
 • replace_method(filepath, class_name, method_name, new_code) - 메서드 정밀 교체
+• extract_code_elements(filepath) - 정확한 좌표와 함께 코드 요소 추출
+• 기존 replace_block도 사용 가능 (레거시 호환)
 
 주의: 이제 중복 코드가 있어도 정확한 위치를 찾아 수정합니다!`,
     inputSchema: executeCodeSchema
@@ -70,7 +89,7 @@ export const toolDefinitions: Tool[] = [
  * @param name 도구 이름
  * @returns 도구 정의 또는 undefined
  */
-export function getToolByName(name: string): Tool | undefined {
+export function findToolByName(name: string): Tool | undefined {
   return toolDefinitions.find(tool => tool.name === name);
 }
 
@@ -81,21 +100,3 @@ export function getToolByName(name: string): Tool | undefined {
 export function getToolNames(): string[] {
   return toolDefinitions.map(tool => tool.name);
 }
-
-/**
- * 도구 정의를 검증합니다
- * @param tool 검증할 도구
- * @returns 유효성 여부
- */
-export function validateTool(tool: Tool): boolean {
-  return !!(
-    tool.name &&
-    tool.description &&
-    tool.inputSchema &&
-    typeof tool.inputSchema === 'object'
-  );
-}
-
-// Type exports for use in handlers
-export type ToolName = 'execute_code' | 'restart_json_repl';
-export type ToolDefinition = typeof toolDefinitions[number];

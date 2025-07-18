@@ -1,0 +1,4 @@
+{
+  "command": "/status",
+  "result": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 자동화 테스트 프로젝트\n진행률: 83.3% (5/6)\n현재 태스크: json_repl_session.py 에러 수정 완료\n태스크 상태: todo"
+}

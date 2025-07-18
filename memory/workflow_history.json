@@ -1684,5 +1684,245 @@
     "details": "태스크 완료: 첫 번째 태스크",
     "conversation_id": "conv_20250717_1824",
     "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_211.json"
+  },
+  {
+    "id": 212,
+    "timestamp": "2025-07-17 18:59:16",
+    "action": "워크플로우 명령: /a",
+    "details": "✅ 프로젝트 분석 완료",
+    "conversation_id": "conv_20250717_1859",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_212.json"
+  },
+  {
+    "id": 213,
+    "timestamp": "2025-07-17 19:04:23",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 테스트 작업\n진행률: 100.0% (1/1)\n",
+    "conversation_id": "conv_20250717_1904",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_213.json"
+  },
+  {
+    "id": 214,
+    "timestamp": "2025-07-17 19:04:23",
+    "action": "워크플로우 명령: /start",
+    "details": "플랜 생성됨: 복합 테스트 작업",
+    "conversation_id": "conv_20250717_1904",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_214.json"
+  },
+  {
+    "id": 215,
+    "timestamp": "2025-07-17 19:04:23",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: 코드 분석 자동화",
+    "conversation_id": "conv_20250717_1904",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_215.json"
+  },
+  {
+    "id": 216,
+    "timestamp": "2025-07-17 19:04:23",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: 에러 처리 개선",
+    "conversation_id": "conv_20250717_1904",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_216.json"
+  },
+  {
+    "id": 217,
+    "timestamp": "2025-07-17 19:04:23",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 복합 테스트 작업\n진행률: 0.0% (0/2)\n현재 태스크: 코드 분석 자동화\n태스크 상태: todo",
+    "conversation_id": "conv_20250717_1904",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_217.json"
+  },
+  {
+    "id": 218,
+    "timestamp": "2025-07-17 19:04:23",
+    "action": "워크플로우 명령: /next",
+    "details": "태스크 시작됨: 코드 분석 자동화. 설계서 작성 후 계속 진행하세요.",
+    "conversation_id": "conv_20250717_1904",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_218.json"
+  },
+  {
+    "id": 219,
+    "timestamp": "2025-07-17 19:04:23",
+    "action": "워크플로우 명령: /complete",
+    "details": "태스크 완료: 코드 분석 자동화",
+    "conversation_id": "conv_20250717_1904",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_219.json"
+  },
+  {
+    "id": 220,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /start",
+    "details": "플랜 생성됨: 자동화 테스트 프로젝트",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_220.json"
+  },
+  {
+    "id": 221,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: 요구사항 분석 및 설계",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_221.json"
+  },
+  {
+    "id": 222,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: 핵심 기능 구현",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_222.json"
+  },
+  {
+    "id": 223,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: 단위 테스트 작성",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_223.json"
+  },
+  {
+    "id": 224,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: 통합 테스트",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_224.json"
+  },
+  {
+    "id": 225,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: 문서화 및 배포 준비",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_225.json"
+  },
+  {
+    "id": 226,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /next",
+    "details": "태스크 시작됨: 요구사항 분석 및 설계. 설계서 작성 후 계속 진행하세요.",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_226.json"
+  },
+  {
+    "id": 227,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /complete",
+    "details": "태스크 완료: 요구사항 분석 및 설계",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_227.json"
+  },
+  {
+    "id": 228,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /next",
+    "details": "태스크 시작됨: 핵심 기능 구현. 설계서 작성 후 계속 진행하세요.",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_228.json"
+  },
+  {
+    "id": 229,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /complete",
+    "details": "태스크 완료: 핵심 기능 구현",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_229.json"
+  },
+  {
+    "id": 230,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /next",
+    "details": "태스크 시작됨: 단위 테스트 작성. 설계서 작성 후 계속 진행하세요.",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_230.json"
+  },
+  {
+    "id": 231,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /complete",
+    "details": "태스크 완료: 단위 테스트 작성",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_231.json"
+  },
+  {
+    "id": 232,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /next",
+    "details": "태스크 시작됨: 통합 테스트. 설계서 작성 후 계속 진행하세요.",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_232.json"
+  },
+  {
+    "id": 233,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /complete",
+    "details": "태스크 완료: 통합 테스트",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_233.json"
+  },
+  {
+    "id": 234,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /next",
+    "details": "태스크 시작됨: 문서화 및 배포 준비. 설계서 작성 후 계속 진행하세요.",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_234.json"
+  },
+  {
+    "id": 235,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /complete",
+    "details": "태스크 완료: 문서화 및 배포 준비",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_235.json"
+  },
+  {
+    "id": 236,
+    "timestamp": "2025-07-17 19:06:28",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 자동화 테스트 프로젝트\n진행률: 100.0% (5/5)\n",
+    "conversation_id": "conv_20250717_1906",
+    "checkpoint": "C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_236.json"
+  },
+  {
+    "id": 237,
+    "timestamp": "2025-07-18 03:32:06",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 자동화 테스트 프로젝트\n진행률: 100.0% (5/5)\n",
+    "conversation_id": "conv_20250718_0332",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_237.json"
+  },
+  {
+    "id": 238,
+    "timestamp": "2025-07-18 04:11:50",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: json_repl_session.py 에러 수정 완료",
+    "conversation_id": "conv_20250718_0411",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_238.json"
+  },
+  {
+    "id": 239,
+    "timestamp": "2025-07-18 16:24:34",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 자동화 테스트 프로젝트\n진행률: 83.3% (5/6)\n현재 태스크: json_repl_session.py 에러 수정 완료\n태스크 상태: todo",
+    "conversation_id": "conv_20250718_1624",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_239.json"
+  },
+  {
+    "id": 240,
+    "timestamp": "2025-07-18 16:27:14",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 자동화 테스트 프로젝트\n진행률: 83.3% (5/6)\n현재 태스크: json_repl_session.py 에러 수정 완료\n태스크 상태: todo",
+    "conversation_id": "conv_20250718_1627",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_240.json"
+  },
+  {
+    "id": 241,
+    "timestamp": "2025-07-18 16:27:14",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: list",
+    "conversation_id": "conv_20250718_1627",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_241.json"
   }
 ]

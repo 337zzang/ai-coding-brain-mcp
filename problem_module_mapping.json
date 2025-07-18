@@ -1,0 +1,50 @@
+{
+  "report_type": "problem_module_mapping",
+  "problems": {
+    "1. Git 관련 기능 오류": {
+      "primary_module": "python/ai_helpers_v2/git_ops.py",
+      "secondary_modules": [],
+      "error": "WinError 2 - Git 명령을 찾을 수 없음"
+    },
+    "2. scan_directory_dict 오류": {
+      "primary_module": "python/ai_helpers_v2/project_ops.py",
+      "secondary_modules": [],
+      "error": "함수는 존재하나 빈 결과 반환"
+    },
+    "3. search_code_content 미구현": {
+      "primary_module": "python/ai_helpers_v2/search_ops.py",
+      "secondary_modules": [],
+      "error": "함수가 정의되지 않음"
+    },
+    "4. 워크플로우 이벤트 오류": {
+      "primary_module": "python/workflow/messaging/message_controller.py",
+      "secondary_modules": [
+        "python/workflow/improved_manager.py",
+        "python/workflow/models.py"
+      ],
+      "error": "list indices must be integers or slices"
+    }
+  },
+  "recommendations": {
+    "1. Git 관련 기능": {
+      "module": "python/ai_helpers_v2/git_ops.py",
+      "action": "subprocess 호출 부분에 Git 경로 확인 로직 추가",
+      "priority": "High"
+    },
+    "2. scan_directory_dict": {
+      "module": "python/ai_helpers_v2/project_ops.py",
+      "action": "함수 구현 검토 및 리턴 값 확인",
+      "priority": "Medium"
+    },
+    "3. search_code_content": {
+      "module": "python/ai_helpers_v2/search_ops.py",
+      "action": "함수 추가 또는 search_code로 리다이렉트",
+      "priority": "Low"
+    },
+    "4. 워크플로우 이벤트": {
+      "module": "python/workflow/messaging/message_controller.py",
+      "action": "리스트 인덱싱 오류 수정",
+      "priority": "Low"
+    }
+  }
+}

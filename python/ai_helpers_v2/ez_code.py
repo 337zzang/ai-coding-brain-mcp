@@ -6,52 +6,79 @@ import ast
 import shutil
 from datetime import datetime
 
-
 def ez_parse(filepath):
-    """초간단 파서 - 함수/클래스 위치만 반환
+    """파일의 함수/클래스 구조를 파싱"""
+    import ast
 
-    Returns:
-        dict: {name: (start_line, end_line), ...}
-    """
-    with open(filepath, 'r', encoding='utf-8') as f:
-        content = f.read()
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
 
-    lines = content.split('\n')
-    tree = ast.parse(content)
+        tree = ast.parse(content)
+        lines = content.split('\n')
 
-    items = {}
+        # 최상위 클래스 노드 수집
+        class_nodes = {}
+        for node in tree.body:
+            if isinstance(node, ast.ClassDef):
+                class_nodes[node.name] = node
 
-    # 클래스 노드 먼저 수집
-    class_nodes = {node.name: node for node in tree.body if isinstance(node, ast.ClassDef)}
+        items = {}
 
-    def get_end_line(start, indent):
-        """블록의 끝 라인 찾기"""
-        for i in range(start + 1, len(lines)):
-            if lines[i].strip() and len(lines[i]) - len(lines[i].lstrip()) <= indent:
-                return i - 1
-        return len(lines) - 1
+        # 모든 함수/클래스 찾기
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+                # 부모 클래스 찾기
+                parent_class = None
+                for class_name, class_node in class_nodes.items():
+                    if node != class_node and _is_node_in_class(node, class_node):
+                        parent_class = class_name
+                        break
 
-    # 모든 함수/클래스 처리
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
-            # 부모 클래스 찾기
-            parent = None
-            for cname, cnode in class_nodes.items():
-                if node != cnode and any(n == node for n in ast.walk(cnode)):
-                    parent = cname
-                    break
+                # 이름 결정
+                if parent_class and isinstance(node, ast.FunctionDef):
+                    name = f"{parent_class}.{node.name}"
+                else:
+                    name = node.name
 
-            # 이름 결정
-            name = f"{parent}.{node.name}" if parent else node.name
+                # 위치 계산
+                start = node.lineno - 1
+                end = _find_block_end(lines, start)
 
-            # 위치 계산
-            start = node.lineno - 1
-            indent = len(lines[start]) - len(lines[start].lstrip())
-            end = get_end_line(start, indent)
+                items[name] = (start, end)
 
-            items[name] = (start, end)
+        return items
 
-    return items
+    except Exception as e:
+        print(f"❌ 파싱 오류: {e}")
+        return {}
+
+
+def _is_node_in_class(node, class_node):
+    """노드가 클래스 내부에 있는지 확인"""
+    for child in ast.walk(class_node):
+        if child == node:
+            return True
+    return False
+
+
+def _find_block_end(lines, start_line):
+    """블록의 끝 찾기"""
+    if start_line >= len(lines):
+        return start_line
+
+    start_indent = len(lines[start_line]) - len(lines[start_line].lstrip())
+
+    for i in range(start_line + 1, len(lines)):
+        line = lines[i]
+        if not line.strip() or line.strip().startswith('#'):
+            continue
+
+        current_indent = len(line) - len(line.lstrip())
+        if current_indent <= start_indent:
+            return i - 1
+
+    return len(lines) - 1
 
 
 def ez_replace(filepath, target_name, new_code, backup=True):
@@ -149,3 +176,22 @@ if __name__ == "__main__":
     print("  items = ez_parse('file.py')")
     print("  result = ez_replace('file.py', 'function_name', new_code)")
     print("  code = ez_view('file.py', 'function_name')")
+
+# 안전한 교체 함수 (문법 검증 포함)
+def ez_replace_safe(filepath, target_name, new_code, backup=True, validate=True):
+    """안전한 코드 교체 - 문법 검증 및 자동 롤백 지원"""
+    try:
+        from .safe_code_modifier import SafeCodeModifier
+    except ImportError:
+        from safe_code_modifier import SafeCodeModifier
+
+    modifier = SafeCodeModifier(auto_backup=backup, validate_syntax=validate)
+    result = modifier.safe_replace(filepath, target_name, new_code)
+
+    if result['success']:
+        msg = f"✅ Replaced {target_name} ({result['lines_changed']} → {result['new_lines']} lines)"
+        if result['backup_path']:
+            msg += f"\n   Backup: {result['backup_path']}"
+        return msg
+    else:
+        return f"❌ 교체 실패: {result['error']}"

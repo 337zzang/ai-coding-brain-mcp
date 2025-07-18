@@ -919,6 +919,136 @@ def initialize_repl():
         print(f"✅ q_tools 로드 완료! {len(q_functions)}개 함수 사용 가능")
         
     except Exception as e:
+        pass
+    
+    # 7. AST 기반 코드 도구 자동 로드 (추가됨)
+    try:
+        # ai_helpers_v2 경로 추가
+        ai_helpers_path = os.path.join(python_path, "ai_helpers_v2")
+        if ai_helpers_path not in sys.path:
+            sys.path.insert(0, ai_helpers_path)
+
+        # 1. ez_code 개선된 함수들
+        try:
+            from ez_code import ez_parse, ez_replace, ez_view, ez_replace_safe
+            repl_globals.update({
+                'ez_parse': ez_parse,
+                'ez_replace': ez_replace,
+                'ez_view': ez_view,
+                'ez_replace_safe': ez_replace_safe,
+                # 짧은 별칭 추가
+                'ezp': ez_parse,      # 파싱
+                'ezr': ez_replace,    # 교체
+                'ezv': ez_view,       # 보기
+                'ezrs': ez_replace_safe  # 안전한 교체
+            })
+            print("  ✅ ez_code 함수 로드: ez_parse(ezp), ez_replace(ezr), ez_view(ezv), ez_replace_safe(ezrs)")
+        except Exception as e:
+            print(f"  ❌ ez_code 로드 실패: {e}")
+
+        # 2. 개선된 AST 파서
+        try:
+            from improved_ast_parser import ez_parse_advanced, ez_parse_cached, ImprovedASTParser
+            repl_globals.update({
+                'ez_parse_advanced': ez_parse_advanced,
+                'ez_parse_cached': ez_parse_cached,
+                'ImprovedASTParser': ImprovedASTParser,
+                # 짧은 별칭
+                'ezpa': ez_parse_advanced,  # 고급 파싱
+                'ezpc': ez_parse_cached     # 캐시된 파싱
+            })
+            print("  ✅ 개선된 AST 파서 로드: ez_parse_advanced(ezpa), ez_parse_cached(ezpc)")
+        except Exception as e:
+            print(f"  ❌ improved_ast_parser 로드 실패: {e}")
+
+        # 3. 안전한 코드 수정 도구
+        try:
+            from safe_code_modifier import SafeCodeModifier
+            repl_globals.update({
+                'SafeCodeModifier': SafeCodeModifier
+            })
+            # 간편한 인스턴스 생성
+            safe_modifier = SafeCodeModifier()
+            repl_globals['safe_modifier'] = safe_modifier
+            repl_globals['safe_replace'] = safe_modifier.safe_replace
+            repl_globals['sr'] = safe_modifier.safe_replace  # 짧은 별칭
+            print("  ✅ 안전한 코드 수정 도구 로드: SafeCodeModifier, safe_replace(sr)")
+        except Exception as e:
+            print(f"  ❌ safe_code_modifier 로드 실패: {e}")
+
+        print("✅ AST 기반 코드 도구 로드 완료!")
+
+        # 사용 가이드 출력
+        print("""
+📚 AST 코드 도구 사용법:
+  • ezp('file.py') - 파일 구조 파싱
+  • ezv('file.py', 'function_name') - 함수 코드 보기
+  • ezr('file.py', 'function_name', new_code) - 함수 교체
+  • ezrs('file.py', 'function_name', new_code) - 안전한 교체 (문법 검증)
+  • ezpa('file.py', include_docstrings=True) - 고급 파싱
+  • sr('file.py', 'function_name', new_code) - 안전한 교체 (별칭)
+        """)
+
+    except Exception as e:
+        print(f"❌ AST 기반 코드 도구 로드 실패: {e}")
+
+    except Exception as e:
+        print(f"❌ AST 기반 코드 도구 로드 실패: {e}")
+
+
+
+    # 7. AST 기반 코드 도구 자동 로드 (추가됨)
+    try:
+        # ai_helpers_v2 경로 추가
+        ai_helpers_path = os.path.join(python_path, "ai_helpers_v2")
+        if ai_helpers_path not in sys.path:
+            sys.path.insert(0, ai_helpers_path)
+
+        # 1. ez_code 개선된 함수들
+        try:
+            from ez_code import ez_parse, ez_replace, ez_view, ez_replace_safe
+            repl_globals.update({
+                'ez_parse': ez_parse,
+                'ez_replace': ez_replace,
+                'ez_view': ez_view,
+                'ez_replace_safe': ez_replace_safe
+            })
+            print("  ✅ ez_code 함수 로드: ez_parse, ez_replace, ez_view, ez_replace_safe")
+        except Exception as e:
+            print(f"  ❌ ez_code 로드 실패: {e}")
+
+        # 2. 개선된 AST 파서
+        try:
+            from improved_ast_parser import ez_parse_advanced, ez_parse_cached, ImprovedASTParser
+            repl_globals.update({
+                'ez_parse_advanced': ez_parse_advanced,
+                'ez_parse_cached': ez_parse_cached,
+                'ImprovedASTParser': ImprovedASTParser
+            })
+            print("  ✅ 개선된 AST 파서 로드: ez_parse_advanced, ez_parse_cached")
+        except Exception as e:
+            print(f"  ❌ improved_ast_parser 로드 실패: {e}")
+
+        # 3. 안전한 코드 수정 도구
+        try:
+            from safe_code_modifier import SafeCodeModifier
+            repl_globals.update({
+                'SafeCodeModifier': SafeCodeModifier
+            })
+            # 간편한 인스턴스 생성
+            safe_modifier = SafeCodeModifier()
+            repl_globals['safe_modifier'] = safe_modifier
+            repl_globals['safe_replace'] = safe_modifier.safe_replace
+            print("  ✅ 안전한 코드 수정 도구 로드: SafeCodeModifier, safe_replace")
+        except Exception as e:
+            print(f"  ❌ safe_code_modifier 로드 실패: {e}")
+
+        print("✅ AST 기반 코드 도구 로드 완료!")
+
+    except Exception as e:
+        print(f"❌ AST 기반 코드 도구 로드 실패: {e}")
+
+
         print(f"❌ q_tools 로드 실패: {e}")
 
 # ============================================================================

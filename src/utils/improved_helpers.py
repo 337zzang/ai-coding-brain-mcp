@@ -276,16 +276,5 @@ class Helpers:
             return False
         except:
             return False
-
-# 전역 함수 정의
-def flow_project(project_name):
-    """프로젝트 전환 래퍼 함수"""
-    global helpers
-    if 'helpers' not in globals():
-        helpers = Helpers()
-
-    return helpers.cmd_flow_with_context(project_name)
-
-# helpers 초기화 (모듈 로드시 자동 실행)
 if __name__ != "__main__":
     helpers = Helpers()

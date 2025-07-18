@@ -24,6 +24,12 @@
   "exclude": [
     "node_modules",
     "dist",
-    "**/*.test.ts"
+    "**/*.test.ts",
+    "**/backup/**",
+    "**/*.backup",
+    "**/*.spec.ts",
+    "**/deleted_handlers_backup_*/**",
+    "**/SAFETY_BACKUP_*/**",
+    "**/*.backup.*"
   ]
 }

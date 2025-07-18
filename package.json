@@ -1,6 +1,6 @@
 {
   "name": "ai-coding-brain-mcp",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "AI Coding Brain MCP - Simplified Python REPL with persistent helpers",
   "main": "dist/index.js",
   "scripts": {

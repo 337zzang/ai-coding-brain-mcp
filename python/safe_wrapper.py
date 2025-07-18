@@ -3,6 +3,7 @@ Safe Wrapper - 헬퍼 함수를 안전하게 래핑하는 데코레이터 시스
 중복 방지 버전
 """
 import functools
+import sys
 from typing import Any, Callable, Dict, List, Optional, Union
 
 def safe_return(return_type: str = "auto"):
@@ -298,3 +299,126 @@ def register_safe_helpers(helpers_obj, globals_dict):
 def is_safe_function(func):
     """함수가 안전한 래퍼인지 확인"""
     return hasattr(func, '_is_safe_wrapper') and func._is_safe_wrapper
+
+
+
+
+# HelperResult 임포트 추가
+from helper_result import HelperResult, SearchResult, FileResult, ParseResult
+
+
+def safe_return_v2(return_type: str = "auto"):
+    """HelperResult를 활용하는 개선된 safe_return 데코레이터"""
+
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                result = func(*args, **kwargs)
+
+                # 반환 타입별 처리
+                if return_type == "search":
+                    # 검색 결과를 SearchResult로 변환
+                    if isinstance(result, list):
+                        normalized = _normalize_search_results(result)
+                        return SearchResult(results=normalized, success=True)
+                    else:
+                        return SearchResult(success=False, error="Unexpected search result type")
+
+                elif return_type == "file":
+                    # 파일 결과를 FileResult로 변환
+                    if isinstance(result, (str, bytes)):
+                        path = args[0] if args else None
+                        return FileResult(content=result, path=path, success=True)
+                    else:
+                        return FileResult(success=False, error=str(result))
+
+                elif return_type == "parse":
+                    # 파싱 결과를 ParseResult로 변환
+                    if isinstance(result, dict):
+                        return ParseResult(parsed_data=result, success=True)
+                    else:
+                        return ParseResult(success=False, error="Unexpected parse result type")
+
+                else:
+                    # 일반 결과를 HelperResult로 변환
+                    return HelperResult(data=result, success=True)
+
+            except Exception as e:
+                # 에러를 적절한 Result 타입으로 변환
+                error_msg = str(e)
+                error_type = type(e).__name__
+
+                if return_type == "search":
+                    return SearchResult(success=False, error=error_msg, error_type=error_type)
+                elif return_type == "file":
+                    return FileResult(success=False, error=error_msg, error_type=error_type)
+                elif return_type == "parse":
+                    return ParseResult(success=False, error=error_msg, error_type=error_type)
+                else:
+                    return HelperResult(success=False, error=error_msg, error_type=error_type)
+
+        return wrapper
+    return decorator
+
+
+def _normalize_search_results(results: List) -> List[Dict]:
+    """검색 결과를 표준 형태로 정규화"""
+    normalized = []
+    for item in results:
+        if isinstance(item, dict):
+            normalized.append({
+                'file': item.get('file', item.get('path', '')),
+                'line': item.get('line_number', item.get('line', 0)),
+                'text': item.get('content', item.get('text', '')).strip(),
+                'context': item.get('context', [])
+            })
+        elif isinstance(item, str):
+            # 단순 파일 경로인 경우
+            normalized.append({
+                'file': item,
+                'line': 0,
+                'text': '',
+                'context': []
+            })
+    return normalized
+
+
+# 개선된 safe helpers 생성
+def create_safe_helpers_v2(helpers_obj) -> Dict[str, Callable]:
+    """HelperResult를 활용하는 개선된 safe helpers 생성"""
+
+    safe_funcs = {}
+
+    # 검색 함수들
+    if hasattr(helpers_obj, 'search_code'):
+        @safe_return_v2("search")
+        def safe_search_code(pattern, path=".", file_pattern="*.py", **kwargs):
+            return helpers_obj.search_code(pattern, path, file_pattern, **kwargs)
+        safe_funcs['safe_search_code'] = safe_search_code
+
+    if hasattr(helpers_obj, 'search_files'):
+        @safe_return_v2("search") 
+        def safe_search_files(path, pattern, **kwargs):
+            results = helpers_obj.search_files(path, pattern, **kwargs)
+            # 파일 경로 리스트를 검색 결과 형태로 변환
+            if isinstance(results, list):
+                return [{'file': f} for f in results]
+            return results
+        safe_funcs['safe_search_files'] = safe_search_files
+
+    # 파일 함수들
+    if hasattr(helpers_obj, 'read_file'):
+        @safe_return_v2("file")
+        def safe_read_file(path, **kwargs):
+            return helpers_obj.read_file(path, **kwargs)
+        safe_funcs['safe_read_file'] = safe_read_file
+
+    # 파싱 함수들
+    if hasattr(helpers_obj, 'parse_file'):
+        @safe_return_v2("parse")
+        def safe_parse_file(path, **kwargs):
+            return helpers_obj.parse_file(path, **kwargs)
+        safe_funcs['safe_parse_file'] = safe_parse_file
+
+    return safe_funcs

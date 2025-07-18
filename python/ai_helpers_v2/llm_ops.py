@@ -115,15 +115,3 @@ def _simulate_o3_response(prompt: str) -> str:
 def analyze_code(code: str, question: str = "이 코드를 분석해주세요") -> Dict[str, Any]:
     """코드 분석 요청"""
     return ask_o3(question, context=code)
-
-@track_execution
-def explain_error(error_message: str, code: Optional[str] = None) -> Dict[str, Any]:
-    """오류 설명 요청"""
-    question = f"다음 오류를 설명하고 해결 방법을 제안해주세요: {error_message}"
-    return ask_o3(question, context=code)
-
-@track_execution
-def generate_docstring(function_code: str) -> Dict[str, Any]:
-    """함수에 대한 docstring 생성"""
-    question = "이 함수에 대한 Python docstring을 생성해주세요"
-    return ask_o3(question, context=function_code)

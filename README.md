@@ -124,3 +124,6 @@ MIT
 - Python 관련 파일 5개 제거
 - 핵심 기능 2개만 유지 (execute_code, restart_json_repl)
 - 안정성과 성능 향상
+
+
+<!-- 한글 인코딩 테스트: 안녕하세요! 🎯 Windows에서도 잘 작동합니다. -->

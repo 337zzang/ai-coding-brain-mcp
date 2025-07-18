@@ -138,6 +138,64 @@ def workflow_v2(command: str) -> str:
 
         return "\n".join(lines)
 
+    
+    # /v2 plan reset [name] - 플랜 리셋
+    elif cmd == "plan" and len(parts) > 2 and parts[1] == "reset":
+        plan_name = " ".join(parts[2:])
+        result = manager.archive_and_reset(plan_name)
+        if result["archived"]:
+            return f"""
+✅ 플랜 아카이빙 완료
+아카이브: {result['archive_file']}
+새로운 플랜을 시작합니다.
+"""
+        else:
+            return result["message"]
+
+    # /v2 plan list - 아카이빙된 플랜 목록
+    elif cmd == "plan" and len(parts) > 1 and parts[1] == "list":
+        plans = manager.list_archived_plans()
+        if not plans:
+            return "📋 아카이빙된 플랜이 없습니다"
+
+        lines = ["📚 아카이빙된 플랜 목록:"]
+        for plan in plans:
+            progress = f"{plan['completed_tasks']}/{plan['total_tasks']}"
+            lines.append(f"  • {plan['plan_name']} ({progress} 완료) - {plan['file']}")
+
+        return "\n".join(lines)
+
+    # /v2 plan view [file] - 아카이빙된 플랜 보기
+    elif cmd == "plan" and len(parts) > 2 and parts[1] == "view":
+        archive_file = parts[2]
+        if not archive_file.endswith('.json'):
+            archive_file += '.json'
+
+        data = manager.load_archived_plan(archive_file)
+        if not data:
+            return f"❌ 파일을 찾을 수 없습니다: {archive_file}"
+
+        # 간단한 요약 생성
+        tasks = data.get('tasks', [])
+        completed = len([t for t in tasks if t.get('status') == 'done'])
+
+        summary = f"""
+📋 아카이빙된 플랜: {archive_file}
+프로젝트: {data.get('project', 'Unknown')}
+생성일: {data.get('created_at', 'Unknown')[:19]}
+진행률: {completed}/{len(tasks)} 태스크 완료
+
+태스크 목록:
+"""
+        for task in tasks[:5]:  # 처음 5개만
+            status = "✅" if task.get('status') == 'done' else "⏳"
+            summary += f"{status} {task.get('name', 'Unknown')}\n"
+
+        if len(tasks) > 5:
+            summary += f"... 외 {len(tasks) - 5}개 태스크"
+
+        return summary
+    
     # /v2 report - 리포트 생성
     elif cmd == "report":
         return manager.get_report()
@@ -154,6 +212,9 @@ def workflow_v2(command: str) -> str:
 /v2 artifact [id] [type] [path] - 산출물 추가
 /v2 search [검색어] - 태스크 검색
 /v2 report - 전체 리포트
+/v2 plan reset [이름] - 현재 플랜 아카이빙 후 새 플랜 시작
+/v2 plan list - 아카이빙된 플랜 목록
+/v2 plan view [파일명] - 아카이빙된 플랜 보기
 /v2 help - 도움말
 """
 

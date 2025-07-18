@@ -39,7 +39,7 @@ class WorkflowV2Manager:
         # v2는 memory 폴더에 단순하게 저장
         memory_dir = Path("memory")
         memory_dir.mkdir(parents=True, exist_ok=True)
-        return memory_dir / "workflow_v2.json"
+        return memory_dir / "workflow.json"
 
     def _load_or_create(self) -> WorkflowV2:
         """워크플로우 로드 또는 생성"""
@@ -91,6 +91,115 @@ class WorkflowV2Manager:
         self.workflow.updated_at = datetime.now().isoformat()
         with open(self.workflow_path, 'w', encoding='utf-8') as f:
             json.dump(self.workflow.to_dict(), f, indent=2, ensure_ascii=False)
+
+    
+    def archive_and_reset(self, plan_name: str) -> Dict[str, Any]:
+        """현재 워크플로우를 아카이빙하고 새로 시작"""
+        import re
+
+        # 플랜명 정규화 (파일명에 사용 가능하도록)
+        safe_plan_name = re.sub(r'[^\w\s-]', '', plan_name)
+        safe_plan_name = re.sub(r'[-\s]+', '_', safe_plan_name)
+
+        # 현재 워크플로우가 있으면 아카이빙
+        if self.workflow_path.exists() and len(self.workflow.tasks) > 0:
+            # 아카이브 파일명 생성
+            archive_name = f"workflow_{safe_plan_name}.json"
+            archive_path = self.workflow_path.parent / archive_name
+
+            # 중복 방지
+            counter = 1
+            while archive_path.exists():
+                archive_name = f"workflow_{safe_plan_name}_{counter}.json"
+                archive_path = self.workflow_path.parent / archive_name
+                counter += 1
+
+            # 현재 파일을 아카이브로 이동
+            import shutil
+            shutil.move(str(self.workflow_path), str(archive_path))
+
+            # 이벤트 기록
+            archived_info = {
+                "plan_name": plan_name,
+                "archive_file": archive_name,
+                "total_tasks": len(self.workflow.tasks),
+                "completed_tasks": len([t for t in self.workflow.tasks if t.status == TaskStatus.DONE]),
+                "archived_at": datetime.now().isoformat()
+            }
+
+            # 새 워크플로우 생성
+            self.workflow = WorkflowV2(project=self.project_name)
+            self.workflow.metadata["previous_plan"] = archived_info
+            self.save()
+
+            return {
+                "success": True,
+                "archived": True,
+                "archive_file": archive_name,
+                "message": f"플랜 '{plan_name}'이(가) {archive_name}으로 아카이빙되었습니다."
+            }
+        else:
+            # 아카이빙할 내용이 없으면 그냥 새로 시작
+            self.workflow = WorkflowV2(project=self.project_name)
+            self.save()
+
+            return {
+                "success": True,
+                "archived": False,
+                "message": "새로운 플랜을 시작합니다."
+            }
+
+    def list_archived_plans(self) -> List[Dict[str, Any]]:
+        """아카이빙된 플랜 목록 조회"""
+        memory_dir = Path("memory")
+        archived_plans = []
+
+        # workflow_*.json 파일 찾기
+        for file_path in memory_dir.glob("workflow_*.json"):
+            # workflow_v2.json 등 제외
+            if file_path.name == "workflow_v2.json":
+                continue
+
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+
+                # 플랜 정보 추출
+                plan_info = {
+                    "file": file_path.name,
+                    "project": data.get("project", "Unknown"),
+                    "created_at": data.get("created_at", "Unknown"),
+                    "total_tasks": len(data.get("tasks", [])),
+                    "completed_tasks": len([t for t in data.get("tasks", []) 
+                                          if t.get("status") == "done"]),
+                    "size": file_path.stat().st_size
+                }
+
+                # 플랜명 추출 (파일명에서)
+                plan_name = file_path.stem.replace("workflow_", "").replace("_", " ")
+                plan_info["plan_name"] = plan_name.title()
+
+                archived_plans.append(plan_info)
+            except:
+                pass
+
+        # 생성일 기준 정렬
+        archived_plans.sort(key=lambda x: x["created_at"], reverse=True)
+
+        return archived_plans
+
+    def load_archived_plan(self, archive_file: str) -> Optional[Dict[str, Any]]:
+        """아카이빙된 플랜 내용 조회"""
+        archive_path = Path("memory") / archive_file
+
+        if not archive_path.exists():
+            return None
+
+        try:
+            with open(archive_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return None
 
     def add_task(self, name: str, tags: List[str] = None, 
                  priority: int = 3, dependencies: List[int] = None) -> Task:

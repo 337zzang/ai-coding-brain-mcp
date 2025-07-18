@@ -43,6 +43,22 @@ def check_v2_files():
     from .integration import check_v2_files as _check
     return _check()
 
+
+def plan_reset(name: str):
+    """플랜 아카이빙 후 새로 시작"""
+    from .integration import v2_plan_reset
+    return v2_plan_reset(name)
+
+def plan_list():
+    """아카이빙된 플랜 목록"""
+    from .integration import v2_plan_list
+    return v2_plan_list()
+
+def plan_view(file_name: str):
+    """아카이빙된 플랜 보기"""
+    from .integration import v2_plan_view
+    return v2_plan_view(file_name)
+
 def help():
     """WorkflowV2 사용법 안내"""
     return """
@@ -71,12 +87,12 @@ def help():
    파일 생성/수정과 Git 커밋이 자동으로 추적됩니다.
 
 4. 데이터 위치:
-   memory/workflow_v2.json
+   memory/workflow.json
 """
 
 # 필요시 명시적으로 import할 수 있도록
 __all__ = [
-    'task', 'start', 'done', 'status', 'report', 'wf', 'init', 'help', 'check_v2_files'
+    'task', 'start', 'done', 'status', 'report', 'wf', 'init', 'help', 'check_v2_files', 'plan_reset', 'plan_list', 'plan_view'
 ]
 
 # 자동 초기화 시도 (오류 무시)

@@ -1,1 +1,54 @@
-{"v":"1.0","p":"\ucd5c\uc885","s":"R","st":"2025-07-18T22:46:28.761152","t":[{"i":1,"n":"\uae30\ub2a5 \ud14c\uc2a4\ud2b8","d":true},{"i":2,"n":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uc2dc\uc2a4\ud15c \ubd84\uc11d \ubc0f \uac1c\uc120","d":false},{"i":3,"n":"Phase 1: \ub370\uc774\ud130 \uad6c\uc870 \uac1c\uc120","d":false},{"i":4,"n":"Phase 2: \ud575\uc2ec \uae30\ub2a5 \uad6c\ud604","d":false},{"i":5,"n":"Phase 3: \ub9c8\uc774\uadf8\ub808\uc774\uc158","d":false}],"g":[],"c":null,"f":"\ud14c\uc2a4\ud2b8 \ud504\ub85c\uc81d\ud2b8"}
+{
+  "version": "2.0",
+  "project": "default",
+  "status": "active",
+  "created_at": "2025-07-18T23:27:37.217189",
+  "updated_at": "2025-07-18T23:27:37.224192",
+  "focus_task_id": null,
+  "tasks": [
+    {
+      "id": 1,
+      "name": "다음 프로젝트 계획",
+      "status": "todo",
+      "created_at": "2025-07-18T23:27:37.224192",
+      "started_at": null,
+      "completed_at": null,
+      "duration_minutes": null,
+      "summary": null,
+      "artifacts": [],
+      "tags": [
+        "planning"
+      ],
+      "dependencies": [],
+      "assignee": null,
+      "priority": 3
+    }
+  ],
+  "events": [
+    {
+      "id": "04c014b3-49b2-4863-a3af-2060b6c583b7",
+      "type": "task_created",
+      "timestamp": "2025-07-18T23:27:37.224192",
+      "task_id": 1,
+      "user": "system",
+      "data": {
+        "name": "다음 프로젝트 계획",
+        "tags": [
+          "planning"
+        ],
+        "priority": 3
+      },
+      "before_state": null,
+      "after_state": null
+    }
+  ],
+  "metadata": {
+    "previous_plan": {
+      "plan_name": "WorkflowV2 시스템 구현",
+      "archive_file": "workflow_WorkflowV2_시스템_구현.json",
+      "total_tasks": 5,
+      "completed_tasks": 4,
+      "archived_at": "2025-07-18T23:27:37.217189"
+    }
+  }
+}

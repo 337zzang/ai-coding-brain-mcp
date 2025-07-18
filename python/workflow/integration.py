@@ -124,6 +124,25 @@ def check_v2_files():
     else:
         print(f"\n📁 WorkflowV2 파일이 아직 생성되지 않았습니다: {workflow_file}")
 
+
+def v2_plan_reset(plan_name: str) -> str:
+    """현재 플랜을 아카이빙하고 새로 시작"""
+    return workflow_v2(f"plan reset {plan_name}")
+
+def v2_plan_list() -> str:
+    """아카이빙된 플랜 목록"""
+    return workflow_v2("plan list")
+
+def v2_plan_view(file_name: str) -> str:
+    """아카이빙된 플랜 보기"""
+    return workflow_v2(f"plan view {file_name}")
+
+# 짧은 별칭
+plan_reset = v2_plan_reset
+plan_list = v2_plan_list
+plan_view = v2_plan_view
+
+
 print("✅ WorkflowV2 통합 완료!")
 print("\n사용 가능한 함수:")
 print("  • workflow_integrated(command) - 통합 명령어")

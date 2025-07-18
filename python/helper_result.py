@@ -62,11 +62,13 @@ class HelperResult:
         return result
 
 
+
 class SearchResult(HelperResult):
     """검색 전용 결과 객체
 
     검색 헬퍼 함수들을 위한 특화된 결과 클래스.
     검색 결과에 대한 추가적인 편의 메서드를 제공합니다.
+    리스트와 호환되는 인터페이스를 제공합니다.
     """
 
     def __init__(self, results: List[Dict] = None, **kwargs):
@@ -92,37 +94,54 @@ class SearchResult(HelperResult):
         return list(set(item.get('file', '') for item in self.data if item.get('file')))
 
     def by_file(self) -> Dict[str, List[Dict]]:
-        """파일별로 결과 그룹화"""
+        """파일별로 그룹화"""
         if not self.success:
             return {}
 
-        grouped = {}
+        from collections import defaultdict
+        grouped = defaultdict(list)
         for item in self.data:
-            file_path = item.get('file', '')
-            if file_path:
-                if file_path not in grouped:
-                    grouped[file_path] = []
-                grouped[file_path].append(item)
-        return grouped
+            if 'file' in item:
+                grouped[item['file']].append(item)
+        return dict(grouped)
 
     def filter_by_file(self, pattern: str) -> 'SearchResult':
         """파일 패턴으로 필터링"""
-        if not self.success:
-            return self
-
         import fnmatch
         filtered = [
             item for item in self.data 
             if fnmatch.fnmatch(item.get('file', ''), pattern)
         ]
-        return SearchResult(results=filtered, success=True)
+        return SearchResult(filtered, success=self.success)
 
-    def __repr__(self):
-        if self.success:
-            file_count = len(self.files())
-            return f"<SearchResult success=True matches={self.count} files={file_count}>"
-        else:
-            return f"<SearchResult success=False error='{self.error}'>"
+    def filter(self, predicate) -> 'SearchResult':
+        """조건 함수로 필터링"""
+        filtered = [item for item in self.data if predicate(item)]
+        return SearchResult(filtered, success=self.success)
+
+    def limit(self, n: int) -> 'SearchResult':
+        """결과 개수 제한"""
+        return SearchResult(self.data[:n], success=self.success)
+
+    # 리스트 호환성을 위한 메서드들
+    def __len__(self) -> int:
+        """길이 반환 (len() 지원)"""
+        return len(self.data) if self.success else 0
+
+    def __iter__(self):
+        """반복 지원 (for 루프)"""
+        return iter(self.data) if self.success else iter([])
+
+    def __getitem__(self, index):
+        """인덱싱 지원 (result[0])"""
+        if not self.success:
+            raise IndexError("Result is not successful")
+        return self.data[index]
+
+    def __contains__(self, item):
+        """in 연산자 지원"""
+        return item in self.data if self.success else False
+
 
 
 class FileResult(HelperResult):

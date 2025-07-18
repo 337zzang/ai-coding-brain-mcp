@@ -267,3 +267,107 @@ __all__ = [
     'git_status', 'git_add', 'git_commit', 
     'git_push', 'git_pull', 'git_branch'
 ]
+
+
+# === 새로운 Git 기능들 (o3 권장사항 반영) ===
+
+@track_execution
+def git_log(limit: int = 10, format: str = "oneline", cwd: str = ".") -> Dict[str, Any]:
+    """Git 커밋 히스토리 조회
+
+    Args:
+        limit: 조회할 커밋 수
+        format: 출력 형식 (oneline, short, medium, full)
+        cwd: 작업 디렉토리
+
+    Returns:
+        Dict with commits list
+    """
+    args = ['log', f'--max-count={limit}']
+
+    if format == "oneline":
+        args.append('--oneline')
+    else:
+        args.append(f'--format={format}')
+
+    result = run_git_command(args, cwd)
+
+    if result['success'] and format == "oneline":
+        # oneline 형식 파싱
+        commits = []
+        for line in result['stdout'].split('\n'):
+            if line:
+                parts = line.split(' ', 1)
+                if len(parts) == 2:
+                    commits.append({
+                        'hash': parts[0],
+                        'message': parts[1]
+                    })
+        result['commits'] = commits
+
+    return result
+
+
+@track_execution
+def git_diff(file: str = None, staged: bool = False, cwd: str = ".") -> Dict[str, Any]:
+    """변경사항 확인
+
+    Args:
+        file: 특정 파일만 확인 (None이면 전체)
+        staged: 스테이징된 변경사항 확인
+        cwd: 작업 디렉토리
+
+    Returns:
+        Dict with diff output
+    """
+    args = ['diff']
+
+    if staged:
+        args.append('--staged')
+
+    if file:
+        args.append('--')
+        args.append(file)
+
+    return run_git_command(args, cwd)
+
+
+@track_execution
+def git_create_branch(name: str, checkout: bool = True, cwd: str = ".") -> Dict[str, Any]:
+    """새 브랜치 생성
+
+    Args:
+        name: 브랜치 이름
+        checkout: 생성 후 체크아웃 여부
+        cwd: 작업 디렉토리
+
+    Returns:
+        Dict with operation result
+    """
+    if not name:
+        return {
+            'success': False,
+            'error': 'Branch name is required'
+        }
+
+    if checkout:
+        args = ['checkout', '-b', name]
+    else:
+        args = ['branch', name]
+
+    return run_git_command(args, cwd)
+
+
+@track_execution  
+def git_current_branch(cwd: str = ".") -> Dict[str, Any]:
+    """현재 브랜치 확인
+
+    Returns:
+        Dict with current branch name
+    """
+    result = run_git_command(['branch', '--show-current'], cwd)
+
+    if result['success']:
+        result['branch'] = result['stdout']
+
+    return result

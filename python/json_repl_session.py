@@ -903,7 +903,6 @@ def initialize_repl():
             sys.path.insert(0, python_path)
         
         # q_tools 모든 함수 로드
-        import q_tools
         q_functions = {}
         for name in dir(q_tools):
             if not name.startswith('_') and callable(getattr(q_tools, name)):

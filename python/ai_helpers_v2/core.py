@@ -9,6 +9,19 @@ from typing import Any, Callable, Dict, List, Optional
 from functools import wraps
 from pathlib import Path
 
+# 캐싱에서 제외할 함수 목록
+NO_CACHE_FUNCTIONS = [
+    'replace_block',
+    'create_file',
+    'write_file',
+    'append_to_file',
+    'git_add',
+    'git_commit',
+    'git_push',
+    'delete_file',
+    'move_file',
+    'copy_file'
+]
 class ExecutionProtocol:
     """실행 추적 프로토콜"""
 
@@ -67,17 +80,37 @@ class ExecutionProtocol:
 protocol = ExecutionProtocol()
 
 def track_execution(func: Callable) -> Callable:
-    """실행 추적 데코레이터"""
+    """실행 추적 데코레이터 - 캐싱 개선 버전"""
     @wraps(func)
     def wrapper(*args, **kwargs):
         func_name = func.__name__
         start_time = time.time()
 
-        # 캐시 확인
+        # 파일 수정 작업은 캐싱하지 않음
+        if func_name in NO_CACHE_FUNCTIONS:
+            try:
+                # 실제 함수 실행
+                result = func(*args, **kwargs)
+                duration = time.time() - start_time
+
+                # 명시적 메시지 출력 (주요 파일 작업만)
+                if func_name in ['create_file', 'write_file', 'replace_block', 'append_to_file']:
+                    print(f"🔄 {func_name}: 캐싱 없이 실행 (파일 작업)")
+
+                protocol.track(func_name, args, kwargs, result, duration)
+                return result
+
+            except Exception as e:
+                duration = time.time() - start_time
+                protocol.track(func_name, args, kwargs, None, duration)
+                raise
+
+        # 캐시 확인 (파일 작업이 아닌 경우만)
         cache_key = protocol.get_cache_key(func_name, args, kwargs)
         cached_result = protocol.get_cached(cache_key)
 
         if cached_result is not None:
+            print(f"📦 {func_name}: 캐시된 결과 사용")
             protocol.track(func_name, args, kwargs, cached_result, 0.0)
             return cached_result
 
@@ -89,6 +122,8 @@ def track_execution(func: Callable) -> Callable:
             # 캐시 저장 (빠른 작업만)
             if duration < 1.0:  # 1초 미만인 경우만
                 protocol.set_cache(cache_key, result)
+                if func_name not in ['read_file', 'scan_directory', 'search_files']:  # 너무 자주 호출되는 것 제외
+                    print(f"💾 {func_name}: 결과 캐싱됨 ({duration:.3f}초)")
 
             protocol.track(func_name, args, kwargs, result, duration)
             return result
@@ -137,6 +172,8 @@ def get_execution_history(limit: int = 10) -> List[Dict[str, Any]]:
 from enum import Enum
 from dataclasses import dataclass, field
 from typing import Callable, TypeVar, Generic
+
+
 
 T = TypeVar('T')
 

@@ -9,55 +9,67 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from .core import track_execution
+from .helper_result import FileResult
 
 @track_execution
-def read_file(filepath: str, encoding: str = 'utf-8') -> str:
-    """파일 읽기"""
-    with open(filepath, 'r', encoding=encoding) as f:
-        return f.read()
+def read_file(filepath: str, encoding: str = 'utf-8') -> FileResult:
+    """파일 읽기
 
-@track_execution
+    Returns:
+        FileResult: 파일 내용과 메타데이터를 포함한 결과 객체
+    """
+    try:
+        with open(filepath, 'r', encoding=encoding) as f:
+            content = f.read()
+        return FileResult(content=content, path=filepath, success=True)
+    except Exception as e:
+        return FileResult(content=None, path=filepath, success=False, 
+                         error=str(e), error_type=type(e).__name__)
+
 @track_execution
 def write_file(filepath: str, content: str, encoding: str = 'utf-8') -> bool:
     """파일 쓰기 (원자적 저장으로 개선)"""
-    # 빈 경로 체크
-    if not filepath:
-        raise ValueError("파일 경로가 비어있습니다")
+    try:
+        # 디렉토리가 없으면 생성
+        dir_path = os.path.dirname(filepath)
+        if dir_path and not os.path.exists(dir_path):
+            os.makedirs(dir_path)
 
-    # 절대 경로로 변환
-    abs_path = os.path.abspath(filepath)
+        # 임시 파일에 먼저 쓰기
+        fd, tmp_path = tempfile.mkstemp(dir=dir_path if dir_path else None, text=True)
+        try:
+            with os.fdopen(fd, 'w', encoding=encoding) as f:
+                f.write(content)
+            # 원자적으로 교체
+            shutil.move(tmp_path, filepath)
+            return True
+        except Exception:
+            # 실패 시 임시 파일 정리
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            raise
+    except Exception:
+        return False
 
-    # 디렉토리 경로 추출
-    dir_path = os.path.dirname(abs_path)
-
-    # 디렉토리가 있고 존재하지 않으면 생성
-    if dir_path and not os.path.exists(dir_path):
-        os.makedirs(dir_path, exist_ok=True)
-
-    # 원자적 쓰기: 임시 파일 생성 후 이동
-    with tempfile.NamedTemporaryFile('w', dir=dir_path, delete=False, encoding=encoding) as tmp:
-        tmp.write(content)
-        tmp.flush()
-        os.fsync(tmp.fileno())  # 디스크에 강제 동기화
-
-    # 원자적 이동
-    shutil.move(tmp.name, abs_path)
-    return True
-def create_file(filepath: str, content: str, encoding: str = 'utf-8') -> bool:
-    """파일 생성 (write_file과 동일)"""
+@track_execution
+def create_file(filepath: str, content: str = '', encoding: str = 'utf-8') -> bool:
+    """파일 생성 (덮어쓰기)"""
     return write_file(filepath, content, encoding)
 
 @track_execution
 def append_to_file(filepath: str, content: str, encoding: str = 'utf-8') -> bool:
     """파일에 내용 추가"""
-    with open(filepath, 'a', encoding=encoding) as f:
-        f.write(content)
-    return True
+    try:
+        with open(filepath, 'a', encoding=encoding) as f:
+            f.write(content)
+        return True
+    except Exception:
+        return False
 
 @track_execution
 def file_exists(filepath: str) -> bool:
     """파일 존재 여부 확인"""
-    return os.path.exists(filepath) and os.path.isfile(filepath)
+    return os.path.isfile(filepath)
 
 @track_execution
 def read_json(filepath: str) -> FileResult:
@@ -73,15 +85,12 @@ def read_json(filepath: str) -> FileResult:
     except Exception as e:
         return FileResult(content=None, path=filepath, success=False,
                          error=str(e), error_type=type(e).__name__)
-@track_execution
-def write_json(filepath: str, data: Dict[str, Any], indent: int = 2) -> bool:
-    """JSON 파일 쓰기"""
-    content = json.dumps(data, indent=indent, ensure_ascii=False)
-    return write_file(filepath, content)
 
-# 사용 가능한 함수 목록
-__all__ = [
-    'read_file', 'write_file', 'create_file', 
-    'append_to_file', 'file_exists',
-    'read_json', 'write_json'
-]
+@track_execution
+def write_json(filepath: str, data: Any, indent: int = 2) -> bool:
+    """JSON 파일 쓰기"""
+    try:
+        content = json.dumps(data, indent=indent, ensure_ascii=False)
+        return write_file(filepath, content)
+    except Exception:
+        return False

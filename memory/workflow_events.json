@@ -3610,5 +3610,50 @@
         ]
       }
     }
+  },
+  {
+    "type": "task_added",
+    "entity_id": "a53d4ad5-a0d1-4154-a565-22848ade7bcc",
+    "timestamp": "2025-07-18T20:47:57.242220",
+    "data": {
+      "title": "list",
+      "workflow_id": "f9230f1b-bc81-41b9-8fc6-e87da471f572"
+    }
+  },
+  {
+    "type": "task_added",
+    "entity_id": "83da705f-49f4-40a9-8f69-1d3eb0811bdd",
+    "timestamp": "2025-07-18T20:47:57.296577",
+    "data": {
+      "title": "add 테스트 작업",
+      "workflow_id": "f9230f1b-bc81-41b9-8fc6-e87da471f572"
+    }
+  },
+  {
+    "type": "task_added",
+    "entity_id": "2fba3b3a-477f-475e-9bec-766d2ed485c0",
+    "timestamp": "2025-07-18T20:47:57.364508",
+    "data": {
+      "title": "list",
+      "workflow_id": "f9230f1b-bc81-41b9-8fc6-e87da471f572"
+    }
+  },
+  {
+    "type": "task_added",
+    "entity_id": "f05b04a9-7038-42c4-bd0c-6e40ad588086",
+    "timestamp": "2025-07-18T20:50:42.356384",
+    "data": {
+      "title": "새로운 기능 구현",
+      "workflow_id": "f9230f1b-bc81-41b9-8fc6-e87da471f572"
+    }
+  },
+  {
+    "type": "task_added",
+    "entity_id": "fd023fb7-e391-4013-a8f7-4905dbe02439",
+    "timestamp": "2025-07-18T20:50:42.429040",
+    "data": {
+      "title": "버그 수정 작업",
+      "workflow_id": "f9230f1b-bc81-41b9-8fc6-e87da471f572"
+    }
   }
 ]

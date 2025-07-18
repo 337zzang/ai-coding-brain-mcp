@@ -83,7 +83,7 @@ def ask_o3(question: str,
 
         # o3 모델 호출 파라미터
         completion_params = {
-            "model": "o3-2025-01-17",  # o3 기본 모델
+            "model": "o3",  # o3 기본 모델
             "messages": messages,
             "max_completion_tokens": max_completion_tokens,
             "reasoning_effort": reasoning_effort  # low, medium, high

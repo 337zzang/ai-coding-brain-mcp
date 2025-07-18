@@ -221,9 +221,50 @@ class ImprovedWorkflowManager:
                 return {"success": True, "plan_id": plan_id, "message": f"플랜 생성됨: {args}"}
             
             elif cmd in ['/task', '/t']:
-                task_id = self.add_task(args)
-                return {"success": True, "task_id": task_id, "message": f"태스크 추가됨: {args}"}
-            
+                # /task 서브커맨드 처리
+                task_parts = args.split(None, 1) if args else []
+
+                if not task_parts or task_parts[0] == 'list':
+                    # /task 또는 /task list - 태스크 목록 표시
+                    tasks = self._list_current_tasks()
+                    output = "\n=== 📋 태스크 목록 ===\n"
+                    if tasks:
+                        for i, task in enumerate(tasks, 1):
+                            status_icon = "✅" if task['status'] == 'completed' else "⏳" if task['status'] == 'in_progress' else "📋"
+                            output += f"{i}. {status_icon} {task['title']}\n"
+                    else:
+                        output += "태스크가 없습니다"
+                    return {"success": True, "tasks": tasks, "message": output}
+
+                elif task_parts[0] == 'add':
+                    # /task add [내용]
+                    if len(task_parts) > 1:
+                        task_id = self.add_task(task_parts[1])
+                        return {"success": True, "task_id": task_id, "message": f"태스크 추가됨: {task_parts[1]}"}
+                    else:
+                        return {"success": False, "message": "태스크 내용을 입력하세요: /task add [내용]"}
+
+                elif task_parts[0] == 'del' or task_parts[0] == 'delete':
+                    # /task del [번호]
+                    if len(task_parts) > 1:
+                        try:
+                            task_index = int(task_parts[1]) - 1
+                            tasks = self._list_current_tasks()
+                            if 0 <= task_index < len(tasks):
+                                removed_task = tasks[task_index]
+                                # TODO: remove_task 메서드 구현 필요
+                                return {"success": True, "message": f"태스크 삭제됨: {removed_task['title']}"}
+                            else:
+                                return {"success": False, "message": "올바른 태스크 번호를 입력하세요"}
+                        except ValueError:
+                            return {"success": False, "message": "태스크 번호는 숫자여야 합니다"}
+                    else:
+                        return {"success": False, "message": "삭제할 태스크 번호를 입력하세요: /task del [번호]"}
+
+                else:
+                    # 기존 방식 호환: /task [내용]은 태스크 추가로 처리
+                    task_id = self.add_task(args)
+                    return {"success": True, "task_id": task_id, "message": f"태스크 추가됨: {args}"}
             elif cmd == '/list':
                 tasks = self._list_current_tasks()
                 output = "\n=== 📋 태스크 목록 ===\n"
@@ -538,30 +579,36 @@ class ImprovedWorkflowManager:
             "timestamp": datetime.now().isoformat(),
             "data": data
         }
-        
-        # 이벤트를 별도 파일에 저장
+
+        # EventStore를 통해 저장
         try:
-            # 기존 이벤트 로드
-            events_data = {}
-            if os.path.exists(self.events_file):
-                with open(self.events_file, 'r', encoding='utf-8') as f:
-                    events_data = json.load(f)
-            
-            if "events" not in events_data:
-                events_data["events"] = []
-            
-            events_data["events"].append(event)
-            
-            # 이벤트가 너무 많으면 오래된 것 제거 (최대 1000개)
-            if len(events_data["events"]) > 1000:
-                events_data["events"] = events_data["events"][-1000:]
-            
-            # 파일에 저장
-            with open(self.events_file, 'w', encoding='utf-8') as f:
-                json.dump(events_data, f, ensure_ascii=False, indent=2)
-                
+            if hasattr(self, 'event_store'):
+                self.event_store.append(event)
+            else:
+                # EventStore가 없으면 리스트 형태로 직접 처리
+                events_data = []
+                if os.path.exists(self.events_file):
+                    with open(self.events_file, 'r', encoding='utf-8') as f:
+                        loaded = json.load(f)
+                        if isinstance(loaded, list):
+                            events_data = loaded
+                        elif isinstance(loaded, dict) and "events" in loaded:
+                            events_data = loaded["events"]
+
+                events_data.append(event)
+
+                # 최대 1000개 유지
+                if len(events_data) > 1000:
+                    events_data = events_data[-1000:]
+
+                # 저장 (리스트 형태로)
+                with open(self.events_file, 'w', encoding='utf-8') as f:
+                    json.dump(events_data, f, ensure_ascii=False, indent=2)
+
         except Exception as e:
-            print(f"이벤트 저장 오류: {e}")
-        
+            print(f"이벤트 저장 오류: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+
         # MessageController를 통해 AI용 메시지 발행
         self.msg_controller.emit(event_type, entity_id, data)

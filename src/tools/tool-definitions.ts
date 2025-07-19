@@ -26,43 +26,72 @@ export const toolDefinitions: Tool[] = [
 핵심 기능:
 • 세션 간 변수 유지 - 모든 변수와 상태가 호출 간에 보존됩니다
 • 프로젝트별 격리 - 각 프로젝트는 독립적인 실행 환경을 가집니다
-• 검증된 헬퍼 함수 (20개+) - 파일, JSON, Git, 검색, 디렉토리 작업
-• 정밀 코드 수정 - AST 기반 좌표로 정확한 수정 (NEW!)
-• HelperResult 패턴 - 표준화된 결과 반환 (NEW!)
+• AI Helpers v2.0 - 6개 모듈로 구성된 강력한 헬퍼 시스템
+• o3 백그라운드 실행 - 비동기 AI 상담 기능
+• 정밀 코드 수정 - AST 기반 좌표로 정확한 수정
 
-권장 헬퍼 함수:
-• 파일: read_file, write_file, create_file, append_to_file, file_exists
-• JSON: read_json, write_json
-• Git: git_status, git_add, git_commit, git_push, git_branch
-• 검색: search_files, search_code (SearchResult 반환)
-• 분석: parse_file (ParseResult 반환), scan_directory
-• 프로젝트: fp(project_name), get_current_project
-• AI: ask_o3(prompt) - AI 도우미
+AI Helpers v2.0 모듈 구조:
+• file.py - 파일 작업 (read, write, append, exists, info, read_json, write_json)
+• code.py - 코드 분석/수정 (parse, view, replace, insert, functions, classes)
+• search.py - 검색 기능 (search_files, search_code, find_function, find_class, grep)
+• llm.py - LLM 작업 (ask_o3, ask_o3_async, check_o3_status, show_o3_progress)
+• util.py - 유틸리티 (ok, err, is_ok, get_data, get_error)
 
-NEW! HelperResult 패턴:
-• SearchResult - 검색 결과 (count, files(), by_file() 메서드)
-• FileResult - 파일 작업 결과 (lines, size 속성)
-• ParseResult - 파싱 결과 (functions, classes 속성)
+사용 예시:
+import ai_helpers_new as h
 
-NEW! 안전한 헬퍼 함수:
-• safe_search_code() - 예외 없이 SearchResult 반환
-• safe_read_file() - 예외 없이 FileResult 반환
-• safe_parse_file() - 예외 없이 ParseResult 반환
+# 파일 작업
+content = h.read('file.py')['data']
+h.write('output.py', content)
+h.append('log.txt', 'new line\\n')
 
-NEW! Quick 함수 (REPL 친화적):
-• qs(pattern) - 코드 검색, SearchResult 반환
-• qfind(path, pattern) - 파일 검색, SearchResult 반환
-• qc(pattern) - 현재 디렉토리 검색
-• qv(file, func) - 함수 코드 보기
-• qproj() - 프로젝트 정보 표시
+# exists 함수 (v19.0 업데이트 - 이제 dict 반환)
+result = h.exists('file.txt')  # {'ok': True, 'data': True/False, 'path': 'file.txt'}
 
-코드 수정 권장 방법 (NEW!):
-• replace_function(filepath, func_name, new_code) - 함수 정밀 교체
-• replace_method(filepath, class_name, method_name, new_code) - 메서드 정밀 교체
-• extract_code_elements(filepath) - 정확한 좌표와 함께 코드 요소 추출
-• 기존 replace_block도 사용 가능 (레거시 호환)
+# JSON
+data = h.read_json('config.json')['data']
+h.write_json('output.json', data)
 
-주의: 이제 중복 코드가 있어도 정확한 위치를 찾아 수정합니다!`,
+# 코드 분석
+info = h.parse('module.py')
+if info['ok']:
+    functions = info['data']['functions']
+    classes = info['data']['classes']
+
+# 코드 수정
+h.replace('file.py', 'old', 'new')
+h.view('file.py', 'function_name')
+
+# 검색 (v19.0 개선 - 와일드카드 자동 처리)
+results = h.search_files('test')  # 자동으로 *test*로 변환
+results = h.search_files('*.py')  # 모든 Python 파일
+results = h.search_code('pattern', '.')  # 코드 내용 검색
+files = h.find_function('main', '.')
+
+# o3 백그라운드 실행 (병렬 처리)
+task_id = h.ask_o3_async("복잡한 질문")['data']
+status = h.check_o3_status(task_id)
+h.show_o3_progress()
+result = h.get_o3_result(task_id)
+
+# 에러 처리 패턴
+result = h.read('missing.txt')
+if not h.is_ok(result):
+    print(h.get_error(result))
+
+워크플로우 시스템:
+• wf("/status") - 현재 상태
+• wf("/task 작업명") - 작업 추가
+• wf("/next") - 다음 작업
+• wf("/done") - 작업 완료
+
+프로젝트 관리:
+• helpers.fp("project-name") - 프로젝트 전환
+• helpers.get_current_project() - 현재 프로젝트
+• helpers.scan_directory(".", max_depth=2) - 디렉토리 스캔 (v19.0 개선)
+
+모든 헬퍼 함수는 일관된 dict 형식 반환:
+{'ok': bool, 'data': 결과, ...추가정보}`,
     inputSchema: executeCodeSchema
   },
   {

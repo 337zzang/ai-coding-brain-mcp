@@ -1,11 +1,4 @@
 {
-  "session_id": "test_session_001",
-  "created_at": "2025-07-15 13:40",
-  "project": "ai-coding-brain-mcp",
-  "important_value": 42,
-  "work_in_progress": [
-    "task1",
-    "task2",
-    "task3"
-  ]
+  "command": "/task 두 번째 작업",
+  "result": "ℹ️ 워크플로우 v2를 사용합니다. /v2 help로 도움말을 확인하세요"
 }

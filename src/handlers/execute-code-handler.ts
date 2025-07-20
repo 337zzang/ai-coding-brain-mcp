@@ -53,12 +53,13 @@ export class ExecuteCodeHandler {
       // json_repl_session.py 직접 실행
       const pythonPath = process.env['PYTHON_PATH'] || 
         (process.platform === 'win32' ? 'C:\\Users\\Administrator\\miniconda3\\python.exe' : 'python');
-      this.replProcess = spawn(pythonPath, ['-X', 'utf8', replScript], {
+      this.replProcess = spawn(pythonPath, ['-u', '-X', 'utf8', replScript], {
         stdio: ['pipe', 'pipe', 'pipe'],
         env: {
           ...process.env,
           PYTHONIOENCODING: 'utf-8',
           PYTHONUTF8: '1',
+          PYTHONUNBUFFERED: '1',
           PYTHON_SCRIPT_PATH: 'python\\json_repl_session.py'
         }
       });
@@ -118,9 +119,12 @@ export class ExecuteCodeHandler {
     return new Promise((resolve, reject) => {
       const requestId = `req_${++this.requestCounter}_${Date.now()}`;
       const request = {
+        jsonrpc: '2.0',
         id: requestId,
-        command: 'execute',
-        code: code
+        method: 'execute',
+        params: {
+          code: code
+        }
       };
 
       let responseBuffer = '';
@@ -178,46 +182,38 @@ export class ExecuteCodeHandler {
         return lastValidJson;
       };
 
-      // 응답 대기
+      // 응답 대기 - 라인 기반 처리
       const dataHandler = (data: Buffer) => {
         responseBuffer += data.toString();
-
-        // EOT 문자로 응답 완료 감지
-        const eotIndex = responseBuffer.indexOf('\x04');
-        if (eotIndex !== -1) {
-          cleanup();
-
-          const responseData = responseBuffer.substring(0, eotIndex);
+        
+        // 줄바꿈으로 구분된 완전한 라인들 처리
+        const lines = responseBuffer.split('\n');
+        responseBuffer = lines.pop() || ''; // 마지막 불완전한 라인은 버퍼에 유지
+        
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          
           try {
-            // 가장 마지막 완전한 JSON 블록 파싱
-            const parsed = extractLastJson(responseData);
-            if (!parsed) {
-              throw new Error('유효한 JSON 블록을 찾지 못함');
-            }
+            const parsed = JSON.parse(line);
             
-            if (parsed.id === requestId) {
+            // JSON-RPC 응답인지 확인
+            if (parsed.jsonrpc === '2.0' && parsed.id === requestId) {
+              cleanup();
               this.lastActivity = new Date();
-              resolve(parsed);
-            } else {
-              reject(new Error(`응답 ID 불일치: 예상=${requestId}, 실제=${parsed.id}`));
+              
+              // result가 있으면 성공, error가 있으면 에러
+              if (parsed.result) {
+                resolve(parsed.result);
+              } else if (parsed.error) {
+                reject(new Error(parsed.error.message || 'JSON-RPC error'));
+              } else {
+                reject(new Error('Invalid JSON-RPC response'));
+              }
+              return;
             }
-          } catch (parseError) {
-            // JSON 파싱 실패 시 더 자세한 디버깅 정보
-            logger.warn('JSON 파싱 실패 상세:', {
-              error: parseError,
-              dataLength: responseData.length,
-              firstChars: responseData.substring(0, 100),
-              lastChars: responseData.substring(Math.max(0, responseData.length - 100))
-            });
-            
-            // 에러 메시지 개선
-            let errorMsg = 'JSON 응답 파싱 실패';
-            if (parseError instanceof Error) {
-              errorMsg = parseError.message.includes('Unexpected non-whitespace')
-                ? 'JSON 응답 형식 오류 (프로토콜 태그 문제 가능성)'
-                : `JSON 파싱 오류: ${parseError.message}`;
-            }
-            reject(new Error(errorMsg));
+          } catch (e) {
+            // JSON 파싱 실패는 무시 (stderr 출력 등일 수 있음)
+            logger.debug('Non-JSON line ignored:', line);
           }
         }
       };
@@ -232,7 +228,7 @@ export class ExecuteCodeHandler {
 
       // 요청 전송
       const requestJson = JSON.stringify(request);
-      this.replProcess!.stdin!.write(requestJson + '\x04', 'utf8');
+      this.replProcess!.stdin!.write(requestJson + '\n', 'utf8');
     });
   }
 

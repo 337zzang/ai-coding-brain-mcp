@@ -1,0 +1,2 @@
+This is a test file for v19 search
+Contains pattern: TEST_PATTERN_V19

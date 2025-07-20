@@ -1,28 +1,4 @@
 {
-  "command": "/focus 1",
-  "result": {
-    "success": true,
-    "message": "태스크 시작: JSON REPL과 워크플로우 통합"
-  },
-  "workflow_status": {
-    "status": "active",
-    "plan_id": "27019e1a-78c3-4c0b-a826-67f17211c865",
-    "plan_name": "영속적 히스토리 시스템 구축",
-    "total_tasks": 3,
-    "completed_tasks": 0,
-    "current_task": {
-      "id": "a773bf14-84bc-4b04-ab99-0bce0e6da52e",
-      "title": "JSON REPL과 워크플로우 통합",
-      "description": "",
-      "status": "in_progress",
-      "created_at": "2025-07-15T13:33:58.170110+09:00",
-      "updated_at": "2025-07-15T13:33:58.214104",
-      "started_at": "2025-07-15T13:33:58.214104",
-      "completed_at": null,
-      "duration": null,
-      "notes": [],
-      "outputs": {}
-    },
-    "progress": 0.0
-  }
+  "command": "/status",
+  "result": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 워크플로우 리팩토링 완료\n진행률: 60.0% (3/5)\n현재 태스크: 기존 파일 삭제\n태스크 상태: in_progress"
 }

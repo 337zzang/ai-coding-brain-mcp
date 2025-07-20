@@ -1,0 +1,31 @@
+# 삭제 예정 파일 목록
+# 총 27개
+# 생성일: 2025-07-19 22:26:09
+
+.\.gitignore.backup_20250715_142424
+.\ai_coding_brain_helpers.py.backup2_20250715_143829
+.\ai_helpers_new\file.py.backup
+.\ai_helpers_new\search.py.backup
+.\ai_helpers_v2_fix.py.backup_20250719_103415
+.\docs\kanban_workflow_guide.md.backup_1752595517
+.\memory\backups\workflow_backup_20250718_222724\workflow\improved_manager.py.backup_20250718_204018
+.\memory\workflow.json.backup_20250718_230227
+.\memory\workflow_events.json.backup_20250718_204018
+.\memory\workflow_events.json.backup_20250718_230227
+.\memory\workflow_history.json.backup_20250718_230227
+.\python\ai_helpers_v2\__init__.py.backup
+.\python\ai_helpers_v2\git_ops.py.backup
+.\python\json_repl_session.py.backup2_20250719_103903
+.\python\json_repl_session.py.backup_20250719_113355
+.\python\json_repl_session.py.backup_20250719_121817
+.\src\index.ts.backup
+.\src\tools\tool-definitions.ts.backup
+.\src\tools\tool-definitions.ts.backup_20250715_144256
+.\src\tools\tool-definitions.ts.backup_20250715_222152
+.\src\tools\tool-definitions.ts.backup_20250716_201635
+.\src\tools\tool-definitions.ts.bak
+.\startup_script.py.backup_20250719_192920
+.\test_code.py.backup
+.\test_code_v19.py.backup
+.\test_helpers\test_code.py.backup
+.\test_replace.py.backup

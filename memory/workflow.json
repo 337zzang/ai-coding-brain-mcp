@@ -1,24 +1,108 @@
 {
   "version": "2.0",
-  "project": "default",
-  "status": "active",
+  "project": "ai-coding-brain-mcp",
+  "status": "completed",
   "created_at": "2025-07-18T23:27:37.217189",
-  "updated_at": "2025-07-18T23:27:37.224192",
-  "focus_task_id": null,
+  "updated_at": "2025-07-20T01:22:33.580630",
+  "focus_task_id": 5,
   "tasks": [
     {
       "id": 1,
       "name": "다음 프로젝트 계획",
-      "status": "todo",
+      "status": "done",
       "created_at": "2025-07-18T23:27:37.224192",
+      "started_at": "2025-07-18T23:28:25.752419",
+      "completed_at": "2025-07-18T23:28:25.755419",
+      "duration_minutes": 0,
+      "summary": "워크플로우 플랜 아카이빙 구조 구현 완료",
+      "artifacts": [],
+      "tags": [
+        "planning"
+      ],
+      "dependencies": [],
+      "assignee": null,
+      "priority": 3
+    },
+    {
+      "id": 2,
+      "name": "통합 테스트 수행",
+      "status": "done",
+      "created_at": "2025-07-18T23:32:24.492063",
+      "started_at": "2025-07-18T23:32:24.494063",
+      "completed_at": "2025-07-19T11:04:10.168119",
+      "duration_minutes": 691,
+      "summary": "v2 제거 작업 완료 - 모든 명령어 단순화",
+      "artifacts": [],
+      "tags": [
+        "test",
+        "system"
+      ],
+      "dependencies": [],
+      "assignee": null,
+      "priority": 3
+    },
+    {
+      "id": 3,
+      "name": "v2제거완료",
+      "status": "done",
+      "created_at": "2025-07-19T11:03:36.500958",
+      "started_at": null,
+      "completed_at": "2025-07-19T11:04:54.337394",
+      "duration_minutes": null,
+      "summary": "워크플로우 v2 prefix 완전 제거 - 모든 명령어 단순화 완료",
+      "artifacts": [],
+      "tags": [
+        "refactor",
+        "workflow"
+      ],
+      "dependencies": [],
+      "assignee": null,
+      "priority": 3
+    },
+    {
+      "id": 4,
+      "name": "json_repl_session.py 정리 및 재작성",
+      "status": "done",
+      "created_at": "2025-07-19T13:18:30.977659",
+      "started_at": "2025-07-20T01:18:35.898222",
+      "completed_at": "2025-07-20T01:22:33.580630",
+      "duration_minutes": 3,
+      "summary": "4 글로벌 컨텍스트 시스템 구현 완료",
+      "artifacts": [],
+      "tags": [
+        "refactor",
+        "cleanup"
+      ],
+      "dependencies": [],
+      "assignee": null,
+      "priority": 3
+    },
+    {
+      "id": 5,
+      "name": "유저프리퍼런스 개선",
+      "status": "todo",
+      "created_at": "2025-07-19T23:33:44.278237",
       "started_at": null,
       "completed_at": null,
       "duration_minutes": null,
       "summary": null,
       "artifacts": [],
-      "tags": [
-        "planning"
-      ],
+      "tags": [],
+      "dependencies": [],
+      "assignee": null,
+      "priority": 3
+    },
+    {
+      "id": 6,
+      "name": "글로벌 컨텍스트 시스템 구현",
+      "status": "todo",
+      "created_at": "2025-07-20T01:16:31.196646",
+      "started_at": null,
+      "completed_at": null,
+      "duration_minutes": null,
+      "summary": null,
+      "artifacts": [],
+      "tags": [],
       "dependencies": [],
       "assignee": null,
       "priority": 3
@@ -40,6 +124,389 @@
       },
       "before_state": null,
       "after_state": null
+    },
+    {
+      "id": "6c5e1027-2e29-4754-8373-090c9a922498",
+      "type": "task_started",
+      "timestamp": "2025-07-18T23:28:25.752419",
+      "task_id": 1,
+      "user": "system",
+      "data": {},
+      "before_state": {
+        "id": 1,
+        "name": "다음 프로젝트 계획",
+        "status": "todo",
+        "created_at": "2025-07-18T23:27:37.224192",
+        "started_at": null,
+        "completed_at": null,
+        "duration_minutes": null,
+        "summary": null,
+        "artifacts": [],
+        "tags": [
+          "planning"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      },
+      "after_state": {
+        "id": 1,
+        "name": "다음 프로젝트 계획",
+        "status": "doing",
+        "created_at": "2025-07-18T23:27:37.224192",
+        "started_at": "2025-07-18T23:28:25.752419",
+        "completed_at": null,
+        "duration_minutes": null,
+        "summary": null,
+        "artifacts": [],
+        "tags": [
+          "planning"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      }
+    },
+    {
+      "id": "384b8145-594e-45a9-a4d8-122f70d597f4",
+      "type": "task_completed",
+      "timestamp": "2025-07-18T23:28:25.755419",
+      "task_id": 1,
+      "user": "system",
+      "data": {},
+      "before_state": {
+        "id": 1,
+        "name": "다음 프로젝트 계획",
+        "status": "doing",
+        "created_at": "2025-07-18T23:27:37.224192",
+        "started_at": "2025-07-18T23:28:25.752419",
+        "completed_at": null,
+        "duration_minutes": null,
+        "summary": null,
+        "artifacts": [],
+        "tags": [
+          "planning"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      },
+      "after_state": {
+        "id": 1,
+        "name": "다음 프로젝트 계획",
+        "status": "done",
+        "created_at": "2025-07-18T23:27:37.224192",
+        "started_at": "2025-07-18T23:28:25.752419",
+        "completed_at": "2025-07-18T23:28:25.755419",
+        "duration_minutes": 0,
+        "summary": "워크플로우 플랜 아카이빙 구조 구현 완료",
+        "artifacts": [],
+        "tags": [
+          "planning"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      }
+    },
+    {
+      "id": "4765c156-7071-4c23-83c5-18336e34c802",
+      "type": "task_created",
+      "timestamp": "2025-07-18T23:32:24.492063",
+      "task_id": 2,
+      "user": "system",
+      "data": {
+        "name": "통합 테스트 수행",
+        "tags": [
+          "test",
+          "system"
+        ],
+        "priority": 3
+      },
+      "before_state": null,
+      "after_state": null
+    },
+    {
+      "id": "e1c7bce7-75da-4e3a-ade8-a13daa0e75ca",
+      "type": "task_started",
+      "timestamp": "2025-07-18T23:32:24.494063",
+      "task_id": 2,
+      "user": "system",
+      "data": {},
+      "before_state": {
+        "id": 2,
+        "name": "통합 테스트 수행",
+        "status": "todo",
+        "created_at": "2025-07-18T23:32:24.492063",
+        "started_at": null,
+        "completed_at": null,
+        "duration_minutes": null,
+        "summary": null,
+        "artifacts": [],
+        "tags": [
+          "test",
+          "system"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      },
+      "after_state": {
+        "id": 2,
+        "name": "통합 테스트 수행",
+        "status": "doing",
+        "created_at": "2025-07-18T23:32:24.492063",
+        "started_at": "2025-07-18T23:32:24.494063",
+        "completed_at": null,
+        "duration_minutes": null,
+        "summary": null,
+        "artifacts": [],
+        "tags": [
+          "test",
+          "system"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      }
+    },
+    {
+      "id": "97e38096-5f6d-4e15-891c-f39729c3f16d",
+      "type": "task_created",
+      "timestamp": "2025-07-19T11:03:36.500958",
+      "task_id": 3,
+      "user": "system",
+      "data": {
+        "name": "v2제거완료",
+        "tags": [
+          "refactor",
+          "workflow"
+        ],
+        "priority": 3
+      },
+      "before_state": null,
+      "after_state": null
+    },
+    {
+      "id": "39a2f6aa-9fa5-401a-b5f0-ed2bcb78a780",
+      "type": "task_completed",
+      "timestamp": "2025-07-19T11:04:10.169120",
+      "task_id": 2,
+      "user": "system",
+      "data": {},
+      "before_state": {
+        "id": 2,
+        "name": "통합 테스트 수행",
+        "status": "doing",
+        "created_at": "2025-07-18T23:32:24.492063",
+        "started_at": "2025-07-18T23:32:24.494063",
+        "completed_at": null,
+        "duration_minutes": null,
+        "summary": null,
+        "artifacts": [],
+        "tags": [
+          "test",
+          "system"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      },
+      "after_state": {
+        "id": 2,
+        "name": "통합 테스트 수행",
+        "status": "done",
+        "created_at": "2025-07-18T23:32:24.492063",
+        "started_at": "2025-07-18T23:32:24.494063",
+        "completed_at": "2025-07-19T11:04:10.168119",
+        "duration_minutes": 691,
+        "summary": "v2 제거 작업 완료 - 모든 명령어 단순화",
+        "artifacts": [],
+        "tags": [
+          "test",
+          "system"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      }
+    },
+    {
+      "id": "02186558-c05f-4da6-8d4b-3c621bf52e8b",
+      "type": "task_completed",
+      "timestamp": "2025-07-19T11:04:54.337394",
+      "task_id": 3,
+      "user": "system",
+      "data": {},
+      "before_state": {
+        "id": 3,
+        "name": "v2제거완료",
+        "status": "todo",
+        "created_at": "2025-07-19T11:03:36.500958",
+        "started_at": null,
+        "completed_at": null,
+        "duration_minutes": null,
+        "summary": null,
+        "artifacts": [],
+        "tags": [
+          "refactor",
+          "workflow"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      },
+      "after_state": {
+        "id": 3,
+        "name": "v2제거완료",
+        "status": "done",
+        "created_at": "2025-07-19T11:03:36.500958",
+        "started_at": null,
+        "completed_at": "2025-07-19T11:04:54.337394",
+        "duration_minutes": null,
+        "summary": "워크플로우 v2 prefix 완전 제거 - 모든 명령어 단순화 완료",
+        "artifacts": [],
+        "tags": [
+          "refactor",
+          "workflow"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      }
+    },
+    {
+      "id": "33727230-f7a3-4606-aa84-ab0fdc6ee37f",
+      "type": "task_created",
+      "timestamp": "2025-07-19T13:18:30.979678",
+      "task_id": 4,
+      "user": "system",
+      "data": {
+        "name": "json_repl_session.py 정리 및 재작성",
+        "tags": [
+          "refactor",
+          "cleanup"
+        ],
+        "priority": 3
+      },
+      "before_state": null,
+      "after_state": null
+    },
+    {
+      "id": "9128f0e9-ed12-4390-8c21-cf51e97be13d",
+      "type": "task_created",
+      "timestamp": "2025-07-19T23:33:44.278237",
+      "task_id": 5,
+      "user": "system",
+      "data": {
+        "name": "유저프리퍼런스 개선",
+        "tags": [],
+        "priority": 3
+      },
+      "before_state": null,
+      "after_state": null
+    },
+    {
+      "id": "2b509dbc-2b11-4d1e-b6b0-b408966d8d15",
+      "type": "task_created",
+      "timestamp": "2025-07-20T01:16:31.196646",
+      "task_id": 6,
+      "user": "system",
+      "data": {
+        "name": "글로벌 컨텍스트 시스템 구현",
+        "tags": [],
+        "priority": 3
+      },
+      "before_state": null,
+      "after_state": null
+    },
+    {
+      "id": "52f773de-b59c-435a-9604-22e8b7ae4d2f",
+      "type": "task_started",
+      "timestamp": "2025-07-20T01:18:35.898222",
+      "task_id": 4,
+      "user": "system",
+      "data": {},
+      "before_state": {
+        "id": 4,
+        "name": "json_repl_session.py 정리 및 재작성",
+        "status": "todo",
+        "created_at": "2025-07-19T13:18:30.977659",
+        "started_at": null,
+        "completed_at": null,
+        "duration_minutes": null,
+        "summary": null,
+        "artifacts": [],
+        "tags": [
+          "refactor",
+          "cleanup"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      },
+      "after_state": {
+        "id": 4,
+        "name": "json_repl_session.py 정리 및 재작성",
+        "status": "doing",
+        "created_at": "2025-07-19T13:18:30.977659",
+        "started_at": "2025-07-20T01:18:35.898222",
+        "completed_at": null,
+        "duration_minutes": null,
+        "summary": null,
+        "artifacts": [],
+        "tags": [
+          "refactor",
+          "cleanup"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      }
+    },
+    {
+      "id": "a7ab9b72-541f-4ca0-847d-8f6cef7627d7",
+      "type": "task_completed",
+      "timestamp": "2025-07-20T01:22:33.580630",
+      "task_id": 4,
+      "user": "system",
+      "data": {},
+      "before_state": {
+        "id": 4,
+        "name": "json_repl_session.py 정리 및 재작성",
+        "status": "doing",
+        "created_at": "2025-07-19T13:18:30.977659",
+        "started_at": "2025-07-20T01:18:35.898222",
+        "completed_at": null,
+        "duration_minutes": null,
+        "summary": null,
+        "artifacts": [],
+        "tags": [
+          "refactor",
+          "cleanup"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      },
+      "after_state": {
+        "id": 4,
+        "name": "json_repl_session.py 정리 및 재작성",
+        "status": "done",
+        "created_at": "2025-07-19T13:18:30.977659",
+        "started_at": "2025-07-20T01:18:35.898222",
+        "completed_at": "2025-07-20T01:22:33.580630",
+        "duration_minutes": 3,
+        "summary": "4 글로벌 컨텍스트 시스템 구현 완료",
+        "artifacts": [],
+        "tags": [
+          "refactor",
+          "cleanup"
+        ],
+        "dependencies": [],
+        "assignee": null,
+        "priority": 3
+      }
     }
   ],
   "metadata": {

@@ -1,23 +1,4 @@
 {
-  "workflow_snapshot": {
-    "active_plan_id": "plan_test_001",
-    "plans": [
-      {
-        "id": "plan_test_001",
-        "name": "통합 테스트 플랜",
-        "tasks": [
-          {
-            "id": "task_001",
-            "title": "히스토리 연동",
-            "status": "completed"
-          },
-          {
-            "id": "task_002",
-            "title": "워크플로우 통합",
-            "status": "in_progress"
-          }
-        ]
-      }
-    ]
-  }
+  "command": "/start 워크플로우 리팩토링 완료",
+  "result": "플랜 생성됨: 워크플로우 리팩토링 완료"
 }

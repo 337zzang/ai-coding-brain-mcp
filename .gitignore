@@ -24,6 +24,7 @@ debug_flow.log
 # Backups
 backups/
 # memory/ # 워크플로우 데이터 추적 필요
+workflow_backup.json
 
 # Test files
 test_*.txt

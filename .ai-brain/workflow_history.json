@@ -1,0 +1,279 @@
+[
+  {
+    "timestamp": "2025-07-20T08:35:30.804121",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_001",
+        "name": "워크플로우 시스템 리팩토링 완료",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-20T08:35:30.803122",
+        "updated_at": "2025-07-20T08:35:30.803122"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-07-20T08:35:30.808042",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_002",
+        "name": "불필요한 파일 삭제",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-20T08:35:30.806808",
+        "updated_at": "2025-07-20T08:35:30.806808"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-07-20T08:35:30.810040",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_003",
+        "name": "최종 테스트 및 문서화",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-20T08:35:30.810040",
+        "updated_at": "2025-07-20T08:35:30.810040"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-07-20T08:35:30.816041",
+    "action": "task_updated",
+    "data": {
+      "task_id": "task_001",
+      "updates": {
+        "status": "in_progress"
+      },
+      "old_status": "todo"
+    }
+  },
+  {
+    "timestamp": "2025-07-20T08:37:12.309595",
+    "action": "task_updated",
+    "data": {
+      "task_id": "task_001",
+      "updates": {
+        "status": "done"
+      },
+      "old_status": "in_progress"
+    }
+  },
+  {
+    "timestamp": "2025-07-20T08:37:59.078265",
+    "action": "task_updated",
+    "data": {
+      "task_id": "task_002",
+      "updates": {
+        "status": "done"
+      },
+      "old_status": "todo"
+    }
+  },
+  {
+    "timestamp": "2025-07-20T08:39:41.695775",
+    "action": "task_updated",
+    "data": {
+      "task_id": "task_003",
+      "updates": {
+        "status": "in_progress"
+      },
+      "old_status": "todo"
+    }
+  },
+  {
+    "timestamp": "2025-07-20T08:40:54.806557",
+    "action": "task_updated",
+    "data": {
+      "task_id": "task_003",
+      "updates": {
+        "status": "done"
+      },
+      "old_status": "in_progress"
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:16:36.500414",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_004",
+        "name": "WorkflowManager 에러 수정",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-20T20:16:36.499359",
+        "updated_at": "2025-07-20T20:16:36.499359"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:20:49.183481",
+    "action": "task_updated",
+    "data": {
+      "task_id": "task_004",
+      "updates": {
+        "status": "in_progress"
+      },
+      "old_status": "todo"
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:20:49.190459",
+    "action": "task_updated",
+    "data": {
+      "task_id": "task_004",
+      "updates": {
+        "status": "completed",
+        "summary": "태스크 ID 처리 개선 완료"
+      },
+      "old_status": "in_progress"
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:20:49.195464",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_005",
+        "name": "테스트용 태스크",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-20T20:20:49.194464",
+        "updated_at": "2025-07-20T20:20:49.194464"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:21:05.659771",
+    "action": "task_updated",
+    "data": {
+      "task_id": "task_004",
+      "updates": {
+        "status": "in_progress"
+      },
+      "old_status": "completed"
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:21:05.671596",
+    "action": "task_updated",
+    "data": {
+      "task_id": "task_004",
+      "updates": {
+        "status": "completed",
+        "summary": "ID 처리 개선 완료"
+      },
+      "old_status": "in_progress"
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:21:37.179052",
+    "action": "task_updated",
+    "data": {
+      "task_id": "task_005",
+      "updates": {
+        "status": "in_progress"
+      },
+      "old_status": "todo"
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:21:37.188050",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_006",
+        "name": "테스트 태스크 6",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-20T20:21:37.187055",
+        "updated_at": "2025-07-20T20:21:37.187055"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:21:37.195053",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_007",
+        "name": "테스트 태스크 7",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-20T20:21:37.193048",
+        "updated_at": "2025-07-20T20:21:37.193048"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:21:37.201090",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_008",
+        "name": "테스트 태스크 8",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-20T20:21:37.199055",
+        "updated_at": "2025-07-20T20:21:37.199055"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:21:37.206058",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_009",
+        "name": "테스트 태스크 9",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-20T20:21:37.205058",
+        "updated_at": "2025-07-20T20:21:37.205058"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:21:37.213148",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_010",
+        "name": "테스트 태스크 10",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-20T20:21:37.211170",
+        "updated_at": "2025-07-20T20:21:37.211170"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:21:37.218127",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_011",
+        "name": "테스트 태스크 11",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-20T20:21:37.217165",
+        "updated_at": "2025-07-20T20:21:37.217165"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-07-20T20:21:37.227784",
+    "action": "task_updated",
+    "data": {
+      "task_id": "task_011",
+      "updates": {
+        "status": "in_progress"
+      },
+      "old_status": "todo"
+    }
+  }
+]

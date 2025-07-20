@@ -1,0 +1,176 @@
+{
+  "timestamp": "2025-07-19T21:59:42.754487",
+  "version": "v19.0",
+  "modules": {
+    "file": {
+      "tests": [
+        {
+          "write": true
+        },
+        {
+          "read": true
+        },
+        {
+          "exists": true
+        },
+        {
+          "write_json": true
+        },
+        {
+          "read_json": true
+        }
+      ],
+      "success_rate": "5/5"
+    },
+    "code": {
+      "tests": [
+        {
+          "parse": true
+        },
+        {
+          "view": true
+        },
+        {
+          "replace": true
+        }
+      ],
+      "success_rate": "3/3"
+    },
+    "search": {
+      "tests": [
+        {
+          "search_files": false
+        }
+      ],
+      "success_rate": "0/1"
+    },
+    "llm": {
+      "tests": [],
+      "success_rate": "0/0"
+    },
+    "workflow": {
+      "tests": [
+        {
+          "status": true
+        },
+        {
+          "task_list": true
+        },
+        {
+          "task_add": true
+        },
+        {
+          "next": true
+        },
+        {
+          "focus": true
+        },
+        {
+          "done": true
+        }
+      ],
+      "success_rate": "6/6"
+    },
+    "project": {
+      "tests": [
+        {
+          "get_current": true
+        },
+        {
+          "flow_project": true
+        },
+        {
+          "scan_directory": true
+        },
+        {
+          "scan_directory_dict": true
+        }
+      ],
+      "success_rate": "4/4"
+    },
+    "error_handling": {
+      "tests": [
+        {
+          "read_missing": true,
+          "error_msg": "File not found: non_existent_file_v19.txt"
+        },
+        {
+          "bad_json": true
+        },
+        {
+          "permission": false
+        },
+        {
+          "large_output": true
+        }
+      ],
+      "success_rate": "3/4"
+    },
+    "performance": {
+      "tests": [
+        {
+          "large_write": true,
+          "write_time": "0.003s"
+        },
+        {
+          "large_read": true,
+          "read_time": "0.002s"
+        },
+        {
+          "search_performance": true,
+          "search_time": "13.373s",
+          "files_searched": 10496
+        }
+      ],
+      "success_rate": "3/3"
+    },
+    "o3_background": {
+      "tests": [
+        {
+          "single_async": true
+        },
+        {
+          "multi_async": true
+        },
+        {
+          "progress_check": true
+        },
+        {
+          "list_tasks": true
+        },
+        {
+          "completion_check": true
+        }
+      ],
+      "success_rate": "5/5"
+    }
+  },
+  "errors": [
+    {
+      "module": "search",
+      "error": "'data'"
+    },
+    {
+      "module": "llm",
+      "error": "string indices must be integers, not 'str'"
+    }
+  ],
+  "improvements": [
+    {
+      "module": "file.py",
+      "issue": "exists() 함수가 dict가 아닌 bool을 반환 - API 일관성 문제",
+      "suggestion": "다른 함수들처럼 {'ok': True, 'data': True/False} 형식으로 통일"
+    },
+    {
+      "module": "search.py",
+      "issue": "search_files 함수 인자 순서가 직관적이지 않음",
+      "suggestion": "path를 첫 번째 인자로 변경 고려"
+    },
+    {
+      "module": "performance",
+      "issue": "대규모 프로젝트에서 search_code가 13초 이상 소요",
+      "suggestion": "병렬 처리 또는 인덱싱 도입 검토"
+    }
+  ],
+  "summary": {}
+}

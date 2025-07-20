@@ -1,0 +1,49 @@
+{
+  "timestamp": "2025-07-19T21:59:42.754487",
+  "version": "v19.0",
+  "modules": {
+    "file": {
+      "tests": [
+        {
+          "write": true
+        },
+        {
+          "read": true
+        },
+        {
+          "exists": true
+        },
+        {
+          "write_json": true
+        },
+        {
+          "read_json": true
+        }
+      ],
+      "success_rate": "5/5"
+    },
+    "code": {
+      "tests": [
+        {
+          "parse": true
+        },
+        {
+          "view": true
+        },
+        {
+          "replace": true
+        }
+      ],
+      "success_rate": "3/3"
+    }
+  },
+  "errors": [],
+  "improvements": [
+    {
+      "module": "file.py",
+      "issue": "exists() 함수가 dict가 아닌 bool을 반환 - API 일관성 문제",
+      "suggestion": "다른 함수들처럼 {'ok': True, 'data': True/False} 형식으로 통일"
+    }
+  ],
+  "summary": {}
+}

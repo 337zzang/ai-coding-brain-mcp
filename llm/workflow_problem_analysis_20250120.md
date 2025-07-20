@@ -1,0 +1,105 @@
+# 워크플로우 시스템 문제 분석
+
+아래 내용은 현재 리포지터리 구조, 제공-된 증상과 파일 이름만으로 추론한 “원인 분석(WHY)”과 “어떻게 고칠 것인가(HOW)”를 모두 포함합니다.  
+실제 코드를 확인하면서 항목별로 체크리스트를 돌려보면 대부분 바로 재현됩니다.
+
+────────────────────────────────────────
+1) fp(flow_project) 함수가 None 으로 평가되는 이유
+────────────────────────────────────────
+WHY
+• flow_project_wrapper.py 내부에 factory 또는 singleton 객체(예: FlowProject(), FlowProjectContext 등)를 반환해야 하는 함수가 선언만 되어 있거나, 조건부 import 과정에서 예외가 나서 None 이 주입된 상태임.  
+• 많은 경우 __init__.py 에서  
+  from .helpers.flow_project_wrapper import fp  
+  와 같이 import-time 에 객체를 만들어 두는데, flow_project_wrapper.py 안에서 fp 변수에 실제 인스턴스를 할당하지 않았거나, 로딩 순서가 꼬여 fp 가 정의되기 전에 다른 모듈이 import 되면서 “fp = None” 상태가 그대로 노출된다.
+
+HOW
+1. python/helpers/flow_project_wrapper.py
+
+```python
+# BEFORE (현재 추정)
+fp = None     # placeholder
+
+# AFTER
+from .flow_project import FlowProject    # 실제 구현체
+
+# 싱글톤 보장
+_fp_singleton: FlowProject | None = None
+
+def fp() -> FlowProject:
+    global _fp_singleton
+    if _fp_singleton is None:
+        _fp_singleton = FlowProject.load()   # 또는 FlowProject()
+    return _fp_singleton
+```
+
+2. import 순환이 일어나지 않도록 FlowProject 정의 파일과 wrapper 를 구분하거나, lazy import (`importlib.import_module`) 사용.
+3. 외부에서 fp 가 “호출 가능한 함수”라는 계약을 명확히 기재하고 README/Docstring에 명시.
+
+────────────────────────────────────────
+2) workflow.json 에 tasks 배열이 없는(누락되는) 원인
+────────────────────────────────────────
+WHY  
+• (저장 시점 기준) `Workflow.serialize()` 같은 메서드에서 실제 task 리스트가 비어 있으면 키 자체를 쓰지 않도록 하는 방어 로직이 들어가 있거나,  
+• 쓰기 로직이 두 번 실행되는데 두 번째에서 빈 워크플로우 객체를 덮어쓴다. (예: init 시점에 기본 스켈레톤을 먼저 쓰고, 이후 task 를 추가해야 하는데 실패)  
+• 경로 분기: 프로젝트별 디렉터리(`.project/workflow.json` vs 전역 `workflow.json`)를 다르게 사용하면서 어느 한 쪽만 본다.
+
+HOW  
+1. 저장 로직 점검
+```python
+def to_json_dict(self):
+    data = {
+        "name": self.name,
+        # ...
+        "tasks": [t.to_json_dict() for t in self.tasks]   # ← 반드시 존재
+    }
+    return data
+```
+2. save 시점에 atomic write 사용(temporary file + os.replace)해서 두 번 덮어쓰지 않도록.  
+3. 로딩 시에도 “tasks” 키가 없으면 `self.tasks = []` 로 초기화하되, 그 직후 다시 save 로직을 타지 않도록 플래그(loaded_from_disk) 두기.
+
+────────────────────────────────────────
+3) 프로젝트 전환(다른 디렉터리/레포) 시 컨텍스트가 유지되지 않는 이유
+────────────────────────────────────────
+WHY  
+• 컨텍스트(현재 열려있는 FlowProject, 선택된 task 등)를 메모리 단일톤에만 보관하고 디스크/세션 캐시(예: ~/.cache/aicodingbrain/)에 안 써서 Python 프로세스가 바뀔 때마다 사라짐.  
+• 명시적 “close()” 호출 없이 바로 새로운 프로젝트를 open 하면서 기존 _fp_singleton 같은 전역 변수가 덮임.  
+• CLI 도구가 하위 프로세스를 spawn 하여 각 프로세스마다 다른 메모리 공간을 씀.
+
+HOW  
+1. FlowProjectContext 객체를 정의하고, `~/.cache/aicb/context.json`(또는 .vscode/settings.json) 같은 고정 위치에 현재 프로젝트 id, 마지막 열린 파일, 커서 위치 등을 저장.  
+2. 프로젝트를 open 할 때
+   • 현재 컨텍스트 flush → 디스크  
+   • 새 컨텍스트 load → 메모리  
+3. IDE/CLI 레이어(LSP, VS Code extension 등)에 “현재 프로젝트”를 질의할 수 있는 API 제공해 import 순환차단.  
+4. 테스트: 두 개 프로젝트를 번갈아 열고 JSON 파일을 검사하여 컨텍스트가 교대로 정상 저장/로드 되는지 확인.
+
+────────────────────────────────────────
+4) 기존 설계(Documentation) vs. 현재 구현(Repository)의 차이
+────────────────────────────────────────
+설계 문서 요약(가정)
+• WorkflowManager → 여러 FlowProject 를 관리.  
+• 각 FlowProject 는 workflow.json, workflow_history.json, tasks/, assets/ 등 자체 디렉터리를 가진다.  
+• fp() 헬퍼로 현재 활성 프로젝트를 가져온다.  
+• 모든 I/O 는 atomic, 로그는 workflow_history.json 에 append only.  
+• 캐시 모듈(CacheProvider)로 프로젝트 컨텍스트, LLM 호출 결과 등을 저장한다.
+
+현재 구현상의 괴리
+1. FlowProjectWrapper(fp) 가 실제 객체를 생성하지 않고 None.  
+2. workflow.json 스키마가 빠져 있어 tasks, meta, dependencies 등이 부분적으로 저장.  
+3. CacheProvider 나 storage adapter 가 directory path 만 하드코딩되어 작동 안 함.  
+4. history 기능은 파일은 있으나 writer 가 호출되지 않아 항상 빈 배열.  
+5. 테스트 코드(test_workflow.py) 는 설계 스펙에 맞춰 작성돼 통과 불가 → pytest 실패.
+
+정리
+• 설계는 “상태 + 기록 + 캐시” 세 축을 분리하지만, 구현은 상태만 일부 구현하고 기록/캐시는 stub.  
+• 클래스/모듈 이름은 맞으나 메서드 시그니처가 달라 type checking 실패(Mypy “Incompatible override”).  
+• 설계서는 싱글톤이나 DI 컨테이너 사용을 가정, 구현은 전역 변수.
+
+────────────────────────────────────────
+다음 액션 플랜(우선순위)
+────────────────────────────────────────
+1. flow_project_wrapper.py 에 싱글톤 fp() 구현 → 모든 모듈 import 시 None 문제 해소.  
+2. Workflow.serialize / save 로직 수정 → tasks 누락 해결.  
+3. CacheProvider / Context 저장 모듈 추가 → 프로젝트 전환 컨텍스트 유지.  
+4. history writer 구현 → 워크플로우 변경 로그 남기기.  
+5. 테스트 케이스 단계별 복구 → CI 녹색 불 확인.

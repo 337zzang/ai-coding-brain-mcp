@@ -1,1 +1,238 @@
-[{"id":1,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /status","details":"\n=== \ud83d\udcca \uc6cc\ud06c\ud50c\ub85c\uc6b0 \uc0c1\ud0dc ===\n\uc0c1\ud0dc: active\n\ud50c\ub79c: \uc790\ub3d9\ud654 \ud14c\uc2a4\ud2b8 \ud504\ub85c\uc81d\ud2b8\n\uc9c4\ud589\ub960: 26.7% (4/15)\n\ud604\uc7ac \ud0dc\uc2a4\ud06c: \uc694\uad6c\uc0ac\ud56d \ubd84\uc11d \ubc0f \uc124\uacc4\n\ud0dc\uc2a4\ud06c \uc0c1\ud0dc: in_progress","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_1.json"},{"id":2,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /start","details":"\ud50c\ub79c \uc0dd\uc131\ub428: \uc6cc\ud06c\ud50c\ub85c\uc6b0 \ub9ac\ud329\ud1a0\ub9c1 \uc644\ub8cc","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_2.json"},{"id":3,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /task","details":"\ud0dc\uc2a4\ud06c \ucd94\uac00\ub428: \ubc31\uc5c5 \uc0dd\uc131","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_3.json"},{"id":4,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /task","details":"\ud0dc\uc2a4\ud06c \ucd94\uac00\ub428: session_workflow.py \uad6c\ud604","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_4.json"},{"id":5,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /task","details":"\ud0dc\uc2a4\ud06c \ucd94\uac00\ub428: json_repl_session.py \uc218\uc815","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_5.json"},{"id":6,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /task","details":"\ud0dc\uc2a4\ud06c \ucd94\uac00\ub428: \uae30\uc874 \ud30c\uc77c \uc0ad\uc81c","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_6.json"},{"id":7,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /task","details":"\ud0dc\uc2a4\ud06c \ucd94\uac00\ub428: \ud14c\uc2a4\ud2b8 \ubc0f \uac80\uc99d","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_7.json"},{"id":8,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /task","details":"\n=== \ud83d\udccb \ud0dc\uc2a4\ud06c \ubaa9\ub85d ===\n1. \ud83d\udccb \ubc31\uc5c5 \uc0dd\uc131\n2. \ud83d\udccb session_workflow.py \uad6c\ud604\n3. \ud83d\udccb json_repl_session.py \uc218\uc815\n4. \ud83d\udccb \uae30\uc874 \ud30c\uc77c \uc0ad\uc81c\n5. \ud83d\udccb \ud14c\uc2a4\ud2b8 \ubc0f \uac80\uc99d\n","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_8.json"},{"id":9,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /next","details":"\ud0dc\uc2a4\ud06c \uc2dc\uc791\ub428: \ubc31\uc5c5 \uc0dd\uc131. \uc124\uacc4\uc11c \uc791\uc131 \ud6c4 \uacc4\uc18d \uc9c4\ud589\ud558\uc138\uc694.","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_9.json"},{"id":10,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /next","details":"\ub2e4\uc74c \ud0dc\uc2a4\ud06c \uc2dc\uc791: session_workflow.py \uad6c\ud604. \uc124\uacc4\uc11c \uc791\uc131\uc774 \ud544\uc694\ud569\ub2c8\ub2e4.","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_10.json"},{"id":11,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /next","details":"\ub2e4\uc74c \ud0dc\uc2a4\ud06c \uc2dc\uc791: json_repl_session.py \uc218\uc815. \uc124\uacc4\uc11c \uc791\uc131\uc774 \ud544\uc694\ud569\ub2c8\ub2e4.","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_11.json"},{"id":12,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /next","details":"\ub2e4\uc74c \ud0dc\uc2a4\ud06c \uc2dc\uc791: \uae30\uc874 \ud30c\uc77c \uc0ad\uc81c. \uc124\uacc4\uc11c \uc791\uc131\uc774 \ud544\uc694\ud569\ub2c8\ub2e4.","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_12.json"},{"id":13,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /status","details":"\n=== \ud83d\udcca \uc6cc\ud06c\ud50c\ub85c\uc6b0 \uc0c1\ud0dc ===\n\uc0c1\ud0dc: active\n\ud50c\ub79c: \uc6cc\ud06c\ud50c\ub85c\uc6b0 \ub9ac\ud329\ud1a0\ub9c1 \uc644\ub8cc\n\uc9c4\ud589\ub960: 60.0% (3/5)\n\ud604\uc7ac \ud0dc\uc2a4\ud06c: \uae30\uc874 \ud30c\uc77c \uc0ad\uc81c\n\ud0dc\uc2a4\ud06c \uc0c1\ud0dc: in_progress","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_13.json"},{"id":14,"timestamp":"2025-07-18 22:30:28","action":"\uc6cc\ud06c\ud50c\ub85c\uc6b0 \uba85\ub839: /focus","details":"\ud0dc\uc2a4\ud06c \uc2dc\uc791: \ubc31\uc5c5 \uc0dd\uc131","conversation_id":"conv_20250718_2230","checkpoint":"C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_14.json"},{"p":"\ucd5c\uc885","st":"2025-07-18T22:32:27.833231","u":"2025-07-18T22:34:58.903055","s":"D","t":1},{"p":"\ucd5c\uc885","st":"2025-07-18T22:32:27.833231","u":"2025-07-18T22:34:58.905053","s":"D","t":1},{"p":"\ud14c\uc2a4\ud2b8","st":"2025-07-18T22:35:30.722681","u":"2025-07-18T22:36:11.374385","s":"D","t":3},{"p":"\ud14c\uc2a4\ud2b8","st":"2025-07-18T22:35:30.722681","u":"2025-07-18T22:36:55.223290","s":"D","t":3}]
+[
+  {
+    "id": 1,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 자동화 테스트 프로젝트\n진행률: 26.7% (4/15)\n현재 태스크: 요구사항 분석 및 설계\n태스크 상태: in_progress",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_1.json"
+  },
+  {
+    "id": 2,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /start",
+    "details": "플랜 생성됨: 워크플로우 리팩토링 완료",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_2.json"
+  },
+  {
+    "id": 3,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: 백업 생성",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_3.json"
+  },
+  {
+    "id": 4,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: session_workflow.py 구현",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_4.json"
+  },
+  {
+    "id": 5,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: json_repl_session.py 수정",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_5.json"
+  },
+  {
+    "id": 6,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: 기존 파일 삭제",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_6.json"
+  },
+  {
+    "id": 7,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /task",
+    "details": "태스크 추가됨: 테스트 및 검증",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_7.json"
+  },
+  {
+    "id": 8,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /task",
+    "details": "\n=== 📋 태스크 목록 ===\n1. 📋 백업 생성\n2. 📋 session_workflow.py 구현\n3. 📋 json_repl_session.py 수정\n4. 📋 기존 파일 삭제\n5. 📋 테스트 및 검증\n",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_8.json"
+  },
+  {
+    "id": 9,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /next",
+    "details": "태스크 시작됨: 백업 생성. 설계서 작성 후 계속 진행하세요.",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_9.json"
+  },
+  {
+    "id": 10,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /next",
+    "details": "다음 태스크 시작: session_workflow.py 구현. 설계서 작성이 필요합니다.",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_10.json"
+  },
+  {
+    "id": 11,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /next",
+    "details": "다음 태스크 시작: json_repl_session.py 수정. 설계서 작성이 필요합니다.",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_11.json"
+  },
+  {
+    "id": 12,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /next",
+    "details": "다음 태스크 시작: 기존 파일 삭제. 설계서 작성이 필요합니다.",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_12.json"
+  },
+  {
+    "id": 13,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /status",
+    "details": "\n=== 📊 워크플로우 상태 ===\n상태: active\n플랜: 워크플로우 리팩토링 완료\n진행률: 60.0% (3/5)\n현재 태스크: 기존 파일 삭제\n태스크 상태: in_progress",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_13.json"
+  },
+  {
+    "id": 14,
+    "timestamp": "2025-07-18 22:30:28",
+    "action": "워크플로우 명령: /focus",
+    "details": "태스크 시작: 백업 생성",
+    "conversation_id": "conv_20250718_2230",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_14.json"
+  },
+  {
+    "p": "최종",
+    "st": "2025-07-18T22:32:27.833231",
+    "u": "2025-07-18T22:34:58.903055",
+    "s": "D",
+    "t": 1
+  },
+  {
+    "p": "최종",
+    "st": "2025-07-18T22:32:27.833231",
+    "u": "2025-07-18T22:34:58.905053",
+    "s": "D",
+    "t": 1
+  },
+  {
+    "p": "테스트",
+    "st": "2025-07-18T22:35:30.722681",
+    "u": "2025-07-18T22:36:11.374385",
+    "s": "D",
+    "t": 3
+  },
+  {
+    "p": "테스트",
+    "st": "2025-07-18T22:35:30.722681",
+    "u": "2025-07-18T22:36:55.223290",
+    "s": "D",
+    "t": 3
+  },
+  {
+    "id": 19,
+    "timestamp": "2025-07-18 23:46:17",
+    "action": "워크플로우 명령: /start",
+    "details": "ℹ️ 워크플로우 v2를 사용합니다. /v2 help로 도움말을 확인하세요",
+    "conversation_id": "conv_20250718_2346",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_19.json"
+  },
+  {
+    "id": 20,
+    "timestamp": "2025-07-18 23:46:17",
+    "action": "워크플로우 명령: /task",
+    "details": "ℹ️ 워크플로우 v2를 사용합니다. /v2 help로 도움말을 확인하세요",
+    "conversation_id": "conv_20250718_2346",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_20.json"
+  },
+  {
+    "id": 21,
+    "timestamp": "2025-07-18 23:46:17",
+    "action": "워크플로우 명령: /task",
+    "details": "ℹ️ 워크플로우 v2를 사용합니다. /v2 help로 도움말을 확인하세요",
+    "conversation_id": "conv_20250718_2346",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_21.json"
+  },
+  {
+    "id": 22,
+    "timestamp": "2025-07-18 23:46:17",
+    "action": "워크플로우 명령: /task",
+    "details": "📋 태스크 목록:\n✅ #1 다음 프로젝트 계획 [planning]\n🔄 #2 통합 테스트 수행 [test, system]",
+    "conversation_id": "conv_20250718_2346",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_22.json"
+  },
+  {
+    "id": 23,
+    "timestamp": "2025-07-18 23:46:17",
+    "action": "워크플로우 명령: /status",
+    "details": "\n📊 워크플로우 v2 상태\n프로젝트: default\n진행률: 1/2 (50.0%)\n현재 작업: 통합 테스트 수행\n생성일: 2025-07-18T23:27:37\n",
+    "conversation_id": "conv_20250718_2346",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_23.json"
+  },
+  {
+    "id": 24,
+    "timestamp": "2025-07-18 23:46:17",
+    "action": "워크플로우 명령: /next",
+    "details": "✅ 모든 태스크가 완료되었습니다",
+    "conversation_id": "conv_20250718_2346",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_24.json"
+  },
+  {
+    "id": 25,
+    "timestamp": "2025-07-18 23:46:17",
+    "action": "워크플로우 명령: /focus",
+    "details": "ℹ️ 워크플로우 v2를 사용합니다. /v2 help로 도움말을 확인하세요",
+    "conversation_id": "conv_20250718_2346",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_25.json"
+  },
+  {
+    "id": 26,
+    "timestamp": "2025-07-19 05:44:23",
+    "action": "워크플로우 명령: /status",
+    "details": "\n📊 워크플로우 v2 상태\n프로젝트: default\n진행률: 1/2 (50.0%)\n현재 작업: 통합 테스트 수행\n생성일: 2025-07-18T23:27:37\n",
+    "conversation_id": "conv_20250719_0544",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_26.json"
+  },
+  {
+    "id": 27,
+    "timestamp": "2025-07-19 05:44:40",
+    "action": "워크플로우 명령: /task",
+    "details": "📋 태스크 목록:\n✅ #1 다음 프로젝트 계획 [planning]\n🔄 #2 통합 테스트 수행 [test, system]",
+    "conversation_id": "conv_20250719_0544",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_27.json"
+  },
+  {
+    "id": 28,
+    "timestamp": "2025-07-19 05:44:40",
+    "action": "워크플로우 명령: /focus",
+    "details": "ℹ️ 워크플로우 v2를 사용합니다. /v2 help로 도움말을 확인하세요",
+    "conversation_id": "conv_20250719_0544",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_28.json"
+  },
+  {
+    "id": 29,
+    "timestamp": "2025-07-19 05:47:19",
+    "action": "워크플로우 명령: /status",
+    "details": "\n📊 워크플로우 v2 상태\n프로젝트: default\n진행률: 1/2 (50.0%)\n현재 작업: 통합 테스트 수행\n생성일: 2025-07-18T23:27:37\n",
+    "conversation_id": "conv_20250719_0547",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_29.json"
+  },
+  {
+    "id": 30,
+    "timestamp": "2025-07-19 06:01:10",
+    "action": "워크플로우 명령: /status",
+    "details": "\n📊 워크플로우 v2 상태\n프로젝트: default\n진행률: 1/2 (50.0%)\n현재 작업: 통합 테스트 수행\n생성일: 2025-07-18T23:27:37\n",
+    "conversation_id": "conv_20250719_0601",
+    "checkpoint": "C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp\\memory\\checkpoints\\checkpoint_30.json"
+  }
+]

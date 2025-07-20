@@ -11,7 +11,7 @@ from .util import ok, err
 
 
 # 전역 o3 작업 저장소
-_tasks = {}  # 통일된 작업 딕셔너리  # 작업 ID를 키로 하는 딕셔너리
+o3_tasks = {}  # 작업 ID를 키로 하는 딕셔너리
 
 # OpenAI 설정
 try:
@@ -57,10 +57,10 @@ def _call_o3_api(question: str, context: Optional[str] = None,
 
         # API 호출
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # o3는 실제 모델이 아니므로 gpt-3.5-turbo 사용
+            model="o3",
             messages=messages,
-            # reasoning_effort=reasoning_effort,  # OpenAI API에 없는 파라미터
-            max_completion_tokens=10000
+            reasoning_effort=reasoning_effort,
+            max_completion_tokens=36000
         )
 
         # 결과 파싱
@@ -78,12 +78,14 @@ def _call_o3_api(question: str, context: Optional[str] = None,
                 "prompt_tokens": usage.prompt_tokens,
                 "completion_tokens": usage.completion_tokens,
                 "total_tokens": usage.total_tokens,
-                "reasoning_tokens": getattr(usage, 'reasoning_tokens', 0)
+                "reasoning_tokens": getattr(usage, 'reasoning_tokens', 0) if hasattr(usage, 'reasoning_tokens') else 0
             } if usage else None
         }
 
     except Exception as e:
-        return {"error": str(e)}
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        print(f"❌ o3 API 에러: {error_msg}")
+        return {"error": error_msg}
 
 
 def _run_o3_task(task_id: str, question: str, context: Optional[str] = None,
@@ -194,7 +196,7 @@ def check_o3_status(task_id: str) -> Dict[str, Any]:
 
 
 def get_o3_result(task_id: str) -> dict:
-    """o3 작업 결과 가져오기 (수정된 버전)
+    """o3 작업 결과 가져오기
 
     Args:
         task_id: 작업 ID
@@ -202,79 +204,101 @@ def get_o3_result(task_id: str) -> dict:
     Returns:
         결과 딕셔너리
     """
-    from pathlib import Path
-    import json
-    from datetime import datetime
+    with _task_lock:
+        task = _tasks.get(task_id)
 
-    task = _tasks.get(task_id)
     if not task:
         return err(f"Task {task_id} not found")
 
     if task['status'] != 'completed':
         return err(f"Task {task_id} is {task['status']}, not completed")
 
-    # 메모리에서 직접 결과 가져오기
+    # 결과 반환
     result = task.get('result')
-    if result is None:
+    if not result:
         return err(f"No result found for task {task_id}")
 
-    # 파일로도 저장 (향후 참조용)
-    try:
-        # 결과 파일 경로 생성
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        result_file = Path(f"llm/{task_id}_{timestamp}.md")
+    return ok(result)
 
-        # 결과 포맷팅
-        if isinstance(result, dict) and 'answer' in result:
-            content = result['answer']
-        elif isinstance(result, dict):
-            # dict이지만 answer 키가 없는 경우 전체 결과 사용
-            content = str(result)
-        else:
-            content = str(result)
+def save_o3_result(task_id: str) -> dict:
+    """o3 작업 결과를 파일로 저장
 
-        # 파일 저장
-        formatted_content = f"""# o3 Analysis Result
+    Args:
+        task_id: 작업 ID
+
+    Returns:
+        {'ok': True, 'data': 'filepath'} or {'ok': False, 'error': 'message'}
+    """
+    from datetime import datetime
+    import os
+
+    with _task_lock:
+        task = _tasks.get(task_id)
+
+    if not task:
+        return err(f"Task {task_id} not found")
+
+    if task['status'] != 'completed':
+        return err(f"Task {task_id} is {task['status']}, not completed")
+
+    result = task.get('result')
+    if not result:
+        return err(f"No result found for task {task_id}")
+
+    # llm 디렉토리 생성
+    llm_dir = "llm"
+    if not os.path.exists(llm_dir):
+        os.makedirs(llm_dir)
+
+    # 파일명 생성
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"llm/o3_{task_id}_{timestamp}.md"
+
+    # 내용 구성
+    content = f"""# o3 Analysis Result
 
 ## Task ID: {task_id}
 
-## Question
-{task.get('question', 'N/A')}
+### Question
+{task['question']}
 
-## Context
-{(task.get('context') or 'N/A')[:500]}...
+### Context
+{task.get('context', 'No context provided')}
 
-## Analysis Result
-{content}
+### Answer
+{result.get('answer', 'No answer')}
 
-## Metadata
-- Status: {task['status']}
+### Metadata
+- Reasoning Effort: {task.get('reasoning_effort', 'N/A')}
+- Thinking Time: {result.get('thinking_time', 'N/A')}
 - Start Time: {task.get('start_time', 'N/A')}
 - End Time: {task.get('end_time', 'N/A')}
-- Reasoning Effort: {task.get('reasoning_effort', 'N/A')}
 """
 
-        result_file.write_text(formatted_content, encoding='utf-8')
+    # Duration 계산
+    if task.get('start_time') and task.get('end_time'):
+        duration = (task['end_time'] - task['start_time']).total_seconds()
+        content += f"- Duration: {duration:.1f}초\n"
 
-        # 성공 반환
-        return ok({
-            'content': content,
-            'task_id': task_id,
-            'file_path': str(result_file),
-            'metadata': {
-                'start_time': str(task.get('start_time', '')),
-                'end_time': str(task.get('end_time', '')),
-                'reasoning_effort': task.get('reasoning_effort', 'high')
-            }
-        })
+    # Token usage
+    usage = result.get('usage', {})
+    if usage:
+        content += f"""
+### Token Usage
+- Prompt Tokens: {usage.get('prompt_tokens', 0):,}
+- Completion Tokens: {usage.get('completion_tokens', 0):,}
+- Reasoning Tokens: {usage.get('reasoning_tokens', 0):,}
+- Total Tokens: {usage.get('total_tokens', 0):,}
+"""
 
+    # 파일 저장
+    try:
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(content)
+        return ok(filename)
     except Exception as e:
-        # 파일 저장 실패해도 결과는 반환
-        return ok({
-            'content': str(result),
-            'task_id': task_id,
-            'error': f"File save failed: {str(e)}"
-        })
+        return err(f"Failed to save result: {str(e)}")
+
 def list_o3_tasks(status_filter: Optional[str] = None) -> Dict[str, Any]:
     """모든 o3 작업 목록
 

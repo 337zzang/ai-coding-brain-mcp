@@ -79,7 +79,7 @@ def git_status() -> Dict[str, Any]:
     result = run_git_command(['status', '--porcelain'])
     if result['ok']:
         files = result['data'].strip().split('\n') if result['data'].strip() else []
-        return ok(files, count=len(files))
+        return ok({'files': files, 'count': len(files)})
     return result
 
 def git_add(files: List[str]) -> Dict[str, Any]:
@@ -155,9 +155,9 @@ def git_log(limit: int = 10, format: str = "oneline", cwd: str = ".") -> Dict[st
 
     result = run_git_command(args, cwd)
 
-    if result['success'] and result['output']:
+    if result.get('ok') and result.get('data'):
         commits = []
-        for line in result['output'].strip().split('\n'):
+        for line in result.get('data', '').strip().split('\n'):
             if line:
                 if format == "oneline":
                     parts = line.split(' ', 1)

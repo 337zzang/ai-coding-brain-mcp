@@ -67,13 +67,9 @@ def _call_o3_api(question: str, context: Optional[str] = None,
         answer = response.choices[0].message.content
         usage = response.usage
 
-        # 사용량 계산
-        thinking_time = getattr(response, 'thinking_time_seconds', 0)
-
         return {
             "answer": answer,
             "reasoning_effort": reasoning_effort,
-            "thinking_time": f"{thinking_time:.2f}초" if thinking_time else "N/A",
             "usage": {
                 "prompt_tokens": usage.prompt_tokens,
                 "completion_tokens": usage.completion_tokens,
@@ -270,7 +266,7 @@ def save_o3_result(task_id: str) -> dict:
 
 ### Metadata
 - Reasoning Effort: {task.get('reasoning_effort', 'N/A')}
-- Thinking Time: {result.get('thinking_time', 'N/A')}
+
 - Start Time: {task.get('start_time', 'N/A')}
 - End Time: {task.get('end_time', 'N/A')}
 """

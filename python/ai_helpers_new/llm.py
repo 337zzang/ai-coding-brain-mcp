@@ -6,7 +6,7 @@ import os
 import time
 import threading
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, Union, List
 from .util import ok, err
 
 
@@ -115,19 +115,32 @@ def _run_o3_task(task_id: str, question: str, context: Optional[str] = None,
             _tasks[task_id]['end_time'] = datetime.now()
 
 
-def ask_o3_async(question: str, context: Optional[str] = None,
-                 api_key: Optional[str] = None, reasoning_effort: str = "high") -> Dict[str, Any]:
-    """o3를 백그라운드에서 실행
+def ask_o3_async(question: str, context: Optional[str] = None, 
+                 reasoning_effort: Union[str, None] = "high", 
+                 _api_key: Optional[str] = None) -> Dict[str, Any]:
+    """o3 모델에 비동기로 질문 (백그라운드 실행)
 
     Args:
-        question: 질문
-        context: 추가 컨텍스트
-        api_key: OpenAI API 키 (없으면 환경변수 사용)
-        reasoning_effort: 추론 강도 ("low", "medium", "high")
+        question: 질문 내용
+        context: 추가 컨텍스트 (선택)
+        reasoning_effort: 추론 수준 - "high", "medium", "low" (기본: "high")
+        _api_key: API 키 (선택, 환경변수 사용 권장) - deprecated
 
     Returns:
-        {'ok': True, 'data': 'task_id', 'message': '작업이 시작되었습니다'}
+        성공 시: {"ok": True, "data": task_id}
+        실패 시: {"ok": False, "error": 에러_메시지}
     """
+    # 역호환성 처리: 3번째 인자가 API 키인 경우
+    if reasoning_effort and isinstance(reasoning_effort, str):
+        # API 키의 특징: sk-로 시작하거나 길이가 40자 이상
+        if reasoning_effort.startswith('sk-') or len(reasoning_effort) > 40:
+            _api_key = reasoning_effort
+            reasoning_effort = "high"
+        # "low", "medium", "high"가 아닌 경우도 API 키로 간주
+        elif reasoning_effort not in ["low", "medium", "high"]:
+            _api_key = reasoning_effort
+            reasoning_effort = "high"
+
     # 작업 생성
     task_id = _generate_task_id()
 
@@ -137,22 +150,22 @@ def ask_o3_async(question: str, context: Optional[str] = None,
             'question': question,
             'context': context,
             'status': 'pending',
-            'result': None,
+            'started_at': datetime.now().isoformat(),
             'error': None,
-            'start_time': None,
-            'end_time': None,
             'reasoning_effort': reasoning_effort
         }
 
-    # 백그라운드 스레드 시작
+    # 백그라운드 스레드에서 실행
     thread = threading.Thread(
         target=_run_o3_task,
-        args=(task_id, question, context, api_key, reasoning_effort),
-        daemon=True
+        args=(task_id, question, context, _api_key, reasoning_effort),
+        name=f"o3-{task_id}"
     )
+    thread.daemon = True
     thread.start()
 
-    return ok(task_id, message="작업이 백그라운드에서 시작되었습니다")
+    print(f"🚀 작업 {task_id} 시작됨")
+    return ok(task_id)
 def check_o3_status(task_id: str) -> Dict[str, Any]:
     """작업 상태 확인
 

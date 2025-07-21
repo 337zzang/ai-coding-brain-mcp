@@ -31,42 +31,42 @@ except ImportError as e:
 class FlowManagerUnified(FlowManagerWithContext):
     """통합된 Flow + Workflow 매니저"""
 
+
     def __init__(self):
-            """통합 매니저 초기화"""
-            super().__init__()
-
-            # 디렉토리 설정
-            self._ensure_directories()
-
-            # Flow 매니저 초기화
-            self._flow_manager = FlowManager()
-
-            # Context 매니저 초기화
-            self._context_enabled = os.getenv('CONTEXT_SYSTEM', 'on').lower() == 'on'
-            if self._context_enabled:
-                from .context_workflow_manager import get_context_manager
-                self._context_manager = get_context_manager()
-
-            # 워크플로우 데이터
-            self._workflow_data = self._load_workflow_data()
-
-            # 명령어 핸들러 초기화
-            self._command_handlers = self._init_command_handlers()
-
-            # Flow v2 활성화 상태
-            self._has_flow_v2 = True
-
-            # 현재 flow
-            self.current_flow = self._flow_manager.get_current_flow()
-
-            # Flow command handler
-            self.flow_handler = FlowCommandHandler(self._flow_manager)
-
-            # 자동 저장 설정
-            self._auto_save_interval = 300  # 5분
-            self._last_save_time = time.time()
-            self._start_auto_save()
-
+        """통합 매니저 초기화"""
+        super().__init__()
+        
+        # 디렉토리 설정
+        self._ensure_directories()
+        
+        # Flow 매니저 초기화
+        self._flow_manager = FlowManager()
+        
+        # Context 매니저 초기화
+        self._context_enabled = os.getenv('CONTEXT_SYSTEM', 'on').lower() == 'on'
+        if self._context_enabled:
+            from .context_workflow_manager import get_context_manager
+            self._context_manager = get_context_manager()
+        
+        # 워크플로우 데이터
+        self._workflow_data = self._load_workflow_data()
+        
+        # 명령어 핸들러 초기화
+        self._command_handlers = self._init_command_handlers()
+        
+        # Flow v2 활성화 상태
+        self._has_flow_v2 = True
+        
+        # 현재 flow
+        self.current_flow = self._flow_manager.get_current_flow()
+        
+        # Flow command handler
+        self.flow_handler = FlowCommandHandler(self._flow_manager)
+        
+        # 자동 저장 설정
+        self._auto_save_interval = 300  # 5분
+        self._last_save_time = time.time()
+        self._start_auto_save()
 
         def _ensure_directories(self):
             """필요한 디렉토리 생성"""

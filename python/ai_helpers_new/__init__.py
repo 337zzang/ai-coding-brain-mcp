@@ -30,12 +30,12 @@ from .project import (
     fp, flow_project, flow_project_with_workflow
 )
 
-# Workflow
-from .workflow_manager import (
-    WorkflowManager, get_workflow_manager, wf
-)
-from .context_workflow_manager import ContextWorkflowManager, create_context_workflow_manager
-from .flow_command_handler import FlowCommandHandler, get_flow_handler
+# Workflow - 레거시 import 제거
+# from .workflow_manager import (
+#     WorkflowManager, get_workflow_manager, wf
+# )
+# from .context_workflow_manager import ContextWorkflowManager, create_context_workflow_manager
+# from .flow_command_handler import FlowCommandHandler, get_flow_handler
 
 
 # Flow Project
@@ -69,10 +69,8 @@ __all__ = [
     # Flow Project
     'fp', 'flow_project', 'flow_project_with_workflow',
 
-    # Workflow
-    'WorkflowManager', 'get_workflow_manager', 'wf',
-    'ContextWorkflowManager', 'create_context_workflow_manager',
-    'FlowCommandHandler', 'get_flow_handler'
+    # Workflow - FlowManagerUnified만 export
+    'FlowManagerUnified', 'WorkflowManager'
 ]
 
 # 버전 정보

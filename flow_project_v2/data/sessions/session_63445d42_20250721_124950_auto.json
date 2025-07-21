@@ -1,6 +1,6 @@
 {
   "save_type": "auto",
-  "saved_at": "2025-07-21T12:44:50.022420",
+  "saved_at": "2025-07-21T12:49:50.646007",
   "context": {
     "session": {
       "session_id": "63445d42-767c-49e3-bdff-a94341ffd343",
@@ -31,6 +31,6 @@
   },
   "metadata": {
     "context_version": "2.0",
-    "session_duration": 300
+    "session_duration": 600
   }
 }

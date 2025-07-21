@@ -4,7 +4,13 @@ import json
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from .util import ok, err
-from .workflow_manager import get_workflow_manager
+# from .workflow_manager import get_workflow_manager  # 레거시
+try:
+    from python.workflow_wrapper import get_workflow_manager
+except ImportError:
+    # Fallback if direct import fails
+    def get_workflow_manager():
+        return None
 
 # 프로젝트 정보 캐시
 _current_project_cache = None

@@ -19,7 +19,13 @@ def wf(command: str, verbose: bool = False):
         # 명령 실행
         result = manager.wf_command(command)
 
-        # dict 반환
+        # result가 이미 dict이고 'ok' 키가 있으면 그대로 반환
+        if isinstance(result, dict) and 'ok' in result:
+            if verbose and result.get('ok'):
+                print(result.get('data', ''))
+            return result
+
+        # 그렇지 않으면 기존 방식대로 래핑
         response = {
             'ok': True,
             'data': result,

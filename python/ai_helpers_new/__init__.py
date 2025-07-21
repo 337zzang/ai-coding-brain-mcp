@@ -35,6 +35,7 @@ from .workflow_manager import (
     WorkflowManager, get_workflow_manager, wf
 )
 from .context_workflow_manager import ContextWorkflowManager, create_context_workflow_manager
+from .flow_command_handler import FlowCommandHandler, get_flow_handler
 
 
 # Flow Project
@@ -70,7 +71,8 @@ __all__ = [
 
     # Workflow
     'WorkflowManager', 'get_workflow_manager', 'wf',
-    'ContextWorkflowManager', 'create_context_workflow_manager'
+    'ContextWorkflowManager', 'create_context_workflow_manager',
+    'FlowCommandHandler', 'get_flow_handler'
 ]
 
 # 버전 정보

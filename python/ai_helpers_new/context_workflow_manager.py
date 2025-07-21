@@ -17,6 +17,13 @@ try:
 except ImportError:
     CONTEXT_AVAILABLE = False
 
+# Import FlowCommandHandler
+try:
+    from .flow_command_handler import get_flow_handler
+    FLOW_HANDLER_AVAILABLE = True
+except ImportError:
+    FLOW_HANDLER_AVAILABLE = False
+
 
 class ContextWorkflowManager:
     """
@@ -131,15 +138,24 @@ class ContextWorkflowManager:
         return result
 
     def wf_command(self, command: str) -> Dict[str, Any]:
-        """Extended command handler with context commands"""
+        """Extended command handler with context and flow commands"""
+
+        # Parse command
+        parts = command.strip().split()
+        if not parts:
+            return self.wm.wf_command(command)
+
+        # Extract command without leading /
+        cmd = parts[0][1:] if parts[0].startswith('/') else parts[0]
+        args = parts[1:] if len(parts) > 1 else []
+
+        # Handle flow commands (always available if handler exists)
+        if cmd == 'flow' and FLOW_HANDLER_AVAILABLE:
+            flow_handler = get_flow_handler()
+            return flow_handler.handle_flow_command(args)
 
         # Handle context-specific commands if enabled
-        if self.context_enabled and command.startswith('/'):
-            parts = command.strip().split()
-            cmd = parts[0][1:]  # Remove leading /
-            args = parts[1:] if len(parts) > 1 else []
-
-            # Context commands
+        if self.context_enabled:
             if cmd == 'context':
                 return self._handle_context_command(args)
             elif cmd == 'session':
@@ -148,6 +164,10 @@ class ContextWorkflowManager:
                 return self._handle_history_command(args)
             elif cmd == 'stats':
                 return self._show_stats()
+
+        # Override help to include our commands
+        if cmd == 'help':
+            return self._show_help()
 
         # Pass through to original WorkflowManager
         return self.wm.wf_command(command)
@@ -253,6 +273,13 @@ class ContextWorkflowManager:
   /session restore <file>           - Restore session
   /history [n]                      - Show last n history entries
   /stats                            - Show statistics
+
+📋 Flow Commands:
+  /flow                             - Show current flow
+  /flow list                        - List all flows
+  /flow create <n>               - Create new flow
+  /flow switch <id>                 - Switch to flow
+  (Use /flow help for all commands)
 """
             base_help['data'] += context_help
 

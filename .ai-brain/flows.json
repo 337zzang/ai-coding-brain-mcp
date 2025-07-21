@@ -200,9 +200,9 @@
               "id": "task_20250721_130748_839",
               "name": "plan_20250721_130748",
               "description": "Context 시스템 메서드 수정",
-              "status": "in_progress",
+              "status": "completed",
               "created_at": "2025-07-21T13:07:48.839356",
-              "updated_at": "2025-07-21T13:08:27.096426"
+              "updated_at": "2025-07-21T13:12:56.751551"
             },
             {
               "id": "task_20250721_130748_840",
@@ -243,6 +243,14 @@
               "status": "todo",
               "created_at": "2025-07-21T13:07:48.844353",
               "updated_at": "2025-07-21T13:07:48.844353"
+            },
+            {
+              "id": "task_20250721_131256_749",
+              "name": "plan_20250721_130748",
+              "description": "Flow export 디렉토리 자동 생성",
+              "status": "todo",
+              "created_at": "2025-07-21T13:12:56.749552",
+              "updated_at": "2025-07-21T13:12:56.749552"
             }
           ],
           "created_at": "2025-07-21T13:05:00.317317",
@@ -260,6 +268,13 @@
           "name": "UserPreference Improvements",
           "tasks": [],
           "created_at": "2025-07-21T13:07:48.841389",
+          "completed": false
+        },
+        {
+          "id": "plan_20250721_131220",
+          "name": "Test Plan",
+          "tasks": [],
+          "created_at": "2025-07-21T13:12:20.560458",
           "completed": false
         }
       ],

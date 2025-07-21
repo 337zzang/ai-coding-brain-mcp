@@ -1,13 +1,11 @@
 """
-import time
-from .flow_manager import FlowManager
-from .flow_command_handler import FlowCommandHandler
 FlowManagerUnified - 통합 워크플로우 매니저
 Flow Project v2 + 기존 WorkflowManager 기능 통합
 """
 import os
 import json
 import sys
+import copy
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any
@@ -28,204 +26,216 @@ except ImportError as e:
         def __init__(self):
             pass
 
+
+# Task context 기본 구조
+DEFAULT_CONTEXT = {
+    "plan": "",
+    "actions": [],     # 작업 이력: [{"time": ISO8601, "action": str, "result": str}]
+    "results": {},     # 결과 데이터: 자유 형식
+    "docs": [],        # 관련 문서: 파일명 리스트
+    "files": {         # 파일 작업 내역
+        "analyzed": [],
+        "created": [],
+        "modified": []
+    },
+    "errors": []       # 오류 내역
+}
+
 class FlowManagerUnified(FlowManagerWithContext):
     """통합된 Flow + Workflow 매니저"""
 
+    def __init__(self, project_root: str = None):
+        """초기화"""
+        # 기본 속성 초기화
+        self.current_flow = None
+        self.context_manager = None
+        self.flows = []
+        self._has_flow_v2 = _has_flow_v2
 
-    def __init__(self):
-        """통합 매니저 초기화"""
-        super().__init__()
-        
-        # 디렉토리 설정
+        # Flow v2 초기화 시도
+        if self._has_flow_v2:
+            try:
+                super().__init__()
+                print("✅ Flow v2 기능 활성화됨")
+            except Exception as e:
+                print(f"⚠️ Flow v2 초기화 부분 실패: {e}")
+                self._has_flow_v2 = False
+
+        # 프로젝트 설정
+        self.project_root = project_root or os.getcwd()
+        self.data_dir = os.path.join(self.project_root, '.ai-brain')
         self._ensure_directories()
-        
-        # Flow 매니저 초기화
-        self._flow_manager = FlowManager()
-        
-        # Context 매니저 초기화
-        self._context_enabled = os.getenv('CONTEXT_SYSTEM', 'on').lower() == 'on'
-        if self._context_enabled:
-            from .context_workflow_manager import get_context_manager
-            self._context_manager = get_context_manager()
-        
-        # 워크플로우 데이터
-        self._workflow_data = self._load_workflow_data()
-        
+
         # 명령어 핸들러 초기화
         self._command_handlers = self._init_command_handlers()
-        
-        # Flow v2 활성화 상태
-        self._has_flow_v2 = True
-        
-        # 현재 flow
-        self.current_flow = self._flow_manager.get_current_flow()
-        
-        # Flow command handler
-        self.flow_handler = FlowCommandHandler(self._flow_manager)
-        
-        # 자동 저장 설정
-        self._auto_save_interval = 300  # 5분
-        self._last_save_time = time.time()
-        self._start_auto_save()
 
-        def _ensure_directories(self):
-            """필요한 디렉토리 생성"""
-            os.makedirs(self.data_dir, exist_ok=True)
-            os.makedirs(os.path.join(self.data_dir, 'backups'), exist_ok=True)
+        # 레거시 데이터 마이그레이션
+        self._migrate_legacy_data()
+        # Flow 데이터 로드
+        self._load_flows()
 
-        def _create_default_flow(self):
-            """기본 flow 생성"""
+        # 기본 flow가 없으면 생성
+        if self._has_flow_v2 and not self.current_flow:
+            self._create_default_flow()
+
+    def _ensure_directories(self):
+        """필요한 디렉토리 생성"""
+        os.makedirs(self.data_dir, exist_ok=True)
+        os.makedirs(os.path.join(self.data_dir, 'backups'), exist_ok=True)
+
+    def _create_default_flow(self):
+        """기본 flow 생성"""
+        try:
+            if hasattr(self, 'create_flow') and callable(self.create_flow):
+                # Flow 데이터 구조 직접 생성 (FlowManagerWithContext가 없을 경우)
+                if not self.current_flow:
+                    self.current_flow = {
+                        'id': f'flow_{datetime.now().strftime("%Y%m%d_%H%M%S")}',
+                        'name': 'default',
+                        'plans': [],
+                        'created_at': datetime.now().isoformat()
+                    }
+                    if hasattr(self, 'flows'):
+                        self.flows.append(self.current_flow)
+                    print("✅ 기본 flow 생성됨")
+        except Exception as e:
+            print(f"⚠️ 기본 flow 생성 실패: {e}")
+
+    def _ensure_directories(self):
+        """필요한 디렉토리 생성"""
+        os.makedirs(self.data_dir, exist_ok=True)
+        os.makedirs(os.path.join(self.data_dir, 'backups'), exist_ok=True)
+
+    def _create_default_flow(self):
+        """기본 flow 생성"""
+        try:
+            if hasattr(self, 'create_flow'):
+                self.create_flow('default')
+        except Exception as e:
+            print(f"⚠️ 기본 flow 생성 실패: {e}")
+
+    def _migrate_legacy_data(self):
+        """기존 workflow.json을 flow 구조로 마이그레이션"""
+        legacy_path = os.path.join(self.data_dir, 'workflow.json')
+        if not os.path.exists(legacy_path):
+            return
+
+        try:
+            with open(legacy_path, 'r', encoding='utf-8') as f:
+                legacy_data = json.load(f)
+
+            print("📦 레거시 데이터 마이그레이션 시작...")
+
+            # 백업
+            backup_path = os.path.join(self.data_dir, 'backups', 
+                                     f'workflow_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
+            with open(backup_path, 'w', encoding='utf-8') as f:
+                json.dump(legacy_data, f, indent=2)
+
+            # Flow v2가 활성화되어 있으면 마이그레이션
+            if self._has_flow_v2:
+                # 기본 flow 확인
+                if not self.current_flow:
+                    self._create_default_flow()
+
+                # 태스크 마이그레이션
+                migrated_count = 0
+                for task in legacy_data.get('tasks', []):
+                    try:
+                        # Plan이 없으면 기본 plan 생성
+                        if not self.current_flow.get('plans'):
+                            if hasattr(self, 'create_plan'):
+                                self.create_plan('Default Plan')
+
+                        # 첫 번째 plan에 태스크 추가
+                        if hasattr(self, 'create_task'):
+                            self.create_task(
+                                name=task.get('name', 'Unnamed Task'),
+                                description=task.get('description', '')
+                            )
+                            migrated_count += 1
+                    except Exception as e:
+                        print(f"⚠️ 태스크 마이그레이션 실패: {e}")
+
+                print(f"✅ {migrated_count}개 태스크 마이그레이션 완료")
+
+            # 레거시 파일 이름 변경
+            os.rename(legacy_path, legacy_path + '.migrated')
+
+        except Exception as e:
+            print(f"⚠️ 마이그레이션 중 오류: {e}")
+
+    def _init_command_handlers(self) -> Dict[str, Any]:
+        """명령어 핸들러 초기화"""
+        return {
+            # 기본 명령어
+            'help': self._show_help,
+            'status': self._show_status,
+            'list': self._list_tasks,
+
+            # 태스크 관리
+            'task': self._handle_task_command,
+            'start': self._start_task,
+            'done': self._complete_task,
+            'complete': self._complete_task,
+            'skip': self._skip_task,
+
+            # Flow v2 명령어
+            'flow': self._handle_flow_command,
+            'plan': self._handle_plan_command,
+
+            # Context 명령어
+            'context': self._handle_context_command,
+            'session': self._handle_session_command,
+            'history': self._show_history,
+            'stats': self._show_stats,
+
+            # 리포트
+            'report': self._show_report,
+        }
+
+    def process_command(self, command: str) -> Dict[str, Any]:
+        """통합 명령어 처리"""
+        if not command.startswith('/'):
+            return {'ok': False, 'error': 'Commands must start with /'}
+
+        # 명령어 파싱
+        parts = command[1:].split(maxsplit=1)
+        if not parts:
+            return {'ok': False, 'error': 'Empty command'}
+
+        cmd = parts[0].lower()
+        args = parts[1] if len(parts) > 1 else ''
+
+        # 핸들러 찾기
+        handler = self._command_handlers.get(cmd)
+        if handler:
             try:
-                if hasattr(self, 'create_flow') and callable(self.create_flow):
-                    # Flow 데이터 구조 직접 생성 (FlowManagerWithContext가 없을 경우)
-                    if not self.current_flow:
-                        self.current_flow = {
-                            'id': f'flow_{datetime.now().strftime("%Y%m%d_%H%M%S")}',
-                            'name': 'default',
-                            'plans': [],
-                            'created_at': datetime.now().isoformat()
-                        }
-                        if hasattr(self, 'flows'):
-                            self.flows.append(self.current_flow)
-                        print("✅ 기본 flow 생성됨")
+                return handler(args)
             except Exception as e:
-                print(f"⚠️ 기본 flow 생성 실패: {e}")
+                return {'ok': False, 'error': f'Command failed: {str(e)}'}
 
-        def _ensure_directories(self):
-            """필요한 디렉토리 생성"""
-            os.makedirs(self.data_dir, exist_ok=True)
-            os.makedirs(os.path.join(self.data_dir, 'backups'), exist_ok=True)
+        # 알 수 없는 명령어
+        similar = self._find_similar_commands(cmd)
+        error_msg = f"Unknown command: {cmd}"
+        if similar:
+            error_msg += f"\nDid you mean: {', '.join(similar)}?"
+        return {'ok': False, 'error': error_msg}
 
-        def _create_default_flow(self):
-            """기본 flow 생성"""
-            try:
-                if hasattr(self, 'create_flow'):
-                    self.create_flow('default')
-            except Exception as e:
-                print(f"⚠️ 기본 flow 생성 실패: {e}")
-
-        def _migrate_legacy_data(self):
-            """기존 workflow.json을 flow 구조로 마이그레이션"""
-            legacy_path = os.path.join(self.data_dir, 'workflow.json')
-            if not os.path.exists(legacy_path):
-                return
-
-            try:
-                with open(legacy_path, 'r', encoding='utf-8') as f:
-                    legacy_data = json.load(f)
-
-                print("📦 레거시 데이터 마이그레이션 시작...")
-
-                # 백업
-                backup_path = os.path.join(self.data_dir, 'backups', 
-                                         f'workflow_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
-                with open(backup_path, 'w', encoding='utf-8') as f:
-                    json.dump(legacy_data, f, indent=2)
-
-                # Flow v2가 활성화되어 있으면 마이그레이션
-                if self._has_flow_v2:
-                    # 기본 flow 확인
-                    if not self.current_flow:
-                        self._create_default_flow()
-
-                    # 태스크 마이그레이션
-                    migrated_count = 0
-                    for task in legacy_data.get('tasks', []):
-                        try:
-                            # Plan이 없으면 기본 plan 생성
-                            if not self.current_flow.get('plans'):
-                                if hasattr(self, 'create_plan'):
-                                    self.create_plan('Default Plan')
-
-                            # 첫 번째 plan에 태스크 추가
-                            if hasattr(self, 'create_task'):
-                                self.create_task(
-                                    name=task.get('name', 'Unnamed Task'),
-                                    description=task.get('description', '')
-                                )
-                                migrated_count += 1
-                        except Exception as e:
-                            print(f"⚠️ 태스크 마이그레이션 실패: {e}")
-
-                    print(f"✅ {migrated_count}개 태스크 마이그레이션 완료")
-
-                # 레거시 파일 이름 변경
-                os.rename(legacy_path, legacy_path + '.migrated')
-
-            except Exception as e:
-                print(f"⚠️ 마이그레이션 중 오류: {e}")
-
-        def _init_command_handlers(self) -> Dict[str, Any]:
-            """명령어 핸들러 초기화"""
-            return {
-                # 기본 명령어
-                'help': self._show_help,
-                'status': self._show_status,
-                'list': self._list_tasks,
-
-                # 태스크 관리
-                'task': self._handle_task_command,
-                'start': self._start_task,
-                'done': self._complete_task,
-                'complete': self._complete_task,
-                'skip': self._skip_task,
-
-                # Flow v2 명령어
-                'flow': self._handle_flow_command,
-                'plan': self._handle_plan_command,
-
-                # Context 명령어
-                'context': self._handle_context_command,
-                'session': self._handle_session_command,
-                'history': self._show_history,
-                'stats': self._show_stats,
-
-                # 리포트
-                'report': self._show_report,
-            }
-
-        def process_command(self, command: str) -> Dict[str, Any]:
-            """통합 명령어 처리"""
-            if not command.startswith('/'):
-                return {'ok': False, 'error': 'Commands must start with /'}
-
-            # 명령어 파싱
-            parts = command[1:].split(maxsplit=1)
-            if not parts:
-                return {'ok': False, 'error': 'Empty command'}
-
-            cmd = parts[0].lower()
-            args = parts[1] if len(parts) > 1 else ''
-
-            # 핸들러 찾기
-            handler = self._command_handlers.get(cmd)
-            if handler:
-                try:
-                    return handler(args)
-                except Exception as e:
-                    return {'ok': False, 'error': f'Command failed: {str(e)}'}
-
-            # 알 수 없는 명령어
-            similar = self._find_similar_commands(cmd)
-            error_msg = f"Unknown command: {cmd}"
-            if similar:
-                error_msg += f"\nDid you mean: {', '.join(similar)}?"
-            return {'ok': False, 'error': error_msg}
-
-        def _find_similar_commands(self, cmd: str) -> List[str]:
-            """유사한 명령어 찾기"""
-            similar = []
-            for command in self._command_handlers.keys():
-                if cmd in command or command.startswith(cmd):
-                    similar.append(command)
-            return similar[:3]
+    def _find_similar_commands(self, cmd: str) -> List[str]:
+        """유사한 명령어 찾기"""
+        similar = []
+        for command in self._command_handlers.keys():
+            if cmd in command or command.startswith(cmd):
+                similar.append(command)
+        return similar[:3]
 
 
-        # === 도움말 및 상태 ===
+    # === 도움말 및 상태 ===
 
-        def _show_help(self, args: str) -> Dict[str, Any]:
-            """도움말 표시"""
-            help_text = """📋 통합 워크플로우 명령어
+    def _show_help(self, args: str) -> Dict[str, Any]:
+        """도움말 표시"""
+        help_text = """📋 통합 워크플로우 명령어
 
 기본 명령어:
   /help              - 이 도움말 표시
@@ -401,29 +411,67 @@ Context 시스템:
             return {'ok': False, 'error': f'태스크 추가 실패: {str(e)}'}
 
     def _list_tasks(self, args: str) -> Dict[str, Any]:
-        """태스크 목록 표시"""
+        """태스크 목록 표시 (context 정보 포함)"""
         try:
-            tasks = []
-
             if self._has_flow_v2 and self.current_flow:
-                # Flow v2에서 태스크 가져오기
+                lines = ['📌 Task 목록:\\n']
+                
                 for plan in self.current_flow.get('plans', []):
-                    for task in plan.get('tasks', []):
-                        tasks.append({
-                            'id': task['id'],
-                            'name': task['name'],
-                            'status': task.get('status', 'todo'),
-                            'plan': plan['name']
-                        })
-
-            if not tasks:
-                return {'ok': True, 'data': '태스크가 없습니다.'}
-
-            return {'ok': True, 'data': tasks}
-
+                    lines.append(f"\\nPlan: {plan['name']}")
+                    tasks = plan.get('tasks', [])
+                    
+                    if not tasks:
+                        lines.append("  (No tasks)")
+                        continue
+                    
+                    for task in tasks:
+                        # 상태 이모지
+                        status_emoji = {
+                            'todo': '⏳',
+                            'in_progress': '🔄',
+                            'completed': '✅',
+                            'skipped': '⏭️',
+                            'error': '❌'
+                        }.get(task.get('status', 'todo'), '❓')
+                        
+                        # 기본 정보
+                        lines.append(f"  {status_emoji} {task['id']}: {task['name']}")
+                        
+                        # Description
+                        if task.get('description'):
+                            lines.append(f"     📝 {task['description']}")
+                        
+                        # Context 정보가 있으면 표시
+                        if 'context' in task:
+                            ctx = task['context']
+                            
+                            # 계획 (첫 줄만)
+                            if ctx.get('plan'):
+                                plan_first_line = ctx['plan'].split('\\n')[0]
+                                if len(plan_first_line) > 50:
+                                    plan_first_line = plan_first_line[:50] + '...'
+                                lines.append(f"     📋 계획: {plan_first_line}")
+                            
+                            # 최근 작업
+                            if ctx.get('actions'):
+                                last_action = ctx['actions'][-1]
+                                action_text = f"{last_action['action']}"
+                                if last_action.get('result'):
+                                    action_text += f" → {last_action['result']}"
+                                lines.append(f"     🔧 최근: {action_text}")
+                            
+                            # 진행률
+                            if ctx.get('results', {}).get('progress'):
+                                progress = ctx['results']['progress']
+                                lines.append(f"     📊 진행률: {progress}%")
+                
+                return {'ok': True, 'data': '\\n'.join(lines)}
+            else:
+                # 기본 모드
+                return {'ok': True, 'data': '태스크 목록이 비어있습니다.'}
+                
         except Exception as e:
-            return {'ok': False, 'error': f'태스크 목록 조회 실패: {str(e)}'}
-
+            return {'ok': False, 'error': f'태스크 목록 표시 실패: {str(e)}'}
     def _start_task(self, args: str) -> Dict[str, Any]:
         """태스크 시작"""
         if not args:
@@ -433,7 +481,7 @@ Context 시스템:
 
         try:
             if self._has_flow_v2 and hasattr(self, 'update_task_status'):
-                self.update_task_status(task_id, 'in_progress')
+                self.update_task_status(task_id, 'planning')
                 return {'ok': True, 'data': f'태스크 {task_id} 시작됨'}
             else:
                 return {'ok': True, 'data': f'태스크 {task_id} 시작됨 (기본 모드)'}
@@ -450,7 +498,7 @@ Context 시스템:
 
         try:
             if self._has_flow_v2 and hasattr(self, 'update_task_status'):
-                self.update_task_status(task_id, 'completed')
+                self.update_task_status(task_id, 'reviewing')
 
                 # Context에 완료 기록
                 if self.context_manager:
@@ -749,29 +797,14 @@ Context 시스템:
             return {'ok': False, 'error': 'Context 시스템이 활성화되지 않았습니다'}
 
         try:
-            # ContextManager.get_summary()는 인수를 받지 않음
-            summary = self.context_manager.get_summary()
+            if args:
+                if args.startswith('show'):
+                    parts = args.split()
+                    format_type = parts[1] if len(parts) > 1 else 'brief'
+                    return {'ok': True, 'data': self.context_manager.get_summary(format_type)}
 
-            # 포맷 처리
-            if args and args.startswith('show'):
-                parts = args.split()
-                format_type = parts[1] if len(parts) > 1 else 'brief'
-            else:
-                format_type = 'brief'
-
-            # 포맷에 따라 결과 변환
-            if format_type == 'brief':
-                result = f"📊 Context Summary\n"
-                result += f"Session: {summary.get('session_id', 'Unknown')}\n"
-                result += f"Plans: {len(summary.get('plans', []))}\n"
-                result += f"Tasks: {len(summary.get('tasks', []))}\n"
-                result += f"History: {len(summary.get('history', []))} entries"
-            elif format_type == 'detailed':
-                result = json.dumps(summary, indent=2, ensure_ascii=False)
-            else:
-                result = str(summary)
-
-            return {'ok': True, 'data': result}
+            # 기본: brief 요약
+            return {'ok': True, 'data': self.context_manager.get_summary('brief')}
 
         except Exception as e:
             return {'ok': False, 'error': f'Context 조회 실패: {str(e)}'}
@@ -819,99 +852,45 @@ Context 시스템:
         except Exception as e:
             return {'ok': False, 'error': f'Session 명령 실패: {str(e)}'}
 
-    def _show_history(self, args: str = '') -> Dict[str, Any]:
-        """작업 히스토리 표시"""
+    def _show_history(self, args: str) -> Dict[str, Any]:
+        """히스토리 표시"""
+        if not self.context_manager:
+            return {'ok': False, 'error': 'Context 시스템이 활성화되지 않았습니다'}
+
         try:
-            n = 10
-            if args:
-                try:
-                    n = int(args.strip())
-                except ValueError:
-                    return {'ok': False, 'error': '히스토리 개수는 숫자여야 합니다'}
-
-            history = []
-
-            # Context Manager가 있으면 summary에서 히스토리 가져오기
-            if self.context_manager:
-                try:
-                    summary = self.context_manager.get_summary()
-                    for entry in summary.get('history', [])[-n:]:
-                        timestamp = entry.get('timestamp', 'Unknown')[:16]
-                        action = entry.get('action', 'Unknown')
-                        history.append(f"📝 {timestamp} - {action}")
-                except:
-                    pass
-
-            # workflow_history.json 확인
-            history_file = os.path.join(self.data_dir, 'workflow_history.json')
-            if os.path.exists(history_file):
-                try:
-                    with open(history_file, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                        for entry in data.get('history', [])[-n:]:
-                            timestamp = entry.get('timestamp', 'Unknown')[:16]
-                            action = entry.get('action', 'Unknown')
-                            history.append(f"📜 {timestamp} - {action}")
-                except:
-                    pass
+            count = int(args) if args else 10
+            history = self.context_manager.get_history(count)
 
             if not history:
-                return {'ok': True, 'data': '작업 히스토리가 없습니다'}
+                return {'ok': True, 'data': '히스토리가 없습니다'}
 
-            result = f"📜 최근 {min(len(history), n)}개 작업 히스토리:\n"
-            result += "\n".join(history[-n:])
+            lines = [f"📜 최근 {count}개 히스토리:"]
+            for i, item in enumerate(history, 1):
+                lines.append(f"{i}. {item}")
 
-            return {'ok': True, 'data': result}
+            return {'ok': True, 'data': '\n'.join(lines)}
 
         except Exception as e:
             return {'ok': False, 'error': f'히스토리 조회 실패: {str(e)}'}
 
-    def _show_stats(self, args: str = '') -> Dict[str, Any]:
+    def _show_stats(self, args: str) -> Dict[str, Any]:
         """통계 정보 표시"""
+        if not self.context_manager:
+            return {'ok': False, 'error': 'Context 시스템이 활성화되지 않았습니다'}
+
         try:
-            stats = {
-                'total_flows': len(self.list_flows()),
-                'current_flow': self.current_flow.get('name', 'None') if self.current_flow else 'None',
-                'total_plans': 0,
-                'total_tasks': 0,
-                'completed_tasks': 0,
-                'in_progress_tasks': 0,
-                'completion_rate': 0.0
-            }
+            stats = self.context_manager.get_stats()
 
-            if self.current_flow:
-                plans = self.current_flow.get('plans', [])
-                stats['total_plans'] = len(plans)
+            lines = ["📊 통계 정보:"]
+            for key, value in stats.items():
+                lines.append(f"{key}: {value}")
 
-                for plan in plans:
-                    tasks = plan.get('tasks', [])
-                    stats['total_tasks'] += len(tasks)
-
-                    for task in tasks:
-                        status = task.get('status', 'todo')
-                        if status == 'completed':
-                            stats['completed_tasks'] += 1
-                        elif status == 'in_progress':
-                            stats['in_progress_tasks'] += 1
-
-                if stats['total_tasks'] > 0:
-                    stats['completion_rate'] = (stats['completed_tasks'] / stats['total_tasks']) * 100
-
-            result = "📊 프로젝트 통계\n" + "=" * 40 + "\n"
-            result += f"전체 Flows: {stats['total_flows']}개\n"
-            result += f"현재 Flow: {stats['current_flow']}\n"
-            result += f"Plans: {stats['total_plans']}개\n"
-            result += f"\n📌 Task 통계\n"
-            result += f"  - 전체: {stats['total_tasks']}개\n"
-            result += f"  - 완료: {stats['completed_tasks']}개\n"
-            result += f"  - 진행중: {stats['in_progress_tasks']}개\n"
-            result += f"  - 대기: {stats['total_tasks'] - stats['completed_tasks'] - stats['in_progress_tasks']}개\n"
-            result += f"\n완료율: {stats['completion_rate']:.1f}%"
-
-            return {'ok': True, 'data': result}
+            return {'ok': True, 'data': '\n'.join(lines)}
 
         except Exception as e:
             return {'ok': False, 'error': f'통계 조회 실패: {str(e)}'}
+
+    # === 호환성 메서드 ===
 
     def wf_command(self, command: str, verbose: bool = False) -> Dict[str, Any]:
         """기존 WorkflowManager와의 호환성을 위한 메서드"""
@@ -967,10 +946,14 @@ Context 시스템:
         if self.current_flow and self.current_flow['id'] == flow_id:
             raise ValueError("Cannot delete current flow")
 
+        # Flow 존재 여부 확인
+        flow_exists = any(f['id'] == flow_id for f in self.flows)
+        if not flow_exists:
+            return False  # Flow가 없으면 False 반환
+
         self.flows = [f for f in self.flows if f['id'] != flow_id]
         self._save_flows()
         return True
-
     def create_plan(self, name: str, flow_id: str = None) -> Dict[str, Any]:
         """Plan 생성"""
         if not self.current_flow and not flow_id:
@@ -1030,8 +1013,11 @@ Context 시스템:
             'name': name,
             'description': description,
             'status': 'todo',
+            'context': copy.deepcopy(DEFAULT_CONTEXT),  # 컨텍스트 추가
             'created_at': datetime.now().isoformat(),
-            'updated_at': datetime.now().isoformat()
+            'updated_at': datetime.now().isoformat(),
+            'started_at': None,
+            'completed_at': None
         }
 
         if 'tasks' not in target_plan:
@@ -1041,6 +1027,95 @@ Context 시스템:
         self._save_flows()
 
         return new_task
+
+    def update_task_context(self, task_id: str, **kwargs) -> Dict[str, Any]:
+        """Task의 context 업데이트 (deep merge)"""
+        if not self.current_flow:
+            return {'ok': False, 'error': 'No active flow'}
+
+        # Task 찾기
+        target_task = None
+        target_plan = None
+
+        for plan in self.current_flow.get('plans', []):
+            for task in plan.get('tasks', []):
+                if task['id'] == task_id:
+                    target_task = task
+                    target_plan = plan
+                    break
+            if target_task:
+                break
+
+        if not target_task:
+            return {'ok': False, 'error': f'Task not found: {task_id}'}
+
+        # Context 가져오기 (없으면 기본값)
+        if 'context' not in target_task:
+            target_task['context'] = copy.deepcopy(DEFAULT_CONTEXT)
+
+        context = target_task['context']
+
+        # Deep merge 함수
+        def deep_merge(base, update):
+            for key, value in update.items():
+                if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+                    deep_merge(base[key], value)
+                else:
+                    base[key] = value
+
+        # Context 업데이트
+        deep_merge(context, kwargs)
+
+        # 타임스탬프 업데이트
+        target_task['updated_at'] = datetime.now().isoformat()
+
+        # 저장
+        self._save_flows()
+
+        return {'ok': True, 'data': target_task}
+
+    def add_task_action(self, task_id: str, action: str, result: str = '', **meta) -> Dict[str, Any]:
+        """Task에 작업 내역 추가"""
+        if not self.current_flow:
+            return {'ok': False, 'error': 'No active flow'}
+
+        # Task 찾기
+        target_task = None
+
+        for plan in self.current_flow.get('plans', []):
+            for task in plan.get('tasks', []):
+                if task['id'] == task_id:
+                    target_task = task
+                    break
+            if target_task:
+                break
+
+        if not target_task:
+            return {'ok': False, 'error': f'Task not found: {task_id}'}
+
+        # Context 확인
+        if 'context' not in target_task:
+            target_task['context'] = copy.deepcopy(DEFAULT_CONTEXT)
+
+        # Action 추가
+        action_entry = {
+            'time': datetime.now().isoformat(),
+            'action': action,
+            'result': result
+        }
+
+        # meta 데이터가 있으면 추가
+        if meta:
+            action_entry['meta'] = meta
+
+        target_task['context']['actions'].append(action_entry)
+        target_task['updated_at'] = datetime.now().isoformat()
+
+        # 저장
+        self._save_flows()
+
+        return {'ok': True, 'data': action_entry}
+
 
     def update_task_status(self, task_id: str, status: str) -> bool:
         """Task 상태 업데이트"""

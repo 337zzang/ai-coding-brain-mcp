@@ -1,0 +1,61 @@
+{
+  "version": "2.0",
+  "schema": {
+    "session": {
+      "session_id": "string (UUID)",
+      "project_id": "string",
+      "started_at": "ISO-8601 timestamp",
+      "last_updated": "ISO-8601 timestamp",
+      "status": "active|paused|completed"
+    },
+    "plans": {
+      "type": "array",
+      "items": {
+        "plan_id": "string",
+        "title": "string",
+        "created_at": "ISO-8601",
+        "status": "string",
+        "task_count": "integer",
+        "completion_rate": "float"
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "task_id": "string",
+        "plan_id": "string",
+        "title": "string",
+        "status": "string",
+        "started_at": "ISO-8601",
+        "completed_at": "ISO-8601",
+        "duration": "integer (seconds)"
+      }
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "timestamp": "ISO-8601",
+        "action": "string",
+        "target": "plan|task",
+        "target_id": "string",
+        "details": "object"
+      }
+    },
+    "summary": {
+      "total_plans": "integer",
+      "completed_plans": "integer",
+      "total_tasks": "integer",
+      "completed_tasks": "integer",
+      "overall_progress": "float",
+      "last_activity": "string",
+      "key_achievements": "array of strings",
+      "next_steps": "array of strings"
+    },
+    "metadata": {
+      "ai_model": "string",
+      "context_version": "string",
+      "tags": "array of strings",
+      "custom": "object"
+    }
+  }
+}

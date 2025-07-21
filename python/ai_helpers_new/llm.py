@@ -189,8 +189,8 @@ def check_o3_status(task_id: str) -> Dict[str, Any]:
 
         # 실행 시간 계산
         duration = None
-        if task['start_time']:
-            if task['end_time']:
+        if task.get('start_time'):
+            if task.get('end_time'):
                 duration = (task['end_time'] - task['start_time']).total_seconds()
             else:
                 duration = (datetime.now() - task['start_time']).total_seconds()

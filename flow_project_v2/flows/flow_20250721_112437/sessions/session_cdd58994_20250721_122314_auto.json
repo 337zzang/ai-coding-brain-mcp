@@ -1,0 +1,36 @@
+{
+  "save_type": "auto",
+  "saved_at": "2025-07-21T12:23:14.167854",
+  "context": {
+    "session": {
+      "session_id": "cdd58994-6e17-41ad-8a31-1ce00ef8a698",
+      "project_id": "flow_project_v2",
+      "started_at": "2025-07-21T11:25:57.005230",
+      "last_updated": "2025-07-21T11:26:41.116497",
+      "status": "active"
+    },
+    "plans": [],
+    "tasks": [],
+    "history": [],
+    "summary": {
+      "total_plans": 0,
+      "completed_plans": 0,
+      "total_tasks": 0,
+      "completed_tasks": 0,
+      "overall_progress": 0.0,
+      "last_activity": "Session started",
+      "key_achievements": [],
+      "next_steps": []
+    },
+    "metadata": {
+      "ai_model": "claude-3-opus",
+      "context_version": "2.0",
+      "tags": [],
+      "custom": {}
+    }
+  },
+  "metadata": {
+    "context_version": "2.0",
+    "session_duration": 3437
+  }
+}

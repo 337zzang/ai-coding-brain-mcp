@@ -1,0 +1,47 @@
+{
+  "version": "1.0",
+  "created_at": "2025-07-21T10:15:33.970872",
+  "updated_at": "2025-07-21T10:15:33.978871",
+  "session_id": "20250721_101533",
+  "memory": {
+    "active_plan_id": "plan_8cd24b3e",
+    "active_task_id": "task_d80db4d8",
+    "recent_decisions": [
+      {
+        "timestamp": "2025-07-21T10:15:33.972871",
+        "decision": "Flow v2를 Phase 4까지만 구현하기로 결정",
+        "rationale": "",
+        "plan_id": "plan_8cd24b3e",
+        "task_id": "task_d80db4d8"
+      }
+    ],
+    "open_files": [
+      "python/ai_helpers_new/flow_manager.py",
+      "python/ai_helpers_new/context_manager.py",
+      "tests/test_flow_manager.py"
+    ],
+    "modified_files": [],
+    "terminal_commands": [],
+    "error_context": [
+      {
+        "timestamp": "2025-07-21T10:15:33.975869",
+        "error": "ModuleNotFoundError: python.workflow",
+        "solution": "python/__init__.py의 잘못된 import 제거",
+        "file_path": "python/__init__.py",
+        "success": true
+      }
+    ]
+  },
+  "conversation": {
+    "last_topics": [],
+    "key_insights": [],
+    "user_preferences": {},
+    "clarifications": []
+  },
+  "project": {
+    "tech_stack": [],
+    "architecture_decisions": [],
+    "code_patterns": {},
+    "naming_conventions": {}
+  }
+}

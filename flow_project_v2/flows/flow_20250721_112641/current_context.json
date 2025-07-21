@@ -1,0 +1,28 @@
+{
+  "session": {
+    "session_id": "623eff0e-004e-4ed1-bcc5-c97bd32d7f86",
+    "project_id": "flow_project_v2",
+    "started_at": "2025-07-21T11:26:41.123459",
+    "last_updated": "2025-07-21T11:28:14.299612",
+    "status": "active"
+  },
+  "plans": [],
+  "tasks": [],
+  "history": [],
+  "summary": {
+    "total_plans": 0,
+    "completed_plans": 0,
+    "total_tasks": 0,
+    "completed_tasks": 0,
+    "overall_progress": 0.0,
+    "last_activity": "Session started",
+    "key_achievements": [],
+    "next_steps": []
+  },
+  "metadata": {
+    "ai_model": "claude-3-opus",
+    "context_version": "2.0",
+    "tags": [],
+    "custom": {}
+  }
+}

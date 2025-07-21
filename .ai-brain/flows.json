@@ -280,7 +280,336 @@
       ],
       "created_at": "2025-07-21T13:04:06.823581",
       "updated_at": "2025-07-21T13:04:06.823581"
+    },
+    {
+      "id": "flow_20250721_135645",
+      "name": "TestFlow",
+      "plans": [],
+      "created_at": "2025-07-21T13:56:45.956065",
+      "updated_at": "2025-07-21T13:56:45.956065"
+    },
+    {
+      "id": "flow_20250721_152317",
+      "name": "path_test",
+      "plans": [
+        {
+          "id": "plan_20250721_152317",
+          "name": "경로 테스트",
+          "tasks": [
+            {
+              "id": "task_20250721_152317_412",
+              "name": "plan_1",
+              "description": "\"파일 분석: fix_guide.py\" \"경로: fix_guide.py\"",
+              "status": "todo",
+              "created_at": "2025-07-21T15:23:17.412362",
+              "updated_at": "2025-07-21T15:23:17.412362"
+            },
+            {
+              "id": "task_20250721_152317_413",
+              "name": "plan_1",
+              "description": "\"파일 분석: flow_manager.py\" \"경로: ./python/ai_helpers_new/flow_manager.py\"",
+              "status": "todo",
+              "created_at": "2025-07-21T15:23:17.413360",
+              "updated_at": "2025-07-21T15:23:17.413360"
+            },
+            {
+              "id": "task_20250721_152317_414",
+              "name": "plan_1",
+              "description": "\"파일 분석: __init__.py\" \"경로: python/ai_helpers_new/__init__.py\"",
+              "status": "todo",
+              "created_at": "2025-07-21T15:23:17.414390",
+              "updated_at": "2025-07-21T15:23:17.414390"
+            },
+            {
+              "id": "task_20250721_152317_416",
+              "name": "plan_1",
+              "description": "\"파일 분석: error_analysis_report.json\" \"경로: C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp\\error_analysis_report.json\"",
+              "status": "todo",
+              "created_at": "2025-07-21T15:23:17.416364",
+              "updated_at": "2025-07-21T15:23:17.416364"
+            }
+          ],
+          "created_at": "2025-07-21T15:23:17.410360",
+          "completed": false
+        }
+      ],
+      "created_at": "2025-07-21T15:23:17.408361",
+      "updated_at": "2025-07-21T15:23:17.408361"
+    },
+    {
+      "id": "flow_20250721_153234",
+      "name": "card_check_test",
+      "plans": [
+        {
+          "id": "plan_20250721_153234",
+          "name": "카드 체크 기능",
+          "tasks": [],
+          "created_at": "2025-07-21T15:32:34.591707",
+          "completed": false
+        }
+      ],
+      "created_at": "2025-07-21T15:32:34.590708",
+      "updated_at": "2025-07-21T15:32:34.590708"
+    },
+    {
+      "id": "flow_20250721_155809",
+      "name": "test_integrity_155809",
+      "plans": [
+        {
+          "id": "plan_20250721_155809",
+          "name": "무결성 테스트 계획",
+          "tasks": [],
+          "created_at": "2025-07-21T15:58:09.929439",
+          "completed": false
+        }
+      ],
+      "created_at": "2025-07-21T15:58:09.926440",
+      "updated_at": "2025-07-21T15:58:09.926440"
+    },
+    {
+      "id": "flow_20250721_155846",
+      "name": "Flow_20250721_155846",
+      "plans": [],
+      "created_at": "2025-07-21T15:58:46.164812",
+      "updated_at": "2025-07-21T15:58:46.164812"
+    },
+    {
+      "id": "flow_20250721_155915",
+      "name": "AI_개발_작업",
+      "plans": [
+        {
+          "id": "plan_20250721_155915",
+          "name": "모듈 설계",
+          "tasks": [
+            {
+              "id": "task_20250721_155915_290",
+              "name": "plan_1",
+              "description": "프록시 패턴 구현 flow_proxy.py 작성",
+              "status": "todo",
+              "created_at": "2025-07-21T15:59:15.290505",
+              "updated_at": "2025-07-21T15:59:15.290505"
+            }
+          ],
+          "created_at": "2025-07-21T15:59:15.288502",
+          "completed": false
+        }
+      ],
+      "created_at": "2025-07-21T15:59:15.287502",
+      "updated_at": "2025-07-21T15:59:15.287502"
+    },
+    {
+      "id": "flow_20250721_161550",
+      "name": "ai-coding-brain-mcp",
+      "plans": [
+        {
+          "id": "plan_20250721_161610",
+          "name": "프로젝트 상태 분석",
+          "tasks": [
+            {
+              "id": "task_20250721_161741_449",
+              "name": "plan_1",
+              "description": "현재 모듈 구조 분석",
+              "status": "todo",
+              "created_at": "2025-07-21T16:17:41.449581",
+              "updated_at": "2025-07-21T16:17:41.449581"
+            },
+            {
+              "id": "task_20250721_161741_450",
+              "name": "plan_1",
+              "description": "의존성 관계 파악",
+              "status": "todo",
+              "created_at": "2025-07-21T16:17:41.451564",
+              "updated_at": "2025-07-21T16:17:41.451564"
+            },
+            {
+              "id": "task_20250721_161741_452",
+              "name": "plan_1",
+              "description": "성능 병목 지점 확인",
+              "status": "todo",
+              "created_at": "2025-07-21T16:17:41.452563",
+              "updated_at": "2025-07-21T16:17:41.452563"
+            },
+            {
+              "id": "task_20250721_161741_453",
+              "name": "plan_2",
+              "description": "중복 코드 제거",
+              "status": "todo",
+              "created_at": "2025-07-21T16:17:41.453564",
+              "updated_at": "2025-07-21T16:17:41.453564"
+            },
+            {
+              "id": "task_20250721_161741_454",
+              "name": "plan_2",
+              "description": "모듈 분리 및 정리",
+              "status": "todo",
+              "created_at": "2025-07-21T16:17:41.454564",
+              "updated_at": "2025-07-21T16:17:41.454564"
+            },
+            {
+              "id": "task_20250721_161741_455",
+              "name": "plan_2",
+              "description": "에러 처리 개선",
+              "status": "todo",
+              "created_at": "2025-07-21T16:17:41.455564",
+              "updated_at": "2025-07-21T16:17:41.455564"
+            },
+            {
+              "id": "task_20250721_163348_227",
+              "name": "test",
+              "description": "컨텍스트_테스트_Task '새로운 context 필드가 잘 추가되는지 테스트'",
+              "status": "todo",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-21T16:33:48.227940",
+              "updated_at": "2025-07-21T16:33:48.227940",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_20250721_163432_927",
+              "name": "test2",
+              "description": "'두번째_컨텍스트_테스트' '정말로 context가 추가되는지 확인'",
+              "status": "todo",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-21T16:34:32.927929",
+              "updated_at": "2025-07-21T16:34:32.927929",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_20250721_163548_198",
+              "name": "Context 테스트",
+              "description": "update_task_context와 add_task_action 테스트",
+              "status": "todo",
+              "context": {
+                "plan": "1. 초기 설정\n2. 테스트 실행\n3. 결과 검증",
+                "actions": [
+                  {
+                    "time": "2025-07-21T16:35:48.204673",
+                    "action": "테스트 환경 준비",
+                    "result": "Python 환경 및 의존성 확인 완료"
+                  },
+                  {
+                    "time": "2025-07-21T16:35:48.205671",
+                    "action": "모듈 스캔 시작",
+                    "result": "15개 파일 발견",
+                    "meta": {
+                      "files_found": 15,
+                      "scan_time": "2.3s"
+                    }
+                  }
+                ],
+                "results": {
+                  "test_started": true,
+                  "progress": 25
+                },
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-21T16:35:48.198671",
+              "updated_at": "2025-07-21T16:35:48.205671",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_20250721_171113_530",
+              "name": "plan_20250721_161610",
+              "description": "\"워크플로우 테스트 Task\"",
+              "status": "completed",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-21T17:11:13.530829",
+              "updated_at": "2025-07-21T17:11:33.492734",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_20250721_171326_934",
+              "name": "plan_20250721_161610",
+              "description": "\"워크플로우 테스트 Task 2\"",
+              "status": "reviewing",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-21T17:13:26.934215",
+              "updated_at": "2025-07-21T17:13:54.922000",
+              "started_at": null,
+              "completed_at": null
+            }
+          ],
+          "created_at": "2025-07-21T16:16:10.342633",
+          "completed": false
+        },
+        {
+          "id": "plan_20250721_161610",
+          "name": "코드 구조 개선",
+          "tasks": [],
+          "created_at": "2025-07-21T16:16:10.343633",
+          "completed": false
+        },
+        {
+          "id": "plan_20250721_161610",
+          "name": "테스트 및 검증",
+          "tasks": [],
+          "created_at": "2025-07-21T16:16:10.344632",
+          "completed": false
+        },
+        {
+          "id": "plan_20250721_161610",
+          "name": "문서화",
+          "tasks": [],
+          "created_at": "2025-07-21T16:16:10.345632",
+          "completed": false
+        }
+      ],
+      "created_at": "2025-07-21T16:15:50.706641",
+      "updated_at": "2025-07-21T16:15:50.706641"
     }
   ],
-  "current_flow_id": "flow_20250721_130406"
+  "current_flow_id": "flow_20250721_161550"
 }

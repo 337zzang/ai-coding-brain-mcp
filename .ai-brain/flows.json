@@ -1,0 +1,67 @@
+{
+  "flows": [
+    {
+      "id": "flow_20250721_124613",
+      "name": "default",
+      "plans": [],
+      "created_at": "2025-07-21T12:46:13.358518",
+      "updated_at": "2025-07-21T12:46:13.358518"
+    },
+    {
+      "id": "flow_20250721_124613",
+      "name": "Test Project",
+      "plans": [
+        {
+          "id": "plan_20250721_124613",
+          "name": "Default Plan",
+          "tasks": [
+            {
+              "id": "task_20250721_124613_360",
+              "name": "첫 번째 태스크",
+              "description": "",
+              "status": "todo",
+              "created_at": "2025-07-21T12:46:13.360519",
+              "updated_at": "2025-07-21T12:46:13.360519"
+            },
+            {
+              "id": "task_20250721_124657_000",
+              "name": "코드 리뷰",
+              "description": "",
+              "status": "todo",
+              "created_at": "2025-07-21T12:46:57.000637",
+              "updated_at": "2025-07-21T12:46:57.000637"
+            },
+            {
+              "id": "task_20250721_124657_001",
+              "name": "버그 수정",
+              "description": "",
+              "status": "todo",
+              "created_at": "2025-07-21T12:46:57.001637",
+              "updated_at": "2025-07-21T12:46:57.001637"
+            },
+            {
+              "id": "task_20250721_124657_001",
+              "name": "배포 준비",
+              "description": "",
+              "status": "todo",
+              "created_at": "2025-07-21T12:46:57.001637",
+              "updated_at": "2025-07-21T12:46:57.001637"
+            }
+          ],
+          "created_at": "2025-07-21T12:46:13.359530",
+          "completed": false
+        },
+        {
+          "id": "plan_20250721_124656",
+          "name": "Development",
+          "tasks": [],
+          "created_at": "2025-07-21T12:46:56.999635",
+          "completed": false
+        }
+      ],
+      "created_at": "2025-07-21T12:46:13.358518",
+      "updated_at": "2025-07-21T12:46:13.358518"
+    }
+  ],
+  "current_flow_id": "flow_20250721_124613"
+}

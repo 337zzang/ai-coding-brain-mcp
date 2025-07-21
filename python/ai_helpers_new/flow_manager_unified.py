@@ -55,6 +55,8 @@ class FlowManagerUnified(FlowManagerWithContext):
 
         # 레거시 데이터 마이그레이션
         self._migrate_legacy_data()
+        # Flow 데이터 로드
+        self._load_flows()
 
         # 기본 flow가 없으면 생성
         if self._has_flow_v2 and not self.current_flow:
@@ -735,5 +737,207 @@ Context 시스템:
         """기존 WorkflowManager와의 호환성을 위한 메서드"""
         return self.process_command(command)
 
+
+
+
+    # === Flow v2 핵심 메서드 직접 구현 ===
+
+    def create_flow(self, name: str) -> Dict[str, Any]:
+        """새 Flow 생성"""
+        flow_id = f"flow_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        new_flow = {
+            'id': flow_id,
+            'name': name,
+            'plans': [],
+            'created_at': datetime.now().isoformat(),
+            'updated_at': datetime.now().isoformat()
+        }
+
+        if not hasattr(self, 'flows'):
+            self.flows = []
+
+        self.flows.append(new_flow)
+        self.current_flow = new_flow
+
+        # 저장
+        self._save_flows()
+
+        return new_flow
+
+    def list_flows(self) -> List[Dict[str, Any]]:
+        """모든 Flow 목록 반환"""
+        if not hasattr(self, 'flows'):
+            self.flows = []
+            self._load_flows()
+
+        return self.flows
+
+    def switch_flow(self, flow_id: str) -> bool:
+        """Flow 전환"""
+        for flow in self.flows:
+            if flow['id'] == flow_id:
+                self.current_flow = flow
+                self._save_current_flow_id(flow_id)
+                return True
+
+        raise ValueError(f"Flow not found: {flow_id}")
+
+    def delete_flow(self, flow_id: str) -> bool:
+        """Flow 삭제"""
+        if self.current_flow and self.current_flow['id'] == flow_id:
+            raise ValueError("Cannot delete current flow")
+
+        self.flows = [f for f in self.flows if f['id'] != flow_id]
+        self._save_flows()
+        return True
+
+    def create_plan(self, name: str, flow_id: str = None) -> Dict[str, Any]:
+        """Plan 생성"""
+        if not self.current_flow and not flow_id:
+            self._create_default_flow()
+
+        target_flow = self.current_flow
+        if flow_id:
+            target_flow = next((f for f in self.flows if f['id'] == flow_id), None)
+            if not target_flow:
+                raise ValueError(f"Flow not found: {flow_id}")
+
+        plan_id = f"plan_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        new_plan = {
+            'id': plan_id,
+            'name': name,
+            'tasks': [],
+            'created_at': datetime.now().isoformat(),
+            'completed': False
+        }
+
+        if 'plans' not in target_flow:
+            target_flow['plans'] = []
+
+        target_flow['plans'].append(new_plan)
+        self._save_flows()
+
+        return new_plan
+
+    def create_task(self, name: str, description: str = '', plan_id: str = None) -> Dict[str, Any]:
+        """Task 생성"""
+        if not self.current_flow:
+            self._create_default_flow()
+
+        # Plan이 없으면 첫 번째 plan 사용 또는 생성
+        if not plan_id:
+            if not self.current_flow.get('plans'):
+                self.create_plan('Default Plan')
+            plan_id = self.current_flow['plans'][0]['id']
+
+        # Plan 찾기
+        target_plan = None
+        for plan in self.current_flow.get('plans', []):
+            if plan['id'] == plan_id:
+                target_plan = plan
+                break
+
+        if not target_plan:
+            # Plan ID 없이 첫 번째 plan 사용
+            if self.current_flow.get('plans'):
+                target_plan = self.current_flow['plans'][0]
+            else:
+                raise ValueError("No plan available")
+
+        task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:19]}"
+        new_task = {
+            'id': task_id,
+            'name': name,
+            'description': description,
+            'status': 'todo',
+            'created_at': datetime.now().isoformat(),
+            'updated_at': datetime.now().isoformat()
+        }
+
+        if 'tasks' not in target_plan:
+            target_plan['tasks'] = []
+
+        target_plan['tasks'].append(new_task)
+        self._save_flows()
+
+        return new_task
+
+    def update_task_status(self, task_id: str, status: str) -> bool:
+        """Task 상태 업데이트"""
+        if not self.current_flow:
+            return False
+
+        for plan in self.current_flow.get('plans', []):
+            for task in plan.get('tasks', []):
+                if task['id'] == task_id:
+                    task['status'] = status
+                    task['updated_at'] = datetime.now().isoformat()
+                    self._save_flows()
+                    return True
+
+        return False
+
+    def get_current_flow_status(self) -> Dict[str, Any]:
+        """현재 Flow 상태 반환"""
+        if not self.current_flow:
+            return {'error': 'No active flow'}
+
+        total_tasks = 0
+        completed_tasks = 0
+
+        for plan in self.current_flow.get('plans', []):
+            for task in plan.get('tasks', []):
+                total_tasks += 1
+                if task['status'] in ['done', 'completed']:
+                    completed_tasks += 1
+
+        return {
+            'flow': self.current_flow['name'],
+            'plans': len(self.current_flow.get('plans', [])),
+            'total_tasks': total_tasks,
+            'completed_tasks': completed_tasks,
+            'progress': (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+        }
+
+    # === 저장/로드 메서드 ===
+
+    def _save_flows(self):
+        """Flow 데이터 저장"""
+        flows_path = os.path.join(self.data_dir, 'flows.json')
+        try:
+            with open(flows_path, 'w', encoding='utf-8') as f:
+                json.dump({
+                    'flows': self.flows,
+                    'current_flow_id': self.current_flow['id'] if self.current_flow else None
+                }, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"⚠️ Flow 저장 실패: {e}")
+
+    def _load_flows(self):
+        """Flow 데이터 로드"""
+        flows_path = os.path.join(self.data_dir, 'flows.json')
+        if os.path.exists(flows_path):
+            try:
+                with open(flows_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    self.flows = data.get('flows', [])
+                    current_id = data.get('current_flow_id')
+                    if current_id:
+                        for flow in self.flows:
+                            if flow['id'] == current_id:
+                                self.current_flow = flow
+                                break
+            except Exception as e:
+                print(f"⚠️ Flow 로드 실패: {e}")
+                self.flows = []
+
+    def _save_current_flow_id(self, flow_id: str):
+        """현재 Flow ID 저장"""
+        current_flow_path = os.path.join(self.data_dir, 'current_flow.json')
+        try:
+            with open(current_flow_path, 'w') as f:
+                json.dump({'current_flow_id': flow_id}, f)
+        except:
+            pass
 
 # 클래스 종료

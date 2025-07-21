@@ -331,5 +331,19 @@
         "updated_at": "2025-07-21T11:32:03.467738"
       }
     }
+  },
+  {
+    "timestamp": "2025-07-21T12:09:30.577177",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_015",
+        "name": "Flow v2 통합 테스트 태스크",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-21T12:09:30.576176",
+        "updated_at": "2025-07-21T12:09:30.576176"
+      }
+    }
   }
 ]

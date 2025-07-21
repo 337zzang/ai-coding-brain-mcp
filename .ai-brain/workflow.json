@@ -2,7 +2,7 @@
   "version": "3.0",
   "project_name": "ai-coding-brain-mcp",
   "created_at": "2025-07-20T08:35:02.489951",
-  "updated_at": "2025-07-21T11:32:03.467738",
+  "updated_at": "2025-07-21T12:09:30.576176",
   "tasks": [
     {
       "id": "task_001",
@@ -119,11 +119,11 @@
     },
     {
       "id": "task_015",
-      "name": "테스트 태스크",
+      "name": "Flow v2 통합 테스트 태스크",
       "description": "",
       "status": "todo",
-      "created_at": "2025-07-21T11:32:03.467738",
-      "updated_at": "2025-07-21T11:32:03.467738"
+      "created_at": "2025-07-21T12:09:30.576176",
+      "updated_at": "2025-07-21T12:09:30.576176"
     }
   ],
   "current_task": null,

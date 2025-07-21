@@ -733,6 +733,64 @@
       "progress": 0.0,
       "milestones": [],
       "tags": []
+    },
+    "plan_77a38e0f": {
+      "id": "plan_77a38e0f",
+      "title": "웹 개발 프로젝트",
+      "objective": "순환 의존성 예시",
+      "status": "active",
+      "tasks": [
+        {
+          "id": "task_a6c1c330",
+          "title": "프론트엔드 개발",
+          "description": "",
+          "status": "todo",
+          "plan_id": "plan_77a38e0f",
+          "dependencies": [
+            "task_0fad3126"
+          ],
+          "created_at": "2025-07-21T10:37:25.609842",
+          "updated_at": "2025-07-21T10:37:25.622840",
+          "completed_at": null,
+          "assigned_to": null,
+          "tags": []
+        },
+        {
+          "id": "task_0fad3126",
+          "title": "백엔드 API",
+          "description": "",
+          "status": "todo",
+          "plan_id": "plan_77a38e0f",
+          "dependencies": [
+            "task_91914ea3"
+          ],
+          "created_at": "2025-07-21T10:37:25.613841",
+          "updated_at": "2025-07-21T10:37:25.619842",
+          "completed_at": null,
+          "assigned_to": null,
+          "tags": []
+        },
+        {
+          "id": "task_91914ea3",
+          "title": "DB 스키마",
+          "description": "",
+          "status": "todo",
+          "plan_id": "plan_77a38e0f",
+          "dependencies": [],
+          "created_at": "2025-07-21T10:37:25.616840",
+          "updated_at": "2025-07-21T10:37:25.616840",
+          "completed_at": null,
+          "assigned_to": null,
+          "tags": []
+        }
+      ],
+      "created_at": "2025-07-21T10:37:25.605842",
+      "updated_at": "2025-07-21T10:37:25.616840",
+      "completed_at": null,
+      "priority": 0,
+      "progress": 0.0,
+      "milestones": [],
+      "tags": []
     }
   }
 }

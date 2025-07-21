@@ -147,3 +147,5 @@ scan_directory_dict.raw = _scan_directory_dict_raw
 get_current_project.raw = _get_current_project_raw
 
 print("[AI Helpers v2.1] API standardization completed")
+
+from .context_manager import ContextManager

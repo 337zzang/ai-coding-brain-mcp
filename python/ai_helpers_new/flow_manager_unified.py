@@ -556,6 +556,14 @@ Context 시스템:
         subcmd = parts[0].lower()
         flow_args = parts[1] if len(parts) > 1 else ''
 
+        # ✨ 새로운 기능: 직접 프로젝트명으로 전환
+        # subcmd가 명령어가 아닌 경우 프로젝트명으로 간주
+        known_commands = ['list', 'create', 'switch', 'delete', 'status', 
+                         'plan', 'task', 'summary', 'export']
+        if subcmd not in known_commands:
+            # 프로젝트명으로 직접 전환 시도
+            return self._switch_to_project(subcmd)
+
         flow_handlers = {
             'list': self._list_flows,
             'create': lambda: self._create_flow(flow_args),
@@ -573,6 +581,135 @@ Context 시스템:
             return handler()
 
         return {'ok': False, 'error': f'Unknown flow command: {subcmd}'}
+
+
+    def _switch_to_project(self, project_name: str) -> Dict[str, Any]:
+        """프로젝트명으로 직접 전환하고 관련 작업 수행"""
+        import os
+
+        # 1. Flow 찾기 (이름으로, 플랜이 있는 것 우선)
+        flow_id = None
+        matching_flows = []
+
+        # 이름이 일치하는 모든 Flow 찾기
+        for flow in self.flows:
+            if flow['name'].lower() == project_name.lower():
+                matching_flows.append(flow)
+
+        if not matching_flows:
+            return {'ok': False, 'error': f"프로젝트 '{project_name}'를 찾을 수 없습니다"}
+
+                # 플랜이 있는 Flow 우선, 그 다음 최신 Flow 선택
+        matching_flows.sort(key=lambda f: (
+            len(f.get('plans', [])),    # 플랜 수가 많은 것 우선
+            f.get('created_at', '')      # 그 다음 최신 것
+        ), reverse=True)
+
+        flow_id = matching_flows[0]['id']
+
+        # 여러 개가 있으면 알림
+        if len(matching_flows) > 1:
+            plans_count = len(matching_flows[0].get('plans', []))
+            print(f"ℹ️ '{project_name}' Flow가 {len(matching_flows)}개 있습니다. Plans {plans_count}개인 {flow_id} 선택")
+
+        if not flow_id:
+            return {'ok': False, 'error': f"프로젝트 '{project_name}'를 찾을 수 없습니다"}
+
+        # 2. Flow 전환
+        try:
+            self.switch_flow(flow_id)
+        except Exception as e:
+            return {'ok': False, 'error': f'Flow 전환 실패: {str(e)}'}
+
+        # 3. 작업 디렉토리 변경
+        # Windows의 경우 Desktop 경로 확인
+        desktop_path = os.path.join(os.environ['USERPROFILE'], 'Desktop') if os.name == 'nt' else os.path.expanduser("~/Desktop")
+        project_path = os.path.join(desktop_path, project_name)
+
+        result_lines = []
+        result_lines.append(f"✅ 프로젝트 '{project_name}' 전환 완료")
+        result_lines.append(f"📁 Flow ID: {flow_id}")
+
+        if os.path.exists(project_path):
+            try:
+                os.chdir(project_path)
+                result_lines.append(f"📂 작업 디렉토리: {project_path}")
+            except Exception as e:
+                result_lines.append(f"⚠️ 디렉토리 변경 실패: {str(e)}")
+
+            # 4. README.md 읽기
+            readme_path = os.path.join(project_path, "README.md")
+            if os.path.exists(readme_path):
+                try:
+                    with open(readme_path, 'r', encoding='utf-8') as f:
+                        readme_content = f.read()
+                        # 첫 10줄 또는 500자 중 더 짧은 것
+                        readme_lines = readme_content.split('\n')[:10]
+                        readme_preview = '\n'.join(readme_lines)
+                        if len(readme_preview) > 500:
+                            readme_preview = readme_preview[:500] + "..."
+                        result_lines.append(f"\n📄 README.md:")
+                        result_lines.append(readme_preview)
+                except Exception as e:
+                    result_lines.append(f"⚠️ README.md 읽기 실패: {str(e)}")
+
+            # 5. filedirectory.md 읽기
+            filedir_path = os.path.join(project_path, "filedirectory.md")
+            if os.path.exists(filedir_path):
+                try:
+                    with open(filedir_path, 'r', encoding='utf-8') as f:
+                        filedir_content = f.read()
+                        filedir_lines = filedir_content.split('\n')[:20]
+                        filedir_preview = '\n'.join(filedir_lines)
+                        if len(filedir_preview) > 500:
+                            filedir_preview = filedir_preview[:500] + "..."
+                        result_lines.append(f"\n📁 File Directory:")
+                        result_lines.append(filedir_preview)
+                except Exception as e:
+                    result_lines.append(f"⚠️ filedirectory.md 읽기 실패: {str(e)}")
+        else:
+            result_lines.append(f"⚠️ 프로젝트 디렉토리를 찾을 수 없습니다: {project_path}")
+
+        # 6. 최신 플랜 확인
+        if self.current_flow.get('plans'):
+            latest_plan = self.current_flow['plans'][-1]
+            result_lines.append(f"\n📋 최신 플랜: {latest_plan['name']}")
+            tasks = latest_plan.get('tasks', [])
+            completed_tasks = sum(1 for t in tasks if t.get('status') == 'completed')
+            result_lines.append(f"   Tasks: {len(tasks)}개 (완료: {completed_tasks}개)")
+
+            # 최근 3개 태스크 표시
+            if tasks:
+                result_lines.append("   최근 Tasks:")
+                for task in tasks[-3:]:
+                    status_emoji = {
+                        'todo': '📌',
+                        'planning': '📐',
+                        'in_progress': '🔄',
+                        'reviewing': '🔍',
+                        'completed': '✅',
+                        'error': '❌'
+                    }.get(task.get('status', 'todo'), '❓')
+                    result_lines.append(f"   {status_emoji} {task.get('description', 'No description')}")
+
+        # 7. 최근 Task context 확인
+        recent_tasks_with_context = []
+        for plan in self.current_flow.get('plans', []):
+            for task in plan.get('tasks', []):
+                if task.get('context') and task['context'].get('actions'):
+                    recent_tasks_with_context.append(task)
+
+        if recent_tasks_with_context:
+            latest_task = recent_tasks_with_context[-1]
+            result_lines.append(f"\n🔄 최근 작업 Task: {latest_task.get('description', '')}")
+            if latest_task.get('context', {}).get('actions'):
+                result_lines.append("   최근 작업 내역:")
+                for action in latest_task['context']['actions'][-3:]:
+                    result_lines.append(f"   - {action.get('action', 'No action')}")
+                    if action.get('result'):
+                        result_lines.append(f"     → {action['result']}")
+
+        return {'ok': True, 'data': '\n'.join(result_lines)}
 
     def _handle_plan_subcommand(self, args: str) -> Dict[str, Any]:
         """Plan 하위 명령어 처리"""

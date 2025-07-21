@@ -177,7 +177,7 @@ class ContextManager:
         # Add to history
         self.add_history_entry("updated", "task", task_id, {"status": new_status})
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self, format_type="brief") -> Dict[str, Any]:
         """Get current context summary"""
         self._update_summary()
         return self.context["summary"]
@@ -288,3 +288,36 @@ class ContextManager:
             # Create new context
             self.context = self._create_new_context()
             self.save()
+
+    def get_history(self, limit=10):
+        """작업 히스토리 반환"""
+        try:
+            history = []
+            # 최근 히스토리 항목 반환
+            if hasattr(self, 'history') and self.history:
+                history = self.history[-limit:]
+            elif hasattr(self, 'context') and 'history' in self.context:
+                history = self.context['history'][-limit:]
+            return history
+        except Exception as e:
+            return [{'error': f'히스토리 조회 실패: {str(e)}'}]
+
+    def get_stats(self):
+        """통계 정보 반환"""
+        try:
+            stats = {
+                'total_tasks': 0,
+                'completed_tasks': 0,
+                'files_modified': 0,
+                'commands_executed': 0
+            }
+
+            # 실제 데이터가 있으면 사용
+            if hasattr(self, 'context'):
+                stats['total_tasks'] = len(self.context.get('tasks', []))
+                stats['completed_tasks'] = len([t for t in self.context.get('tasks', []) if t.get('status') == 'completed'])
+
+            return stats
+        except Exception as e:
+            return {'error': f'통계 생성 실패: {str(e)}'}
+

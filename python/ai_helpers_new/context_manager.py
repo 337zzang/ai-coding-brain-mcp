@@ -274,6 +274,7 @@ class ContextManager:
 
         return suggestions[:3]  # 최대 3개 제안
 
+
     def get_summary(self, format_type='brief'):
         """컨텍스트 요약 반환 (flow_manager_unified 호환성을 위한 래퍼)
 
@@ -307,18 +308,9 @@ class ContextManager:
             return {'error': f'요약 생성 실패: {str(e)}'}
 
     def get_history(self, limit=10):
-        """작업 히스토리 반환
-
-        Args:
-            limit: 반환할 항목 수
-
-        Returns:
-            list: 최근 작업 히스토리
-        """
+        """작업 히스토리 반환"""
         try:
             history = []
-
-            # 모든 이벤트를 시간순으로 정렬
             events = []
 
             # 태스크 이벤트
@@ -330,24 +322,6 @@ class ContextManager:
                     'status': task.get('status', 'unknown')
                 })
 
-            # 파일 수정 이벤트
-            for file in self.context.get('files_modified', []):
-                events.append({
-                    'type': 'file',
-                    'timestamp': file.get('timestamp', ''),
-                    'description': f"File modified: {file.get('path', 'Unknown')}",
-                    'action': file.get('action', 'modified')
-                })
-
-            # 명령어 실행 이벤트
-            for cmd in self.context.get('terminal_commands', []):
-                events.append({
-                    'type': 'command',
-                    'timestamp': cmd.get('timestamp', ''),
-                    'description': f"Command: {cmd.get('command', 'Unknown')}",
-                    'exit_code': cmd.get('exit_code', 0)
-                })
-
             # 시간순 정렬 및 제한
             events.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
             history = events[:limit]
@@ -357,44 +331,15 @@ class ContextManager:
             return [{'error': f'히스토리 조회 실패: {str(e)}'}]
 
     def get_stats(self):
-        """통계 정보 반환
-
-        Returns:
-            dict: 세션 통계
-        """
+        """통계 정보 반환"""
         try:
             stats = {
                 'total_tasks': len(self.context.get('tasks', [])),
                 'completed_tasks': len([t for t in self.context.get('tasks', []) if t.get('status') == 'completed']),
-                'failed_tasks': len([t for t in self.context.get('tasks', []) if t.get('status') == 'failed']),
                 'files_modified': len(self.context.get('files_modified', [])),
                 'commands_executed': len(self.context.get('terminal_commands', [])),
-                'errors_encountered': len(self.context.get('errors', [])),
-                'decisions_made': len(self.context.get('decisions', [])),
-                'session_duration': self._calculate_session_duration()
+                'errors_encountered': len(self.context.get('errors', []))
             }
-
-            # 파일 유형별 통계
-            file_types = {}
-            for file in self.context.get('files_modified', []):
-                ext = file.get('path', '').split('.')[-1] if '.' in file.get('path', '') else 'no_ext'
-                file_types[ext] = file_types.get(ext, 0) + 1
-            stats['file_types_modified'] = file_types
-
             return stats
         except Exception as e:
             return {'error': f'통계 생성 실패: {str(e)}'}
-
-    def _calculate_session_duration(self):
-        """세션 지속 시간 계산"""
-        try:
-            from datetime import datetime
-            start = self.context.get('session_start', '')
-            if start:
-                start_time = datetime.fromisoformat(start.replace('Z', '+00:00'))
-                duration = datetime.now() - start_time
-                return str(duration).split('.')[0]  # 마이크로초 제거
-            return '0:00:00'
-        except:
-            return 'unknown'
-

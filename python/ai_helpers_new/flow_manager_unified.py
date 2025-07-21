@@ -569,7 +569,8 @@ Context 시스템:
                 return {'ok': False, 'error': 'Usage: /flow task add <plan_id> <task_name>'}
 
             plan_id = parts[1]
-            task_name = parts[2]
+            # parts[2:]를 join하여 전체 task 이름 가져오기
+            task_name = ' '.join(parts[2:])
 
             task = self.create_task(plan_id, task_name)
             if 'id' in task:
@@ -742,14 +743,29 @@ Context 시스템:
             return {'ok': False, 'error': 'Context 시스템이 활성화되지 않았습니다'}
 
         try:
-            if args:
-                if args.startswith('show'):
-                    parts = args.split()
-                    format_type = parts[1] if len(parts) > 1 else 'brief'
-                    return {'ok': True, 'data': self.context_manager.get_summary(format_type)}
+            # ContextManager.get_summary()는 인수를 받지 않음
+            summary = self.context_manager.get_summary()
 
-            # 기본: brief 요약
-            return {'ok': True, 'data': self.context_manager.get_summary('brief')}
+            # 포맷 처리
+            if args and args.startswith('show'):
+                parts = args.split()
+                format_type = parts[1] if len(parts) > 1 else 'brief'
+            else:
+                format_type = 'brief'
+
+            # 포맷에 따라 결과 변환
+            if format_type == 'brief':
+                result = f"📊 Context Summary\n"
+                result += f"Session: {summary.get('session_id', 'Unknown')}\n"
+                result += f"Plans: {len(summary.get('plans', []))}\n"
+                result += f"Tasks: {len(summary.get('tasks', []))}\n"
+                result += f"History: {len(summary.get('history', []))} entries"
+            elif format_type == 'detailed':
+                result = json.dumps(summary, indent=2, ensure_ascii=False)
+            else:
+                result = str(summary)
+
+            return {'ok': True, 'data': result}
 
         except Exception as e:
             return {'ok': False, 'error': f'Context 조회 실패: {str(e)}'}

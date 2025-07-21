@@ -1,126 +1,84 @@
-# AI Coding Brain MCP v3.0.0 - Simplified Edition
+# AI Coding Brain MCP - FlowManagerUnified
 
-영속적인 Python REPL 세션을 제공하는 간소화된 MCP 서버입니다.
+## 개요
+AI Coding Brain MCP는 통합 워크플로우 관리 시스템입니다. 
+FlowManagerUnified를 통해 프로젝트, 태스크, 컨텍스트를 효율적으로 관리합니다.
 
-## 🚀 주요 특징
+## 주요 기능
 
-- **영속적 Python 세션**: 변수와 상태가 세션 전체에서 유지됩니다
-- **내장 헬퍼 함수**: 파일 조작, 디렉토리 스캔, 코드 검색 등의 헬퍼 제공
-- **간소화된 구조**: 핵심 기능만 유지하여 안정성과 성능 향상
+### 1. Flow 관리 (다중 프로젝트)
+- `/flow create <name>` - 새 프로젝트(Flow) 생성
+- `/flow list` - 모든 Flow 목록
+- `/flow switch <id>` - Flow 전환
+- `/flow` - 현재 Flow 정보
 
+### 2. Plan 관리 (프로젝트 단계)
+- `/plan add <name>` - 새 Plan 추가
+- `/plan list` - Plan 목록
 
-## 🎯 워크플로우 명령어
+### 3. Task 관리
+- `/task add <name>` - 새 태스크 추가
+- `/list` - 태스크 목록
+- `/start <id>` - 태스크 시작
+- `/done <id>` - 태스크 완료
+- `/skip <id>` - 태스크 건너뛰기
 
-프로젝트 작업을 체계적으로 관리하는 6개의 명령어가 추가되었습니다:
+### 4. Context 시스템
+- `/context` - 현재 컨텍스트 표시
+- `/session save <name>` - 세션 저장
+- `/session list` - 세션 목록
+- `/history <n>` - 최근 히스토리
+- `/stats` - 통계 정보
 
-### 1. `/start [프로젝트명]`
-새 프로젝트를 시작합니다.
-```python
-workflow("/start AI 도구 개발")
-# ✅ 'AI 도구 개발' 시작됨
+### 5. 기본 명령어
+- `/help` - 도움말
+- `/status` - 현재 상태
+- `/report` - 전체 리포트
+
+## 시스템 구조
+
+```
+python/
+├── ai_helpers_new/
+│   ├── flow_manager_unified.py  # 통합 매니저
+│   └── __init__.py
+└── workflow_wrapper.py          # 명령어 인터페이스
 ```
 
-### 2. `/plan [단계1] [단계2] ...`
-작업 단계를 설정하거나 조회합니다.
+## 사용 예시
+
 ```python
-workflow("/plan")                    # 현재 단계 조회
-workflow("/plan 기획 개발 테스트")   # 단계 설정
+from python.workflow_wrapper import wf
+
+# 새 프로젝트 생성
+wf("/flow create My Project")
+
+# 태스크 추가
+wf("/task add 코드 작성")
+wf("/task add 테스트 작성")
+
+# 태스크 시작 및 완료
+wf("/start task_001")
+wf("/done task_001")
+
+# 상태 확인
+wf("/status")
 ```
 
-### 3. `/task [add|list|del]`
-작업을 관리합니다.
-```python
-workflow("/task add API 설계")       # 작업 추가
-workflow("/task list")               # 작업 목록
-workflow("/task del 1")              # 1번 작업 삭제
-```
-
-### 4. `/next`
-다음 작업을 진행 상태로 변경합니다.
-```python
-workflow("/next")
-# ▶️ 진행: API 설계
-```
-
-### 5. `/status`
-프로젝트 현황을 확인합니다.
-```python
-workflow("/status")
-# 📊 AI 도구 개발
-# 작업: 3개 (완료: 1개)
-# 진행률: 33%
-```
-
-### 6. `/focus [내용]`
-현재 집중할 사항을 설정합니다.
-```python
-workflow("/focus 성능 최적화")       # 포커스 설정
-workflow("/focus")                   # 현재 포커스 확인
-```
-
-## 📦 설치
+## 환경 설정
 
 ```bash
-npm install
-npm run build
+# Context 시스템 활성화
+export CONTEXT_SYSTEM=on
 ```
 
-## 🛠️ 제공 도구
+## 변경 이력
 
-### 1. execute_code
-Python 코드를 실행합니다. 세션 간 변수가 유지되며, 다양한 헬퍼 함수를 사용할 수 있습니다.
+### v27.1 (2025-07-21)
+- FlowManagerUnified로 완전 통합
+- 레거시 WorkflowManager 제거
+- Flow v2 기능 완전 구현
+- Context 시스템 통합
 
-**사용 가능한 helpers 메서드:**
-- `helpers.scan_directory_dict(path)` - 디렉토리 스캔
-- `helpers.read_file(path)` - 파일 읽기
-- `helpers.create_file(path, content)` - 파일 생성/수정
-- `helpers.search_files_advanced(path, pattern)` - 파일명 검색
-- `helpers.search_code_content(path, pattern, file_pattern)` - 코드 내용 검색
-- `helpers.replace_block(file, target, new_code)` - 코드 블록 교체
-
-### 2. restart_json_repl
-JSON REPL 세션을 재시작합니다. `keep_helpers=True`(기본값)로 헬퍼를 유지할 수 있습니다.
-
-## 📝 사용 예시
-
-```python
-# 디렉토리 구조 파악
-files = helpers.scan_directory_dict(".")
-print(f"파일: {len(files['files'])}개")
-
-# 파일 읽기/쓰기
-content = helpers.read_file("config.json")
-helpers.create_file("output.txt", content)
-
-# 코드 검색
-results = helpers.search_code_content("src", "function", "*.ts")
-```
-
-## 🏗️ 프로젝트 구조
-
-```
-ai-coding-brain-mcp/
-├── src/
-│   ├── handlers/
-│   │   └── execute-code-handler.ts  # 핵심 실행 핸들러
-│   ├── tools/
-│   │   └── tool-definitions.ts      # 도구 정의
-│   └── index.ts                     # 메인 서버
-├── python/
-│   ├── json_repl_session.py        # Python REPL 세션
-│   └── helpers_wrapper.py          # 헬퍼 함수들
-└── package.json
-```
-
-## 📄 라이선스
-
-MIT
-
-## 🔄 변경 이력
-
-### v3.0.0 (2025-07-15)
-- 코드베이스 대폭 간소화
-- 불필요한 핸들러 6개 제거
-- Python 관련 파일 5개 제거
-- 핵심 기능 2개만 유지 (execute_code, restart_json_repl)
-- 안정성과 성능 향상
+---
+AI Coding Brain MCP v27.1 - Unified Workflow System

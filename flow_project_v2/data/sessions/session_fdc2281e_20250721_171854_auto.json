@@ -1,12 +1,12 @@
 {
   "save_type": "auto",
-  "saved_at": "2025-07-21T17:02:54.449867",
+  "saved_at": "2025-07-21T17:18:54.875537",
   "context": {
     "session": {
-      "session_id": "40361869-0e91-4964-823f-894ae1bc4ea7",
+      "session_id": "fdc2281e-82f6-4e45-a757-3277df132c1c",
       "project_id": "flow_project_v2",
-      "started_at": "2025-07-21T16:37:53.687513",
-      "last_updated": "2025-07-21T16:37:53.687513",
+      "started_at": "2025-07-21T17:13:54.915006",
+      "last_updated": "2025-07-21T17:13:54.915006",
       "status": "active"
     },
     "plans": [],
@@ -31,6 +31,6 @@
   },
   "metadata": {
     "context_version": "2.0",
-    "session_duration": 1500
+    "session_duration": 299
   }
 }

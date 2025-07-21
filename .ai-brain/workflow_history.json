@@ -275,5 +275,47 @@
       },
       "old_status": "todo"
     }
+  },
+  {
+    "timestamp": "2025-07-21T10:58:30.338478",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_012",
+        "name": "Flow Project v2 - Phase 3 Context System 구현 완료",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-21T10:58:30.337476",
+        "updated_at": "2025-07-21T10:58:30.337476"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-07-21T11:11:00.090851",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_013",
+        "name": "워크플로우-컨텍스트 통합 (o3 분석 기반)",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-21T11:11:00.089862",
+        "updated_at": "2025-07-21T11:11:00.089862"
+      }
+    }
+  },
+  {
+    "timestamp": "2025-07-21T11:12:49.278001",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_014",
+        "name": "테스트 태스크",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-21T11:12:49.277001",
+        "updated_at": "2025-07-21T11:12:49.277001"
+      }
+    }
   }
 ]

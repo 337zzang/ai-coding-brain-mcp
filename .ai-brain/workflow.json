@@ -2,7 +2,7 @@
   "version": "3.0",
   "project_name": "ai-coding-brain-mcp",
   "created_at": "2025-07-20T08:35:02.489951",
-  "updated_at": "2025-07-21T11:12:49.277001",
+  "updated_at": "2025-07-21T11:32:03.467738",
   "tasks": [
     {
       "id": "task_001",
@@ -116,6 +116,14 @@
       "status": "todo",
       "created_at": "2025-07-21T11:12:49.277001",
       "updated_at": "2025-07-21T11:12:49.277001"
+    },
+    {
+      "id": "task_015",
+      "name": "테스트 태스크",
+      "description": "",
+      "status": "todo",
+      "created_at": "2025-07-21T11:32:03.467738",
+      "updated_at": "2025-07-21T11:32:03.467738"
     }
   ],
   "current_task": null,

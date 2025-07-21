@@ -8,5 +8,10 @@
     "name": "My New Project",
     "created_at": "2025-07-21T11:26:41.116497",
     "description": "Flow project: My New Project"
+  },
+  "flow_20250721_113205": {
+    "name": "Test Flow Project",
+    "created_at": "2025-07-21T11:32:05.490736",
+    "description": "Flow project: Test Flow Project"
   }
 }

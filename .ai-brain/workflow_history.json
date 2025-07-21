@@ -317,5 +317,19 @@
         "updated_at": "2025-07-21T11:12:49.277001"
       }
     }
+  },
+  {
+    "timestamp": "2025-07-21T11:32:03.468766",
+    "action": "task_added",
+    "data": {
+      "task": {
+        "id": "task_015",
+        "name": "테스트 태스크",
+        "description": "",
+        "status": "todo",
+        "created_at": "2025-07-21T11:32:03.467738",
+        "updated_at": "2025-07-21T11:32:03.467738"
+      }
+    }
   }
 ]

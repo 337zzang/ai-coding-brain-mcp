@@ -31,201 +31,201 @@ except ImportError as e:
 class FlowManagerUnified(FlowManagerWithContext):
     """통합된 Flow + Workflow 매니저"""
 
-def __init__(self):
-        """통합 매니저 초기화"""
-        super().__init__()
+    def __init__(self):
+            """통합 매니저 초기화"""
+            super().__init__()
 
-        # 디렉토리 설정
-        self._ensure_directories()
+            # 디렉토리 설정
+            self._ensure_directories()
 
-        # Flow 매니저 초기화
-        self._flow_manager = FlowManager()
+            # Flow 매니저 초기화
+            self._flow_manager = FlowManager()
 
-        # Context 매니저 초기화
-        self._context_enabled = os.getenv('CONTEXT_SYSTEM', 'on').lower() == 'on'
-        if self._context_enabled:
-            from .context_workflow_manager import get_context_manager
-            self._context_manager = get_context_manager()
+            # Context 매니저 초기화
+            self._context_enabled = os.getenv('CONTEXT_SYSTEM', 'on').lower() == 'on'
+            if self._context_enabled:
+                from .context_workflow_manager import get_context_manager
+                self._context_manager = get_context_manager()
 
-        # 워크플로우 데이터
-        self._workflow_data = self._load_workflow_data()
+            # 워크플로우 데이터
+            self._workflow_data = self._load_workflow_data()
 
-        # 명령어 핸들러 초기화
-        self._command_handlers = self._init_command_handlers()
+            # 명령어 핸들러 초기화
+            self._command_handlers = self._init_command_handlers()
 
-        # Flow v2 활성화 상태
-        self._has_flow_v2 = True
+            # Flow v2 활성화 상태
+            self._has_flow_v2 = True
 
-        # 현재 flow
-        self.current_flow = self._flow_manager.get_current_flow()
+            # 현재 flow
+            self.current_flow = self._flow_manager.get_current_flow()
 
-        # Flow command handler
-        self.flow_handler = FlowCommandHandler(self._flow_manager)
+            # Flow command handler
+            self.flow_handler = FlowCommandHandler(self._flow_manager)
 
-        # 자동 저장 설정
-        self._auto_save_interval = 300  # 5분
-        self._last_save_time = time.time()
-        self._start_auto_save()
+            # 자동 저장 설정
+            self._auto_save_interval = 300  # 5분
+            self._last_save_time = time.time()
+            self._start_auto_save()
 
 
-    def _ensure_directories(self):
-        """필요한 디렉토리 생성"""
-        os.makedirs(self.data_dir, exist_ok=True)
-        os.makedirs(os.path.join(self.data_dir, 'backups'), exist_ok=True)
+        def _ensure_directories(self):
+            """필요한 디렉토리 생성"""
+            os.makedirs(self.data_dir, exist_ok=True)
+            os.makedirs(os.path.join(self.data_dir, 'backups'), exist_ok=True)
 
-    def _create_default_flow(self):
-        """기본 flow 생성"""
-        try:
-            if hasattr(self, 'create_flow') and callable(self.create_flow):
-                # Flow 데이터 구조 직접 생성 (FlowManagerWithContext가 없을 경우)
-                if not self.current_flow:
-                    self.current_flow = {
-                        'id': f'flow_{datetime.now().strftime("%Y%m%d_%H%M%S")}',
-                        'name': 'default',
-                        'plans': [],
-                        'created_at': datetime.now().isoformat()
-                    }
-                    if hasattr(self, 'flows'):
-                        self.flows.append(self.current_flow)
-                    print("✅ 기본 flow 생성됨")
-        except Exception as e:
-            print(f"⚠️ 기본 flow 생성 실패: {e}")
-
-    def _ensure_directories(self):
-        """필요한 디렉토리 생성"""
-        os.makedirs(self.data_dir, exist_ok=True)
-        os.makedirs(os.path.join(self.data_dir, 'backups'), exist_ok=True)
-
-    def _create_default_flow(self):
-        """기본 flow 생성"""
-        try:
-            if hasattr(self, 'create_flow'):
-                self.create_flow('default')
-        except Exception as e:
-            print(f"⚠️ 기본 flow 생성 실패: {e}")
-
-    def _migrate_legacy_data(self):
-        """기존 workflow.json을 flow 구조로 마이그레이션"""
-        legacy_path = os.path.join(self.data_dir, 'workflow.json')
-        if not os.path.exists(legacy_path):
-            return
-
-        try:
-            with open(legacy_path, 'r', encoding='utf-8') as f:
-                legacy_data = json.load(f)
-
-            print("📦 레거시 데이터 마이그레이션 시작...")
-
-            # 백업
-            backup_path = os.path.join(self.data_dir, 'backups', 
-                                     f'workflow_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
-            with open(backup_path, 'w', encoding='utf-8') as f:
-                json.dump(legacy_data, f, indent=2)
-
-            # Flow v2가 활성화되어 있으면 마이그레이션
-            if self._has_flow_v2:
-                # 기본 flow 확인
-                if not self.current_flow:
-                    self._create_default_flow()
-
-                # 태스크 마이그레이션
-                migrated_count = 0
-                for task in legacy_data.get('tasks', []):
-                    try:
-                        # Plan이 없으면 기본 plan 생성
-                        if not self.current_flow.get('plans'):
-                            if hasattr(self, 'create_plan'):
-                                self.create_plan('Default Plan')
-
-                        # 첫 번째 plan에 태스크 추가
-                        if hasattr(self, 'create_task'):
-                            self.create_task(
-                                name=task.get('name', 'Unnamed Task'),
-                                description=task.get('description', '')
-                            )
-                            migrated_count += 1
-                    except Exception as e:
-                        print(f"⚠️ 태스크 마이그레이션 실패: {e}")
-
-                print(f"✅ {migrated_count}개 태스크 마이그레이션 완료")
-
-            # 레거시 파일 이름 변경
-            os.rename(legacy_path, legacy_path + '.migrated')
-
-        except Exception as e:
-            print(f"⚠️ 마이그레이션 중 오류: {e}")
-
-    def _init_command_handlers(self) -> Dict[str, Any]:
-        """명령어 핸들러 초기화"""
-        return {
-            # 기본 명령어
-            'help': self._show_help,
-            'status': self._show_status,
-            'list': self._list_tasks,
-
-            # 태스크 관리
-            'task': self._handle_task_command,
-            'start': self._start_task,
-            'done': self._complete_task,
-            'complete': self._complete_task,
-            'skip': self._skip_task,
-
-            # Flow v2 명령어
-            'flow': self._handle_flow_command,
-            'plan': self._handle_plan_command,
-
-            # Context 명령어
-            'context': self._handle_context_command,
-            'session': self._handle_session_command,
-            'history': self._show_history,
-            'stats': self._show_stats,
-
-            # 리포트
-            'report': self._show_report,
-        }
-
-    def process_command(self, command: str) -> Dict[str, Any]:
-        """통합 명령어 처리"""
-        if not command.startswith('/'):
-            return {'ok': False, 'error': 'Commands must start with /'}
-
-        # 명령어 파싱
-        parts = command[1:].split(maxsplit=1)
-        if not parts:
-            return {'ok': False, 'error': 'Empty command'}
-
-        cmd = parts[0].lower()
-        args = parts[1] if len(parts) > 1 else ''
-
-        # 핸들러 찾기
-        handler = self._command_handlers.get(cmd)
-        if handler:
+        def _create_default_flow(self):
+            """기본 flow 생성"""
             try:
-                return handler(args)
+                if hasattr(self, 'create_flow') and callable(self.create_flow):
+                    # Flow 데이터 구조 직접 생성 (FlowManagerWithContext가 없을 경우)
+                    if not self.current_flow:
+                        self.current_flow = {
+                            'id': f'flow_{datetime.now().strftime("%Y%m%d_%H%M%S")}',
+                            'name': 'default',
+                            'plans': [],
+                            'created_at': datetime.now().isoformat()
+                        }
+                        if hasattr(self, 'flows'):
+                            self.flows.append(self.current_flow)
+                        print("✅ 기본 flow 생성됨")
             except Exception as e:
-                return {'ok': False, 'error': f'Command failed: {str(e)}'}
+                print(f"⚠️ 기본 flow 생성 실패: {e}")
 
-        # 알 수 없는 명령어
-        similar = self._find_similar_commands(cmd)
-        error_msg = f"Unknown command: {cmd}"
-        if similar:
-            error_msg += f"\nDid you mean: {', '.join(similar)}?"
-        return {'ok': False, 'error': error_msg}
+        def _ensure_directories(self):
+            """필요한 디렉토리 생성"""
+            os.makedirs(self.data_dir, exist_ok=True)
+            os.makedirs(os.path.join(self.data_dir, 'backups'), exist_ok=True)
 
-    def _find_similar_commands(self, cmd: str) -> List[str]:
-        """유사한 명령어 찾기"""
-        similar = []
-        for command in self._command_handlers.keys():
-            if cmd in command or command.startswith(cmd):
-                similar.append(command)
-        return similar[:3]
+        def _create_default_flow(self):
+            """기본 flow 생성"""
+            try:
+                if hasattr(self, 'create_flow'):
+                    self.create_flow('default')
+            except Exception as e:
+                print(f"⚠️ 기본 flow 생성 실패: {e}")
+
+        def _migrate_legacy_data(self):
+            """기존 workflow.json을 flow 구조로 마이그레이션"""
+            legacy_path = os.path.join(self.data_dir, 'workflow.json')
+            if not os.path.exists(legacy_path):
+                return
+
+            try:
+                with open(legacy_path, 'r', encoding='utf-8') as f:
+                    legacy_data = json.load(f)
+
+                print("📦 레거시 데이터 마이그레이션 시작...")
+
+                # 백업
+                backup_path = os.path.join(self.data_dir, 'backups', 
+                                         f'workflow_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
+                with open(backup_path, 'w', encoding='utf-8') as f:
+                    json.dump(legacy_data, f, indent=2)
+
+                # Flow v2가 활성화되어 있으면 마이그레이션
+                if self._has_flow_v2:
+                    # 기본 flow 확인
+                    if not self.current_flow:
+                        self._create_default_flow()
+
+                    # 태스크 마이그레이션
+                    migrated_count = 0
+                    for task in legacy_data.get('tasks', []):
+                        try:
+                            # Plan이 없으면 기본 plan 생성
+                            if not self.current_flow.get('plans'):
+                                if hasattr(self, 'create_plan'):
+                                    self.create_plan('Default Plan')
+
+                            # 첫 번째 plan에 태스크 추가
+                            if hasattr(self, 'create_task'):
+                                self.create_task(
+                                    name=task.get('name', 'Unnamed Task'),
+                                    description=task.get('description', '')
+                                )
+                                migrated_count += 1
+                        except Exception as e:
+                            print(f"⚠️ 태스크 마이그레이션 실패: {e}")
+
+                    print(f"✅ {migrated_count}개 태스크 마이그레이션 완료")
+
+                # 레거시 파일 이름 변경
+                os.rename(legacy_path, legacy_path + '.migrated')
+
+            except Exception as e:
+                print(f"⚠️ 마이그레이션 중 오류: {e}")
+
+        def _init_command_handlers(self) -> Dict[str, Any]:
+            """명령어 핸들러 초기화"""
+            return {
+                # 기본 명령어
+                'help': self._show_help,
+                'status': self._show_status,
+                'list': self._list_tasks,
+
+                # 태스크 관리
+                'task': self._handle_task_command,
+                'start': self._start_task,
+                'done': self._complete_task,
+                'complete': self._complete_task,
+                'skip': self._skip_task,
+
+                # Flow v2 명령어
+                'flow': self._handle_flow_command,
+                'plan': self._handle_plan_command,
+
+                # Context 명령어
+                'context': self._handle_context_command,
+                'session': self._handle_session_command,
+                'history': self._show_history,
+                'stats': self._show_stats,
+
+                # 리포트
+                'report': self._show_report,
+            }
+
+        def process_command(self, command: str) -> Dict[str, Any]:
+            """통합 명령어 처리"""
+            if not command.startswith('/'):
+                return {'ok': False, 'error': 'Commands must start with /'}
+
+            # 명령어 파싱
+            parts = command[1:].split(maxsplit=1)
+            if not parts:
+                return {'ok': False, 'error': 'Empty command'}
+
+            cmd = parts[0].lower()
+            args = parts[1] if len(parts) > 1 else ''
+
+            # 핸들러 찾기
+            handler = self._command_handlers.get(cmd)
+            if handler:
+                try:
+                    return handler(args)
+                except Exception as e:
+                    return {'ok': False, 'error': f'Command failed: {str(e)}'}
+
+            # 알 수 없는 명령어
+            similar = self._find_similar_commands(cmd)
+            error_msg = f"Unknown command: {cmd}"
+            if similar:
+                error_msg += f"\nDid you mean: {', '.join(similar)}?"
+            return {'ok': False, 'error': error_msg}
+
+        def _find_similar_commands(self, cmd: str) -> List[str]:
+            """유사한 명령어 찾기"""
+            similar = []
+            for command in self._command_handlers.keys():
+                if cmd in command or command.startswith(cmd):
+                    similar.append(command)
+            return similar[:3]
 
 
-    # === 도움말 및 상태 ===
+        # === 도움말 및 상태 ===
 
-    def _show_help(self, args: str) -> Dict[str, Any]:
-        """도움말 표시"""
-        help_text = """📋 통합 워크플로우 명령어
+        def _show_help(self, args: str) -> Dict[str, Any]:
+            """도움말 표시"""
+            help_text = """📋 통합 워크플로우 명령어
 
 기본 명령어:
   /help              - 이 도움말 표시

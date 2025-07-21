@@ -132,7 +132,140 @@
       "plans": [],
       "created_at": "2025-07-21T12:56:58.195368",
       "updated_at": "2025-07-21T12:56:58.195368"
+    },
+    {
+      "id": "flow_20250721_130338",
+      "name": "ai-coding-brain-mcp",
+      "plans": [],
+      "created_at": "2025-07-21T13:03:38.281438",
+      "updated_at": "2025-07-21T13:03:38.281438"
+    },
+    {
+      "id": "flow_20250721_130406",
+      "name": "ai-coding-brain-mcp",
+      "plans": [
+        {
+          "id": "plan_20250721_130500",
+          "name": "Main Development",
+          "tasks": [
+            {
+              "id": "task_20250721_130531_594",
+              "name": "plan_20250721_130500",
+              "description": "프로젝트 구조 분석",
+              "status": "todo",
+              "created_at": "2025-07-21T13:05:31.594794",
+              "updated_at": "2025-07-21T13:05:31.594794"
+            },
+            {
+              "id": "task_20250721_130531_595",
+              "name": "plan_20250721_130500",
+              "description": "모듈 의존성 정리",
+              "status": "todo",
+              "created_at": "2025-07-21T13:05:31.595794",
+              "updated_at": "2025-07-21T13:05:31.595794"
+            },
+            {
+              "id": "task_20250721_130531_596",
+              "name": "plan_20250721_130500",
+              "description": "테스트 케이스 작성",
+              "status": "todo",
+              "created_at": "2025-07-21T13:05:31.596794",
+              "updated_at": "2025-07-21T13:05:31.596794"
+            },
+            {
+              "id": "task_20250721_130531_597",
+              "name": "plan_20250721_130500",
+              "description": "문서화 업데이트",
+              "status": "todo",
+              "created_at": "2025-07-21T13:05:31.597794",
+              "updated_at": "2025-07-21T13:05:31.597794"
+            },
+            {
+              "id": "task_20250721_130531_598",
+              "name": "plan_20250721_130500",
+              "description": "성능 최적화",
+              "status": "todo",
+              "created_at": "2025-07-21T13:05:31.598794",
+              "updated_at": "2025-07-21T13:05:31.598794"
+            },
+            {
+              "id": "task_20250721_130748_837",
+              "name": "plan_20250721_130748",
+              "description": "Flow 명령어 통합 구현",
+              "status": "todo",
+              "created_at": "2025-07-21T13:07:48.837356",
+              "updated_at": "2025-07-21T13:07:48.837356"
+            },
+            {
+              "id": "task_20250721_130748_839",
+              "name": "plan_20250721_130748",
+              "description": "Context 시스템 메서드 수정",
+              "status": "in_progress",
+              "created_at": "2025-07-21T13:07:48.839356",
+              "updated_at": "2025-07-21T13:08:27.096426"
+            },
+            {
+              "id": "task_20250721_130748_840",
+              "name": "plan_20250721_130748",
+              "description": "o3 백그라운드 status 오류 해결",
+              "status": "todo",
+              "created_at": "2025-07-21T13:07:48.840357",
+              "updated_at": "2025-07-21T13:07:48.840357"
+            },
+            {
+              "id": "task_20250721_130748_841",
+              "name": "plan_20250721_130748",
+              "description": "누락된 메서드 구현 (/history, /stats)",
+              "status": "todo",
+              "created_at": "2025-07-21T13:07:48.841389",
+              "updated_at": "2025-07-21T13:07:48.841389"
+            },
+            {
+              "id": "task_20250721_130748_842",
+              "name": "plan_20250721_130748",
+              "description": "명령어 체계 통합 설계",
+              "status": "todo",
+              "created_at": "2025-07-21T13:07:48.842353",
+              "updated_at": "2025-07-21T13:07:48.842353"
+            },
+            {
+              "id": "task_20250721_130748_843",
+              "name": "plan_20250721_130748",
+              "description": "유저프리퍼런스 v28.0 문서 작성",
+              "status": "todo",
+              "created_at": "2025-07-21T13:07:48.843353",
+              "updated_at": "2025-07-21T13:07:48.843353"
+            },
+            {
+              "id": "task_20250721_130748_844",
+              "name": "plan_20250721_130748",
+              "description": "실제 구현과 문서 동기화",
+              "status": "todo",
+              "created_at": "2025-07-21T13:07:48.844353",
+              "updated_at": "2025-07-21T13:07:48.844353"
+            }
+          ],
+          "created_at": "2025-07-21T13:05:00.317317",
+          "completed": false
+        },
+        {
+          "id": "plan_20250721_130748",
+          "name": "Code Improvements",
+          "tasks": [],
+          "created_at": "2025-07-21T13:07:48.836355",
+          "completed": false
+        },
+        {
+          "id": "plan_20250721_130748",
+          "name": "UserPreference Improvements",
+          "tasks": [],
+          "created_at": "2025-07-21T13:07:48.841389",
+          "completed": false
+        }
+      ],
+      "created_at": "2025-07-21T13:04:06.823581",
+      "updated_at": "2025-07-21T13:04:06.823581"
     }
   ],
-  "current_flow_id": "flow_20250721_125658"
+  "current_flow_id": "flow_20250721_130406"
 }

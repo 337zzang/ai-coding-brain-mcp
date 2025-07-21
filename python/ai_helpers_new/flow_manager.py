@@ -9,6 +9,7 @@ from datetime import datetime
 
 from .models import Plan, Task
 from .workflow_manager import WorkflowManager
+from .context_manager import ContextManager
 
 
 
@@ -30,6 +31,9 @@ class FlowManager:
 
         # 데이터 로드
         self._load_data()
+        
+        # Context Manager 초기화
+        self.context_manager = ContextManager(self)
 
     def _ensure_directories(self):
         """필요한 디렉토리 생성"""
@@ -289,10 +293,40 @@ class FlowManager:
             return self._show_flow_status()
 
         # 추가 명령어는 Phase 4에서 구현
+        # /flow context 명령어
+        if command.startswith('/flow context'):
+            return self._handle_context_command(command)
+
         return {'ok': False, 'error': 'Phase 4에서 구현 예정'}
 
     def _show_flow_status(self) -> Dict:
         """Flow 상태 표시"""
+
+
+    def _handle_context_command(self, command: str) -> Dict:
+        """context 명령어 처리"""
+        parts = command.split()
+
+        if len(parts) == 2 or parts[2] == 'save':
+            # 컨텍스트 저장
+            result = self.save_context()
+            if result['ok']:
+                return {'ok': True, 'data': '✅ 컨텍스트 저장 완료', 'type': 'context_command'}
+            else:
+                return result
+
+        elif parts[2] == 'load' or parts[2] == 'summary':
+            # 세션 요약
+            summary = self.load_context_summary()
+            return {'ok': True, 'data': summary, 'type': 'context_summary'}
+
+        elif len(parts) > 3 and parts[2] == 'decision':
+            # 결정사항 추가
+            decision = ' '.join(parts[3:])
+            self.context_manager.add_decision(decision)
+            return {'ok': True, 'data': f'✅ 결정사항 추가: {decision}', 'type': 'context_command'}
+
+        return {'ok': False, 'error': '알 수 없는 context 명령어'}
         active_plan = self.get_active_plan()
 
         if not active_plan:
@@ -310,6 +344,16 @@ class FlowManager:
 💡 다음 명령어: /flow help (Phase 4에서 구현)"""
 
         return {'ok': True, 'data': status, 'type': 'flow_status'}
+
+
+    def save_context(self) -> Dict:
+        """컨텍스트 저장 (공개 메서드)"""
+        return self.context_manager.save_context()
+
+    def load_context_summary(self) -> str:
+        """세션 요약 로드"""
+        return self.context_manager.generate_session_summary()
+
 
 
     # === Phase 2 추가 메서드 ===

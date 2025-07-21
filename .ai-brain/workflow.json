@@ -1,102 +1,186 @@
 {
-  "version": "3.0",
-  "project_name": "ai-coding-brain-mcp",
-  "created_at": "2025-07-20T08:35:02.489951",
-  "updated_at": "2025-07-20T20:21:37.223749",
-  "tasks": [
-    {
-      "id": "task_001",
-      "name": "워크플로우 시스템 리팩토링 완료",
-      "description": "",
-      "status": "done",
-      "created_at": "2025-07-20T08:35:30.803122",
-      "updated_at": "2025-07-20T08:37:12.307587"
+  "version": "2.0",
+  "metadata": {},
+  "plans": {
+    "plan_b091e6f8": {
+      "id": "plan_b091e6f8",
+      "title": "Flow v2 테스트",
+      "objective": "Phase 1 검증",
+      "status": "active",
+      "tasks": [
+        {
+          "id": "task_1edabb81",
+          "title": "모델 정의",
+          "description": "",
+          "status": "todo",
+          "plan_id": "plan_b091e6f8",
+          "dependencies": [],
+          "created_at": "2025-07-21T10:09:40.765292",
+          "updated_at": "2025-07-21T10:09:40.766292",
+          "completed_at": null,
+          "assigned_to": null,
+          "tags": []
+        },
+        {
+          "id": "task_f2b9ab8d",
+          "title": "FlowManager 구현",
+          "description": "",
+          "status": "completed",
+          "plan_id": "plan_b091e6f8",
+          "dependencies": [],
+          "created_at": "2025-07-21T10:09:40.767294",
+          "updated_at": "2025-07-21T10:09:40.768293",
+          "completed_at": "2025-07-21T10:09:40.768293",
+          "assigned_to": null,
+          "tags": []
+        }
+      ],
+      "created_at": "2025-07-21T10:09:40.765292",
+      "updated_at": "2025-07-21T10:09:40.767294",
+      "completed_at": null,
+      "priority": 0,
+      "progress": 50.0,
+      "milestones": [],
+      "tags": []
     },
-    {
-      "id": "task_002",
-      "name": "불필요한 파일 삭제",
-      "description": "",
-      "status": "done",
-      "created_at": "2025-07-20T08:35:30.806808",
-      "updated_at": "2025-07-20T08:37:59.076382"
+    "plan_8cd24b3e": {
+      "id": "plan_8cd24b3e",
+      "title": "Backend API",
+      "objective": "REST API 구현",
+      "status": "active",
+      "tasks": [
+        {
+          "id": "task_d80db4d8",
+          "title": "모델 클래스 작성",
+          "description": "",
+          "status": "in_progress",
+          "plan_id": "plan_8cd24b3e",
+          "dependencies": [
+            "task_3e50dc57"
+          ],
+          "created_at": "2025-07-21T10:11:51.993542",
+          "updated_at": "2025-07-21T10:11:52.008539",
+          "completed_at": null,
+          "assigned_to": null,
+          "tags": []
+        },
+        {
+          "id": "task_0dd79f1b",
+          "title": "API 엔드포인트 구현",
+          "description": "",
+          "status": "todo",
+          "plan_id": "plan_8cd24b3e",
+          "dependencies": [
+            "task_d80db4d8"
+          ],
+          "created_at": "2025-07-21T10:11:51.993542",
+          "updated_at": "2025-07-21T10:11:52.005540",
+          "completed_at": null,
+          "assigned_to": null,
+          "tags": []
+        },
+        {
+          "id": "task_e03cdee3",
+          "title": "테스트 작성",
+          "description": "",
+          "status": "todo",
+          "plan_id": "plan_8cd24b3e",
+          "dependencies": [
+            "task_0dd79f1b"
+          ],
+          "created_at": "2025-07-21T10:11:51.994541",
+          "updated_at": "2025-07-21T10:11:52.006539",
+          "completed_at": null,
+          "assigned_to": null,
+          "tags": []
+        }
+      ],
+      "created_at": "2025-07-21T10:11:51.990541",
+      "updated_at": "2025-07-21T10:11:52.009539",
+      "completed_at": null,
+      "priority": 2,
+      "progress": 0.0,
+      "milestones": [],
+      "tags": [
+        "backend",
+        "api"
+      ]
     },
-    {
-      "id": "task_003",
-      "name": "최종 테스트 및 문서화",
-      "description": "",
-      "status": "done",
-      "created_at": "2025-07-20T08:35:30.810040",
-      "updated_at": "2025-07-20T08:40:54.805567"
+    "plan_779b6cbb": {
+      "id": "plan_779b6cbb",
+      "title": "Frontend UI",
+      "objective": "React 앱 개발",
+      "status": "active",
+      "tasks": [],
+      "created_at": "2025-07-21T10:11:51.991541",
+      "updated_at": "2025-07-21T10:11:51.991541",
+      "completed_at": null,
+      "priority": 1,
+      "progress": 0.0,
+      "milestones": [],
+      "tags": [
+        "frontend",
+        "react"
+      ]
     },
-    {
-      "id": "task_004",
-      "name": "WorkflowManager 에러 수정",
-      "description": "",
-      "status": "completed",
-      "created_at": "2025-07-20T20:16:36.499359",
-      "updated_at": "2025-07-20T20:21:05.670576",
-      "summary": "ID 처리 개선 완료"
+    "plan_d2cb4e42": {
+      "id": "plan_d2cb4e42",
+      "title": "Database",
+      "objective": "스키마 설계",
+      "status": "active",
+      "tasks": [
+        {
+          "id": "task_3e50dc57",
+          "title": "DB 스키마 설계",
+          "description": "",
+          "status": "completed",
+          "plan_id": "plan_d2cb4e42",
+          "dependencies": [],
+          "created_at": "2025-07-21T10:11:51.992542",
+          "updated_at": "2025-07-21T10:11:52.007539",
+          "completed_at": "2025-07-21T10:11:52.007539",
+          "assigned_to": null,
+          "tags": []
+        }
+      ],
+      "created_at": "2025-07-21T10:11:51.991541",
+      "updated_at": "2025-07-21T10:11:52.009539",
+      "completed_at": null,
+      "priority": 2,
+      "progress": 100.0,
+      "milestones": [],
+      "tags": [
+        "backend",
+        "db"
+      ]
     },
-    {
-      "id": "task_005",
-      "name": "테스트용 태스크",
-      "description": "",
-      "status": "in_progress",
-      "created_at": "2025-07-20T20:20:49.194464",
-      "updated_at": "2025-07-20T20:21:37.178053"
-    },
-    {
-      "id": "task_006",
-      "name": "테스트 태스크 6",
-      "description": "",
-      "status": "todo",
-      "created_at": "2025-07-20T20:21:37.187055",
-      "updated_at": "2025-07-20T20:21:37.187055"
-    },
-    {
-      "id": "task_007",
-      "name": "테스트 태스크 7",
-      "description": "",
-      "status": "todo",
-      "created_at": "2025-07-20T20:21:37.193048",
-      "updated_at": "2025-07-20T20:21:37.193048"
-    },
-    {
-      "id": "task_008",
-      "name": "테스트 태스크 8",
-      "description": "",
-      "status": "todo",
-      "created_at": "2025-07-20T20:21:37.199055",
-      "updated_at": "2025-07-20T20:21:37.199055"
-    },
-    {
-      "id": "task_009",
-      "name": "테스트 태스크 9",
-      "description": "",
-      "status": "todo",
-      "created_at": "2025-07-20T20:21:37.205058",
-      "updated_at": "2025-07-20T20:21:37.205058"
-    },
-    {
-      "id": "task_010",
-      "name": "테스트 태스크 10",
-      "description": "",
-      "status": "todo",
-      "created_at": "2025-07-20T20:21:37.211170",
-      "updated_at": "2025-07-20T20:21:37.211170"
-    },
-    {
-      "id": "task_011",
-      "name": "테스트 태스크 11",
-      "description": "",
-      "status": "in_progress",
-      "created_at": "2025-07-20T20:21:37.217165",
-      "updated_at": "2025-07-20T20:21:37.223749"
+    "plan_18295ad5": {
+      "id": "plan_18295ad5",
+      "title": "테스트 계획",
+      "objective": "Phase 1 완료 확인",
+      "status": "active",
+      "tasks": [
+        {
+          "id": "task_a9b06770",
+          "title": "테스트 작업",
+          "description": "",
+          "status": "todo",
+          "plan_id": "plan_18295ad5",
+          "dependencies": [],
+          "created_at": "2025-07-21T10:20:48.618632",
+          "updated_at": "2025-07-21T10:20:48.618632",
+          "completed_at": null,
+          "assigned_to": null,
+          "tags": []
+        }
+      ],
+      "created_at": "2025-07-21T10:20:48.617632",
+      "updated_at": "2025-07-21T10:20:48.618632",
+      "completed_at": null,
+      "priority": 0,
+      "progress": 0.0,
+      "milestones": [],
+      "tags": []
     }
-  ],
-  "current_task": null,
-  "context": {
-    "last_files": [],
-    "last_command": ""
   }
 }

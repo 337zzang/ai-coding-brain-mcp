@@ -28,40 +28,6 @@ except ImportError as e:
 class FlowManagerUnified(FlowManagerWithContext):
     """통합된 Flow + Workflow 매니저"""
 
-    def __init__(self, project_root: str = None):
-        """초기화"""
-        # 기본 속성 초기화
-        self.current_flow = None
-        self.context_manager = None
-        self.flows = []
-        self._has_flow_v2 = _has_flow_v2
-
-        # Flow v2 초기화 시도
-        if self._has_flow_v2:
-            try:
-                super().__init__()
-                print("✅ Flow v2 기능 활성화됨")
-            except Exception as e:
-                print(f"⚠️ Flow v2 초기화 부분 실패: {e}")
-                self._has_flow_v2 = False
-
-        # 프로젝트 설정
-        self.project_root = project_root or os.getcwd()
-        self.data_dir = os.path.join(self.project_root, '.ai-brain')
-        self._ensure_directories()
-
-        # 명령어 핸들러 초기화
-        self._command_handlers = self._init_command_handlers()
-
-        # 레거시 데이터 마이그레이션
-        self._migrate_legacy_data()
-        # Flow 데이터 로드
-        self._load_flows()
-
-        # 기본 flow가 없으면 생성
-        if self._has_flow_v2 and not self.current_flow:
-            self._create_default_flow()
-
     def _ensure_directories(self):
         """필요한 디렉토리 생성"""
         os.makedirs(self.data_dir, exist_ok=True)
@@ -813,45 +779,99 @@ Context 시스템:
         except Exception as e:
             return {'ok': False, 'error': f'Session 명령 실패: {str(e)}'}
 
-    def _show_history(self, args: str) -> Dict[str, Any]:
-        """히스토리 표시"""
-        if not self.context_manager:
-            return {'ok': False, 'error': 'Context 시스템이 활성화되지 않았습니다'}
-
+    def _show_history(self, args: str = '') -> Dict[str, Any]:
+        """작업 히스토리 표시"""
         try:
-            count = int(args) if args else 10
-            history = self.context_manager.get_history(count)
+            n = 10
+            if args:
+                try:
+                    n = int(args.strip())
+                except ValueError:
+                    return {'ok': False, 'error': '히스토리 개수는 숫자여야 합니다'}
+
+            history = []
+
+            # Context Manager가 있으면 summary에서 히스토리 가져오기
+            if self.context_manager:
+                try:
+                    summary = self.context_manager.get_summary()
+                    for entry in summary.get('history', [])[-n:]:
+                        timestamp = entry.get('timestamp', 'Unknown')[:16]
+                        action = entry.get('action', 'Unknown')
+                        history.append(f"📝 {timestamp} - {action}")
+                except:
+                    pass
+
+            # workflow_history.json 확인
+            history_file = os.path.join(self.data_dir, 'workflow_history.json')
+            if os.path.exists(history_file):
+                try:
+                    with open(history_file, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        for entry in data.get('history', [])[-n:]:
+                            timestamp = entry.get('timestamp', 'Unknown')[:16]
+                            action = entry.get('action', 'Unknown')
+                            history.append(f"📜 {timestamp} - {action}")
+                except:
+                    pass
 
             if not history:
-                return {'ok': True, 'data': '히스토리가 없습니다'}
+                return {'ok': True, 'data': '작업 히스토리가 없습니다'}
 
-            lines = [f"📜 최근 {count}개 히스토리:"]
-            for i, item in enumerate(history, 1):
-                lines.append(f"{i}. {item}")
+            result = f"📜 최근 {min(len(history), n)}개 작업 히스토리:\n"
+            result += "\n".join(history[-n:])
 
-            return {'ok': True, 'data': '\n'.join(lines)}
+            return {'ok': True, 'data': result}
 
         except Exception as e:
             return {'ok': False, 'error': f'히스토리 조회 실패: {str(e)}'}
 
-    def _show_stats(self, args: str) -> Dict[str, Any]:
+    def _show_stats(self, args: str = '') -> Dict[str, Any]:
         """통계 정보 표시"""
-        if not self.context_manager:
-            return {'ok': False, 'error': 'Context 시스템이 활성화되지 않았습니다'}
-
         try:
-            stats = self.context_manager.get_stats()
+            stats = {
+                'total_flows': len(self.list_flows()),
+                'current_flow': self.current_flow.get('name', 'None') if self.current_flow else 'None',
+                'total_plans': 0,
+                'total_tasks': 0,
+                'completed_tasks': 0,
+                'in_progress_tasks': 0,
+                'completion_rate': 0.0
+            }
 
-            lines = ["📊 통계 정보:"]
-            for key, value in stats.items():
-                lines.append(f"{key}: {value}")
+            if self.current_flow:
+                plans = self.current_flow.get('plans', [])
+                stats['total_plans'] = len(plans)
 
-            return {'ok': True, 'data': '\n'.join(lines)}
+                for plan in plans:
+                    tasks = plan.get('tasks', [])
+                    stats['total_tasks'] += len(tasks)
+
+                    for task in tasks:
+                        status = task.get('status', 'todo')
+                        if status == 'completed':
+                            stats['completed_tasks'] += 1
+                        elif status == 'in_progress':
+                            stats['in_progress_tasks'] += 1
+
+                if stats['total_tasks'] > 0:
+                    stats['completion_rate'] = (stats['completed_tasks'] / stats['total_tasks']) * 100
+
+            result = "📊 프로젝트 통계\n" + "=" * 40 + "\n"
+            result += f"전체 Flows: {stats['total_flows']}개\n"
+            result += f"현재 Flow: {stats['current_flow']}\n"
+            result += f"Plans: {stats['total_plans']}개\n"
+            result += f"\n📌 Task 통계\n"
+            result += f"  - 전체: {stats['total_tasks']}개\n"
+            result += f"  - 완료: {stats['completed_tasks']}개\n"
+            result += f"  - 진행중: {stats['in_progress_tasks']}개\n"
+            result += f"  - 대기: {stats['total_tasks'] - stats['completed_tasks'] - stats['in_progress_tasks']}개\n"
+            result += f"\n완료율: {stats['completion_rate']:.1f}%"
+
+            return {'ok': True, 'data': result}
 
         except Exception as e:
             return {'ok': False, 'error': f'통계 조회 실패: {str(e)}'}
-
-    # === 호환성 메서드 ===
 
     def wf_command(self, command: str, verbose: bool = False) -> Dict[str, Any]:
         """기존 WorkflowManager와의 호환성을 위한 메서드"""

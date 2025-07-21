@@ -508,6 +508,10 @@ Context 시스템:
             'switch': lambda: self._switch_flow(flow_args),
             'delete': lambda: self._delete_flow(flow_args),
             'status': lambda: self._handle_flow_command(''),  # 현재 flow 정보
+            'plan': lambda: self._handle_plan_subcommand(flow_args),
+            'task': lambda: self._handle_task_subcommand(flow_args),
+            'summary': lambda: self.get_summary(),
+            'export': lambda: self._export_flow_data(),
         }
 
         handler = flow_handlers.get(subcmd)
@@ -516,6 +520,106 @@ Context 시스템:
 
         return {'ok': False, 'error': f'Unknown flow command: {subcmd}'}
 
+    def _handle_plan_subcommand(self, args: str) -> Dict[str, Any]:
+        """Plan 하위 명령어 처리"""
+        if not self.current_flow:
+            return {'ok': False, 'error': '현재 flow가 선택되지 않았습니다'}
+
+        if not args:
+            return {'ok': False, 'error': 'Plan 명령어가 필요합니다. 예: /flow plan add <name>'}
+
+        parts = args.split(maxsplit=1)
+        action = parts[0].lower()
+        plan_args = parts[1] if len(parts) > 1 else ''
+
+        if action == 'add':
+            if not plan_args:
+                return {'ok': False, 'error': 'Plan 이름이 필요합니다'}
+            plan = self.create_plan(plan_args)
+            if 'id' in plan:
+                return {'ok': True, 'data': f'Plan 생성됨: {plan["id"]} - {plan["name"]}'}
+            return {'ok': False, 'error': 'Plan 생성 실패'}
+
+        elif action == 'list':
+            plans = self.current_flow.get('plans', [])
+            if not plans:
+                return {'ok': True, 'data': 'Plan이 없습니다'}
+
+            result = "📋 Plan 목록:\n"
+            for plan in plans:
+                task_count = len(plan.get('tasks', []))
+                result += f"- {plan['id']}: {plan['name']} ({task_count} tasks)\n"
+            return {'ok': True, 'data': result.strip()}
+
+        return {'ok': False, 'error': f'Unknown plan action: {action}'}
+
+    def _handle_task_subcommand(self, args: str) -> Dict[str, Any]:
+        """Task 하위 명령어 처리"""
+        if not self.current_flow:
+            return {'ok': False, 'error': '현재 flow가 선택되지 않았습니다'}
+
+        if not args:
+            return {'ok': False, 'error': 'Task 명령어가 필요합니다. 예: /flow task add <plan_id> <name>'}
+
+        parts = args.split(maxsplit=2)
+        action = parts[0].lower()
+
+        if action == 'add':
+            if len(parts) < 3:
+                return {'ok': False, 'error': 'Usage: /flow task add <plan_id> <task_name>'}
+
+            plan_id = parts[1]
+            task_name = parts[2]
+
+            task = self.create_task(plan_id, task_name)
+            if 'id' in task:
+                return {'ok': True, 'data': f'Task 생성됨: {task["id"]} - {task["name"]}'}
+            return {'ok': False, 'error': 'Task 생성 실패'}
+
+        elif action == 'list':
+            result = "📌 Task 목록:\n"
+            plans = self.current_flow.get('plans', [])
+            for plan in plans:
+                result += f"\nPlan: {plan['name']}\n"
+                tasks = plan.get('tasks', [])
+                if tasks:
+                    for task in tasks:
+                        status = task.get('status', 'todo')
+                        icon = '✅' if status == 'completed' else '🔄' if status == 'in_progress' else '⏳'
+                        result += f"  {icon} {task['id']}: {task['name']}\n"
+                else:
+                    result += "  (No tasks)\n"
+            return {'ok': True, 'data': result.strip()}
+
+        return {'ok': False, 'error': f'Unknown task action: {action}'}
+
+    def _export_flow_data(self) -> Dict[str, Any]:
+        """현재 flow 데이터 내보내기"""
+        if not self.current_flow:
+            return {'ok': False, 'error': '현재 flow가 선택되지 않았습니다'}
+
+        import json
+        try:
+            export_data = {
+                'flow': self.current_flow,
+                'exported_at': datetime.now().isoformat(),
+                'stats': self.get_current_flow_status()
+            }
+
+            # 파일로 저장
+            filename = f"flow_export_{self.current_flow['id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            export_path = os.path.join(self.data_dir, 'exports', filename)
+
+            # exports 디렉토리 생성
+            os.makedirs(os.path.dirname(export_path), exist_ok=True)
+
+            with open(export_path, 'w', encoding='utf-8') as f:
+                json.dump(export_data, f, ensure_ascii=False, indent=2)
+
+            return {'ok': True, 'data': f'Flow exported to: {filename}'}
+
+        except Exception as e:
+            return {'ok': False, 'error': f'Export failed: {str(e)}'}
     def _list_flows(self) -> Dict[str, Any]:
         """Flow 목록 표시"""
         try:

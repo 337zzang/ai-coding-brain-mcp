@@ -153,3 +153,8 @@ get_current_project.raw = _get_current_project_raw
 print("[AI Helpers v2.1] API standardization completed")
 
 from .context_manager import ContextManager
+
+
+# Flow Manager Unified
+from .flow_manager_unified import FlowManagerUnified
+from .flow_manager_unified import FlowManagerUnified as WorkflowManager  # 호환성

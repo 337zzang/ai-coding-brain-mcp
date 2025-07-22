@@ -45,7 +45,7 @@ class FlowManagerUnified(FlowManagerWithContext):
             # 현재 프로젝트의 .ai-brain/flows.json 사용
             storage_path = os.path.join(os.getcwd(), ".ai-brain", "flows.json")
         
-        self.repository = JsonFlowRepository(storage_path)
+        self.repository = JsonFlowRepository(storage_path=storage_path)
         self.flow_service = FlowService(self.repository)
         self.plan_service = PlanService(self.flow_service)
         self.task_service = TaskService(self.plan_service)

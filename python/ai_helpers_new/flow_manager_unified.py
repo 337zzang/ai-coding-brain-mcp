@@ -7,10 +7,14 @@ import json
 import sys
 import copy
 from datetime import datetime
+import time
+import uuid
+import shutil
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 # Flow Project v2 import 시도
+from enum import Enum
 _has_flow_v2 = False
 try:
     # 경로 추가
@@ -26,8 +30,67 @@ except ImportError as e:
         def __init__(self):
             pass
 
-
 # Task context 기본 구조
+
+class TaskStatus(Enum):
+    """Task 상태 정의"""
+    TODO = "todo"
+    IN_PROGRESS = "in_progress"
+    REVIEWING = "reviewing"
+    APPROVED = "approved"
+    COMPLETED = "completed"
+    BLOCKED = "blocked"
+    CANCELLED = "cancelled"
+
+    @classmethod
+    def from_string(cls, status_str: str):
+        """문자열에서 TaskStatus로 변환"""
+        status_map = {
+            'todo': cls.TODO,
+            'in_progress': cls.IN_PROGRESS,
+            'in-progress': cls.IN_PROGRESS,
+            'reviewing': cls.REVIEWING,
+            'approved': cls.APPROVED,
+            'completed': cls.COMPLETED,
+            'done': cls.COMPLETED,
+            'blocked': cls.BLOCKED,
+            'cancelled': cls.CANCELLED,
+            'canceled': cls.CANCELLED,
+        }
+        return status_map.get(status_str.lower(), cls.TODO)
+
+    def __str__(self):
+        return self.value
+
+# Task 상태 전환 규칙
+TASK_TRANSITIONS = {
+    TaskStatus.TODO: {
+        TaskStatus.IN_PROGRESS,
+        TaskStatus.CANCELLED
+    },
+    TaskStatus.IN_PROGRESS: {
+        TaskStatus.REVIEWING,
+        TaskStatus.BLOCKED,
+        TaskStatus.TODO,
+        TaskStatus.CANCELLED
+    },
+    TaskStatus.REVIEWING: {
+        TaskStatus.APPROVED,
+        TaskStatus.IN_PROGRESS,
+        TaskStatus.BLOCKED
+    },
+    TaskStatus.APPROVED: {
+        TaskStatus.COMPLETED
+    },
+    TaskStatus.BLOCKED: {
+        TaskStatus.IN_PROGRESS,
+        TaskStatus.TODO,
+        TaskStatus.CANCELLED
+    },
+    TaskStatus.COMPLETED: set(),
+    TaskStatus.CANCELLED: set(),
+}
+
 DEFAULT_CONTEXT = {
     "plan": "",
     "actions": [],     # 작업 이력: [{"time": ISO8601, "action": str, "result": str}]
@@ -51,6 +114,7 @@ class FlowManagerUnified(FlowManagerWithContext):
         self.context_manager = None
         self.flows = []
         self._has_flow_v2 = _has_flow_v2
+        self.debug = False  # 디버그 모드 (기본값: False)
 
         # Flow v2 초기화 시도
         if self._has_flow_v2:
@@ -77,6 +141,20 @@ class FlowManagerUnified(FlowManagerWithContext):
         # 기본 flow가 없으면 생성
         if self._has_flow_v2 and not self.current_flow:
             self._create_default_flow()
+
+    def _generate_unique_id(self, prefix: str) -> str:
+        """
+        나노초 타임스탬프 + UUID 기반 고유 ID 생성
+
+        Args:
+            prefix: ID 접두사 (예: 'plan', 'task')
+
+        Returns:
+            str: 고유 ID (예: 'plan_1753143613422185100_eac7a3')
+        """
+        ns = time.time_ns()  # 나노초 타임스탬프
+        rand = uuid.uuid4().hex[:6]  # 6자리 랜덤 문자열
+        return f"{prefix}_{ns}_{rand}"
 
     def _ensure_directories(self):
         """필요한 디렉토리 생성"""
@@ -230,7 +308,6 @@ class FlowManagerUnified(FlowManagerWithContext):
                 similar.append(command)
         return similar[:3]
 
-
     # === 도움말 및 상태 ===
 
     def _show_help(self, args: str) -> Dict[str, Any]:
@@ -356,7 +433,6 @@ Context 시스템:
 
         return {'ok': True, 'data': '\n'.join(report_lines)}
 
-
     # === 태스크 관리 ===
 
     def _handle_task_command(self, args: str) -> Dict[str, Any]:
@@ -377,7 +453,23 @@ Context 시스템:
 
     def _add_task(self, args: str) -> Dict[str, Any]:
         """태스크 추가"""
-        name = args.strip() if args else 'New Task'
+        # args 파싱: plan_id name 형식 지원
+        parts = args.strip().split(maxsplit=1) if args else []
+
+        # plan_id가 있는지 확인
+        plan_id = None
+        name = 'New Task'
+
+        if len(parts) >= 2 and parts[0].startswith('plan_'):
+            # plan_id name 형식
+            plan_id = parts[0]
+            name = parts[1]
+        elif len(parts) == 1:
+            # name만 있는 경우
+            name = parts[0]
+        elif args:
+            # 전체를 name으로 사용
+            name = args.strip()
 
         try:
             if self._has_flow_v2:
@@ -390,9 +482,9 @@ Context 시스템:
                     if hasattr(self, 'create_plan'):
                         self.create_plan('Default Plan')
 
-                # 태스크 생성
+                # 태스크 생성 (plan_id 전달)
                 if hasattr(self, 'create_task'):
-                    task = self.create_task(name)
+                    task = self.create_task(name, plan_id=plan_id)
                     return {'ok': True, 'data': {
                         'id': task.get('id'),
                         'name': task.get('name'),
@@ -400,7 +492,7 @@ Context 시스템:
                     }}
             else:
                 # 기본 모드 (Flow v2 없을 때)
-                task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                task_id = self._generate_unique_id("task")
                 return {'ok': True, 'data': {
                     'id': task_id,
                     'name': name,
@@ -512,10 +604,162 @@ Context 시스템:
 
                 return {'ok': True, 'data': f'태스크 {task_id} 완료됨'}
             else:
+
+                # Plan 자동 완료 체크
+                try:
+                    # Task가 속한 Plan 찾기
+                    for plan in self.current_flow.get("plans", []):
+                        for task in plan.get("tasks", []):
+                            if task.get("id") == task_id:
+                                self._check_plan_auto_complete(plan["id"])
+                                break
+                except:
+                    pass  # 자동 완료 체크 실패는 무시
+
                 return {'ok': True, 'data': f'태스크 {task_id} 완료됨 (기본 모드)'}
 
         except Exception as e:
             return {'ok': False, 'error': f'태스크 완료 실패: {str(e)}'}
+
+
+
+    def _complete_plan(self, plan_id: str) -> Dict[str, Any]:
+        """Plan을 완료 상태로 변경"""
+        try:
+            # 현재 Flow 확인
+            if not self.current_flow:
+                return {'ok': False, 'error': '활성 Flow가 없습니다'}
+
+            # Plan 존재 확인
+            plan_found = False
+            for plan in self.current_flow['plans']:
+                if plan['id'] == plan_id:
+                    plan_found = True
+                    # completed 필드 업데이트
+                    plan['completed'] = True
+                    plan['completed_at'] = datetime.now().isoformat()
+
+                    # 모든 하위 Task도 완료 처리
+                    if 'tasks' in plan:
+                        for task in plan['tasks']:
+                            if task.get('status') != 'completed':
+                                task['status'] = 'completed'
+                                task['completed_at'] = datetime.now().isoformat()
+
+                    # 저장
+                    self._save_flows()
+
+                    # Context Manager에 이벤트 기록
+                    if self.context_manager:
+                        try:
+                            self.context_manager.add_event('plan_completed', {
+                                'plan_id': plan_id,
+                                'plan_name': plan['name'],
+                                'task_count': len(plan.get('tasks', [])),
+                                'completed_at': plan.get('completed_at', ''),
+                                'auto_completed_tasks': True
+                            })
+                        except:
+                            pass  # Context Manager 오류는 무시
+
+                    # 알림 메시지
+                    task_count = len(plan.get('tasks', []))
+                    return {
+                        'ok': True, 
+                        'data': f"✅ Plan '{plan['name']}' 완료! (하위 {task_count}개 Task 모두 완료 처리)"
+                    }
+
+            if not plan_found:
+                return {'ok': False, 'error': f'Plan을 찾을 수 없습니다: {plan_id}'}
+
+        except Exception as e:
+            return {'ok': False, 'error': f'Plan 완료 처리 중 오류: {str(e)}'}
+
+
+
+    def _reopen_plan(self, plan_id: str) -> Dict[str, Any]:
+        """Plan을 다시 열기 (완료 상태 취소)"""
+        try:
+            # 현재 Flow 확인
+            if not self.current_flow:
+                return {'ok': False, 'error': '활성 Flow가 없습니다'}
+
+            # Plan 찾기
+            plan_found = False
+            for plan in self.current_flow['plans']:
+                if plan['id'] == plan_id:
+                    plan_found = True
+                    # completed 필드 업데이트
+                    plan['completed'] = False
+                    if 'completed_at' in plan:
+                        del plan['completed_at']
+
+                    # 저장
+                    self._save_flows()
+
+                    # 알림 메시지 (Task 상태는 유지)
+                    return {
+                        'ok': True, 
+                        'data': f"📂 Plan '{plan['name']}' 다시 열림 (Task 상태는 유지됨)"
+                    }
+
+            if not plan_found:
+                return {'ok': False, 'error': f'Plan을 찾을 수 없습니다: {plan_id}'}
+
+        except Exception as e:
+            return {'ok': False, 'error': f'Plan 재오픈 중 오류: {str(e)}'}
+
+
+
+    def _check_plan_auto_complete(self, plan_id: str) -> bool:
+        """모든 Task가 완료되면 Plan 자동 완료"""
+        try:
+            if not self.current_flow:
+                return False
+
+            for plan in self.current_flow['plans']:
+                if plan['id'] == plan_id:
+                    # 이미 완료된 Plan은 건너뛰기
+                    if plan.get('completed', False):
+                        return False
+
+                    # 모든 Task가 완료되었는지 확인
+                    tasks = plan.get('tasks', [])
+                    if not tasks:  # Task가 없으면 자동 완료하지 않음
+                        return False
+
+                    all_completed = all(
+                        task.get('status') in ['completed', 'reviewing'] 
+                        for task in tasks
+                    )
+
+                    if all_completed:
+                        # Plan 자동 완료
+                        result = self._complete_plan(plan_id)
+                        if result['ok']:
+                            print(f"🎉 모든 Task 완료! {result['data']}")
+
+                            # Context Manager에 자동 완료 이벤트 기록
+                            if self.context_manager:
+                                try:
+                                    self.context_manager.add_event('plan_auto_completed', {
+                                        'plan_id': plan_id,
+                                        'plan_name': plan['name'],
+                                        'trigger': 'all_tasks_completed',
+                                        'task_count': len(tasks)
+                                    })
+                                except:
+                                    pass
+
+                            return True
+
+                    return False
+
+            return False
+
+        except Exception as e:
+            print(f"자동 완료 체크 중 오류: {e}")
+            return False
 
     def _skip_task(self, args: str) -> Dict[str, Any]:
         """태스크 건너뛰기"""
@@ -533,7 +777,6 @@ Context 시스템:
 
         except Exception as e:
             return {'ok': False, 'error': f'태스크 건너뛰기 실패: {str(e)}'}
-
 
     # === Flow v2 명령어 ===
 
@@ -581,7 +824,6 @@ Context 시스템:
             return handler()
 
         return {'ok': False, 'error': f'Unknown flow command: {subcmd}'}
-
 
     def _switch_to_project(self, project_name: str) -> Dict[str, Any]:
         """프로젝트명으로 직접 전환하고 관련 작업 수행"""
@@ -879,7 +1121,7 @@ Context 시스템:
             return {'ok': False, 'error': 'Flow v2가 활성화되지 않았습니다'}
 
         if not args:
-            return {'ok': False, 'error': 'Usage: /plan <add|list>'}
+            return {'ok': False, 'error': 'Usage: /plan <add|list|complete|reopen|status>'}
 
         parts = args.split(maxsplit=1)
         subcmd = parts[0].lower()
@@ -889,8 +1131,18 @@ Context 시스템:
             return self._add_plan(plan_args)
         elif subcmd == 'list':
             return self._list_plans()
+        elif subcmd == 'complete':
+            if not plan_args:
+                return {'ok': False, 'error': 'Usage: /plan complete <plan_id>'}
+            return self._complete_plan(plan_args.strip())
+        elif subcmd == 'reopen':
+            if not plan_args:
+                return {'ok': False, 'error': 'Usage: /plan reopen <plan_id>'}
+            return self._reopen_plan(plan_args.strip())
+        elif subcmd == 'status':
+            return self._show_plan_status()
         else:
-            return {'ok': False, 'error': f'Unknown plan command: {subcmd}'}
+            return {'ok': False, 'error': f'Unknown plan command: {subcmd}. Available: add, list, complete, reopen, status'}
 
     def _add_plan(self, name: str) -> Dict[str, Any]:
         """Plan 추가"""
@@ -927,6 +1179,58 @@ Context 시스템:
             return {'ok': False, 'error': f'Plan 목록 조회 실패: {str(e)}'}
 
     # === Context 명령어 ===
+
+
+
+    def _show_plan_status(self) -> Dict[str, Any]:
+        """모든 Plan의 완료 상태 표시"""
+        try:
+            if not self.current_flow:
+                return {'ok': False, 'error': '활성 Flow가 없습니다'}
+
+            plans = self.current_flow.get('plans', [])
+            if not plans:
+                return {'ok': True, 'data': 'Plan이 없습니다'}
+
+            output = ['📊 Plan 완료 상태:\n']
+            total_plans = len(plans)
+            completed_plans = 0
+
+            for plan in plans:
+                plan_id = plan['id']
+                plan_name = plan['name']
+                is_completed = plan.get('completed', False)
+                tasks = plan.get('tasks', [])
+
+                # Task 완료 상태 계산
+                if tasks:
+                    completed_tasks = sum(1 for task in tasks if task.get('status') == 'completed')
+                    total_tasks = len(tasks)
+                else:
+                    completed_tasks = 0
+                    total_tasks = 0
+
+                # 아이콘 설정
+                if is_completed:
+                    icon = '✅'
+                    completed_plans += 1
+                elif total_tasks > 0 and completed_tasks == total_tasks:
+                    icon = '🔄'  # 모든 Task 완료했지만 Plan은 미완료
+                else:
+                    icon = '⏳'
+
+                output.append(f'{icon} {plan_name}')
+                output.append(f'   ID: {plan_id[:30]}...')
+                output.append(f'   Tasks: {completed_tasks}/{total_tasks} 완료')
+                output.append('')
+
+            # 전체 통계
+            output.append(f'\n📈 전체 진행률: {completed_plans}/{total_plans} Plans 완료 ({completed_plans/total_plans*100:.1f}%)')
+
+            return {'ok': True, 'data': '\n'.join(output)}
+
+        except Exception as e:
+            return {'ok': False, 'error': f'Plan 상태 표시 중 오류: {str(e)}'}
 
     def _handle_context_command(self, args: str) -> Dict[str, Any]:
         """Context 명령어 처리"""
@@ -1033,14 +1337,11 @@ Context 시스템:
         """기존 WorkflowManager와의 호환성을 위한 메서드"""
         return self.process_command(command)
 
-
-
-
     # === Flow v2 핵심 메서드 직접 구현 ===
 
     def create_flow(self, name: str) -> Dict[str, Any]:
         """새 Flow 생성"""
-        flow_id = f"flow_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        flow_id = self._generate_unique_id("flow")
         new_flow = {
             'id': flow_id,
             'name': name,
@@ -1102,7 +1403,7 @@ Context 시스템:
             if not target_flow:
                 raise ValueError(f"Flow not found: {flow_id}")
 
-        plan_id = f"plan_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        plan_id = self._generate_unique_id("plan")
         new_plan = {
             'id': plan_id,
             'name': name,
@@ -1144,7 +1445,7 @@ Context 시스템:
             else:
                 raise ValueError("No plan available")
 
-        task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:19]}"
+        task_id = self._generate_unique_id("task")
         new_task = {
             'id': task_id,
             'name': name,
@@ -1253,6 +1554,44 @@ Context 시스템:
 
         return {'ok': True, 'data': action_entry}
 
+    def _validate_task_transition(self, current_status: TaskStatus, new_status: TaskStatus) -> bool:
+        """Task 상태 전환이 유효한지 검증"""
+        if current_status == new_status:
+            return True
+        allowed_transitions = TASK_TRANSITIONS.get(current_status, set())
+        return new_status in allowed_transitions
+
+    def update_task_status_validated(self, task_id: str, new_status: str, force: bool = False) -> Dict[str, Any]:
+        """검증된 Task 상태 업데이트"""
+        if not self.current_flow:
+            return {'ok': False, 'error': 'No active flow'}
+
+        # 새 상태를 TaskStatus로 변환
+        try:
+            new_status_enum = TaskStatus.from_string(new_status)
+        except:
+            return {'ok': False, 'error': f'Invalid status: {new_status}'}
+
+        # Task 찾기 및 처리
+        for plan in self.current_flow.get('plans', []):
+            for task in plan.get('tasks', []):
+                if task['id'] == task_id:
+                    current_status_str = task.get('status', 'todo')
+                    current_status_enum = TaskStatus.from_string(current_status_str)
+
+                    # 전환 검증
+                    if not force and not self._validate_task_transition(current_status_enum, new_status_enum):
+                        allowed = [s.value for s in TASK_TRANSITIONS.get(current_status_enum, set())]
+                        return {'ok': False, 'error': f'Invalid transition', 'allowed': allowed}
+
+                    # 상태 업데이트
+                    task['status'] = new_status_enum.value
+                    task['updated_at'] = datetime.now().isoformat()
+                    self._save_flows()
+
+                    return {'ok': True, 'data': {'task_id': task_id, 'new_status': new_status_enum.value}}
+
+        return {'ok': False, 'error': f'Task not found: {task_id}'}
 
     def update_task_status(self, task_id: str, status: str) -> bool:
         """Task 상태 업데이트"""
@@ -1268,6 +1607,15 @@ Context 시스템:
                     return True
 
         return False
+
+
+
+    def update_plan_status(self, plan_id: str, completed: bool = True) -> Dict[str, Any]:
+        """Plan 상태 업데이트 (public API)"""
+        if completed:
+            return self._complete_plan(plan_id)
+        else:
+            return self._reopen_plan(plan_id)
 
     def get_current_flow_status(self) -> Dict[str, Any]:
         """현재 Flow 상태 반환"""
@@ -1293,43 +1641,133 @@ Context 시스템:
 
     # === 저장/로드 메서드 ===
 
-    def _save_flows(self):
-        """Flow 데이터 저장"""
-        flows_path = os.path.join(self.data_dir, 'flows.json')
-        try:
-            with open(flows_path, 'w', encoding='utf-8') as f:
-                json.dump({
-                    'flows': self.flows,
-                    'current_flow_id': self.current_flow['id'] if self.current_flow else None
-                }, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            print(f"⚠️ Flow 저장 실패: {e}")
-
     def _load_flows(self):
-        """Flow 데이터 로드"""
+        """
+        flows.json에서 flow 데이터 로드
+
+        flows.json 구조:
+        {
+            "flows": [...],
+            "current_flow_id": "...",
+            "last_saved": "...",
+            "version": "2.0"
+        }
+        """
         flows_path = os.path.join(self.data_dir, 'flows.json')
+
         if os.path.exists(flows_path):
             try:
                 with open(flows_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     self.flows = data.get('flows', [])
+
+                    # current_flow_id가 있으면 해당 flow 찾기
                     current_id = data.get('current_flow_id')
                     if current_id:
                         for flow in self.flows:
                             if flow['id'] == current_id:
                                 self.current_flow = flow
                                 break
+
+                    # Debug 로그 (debug 속성 확인)
+                    if hasattr(self, 'debug') and self.debug:
+                        print(f"✅ Flow 데이터 로드 완료: {len(self.flows)}개 flow")
+
             except Exception as e:
-                print(f"⚠️ Flow 로드 실패: {e}")
+                if hasattr(self, 'debug') and self.debug:
+                    print(f'❌ Flow 데이터 로드 실패: {e}')
                 self.flows = []
+        else:
+            # flows.json이 없으면 빈 리스트로 초기화
+            self.flows = []
+            if hasattr(self, 'debug') and self.debug:
+                print("📝 flows.json 파일이 없습니다. 새로 생성됩니다.")
 
-    def _save_current_flow_id(self, flow_id: str):
-        """현재 Flow ID 저장"""
-        current_flow_path = os.path.join(self.data_dir, 'current_flow.json')
+
+    def _save_current_flow_id(self, flow_id: str) -> bool:
+        """
+        현재 flow ID를 flows.json에 저장
+
+        Args:
+            flow_id: 저장할 flow ID
+
+        Returns:
+            bool: 저장 성공 여부
+        """
         try:
-            with open(current_flow_path, 'w') as f:
-                json.dump({'current_flow_id': flow_id}, f)
-        except:
-            pass
+            flows_path = os.path.join(self.data_dir, 'flows.json')
 
+            # 기존 데이터 읽기
+            if os.path.exists(flows_path):
+                with open(flows_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            else:
+                data = {'flows': self.flows}
+
+            # current_flow_id 업데이트
+            data['current_flow_id'] = flow_id
+            data['last_saved'] = datetime.now().isoformat()
+
+            # 저장
+            with open(flows_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+
+            return True
+
+        except Exception as e:
+            if hasattr(self, 'debug') and self.debug:
+                print(f"❌ current_flow_id 저장 실패: {e}")
+            return False
+
+
+
+
+    def _save_flows(self, force: bool = False) -> bool:
+        """
+        Flow 데이터 저장 (개선된 버전)
+
+        Args:
+            force: 강제 저장 여부
+
+        Returns:
+            bool: 저장 성공 여부
+        """
+        flows_path = os.path.join(self.data_dir, 'flows.json')
+
+        try:
+            # 저장할 데이터 준비
+            save_data = {
+                'flows': self.flows,
+                'current_flow_id': self.current_flow['id'] if self.current_flow else None,
+                'last_saved': datetime.now().isoformat(),
+                'version': '2.0'
+            }
+
+            # 임시 파일에 먼저 저장
+            temp_path = flows_path + '.tmp'
+            with open(temp_path, 'w', encoding='utf-8') as f:
+                json.dump(save_data, f, indent=2, ensure_ascii=False)
+
+            # 원자적 이동
+            shutil.move(temp_path, flows_path)
+
+            # 로깅
+            if hasattr(self, '_last_save_time'):
+                elapsed = (datetime.now() - self._last_save_time).total_seconds()
+                if elapsed > 60:
+                    print(f"💾 Flows 자동 저장 ({len(self.flows)} flows)")
+
+            self._last_save_time = datetime.now()
+            self._save_error_count = 0
+            return True
+
+        except Exception as e:
+            if not hasattr(self, '_save_error_count'):
+                self._save_error_count = 0
+            self._save_error_count += 1
+
+            if self._save_error_count <= 3:
+                print(f"⚠️ Flow 저장 실패 ({self._save_error_count}회): {e}")
+
+            return False
 # 클래스 종료

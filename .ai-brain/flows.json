@@ -403,60 +403,12 @@
       "plans": [
         {
           "id": "plan_20250721_161610",
-          "name": "프로젝트 상태 분석",
+          "name": "테스트 및 검증",
           "tasks": [
             {
-              "id": "task_20250721_161741_449",
-              "name": "plan_1",
-              "description": "현재 모듈 구조 분석",
-              "status": "todo",
-              "created_at": "2025-07-21T16:17:41.449581",
-              "updated_at": "2025-07-21T16:17:41.449581"
-            },
-            {
-              "id": "task_20250721_161741_450",
-              "name": "plan_1",
-              "description": "의존성 관계 파악",
-              "status": "todo",
-              "created_at": "2025-07-21T16:17:41.451564",
-              "updated_at": "2025-07-21T16:17:41.451564"
-            },
-            {
-              "id": "task_20250721_161741_452",
-              "name": "plan_1",
-              "description": "성능 병목 지점 확인",
-              "status": "todo",
-              "created_at": "2025-07-21T16:17:41.452563",
-              "updated_at": "2025-07-21T16:17:41.452563"
-            },
-            {
-              "id": "task_20250721_161741_453",
-              "name": "plan_2",
-              "description": "중복 코드 제거",
-              "status": "todo",
-              "created_at": "2025-07-21T16:17:41.453564",
-              "updated_at": "2025-07-21T16:17:41.453564"
-            },
-            {
-              "id": "task_20250721_161741_454",
-              "name": "plan_2",
-              "description": "모듈 분리 및 정리",
-              "status": "todo",
-              "created_at": "2025-07-21T16:17:41.454564",
-              "updated_at": "2025-07-21T16:17:41.454564"
-            },
-            {
-              "id": "task_20250721_161741_455",
-              "name": "plan_2",
-              "description": "에러 처리 개선",
-              "status": "todo",
-              "created_at": "2025-07-21T16:17:41.455564",
-              "updated_at": "2025-07-21T16:17:41.455564"
-            },
-            {
-              "id": "task_20250721_163348_227",
-              "name": "test",
-              "description": "컨텍스트_테스트_Task '새로운 context 필드가 잘 추가되는지 테스트'",
+              "id": "task_1753149270171987400_4994d4",
+              "name": "plan_20250721_161610",
+              "description": "\"Proxy 초기화 테스트\"",
               "status": "todo",
               "context": {
                 "plan": "",
@@ -470,15 +422,15 @@
                 },
                 "errors": []
               },
-              "created_at": "2025-07-21T16:33:48.227940",
-              "updated_at": "2025-07-21T16:33:48.227940",
+              "created_at": "2025-07-22T10:54:30.172987",
+              "updated_at": "2025-07-22T10:54:30.172987",
               "started_at": null,
               "completed_at": null
             },
             {
-              "id": "task_20250721_163432_927",
-              "name": "test2",
-              "description": "'두번째_컨텍스트_테스트' '정말로 context가 추가되는지 확인'",
+              "id": "task_1753149270177985800_fd3b2c",
+              "name": "plan_20250721_161610",
+              "description": "\"세션 복구 시나리오 테스트\"",
               "status": "todo",
               "context": {
                 "plan": "",
@@ -492,38 +444,171 @@
                 },
                 "errors": []
               },
-              "created_at": "2025-07-21T16:34:32.927929",
-              "updated_at": "2025-07-21T16:34:32.927929",
+              "created_at": "2025-07-22T10:54:30.177985",
+              "updated_at": "2025-07-22T10:54:30.177985",
               "started_at": null,
               "completed_at": null
             },
             {
-              "id": "task_20250721_163548_198",
-              "name": "Context 테스트",
-              "description": "update_task_context와 add_task_action 테스트",
+              "id": "task_1753149270182987500_b084e5",
+              "name": "plan_20250721_161610",
+              "description": "\"Task 자동화 동작 검증\"",
               "status": "todo",
               "context": {
-                "plan": "1. 초기 설정\n2. 테스트 실행\n3. 결과 검증",
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T10:54:30.182987",
+              "updated_at": "2025-07-22T10:54:30.182987",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_1753149270187988000_7dd387",
+              "name": "plan_20250721_161610",
+              "description": "\"통합 테스트 및 문서화\"",
+              "status": "todo",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T10:54:30.187988",
+              "updated_at": "2025-07-22T10:54:30.187988",
+              "started_at": null,
+              "completed_at": null
+            }
+          ],
+          "created_at": "2025-07-21T16:16:10.344632",
+          "completed": false
+        },
+        {
+          "id": "plan_1753149197141390900_b925ef",
+          "name": "Flow 시스템 코드 분석 및 문제 진단",
+          "tasks": [
+            {
+              "id": "task_1753149270115139700_0e088a",
+              "name": "plan_1753149197141390900_b925ef",
+              "description": "\"Proxy 패턴 초기화 문제 분석\"",
+              "status": "completed",
+              "context": {
+                "plan": "\n1. Proxy 초기화 경로 추적\n2. wf 함수 실행 흐름 분석  \n3. 문제 재현 및 검증\n4. 근본 원인 문서화\n",
                 "actions": [
                   {
-                    "time": "2025-07-21T16:35:48.204673",
-                    "action": "테스트 환경 준비",
-                    "result": "Python 환경 및 의존성 확인 완료"
+                    "time": "2025-07-22T10:59:29.557094",
+                    "action": "wf 함수 실행 흐름 분석 완료",
+                    "result": "Lazy initialization 패턴 확인, 첫 호출 시 타이밍 이슈 가능성"
                   },
                   {
-                    "time": "2025-07-21T16:35:48.205671",
-                    "action": "모듈 스캔 시작",
-                    "result": "15개 파일 발견",
-                    "meta": {
-                      "files_found": 15,
-                      "scan_time": "2.3s"
-                    }
+                    "time": "2025-07-22T11:00:07.807877",
+                    "action": "문제 재현 및 검증 완료",
+                    "result": "모듈 로드 시 자동 초기화 부재가 근본 원인"
+                  },
+                  {
+                    "time": "2025-07-22T11:00:47.849177",
+                    "action": "근본 원인 문서화 완료",
+                    "result": "분석 보고서 생성: docs/flow-improvement/proxy_init_analysis.md"
                   }
                 ],
                 "results": {
-                  "test_started": true,
-                  "progress": 25
+                  "root_cause": "모듈 임포트 시 자동 초기화 코드 부재",
+                  "timing_issue": "FlowManagerUnified 생성은 정상이나 context 로드 지연",
+                  "solution": "__init__.py에 자동 초기화 코드 추가 필요"
                 },
+                "docs": [],
+                "files": {
+                  "analyzed": [
+                    "python/ai_helpers_new/__init__.py",
+                    "python/ai_helpers_new/flow_proxy.py",
+                    "python/ai_helpers_new/flow_manager_unified.py"
+                  ],
+                  "created": [
+                    "docs/flow-improvement/proxy_init_analysis.md"
+                  ],
+                  "modified": []
+                },
+                "errors": [],
+                "report": "\n## 분석 완료: Proxy 패턴 초기화 문제\n\n### 근본 원인\n- 모듈 임포트 시 자동 초기화 코드 부재\n- Lazy initialization의 타이밍 이슈\n\n### 해결 방안\n1. __init__.py에 자동 초기화 코드 추가\n2. wf 함수에 초기화 체크 로직 추가\n3. 세션 복구 메커니즘 구현\n\n### 생성된 문서\n- docs/flow-improvement/proxy_init_analysis.md\n"
+              },
+              "created_at": "2025-07-22T10:54:30.115139",
+              "updated_at": "2025-07-22T10:57:22.120353",
+              "started_at": "2025-07-22T10:58:39.671060",
+              "completed_at": "2025-07-22T11:00:47.849177",
+              "approved_at": "2025-07-22T11:30:03.851769"
+            },
+            {
+              "id": "task_1753149270120138500_0ecf37",
+              "name": "plan_1753149197141390900_b925ef",
+              "description": "\"Context 연결 끊김 원인 조사\"",
+              "status": "completed",
+              "context": {
+                "plan": "\n1. ContextManager 초기화 과정 분석\n2. Context 데이터 로드 시점 추적\n3. Process Command 실행 경로 분석\n4. 실제 문제 재현 및 해결책 도출\n",
+                "actions": [
+                  {
+                    "time": "2025-07-22T11:34:15.566071",
+                    "action": "Context 데이터 로드 시점 추적 완료",
+                    "result": "context_manager가 초기화되지 않음, get_context 메서드 구현 필요"
+                  },
+                  {
+                    "time": "2025-07-22T11:34:55.728701",
+                    "action": "실제 문제 재현 및 해결책 도출 완료",
+                    "result": "context_manager 초기화 누락이 핵심 원인, 3가지 즉시 수정안 제시"
+                  }
+                ],
+                "results": {
+                  "root_cause": "context_manager가 생성되지 않음",
+                  "missing_implementations": [
+                    "FlowManagerWithContext.__init__",
+                    "get_context() 메서드",
+                    "context_manager 자동 초기화"
+                  ],
+                  "solution": "3가지 즉시 수정 필요 항목 도출"
+                },
+                "docs": [],
+                "files": {
+                  "analyzed": [
+                    "python/ai_helpers_new/flow_manager_unified.py",
+                    "python/ai_helpers_new/context_manager.py",
+                    ".ai-brain/context.json"
+                  ],
+                  "created": [
+                    "docs/flow-improvement/context_connection_analysis.md"
+                  ],
+                  "modified": []
+                },
+                "errors": [],
+                "report": "\n## 분석 완료: Context 연결 끊김 원인\n\n### 핵심 발견\n1. FlowManagerWithContext.__init__()가 비어있음 (pass만 있음)\n2. context_manager = None으로 설정되고 실제 생성 안됨\n3. get_context() 메서드 미구현\n\n### 즉시 수정 필요\n1. FlowManagerWithContext.__init__ 구현 (긴급)\n2. get_context() 메서드 추가 (높음)\n3. context_manager 자동 생성 로직 (중간)\n\n### 생성된 문서\n- docs/flow-improvement/context_connection_analysis.md\n"
+              },
+              "created_at": "2025-07-22T10:54:30.120138",
+              "updated_at": "2025-07-22T11:31:54.448028",
+              "started_at": "2025-07-22T11:33:17.907348",
+              "completed_at": "2025-07-22T11:35:36.574921",
+              "approved_at": "2025-07-22T11:36:57.091547"
+            },
+            {
+              "id": "task_1753149270125138300_33aae4",
+              "name": "plan_1753149197141390900_b925ef",
+              "description": "\"Task 자동화 미작동 현황 파악\"",
+              "status": "todo",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
                 "docs": [],
                 "files": {
                   "analyzed": [],
@@ -532,15 +617,355 @@
                 },
                 "errors": []
               },
-              "created_at": "2025-07-21T16:35:48.198671",
-              "updated_at": "2025-07-21T16:35:48.205671",
+              "created_at": "2025-07-22T10:54:30.125138",
+              "updated_at": "2025-07-22T10:54:30.125138",
               "started_at": null,
               "completed_at": null
             },
             {
-              "id": "task_20250721_171113_530",
-              "name": "plan_20250721_161610",
-              "description": "\"워크플로우 테스트 Task\"",
+              "id": "task_1753149270129168300_127ba0",
+              "name": "plan_1753149197141390900_b925ef",
+              "description": "\"개선 우선순위 결정\"",
+              "status": "todo",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T10:54:30.129168",
+              "updated_at": "2025-07-22T10:54:30.129168",
+              "started_at": null,
+              "completed_at": null
+            }
+          ],
+          "created_at": "2025-07-22T10:53:17.141390",
+          "completed": false
+        },
+        {
+          "id": "plan_1753149197147424500_ec406e",
+          "name": "Proxy 초기화 및 세션 관리 개선",
+          "tasks": [
+            {
+              "id": "task_1753149270134139300_f45339",
+              "name": "plan_1753149197147424500_ec406e",
+              "description": "\"__init__.py 자동 초기화 구현\"",
+              "status": "completed",
+              "context": {
+                "plan": "\n1. 현재 __init__.py 구조 분석\n2. 자동 초기화 함수 작성\n3. 코드 추가 및 테스트\n4. 검증 및 문서화\n",
+                "actions": [
+                  {
+                    "time": "2025-07-22T11:39:34.068484",
+                    "action": "자동 초기화 함수 작성 완료",
+                    "result": "_auto_init_proxy() 함수와 호출 코드 준비"
+                  },
+                  {
+                    "time": "2025-07-22T11:39:34.069516",
+                    "action": "__init__.py 파일 업데이트 완료",
+                    "result": "1109 bytes 추가됨"
+                  },
+                  {
+                    "time": "2025-07-22T11:39:54.355252",
+                    "action": "자동 초기화 테스트 시작",
+                    "result": "REPL 재시작 예정"
+                  },
+                  {
+                    "time": "2025-07-22T11:41:21.823182",
+                    "action": "검증 및 문서화 완료",
+                    "result": "자동 초기화 성공적으로 구현 및 테스트 완료"
+                  }
+                ],
+                "results": {
+                  "implementation": "자동 초기화 함수 추가 완료",
+                  "test_result": "모든 테스트 통과",
+                  "improvement": "첫 wf() 호출부터 정상 작동"
+                },
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [
+                    "docs/flow-improvement/proxy_auto_init_implementation.md",
+                    "backups/__init__.py.backup_20250722_113900"
+                  ],
+                  "modified": [
+                    "python/ai_helpers_new/__init__.py"
+                  ]
+                },
+                "errors": [],
+                "report": "\n## 구현 완료: __init__.py 자동 초기화\n\n### 구현 내용\n- _auto_init_proxy() 함수 추가\n- 모듈 로드 시 자동 실행\n- 1,109 bytes 코드 추가\n\n### 테스트 결과\n- 모듈 임포트 시 자동 초기화 ✅\n- 첫 wf() 호출 정상 작동 ✅\n- 17개 flows 정상 로드 ✅\n\n### 개선 효과\n- 첫 호출부터 정상 작동\n- 수동 초기화 불필요\n\n### 생성/수정 파일\n- python/ai_helpers_new/__init__.py (수정)\n- docs/flow-improvement/proxy_auto_init_implementation.md (생성)\n"
+              },
+              "created_at": "2025-07-22T10:54:30.134139",
+              "updated_at": "2025-07-22T11:37:48.947143",
+              "started_at": "2025-07-22T11:39:00.949040",
+              "completed_at": "2025-07-22T11:41:21.823182",
+              "approved_at": "2025-07-22T12:05:24.577675"
+            },
+            {
+              "id": "task_1753149270137858200_0d9d2e",
+              "name": "plan_1753149197147424500_ec406e",
+              "description": "\"wf 함수 강화 (초기화 체크)\"",
+              "status": "completed",
+              "context": {
+                "plan": "\n1. 현재 wf 함수 분석\n2. 초기화 체크 로직 설계\n3. 코드 수정 및 적용\n4. 테스트 및 검증\n",
+                "actions": [
+                  {
+                    "time": "2025-07-22T12:08:22.900324",
+                    "action": "현재 wf 함수 분석 완료",
+                    "result": "Line 174부터 시작, 초기화 체크 로직 없음 확인"
+                  },
+                  {
+                    "time": "2025-07-22T12:08:54.833461",
+                    "action": "초기화 체크 로직 설계 완료",
+                    "result": "proxy._current None 체크 및 자동 초기화 로직 추가"
+                  },
+                  {
+                    "time": "2025-07-22T12:08:54.834462",
+                    "action": "코드 수정 및 적용 완료",
+                    "result": "wf 함수에 초기화 체크 로직 추가 (5줄 추가)"
+                  },
+                  {
+                    "time": "2025-07-22T12:10:26.655370",
+                    "action": "테스트 및 검증 완료",
+                    "result": "모든 테스트 시나리오 통과, wf 함수 강화 성공"
+                  }
+                ],
+                "results": {
+                  "implementation": "초기화 체크 로직 추가 완료",
+                  "test_result": "모든 테스트 통과",
+                  "improvement": "이중 안전장치로 안정성 향상"
+                },
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [
+                    "docs/flow-improvement/wf_function_enhancement.md",
+                    "backups/__init__.py.backup_20250722_120822_wf"
+                  ],
+                  "modified": [
+                    "python/ai_helpers_new/__init__.py"
+                  ]
+                },
+                "errors": [],
+                "report": "\n## 구현 완료: wf 함수 강화\n\n### 구현 내용\n- proxy._current None 체크 추가\n- 자동 초기화 로직 구현\n- verbose 모드 지원\n\n### 테스트 결과\n- None 상태에서 자동 초기화 ✅\n- verbose 모드 메시지 출력 ✅\n- 정상 상태 유지 ✅\n\n### 개선 효과\n- 이중 안전장치 구현\n- 첫 호출부터 안정적 작동\n"
+              },
+              "created_at": "2025-07-22T10:54:30.137858",
+              "updated_at": "2025-07-22T12:05:38.521452",
+              "started_at": "2025-07-22T12:08:22.895323",
+              "completed_at": "2025-07-22T12:10:26.655370",
+              "approved_at": "2025-07-22T12:11:40.979293"
+            },
+            {
+              "id": "task_1753149270142842200_f1d4ea",
+              "name": "plan_1753149197147424500_ec406e",
+              "description": "\"세션 복구 메커니즘 구현\"",
+              "status": "todo",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T10:54:30.142842",
+              "updated_at": "2025-07-22T10:54:30.142842",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_1753149270147881900_37c6d4",
+              "name": "plan_1753149197147424500_ec406e",
+              "description": "\"Proxy 싱글톤 패턴 개선\"",
+              "status": "todo",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T10:54:30.147881",
+              "updated_at": "2025-07-22T10:54:30.147881",
+              "started_at": null,
+              "completed_at": null
+            }
+          ],
+          "created_at": "2025-07-22T10:53:17.147424",
+          "completed": false
+        },
+        {
+          "id": "plan_1753149197152419900_871c49",
+          "name": "Task 상태 전환 자동화 구현",
+          "tasks": [
+            {
+              "id": "task_1753149270152847000_0fe27f",
+              "name": "plan_1753149197152419900_871c49",
+              "description": "\"planning 상태 템플릿 자동 생성\"",
+              "status": "todo",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T10:54:30.152847",
+              "updated_at": "2025-07-22T10:54:30.152847",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_1753149270157019400_83802e",
+              "name": "plan_1753149197152419900_871c49",
+              "description": "\"reviewing 상태 보고서 자동 생성\"",
+              "status": "todo",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T10:54:30.157019",
+              "updated_at": "2025-07-22T10:54:30.157019",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_1753149270162000900_aeca8f",
+              "name": "plan_1753149197152419900_871c49",
+              "description": "\"상태 전환 트리거 구현\"",
+              "status": "todo",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T10:54:30.162000",
+              "updated_at": "2025-07-22T10:54:30.162000",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_1753149270167988500_2dd810",
+              "name": "plan_1753149197152419900_871c49",
+              "description": "\"이벤트 기반 아키텍처 설계\"",
+              "status": "todo",
+              "context": {
+                "plan": "",
+                "actions": [
+                  {
+                    "time": "2025-07-22T10:59:02.776880",
+                    "action": "Proxy 초기화 경로 추적 완료",
+                    "result": "자동 초기화 코드 부재 확인, 싱글톤 패턴은 정상 작동"
+                  },
+                  {
+                    "time": "2025-07-22T11:33:46.774524",
+                    "action": "ContextManager 초기화 과정 분석 완료",
+                    "result": "FlowManagerWithContext.__init__ 비어있음, context_manager 생성 코드 부재 가능성"
+                  }
+                ],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T10:54:30.167988",
+              "updated_at": "2025-07-22T10:54:30.167988",
+              "started_at": null,
+              "completed_at": null
+            }
+          ],
+          "created_at": "2025-07-22T10:53:17.152419",
+          "completed": false
+        },
+        {
+          "id": "plan_1753149197156392900_e806d8",
+          "name": "테스트 및 검증",
+          "tasks": [],
+          "created_at": "2025-07-22T10:53:17.156392",
+          "completed": false
+        }
+      ],
+      "created_at": "2025-07-21T16:15:50.706641",
+      "updated_at": "2025-07-21T16:15:50.706641"
+    },
+    {
+      "id": "flow_20250722_094329",
+      "name": "ai-coding-brain-mcp",
+      "plans": [],
+      "created_at": "2025-07-22T09:43:29.175052",
+      "updated_at": "2025-07-22T09:43:29.175052"
+    },
+    {
+      "id": "flow_20250722_094542",
+      "name": "test-flow",
+      "plans": [],
+      "created_at": "2025-07-22T09:45:42.123004",
+      "updated_at": "2025-07-22T09:45:42.123004"
+    },
+    {
+      "id": "flow_20250722_094602",
+      "name": "test-flow-v2",
+      "plans": [],
+      "created_at": "2025-07-22T09:46:02.025125",
+      "updated_at": "2025-07-22T09:46:02.025125"
+    },
+    {
+      "id": "flow_1753145194437051700_762444",
+      "name": "test-autosave",
+      "plans": [],
+      "created_at": "2025-07-22T09:46:34.437051",
+      "updated_at": "2025-07-22T09:46:34.437051"
+    },
+    {
+      "id": "flow_1753154586977862100_c3e45d",
+      "name": "plan-complete-feature",
+      "plans": [
+        {
+          "id": "plan_1753154586984860900_8cbeef",
+          "name": "Plan 완료 기능 구현",
+          "tasks": [
+            {
+              "id": "task_1753154600982570700_acc1f9",
+              "name": "plan_1753154586984860900_8cbeef",
+              "description": "Plan 완료 메서드 구현",
               "status": "completed",
               "context": {
                 "plan": "",
@@ -554,15 +979,147 @@
                 },
                 "errors": []
               },
-              "created_at": "2025-07-21T17:11:13.530829",
-              "updated_at": "2025-07-21T17:11:33.492734",
+              "created_at": "2025-07-22T12:23:20.982570",
+              "updated_at": "2025-07-22T12:23:37.759765",
+              "started_at": null,
+              "completed_at": "2025-07-22T12:32:57.095508"
+            },
+            {
+              "id": "task_1753154600989570900_cb31fd",
+              "name": "plan_1753154586984860900_8cbeef",
+              "description": "자동 완료 기능 구현",
+              "status": "completed",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:23:20.989570",
+              "updated_at": "2025-07-22T12:30:23.717029",
+              "started_at": null,
+              "completed_at": "2025-07-22T12:32:57.095508"
+            },
+            {
+              "id": "task_1753154600994539800_76d613",
+              "name": "plan_1753154586984860900_8cbeef",
+              "description": "명령어 핸들러 추가",
+              "status": "completed",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:23:20.995570",
+              "updated_at": "2025-07-22T12:30:41.363729",
+              "started_at": null,
+              "completed_at": "2025-07-22T12:32:57.095508"
+            },
+            {
+              "id": "task_1753154601001543200_92ab6c",
+              "name": "plan_1753154586984860900_8cbeef",
+              "description": "UI 개선 및 테스트",
+              "status": "completed",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:23:21.001543",
+              "updated_at": "2025-07-22T12:31:53.912996",
+              "started_at": null,
+              "completed_at": "2025-07-22T12:32:57.095508"
+            },
+            {
+              "id": "task_1753155441494889700_eb5820",
+              "name": "plan_1753155412950033500_89c6aa 자동 완료 기능 디버깅 및 수정",
+              "description": "",
+              "status": "planning",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:37:21.494889",
+              "updated_at": "2025-07-22T12:37:21.513883",
               "started_at": null,
               "completed_at": null
             },
             {
-              "id": "task_20250721_171326_934",
-              "name": "plan_20250721_161610",
-              "description": "\"워크플로우 테스트 Task 2\"",
+              "id": "task_1753155441500884100_58a18c",
+              "name": "plan_1753155412950033500_89c6aa _handle_plan_subcommand 통합",
+              "description": "",
+              "status": "planning",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:37:21.500884",
+              "updated_at": "2025-07-22T12:41:19.700364",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_1753155441507884000_0bb435",
+              "name": "plan_1753155412950033500_89c6aa Plan 완료 시 Context Manager 로그 추가",
+              "description": "",
+              "status": "planning",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:37:21.507884",
+              "updated_at": "2025-07-22T12:42:13.794509",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_1753155484745293500_5d146a",
+              "name": "plan_1753155484738261700_7f158d 테스트 Task 1",
+              "description": "",
               "status": "reviewing",
               "context": {
                 "plan": "",
@@ -576,40 +1133,272 @@
                 },
                 "errors": []
               },
-              "created_at": "2025-07-21T17:13:26.934215",
-              "updated_at": "2025-07-21T17:13:54.922000",
+              "created_at": "2025-07-22T12:38:04.745293",
+              "updated_at": "2025-07-22T12:38:25.824270",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_1753155484755260500_67fc7d",
+              "name": "plan_1753155484738261700_7f158d 테스트 Task 2",
+              "description": "",
+              "status": "reviewing",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:38:04.755260",
+              "updated_at": "2025-07-22T12:38:25.831269",
               "started_at": null,
               "completed_at": null
             }
           ],
-          "created_at": "2025-07-21T16:16:10.342633",
+          "created_at": "2025-07-22T12:23:06.984860",
           "completed": false
         },
         {
-          "id": "plan_20250721_161610",
-          "name": "코드 구조 개선",
+          "id": "plan_1753155412950033500_89c6aa",
+          "name": "Plan 완료 기능 개선사항",
           "tasks": [],
-          "created_at": "2025-07-21T16:16:10.343633",
+          "created_at": "2025-07-22T12:36:52.950033",
           "completed": false
         },
         {
-          "id": "plan_20250721_161610",
-          "name": "테스트 및 검증",
+          "id": "plan_1753155484738261700_7f158d",
+          "name": "자동 완료 재테스트",
           "tasks": [],
-          "created_at": "2025-07-21T16:16:10.344632",
+          "created_at": "2025-07-22T12:38:04.738261",
           "completed": false
         },
         {
-          "id": "plan_20250721_161610",
-          "name": "문서화",
-          "tasks": [],
-          "created_at": "2025-07-21T16:16:10.345632",
+          "id": "plan_1753155605545194800_77f9d0",
+          "name": "자동완료 최종테스트",
+          "tasks": [
+            {
+              "id": "task_1753155605554198200_6a576d",
+              "name": "최종테스트 Task 1",
+              "description": "",
+              "status": "reviewing",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:40:05.554198",
+              "updated_at": "2025-07-22T12:40:24.303746",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_1753155605561197200_aeadc5",
+              "name": "최종테스트 Task 2",
+              "description": "",
+              "status": "reviewing",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:40:05.561197",
+              "updated_at": "2025-07-22T12:40:24.310743",
+              "started_at": null,
+              "completed_at": null
+            }
+          ],
+          "created_at": "2025-07-22T12:40:05.545194",
+          "completed": false
+        },
+        {
+          "id": "plan_1753155809766554800_1098fa",
+          "name": "최종 통합 테스트",
+          "tasks": [
+            {
+              "id": "task_1753155809774557400_ba5091",
+              "name": "통합테스트 Task 1",
+              "description": "",
+              "status": "reviewing",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:43:29.774557",
+              "updated_at": "2025-07-22T12:44:05.360661",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_1753155809784554600_4a606d",
+              "name": "통합테스트 Task 2",
+              "description": "",
+              "status": "reviewing",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:43:29.784554",
+              "updated_at": "2025-07-22T12:44:05.367630",
+              "started_at": null,
+              "completed_at": null
+            }
+          ],
+          "created_at": "2025-07-22T12:43:29.766554",
           "completed": false
         }
       ],
-      "created_at": "2025-07-21T16:15:50.706641",
-      "updated_at": "2025-07-21T16:15:50.706641"
+      "created_at": "2025-07-22T12:23:06.978862",
+      "updated_at": "2025-07-22T12:23:06.978862"
+    },
+    {
+      "id": "flow_1753155189781190200_654e6f",
+      "name": "auto-complete-test",
+      "plans": [
+        {
+          "id": "plan_1753155204845563800_2c2efc",
+          "name": "자동 완료 테스트 Plan",
+          "tasks": [
+            {
+              "id": "task_1753155240879866600_ffa770",
+              "name": "plan_1753155218393928700_7258d8 테스트 Task 1",
+              "description": "",
+              "status": "todo",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:34:00.879866",
+              "updated_at": "2025-07-22T12:34:00.879866",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_1753155254038189200_874421",
+              "name": "plan_1753155218393928700_7258d8 테스트 Task 1",
+              "description": "",
+              "status": "reviewing",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:34:14.038189",
+              "updated_at": "2025-07-22T12:34:34.448648",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_1753155254045204400_009ef4",
+              "name": "plan_1753155218393928700_7258d8 테스트 Task 2",
+              "description": "",
+              "status": "reviewing",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:34:14.045204",
+              "updated_at": "2025-07-22T12:34:34.454615",
+              "started_at": null,
+              "completed_at": null
+            },
+            {
+              "id": "task_1753155254051188400_c35cbf",
+              "name": "plan_1753155218393928700_7258d8 테스트 Task 3",
+              "description": "",
+              "status": "reviewing",
+              "context": {
+                "plan": "",
+                "actions": [],
+                "results": {},
+                "docs": [],
+                "files": {
+                  "analyzed": [],
+                  "created": [],
+                  "modified": []
+                },
+                "errors": []
+              },
+              "created_at": "2025-07-22T12:34:14.051188",
+              "updated_at": "2025-07-22T12:34:34.460615",
+              "started_at": null,
+              "completed_at": null
+            }
+          ],
+          "created_at": "2025-07-22T12:33:24.845563",
+          "completed": false
+        },
+        {
+          "id": "plan_1753155218393928700_7258d8",
+          "name": "자동 완료 테스트 Plan",
+          "tasks": [],
+          "created_at": "2025-07-22T12:33:38.393928",
+          "completed": false
+        }
+      ],
+      "created_at": "2025-07-22T12:33:09.781190",
+      "updated_at": "2025-07-22T12:33:09.781190"
     }
   ],
-  "current_flow_id": "flow_20250721_161550"
+  "current_flow_id": "flow_1753154586977862100_c3e45d",
+  "last_saved": "2025-07-22T12:44:05.367630",
+  "version": "2.0"
 }

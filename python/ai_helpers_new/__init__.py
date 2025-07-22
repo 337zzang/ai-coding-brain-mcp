@@ -175,6 +175,13 @@ def wf(command: str, verbose: bool = False) -> Dict[str, Any]:
     """워크플로우 명령 실행 - 현재 프로젝트의 매니저 사용"""
     try:
         proxy = get_workflow_proxy()
+
+        # 초기화 확인 및 자동 복구 (추가된 부분)
+        if proxy._current is None:
+            proxy.switch()
+            if verbose:
+                print("ℹ️ FlowManagerUnified 자동 초기화됨")
+
         manager = proxy.current()
 
         if hasattr(manager, 'process_command'):
@@ -188,8 +195,6 @@ def wf(command: str, verbose: bool = False) -> Dict[str, Any]:
             return {'ok': False, 'error': 'process_command 메서드가 없습니다'}
     except Exception as e:
         return {'ok': False, 'error': str(e)}
-
-
 # fp 함수 재정의 (프로젝트 전환 시 Flow 매니저도 전환)
 def fp(project_name_or_path: str = "", verbose: bool = True) -> Dict[str, Any]:
     """
@@ -313,3 +318,40 @@ def fp(project_name_or_path: str = "", verbose: bool = True) -> Dict[str, Any]:
             'success': False,
             'error': str(e)
         }
+
+# ============================================================================
+# Flow Proxy 자동 초기화
+# ============================================================================
+def _auto_init_proxy():
+    """
+    모듈 로드 시 자동으로 현재 프로젝트의 FlowManagerUnified 초기화
+
+    이 함수는 첫 wf() 호출 시 빈 context가 반환되는 문제를 해결합니다.
+    프록시가 초기화되지 않은 경우 현재 디렉토리를 기준으로 자동 초기화합니다.
+    """
+    try:
+        # 프록시 가져오기
+        proxy = get_workflow_proxy()
+
+        # 초기화되지 않은 경우에만 초기화
+        if proxy._current is None:
+            # 현재 디렉토리 기준으로 프로젝트 초기화
+            proxy.switch()
+
+            # 디버그 모드에서만 로그 출력
+            if os.environ.get('DEBUG_FLOW'):
+                print("✅ FlowManagerUnified 자동 초기화 완료")
+                if proxy._current:
+                    print(f"   - 프로젝트: {os.path.basename(proxy._current.project_root)}")
+                    print(f"   - Flows: {len(proxy._current.flows)}")
+
+    except Exception as e:
+        # 모듈 로드를 방해하지 않도록 조용히 실패
+        if os.environ.get('DEBUG_FLOW'):
+            print(f"⚠️ Flow 자동 초기화 실패: {e}")
+        # 실패해도 모듈 로드는 계속됨
+        pass
+
+
+# 모듈 로드 시 자동 초기화 실행
+_auto_init_proxy()

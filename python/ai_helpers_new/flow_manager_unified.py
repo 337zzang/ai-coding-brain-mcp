@@ -856,7 +856,8 @@ Context 시스템:
 
                     # 모든 하위 Task도 완료 처리
                     if 'tasks' in plan:
-                        for task in plan['tasks']:
+                        tasks_dict = plan.get('tasks', {})
+                        for task_id, task in tasks_dict.items():
                             if task.get('status') != 'completed':
                                 task['status'] = 'completed'
                                 task['completed_at'] = datetime.now().isoformat()
@@ -901,7 +902,8 @@ Context 시스템:
 
             # Plan 찾기
             plan_found = False
-            for plan in self.current_flow['plans']:
+            plans_dict = self.current_flow.get('plans', {})
+            for pid, plan in plans_dict.items():
                 if plan['id'] == plan_id:
                     plan_found = True
                     # completed 필드 업데이트
@@ -1132,14 +1134,28 @@ Context 시스템:
 
         # 6. 모든 Plan 리스트 표시
         if self.current_flow.get('plans'):
-            result_lines.append(f"\n📋 Plans ({len(self.current_flow['plans'])}개):")
+            plans_dict = self.current_flow.get('plans', {})
+            result_lines.append(f"\n📋 Plans ({len(plans_dict)}개):")
             result_lines.append("-" * 50)
 
-            for i, plan in enumerate(self.current_flow['plans']):
+            # 딕셔너리를 리스트로 변환하여 순서 유지
+            plan_list = []
+            for plan_id, plan_data in plans_dict.items():
+                plan_list.append(plan_data)
+
+            # 생성일 기준 정렬
+            plan_list.sort(key=lambda p: p.get('created_at', ''))
+
+            for i, plan in enumerate(plan_list):
                 # Task 집계
-                tasks = plan.get('tasks', [])
-                total_tasks = len(tasks)
-                completed_tasks = sum(1 for t in tasks if t.get('status') in ['completed', 'reviewing'])
+                tasks_dict = plan.get('tasks', {})
+                task_list = []
+                if isinstance(tasks_dict, dict):
+                    for task_id, task_data in tasks_dict.items():
+                        task_list.append(task_data)
+
+                total_tasks = len(task_list)
+                completed_tasks = sum(1 for t in task_list if t.get('status') in ['completed', 'reviewing'])
 
                 # 완료 상태 아이콘 결정
                 if plan.get('completed', False):
@@ -1164,8 +1180,10 @@ Context 시스템:
 
         # 7. 최근 Task context 확인
         recent_tasks_with_context = []
-        for plan in self.current_flow.get('plans', []):
-            for task in plan.get('tasks', []):
+        plans_dict = self.current_flow.get('plans', {})
+        for plan_id, plan in plans_dict.items():
+            tasks_dict = plan.get('tasks', {})
+            for task_id, task in tasks_dict.items():
                 if task.get('context') and task['context'].get('actions'):
                     recent_tasks_with_context.append(task)
 
@@ -1672,11 +1690,12 @@ Context 시스템:
 
         # Plan 찾기
         plan_to_delete = None
-        plan_index = None
-        for i, plan in enumerate(self.current_flow.get('plans', [])):
+        plan_id_to_delete = None
+        plans_dict = self.current_flow.get('plans', {})
+        for pid, plan in plans_dict.items():
             if plan['id'] == plan_id:
                 plan_to_delete = plan
-                plan_index = i
+                plan_id_to_delete = pid
                 break
 
         if not plan_to_delete:
@@ -1703,7 +1722,7 @@ Context 시스템:
             )
 
         # Plan 삭제
-        del self.current_flow['plans'][plan_index]
+        del self.current_flow['plans'][plan_id_to_delete]
 
         # 변경사항 저장
         self._save_flows()
@@ -1731,7 +1750,8 @@ Context 시스템:
 
         # Plan 찾기
         target_plan = None
-        for plan in self.current_flow.get('plans', []):
+        plans_dict = self.current_flow.get('plans', {})
+        for pid, plan in plans_dict.items():
             if plan['id'] == plan_id:
                 target_plan = plan
                 break
@@ -1773,8 +1793,10 @@ Context 시스템:
         target_task = None
         target_plan = None
 
-        for plan in self.current_flow.get('plans', []):
-            for task in plan.get('tasks', []):
+        plans_dict = self.current_flow.get('plans', {})
+        for plan_id, plan in plans_dict.items():
+            tasks_dict = plan.get('tasks', {})
+            for tid, task in tasks_dict.items():
                 if task['id'] == task_id:
                     target_task = task
                     target_plan = plan
@@ -1818,8 +1840,10 @@ Context 시스템:
         # Task 찾기
         target_task = None
 
-        for plan in self.current_flow.get('plans', []):
-            for task in plan.get('tasks', []):
+        plans_dict = self.current_flow.get('plans', {})
+        for plan_id, plan in plans_dict.items():
+            tasks_dict = plan.get('tasks', {})
+            for tid, task in tasks_dict.items():
                 if task['id'] == task_id:
                     target_task = task
                     break
@@ -1871,8 +1895,10 @@ Context 시스템:
             return {'ok': False, 'error': f'Invalid status: {new_status}'}
 
         # Task 찾기 및 처리
-        for plan in self.current_flow.get('plans', []):
-            for task in plan.get('tasks', []):
+        plans_dict = self.current_flow.get('plans', {})
+        for plan_id, plan in plans_dict.items():
+            tasks_dict = plan.get('tasks', {})
+            for tid, task in tasks_dict.items():
                 if task['id'] == task_id:
                     current_status_str = task.get('status', 'todo')
                     current_status_enum = TaskStatus.from_string(current_status_str)

@@ -118,11 +118,11 @@
           "task_17531907525440770_54be50": {
             "id": "task_17531907525440770_54be50",
             "name": "현재-코드-백업",
-            "status": "in_progress",
+            "status": "completed",
             "created_at": "2025-07-22T22:25:52.544077",
-            "updated_at": "2025-07-22T22:29:59.668795",
+            "updated_at": "2025-07-22T22:30:58.721905",
             "started_at": "2025-07-22T22:29:59.668795",
-            "completed_at": null,
+            "completed_at": "2025-07-22T22:30:58.721905",
             "context": {
               "plan": "",
               "actions": [],
@@ -139,11 +139,11 @@
           "task_17531907525829970_817621": {
             "id": "task_17531907525829970_817621",
             "name": "개선-설계-문서-작성",
-            "status": "todo",
+            "status": "completed",
             "created_at": "2025-07-22T22:25:52.582997",
-            "updated_at": "2025-07-22T22:25:52.582997",
-            "started_at": null,
-            "completed_at": null,
+            "updated_at": "2025-07-22T22:36:23.236237",
+            "started_at": "2025-07-22T22:31:43.475466",
+            "completed_at": "2025-07-22T22:36:23.236237",
             "context": {
               "plan": "",
               "actions": [],
@@ -186,7 +186,92 @@
       "plan_17531907290857580_5e493a": {
         "id": "plan_17531907290857580_5e493a",
         "name": "ProjectContext-구현",
-        "tasks": {},
+        "tasks": {
+          "task_17531914171894482_4fd745": {
+            "id": "task_17531914171894482_4fd745",
+            "name": "ProjectContext-클래스-구현",
+            "status": "completed",
+            "created_at": "2025-07-22T22:36:57.189448",
+            "updated_at": "2025-07-22T22:39:06.809986",
+            "started_at": "2025-07-22T22:36:57.235444",
+            "completed_at": "2025-07-22T22:39:06.809986",
+            "context": {
+              "plan": "",
+              "actions": [],
+              "results": {},
+              "files": {
+                "created": [],
+                "modified": [],
+                "analyzed": []
+              },
+              "errors": [],
+              "notes": []
+            }
+          },
+          "task_17531914171994440_44bb1f": {
+            "id": "task_17531914171994440_44bb1f",
+            "name": "ProjectContext-단위-테스트-작성",
+            "status": "completed",
+            "created_at": "2025-07-22T22:36:57.199444",
+            "updated_at": "2025-07-22T22:50:29.142745",
+            "started_at": "2025-07-22T22:44:28.226348",
+            "completed_at": "2025-07-22T22:50:29.142745",
+            "context": {
+              "plan": "",
+              "actions": [],
+              "results": {},
+              "files": {
+                "created": [],
+                "modified": [],
+                "analyzed": []
+              },
+              "errors": [],
+              "notes": []
+            }
+          },
+          "task_17531914172094480_6defab": {
+            "id": "task_17531914172094480_6defab",
+            "name": "ProjectContext-통합-테스트",
+            "status": "todo",
+            "created_at": "2025-07-22T22:36:57.209448",
+            "updated_at": "2025-07-22T22:36:57.209448",
+            "started_at": null,
+            "completed_at": null,
+            "context": {
+              "plan": "",
+              "actions": [],
+              "results": {},
+              "files": {
+                "created": [],
+                "modified": [],
+                "analyzed": []
+              },
+              "errors": [],
+              "notes": []
+            }
+          },
+          "task_17531914172184442_7abfdf": {
+            "id": "task_17531914172184442_7abfdf",
+            "name": "ProjectContext-문서화",
+            "status": "todo",
+            "created_at": "2025-07-22T22:36:57.218444",
+            "updated_at": "2025-07-22T22:36:57.218444",
+            "started_at": null,
+            "completed_at": null,
+            "context": {
+              "plan": "",
+              "actions": [],
+              "results": {},
+              "files": {
+                "created": [],
+                "modified": [],
+                "analyzed": []
+              },
+              "errors": [],
+              "notes": []
+            }
+          }
+        },
         "created_at": "2025-07-22T22:25:29.085758",
         "completed": false,
         "completed_at": null
@@ -225,7 +310,7 @@
       }
     },
     "created_at": "2025-07-22T22:23:42.218744",
-    "updated_at": "2025-07-22T22:29:59.669793",
+    "updated_at": "2025-07-22T22:50:29.143745",
     "metadata": {}
   },
   "flow_20250722_222447_3dc7c1": {

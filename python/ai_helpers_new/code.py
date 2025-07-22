@@ -4,7 +4,7 @@ AI Helpers Code Module
 """
 import ast
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, List
 from .util import ok, err
 
 
@@ -15,59 +15,143 @@ def parse(path: str) -> Dict[str, Any]:
         성공: {
             'ok': True,
             'data': {
-                'functions': [{'name': 'func1', 'line': 10, 'args': ['a', 'b']}, ...],
-                'classes': [{'name': 'Class1', 'line': 20, 'methods': ['method1']}, ...],
-                'imports': ['os', 'sys', ...]
+                'functions': [{'name': 'func1', 'line': 10, 'args': ['a', 'b'], ...}, ...],
+                'classes': [{'name': 'Class1', 'line': 20, 'methods': ['method1'], ...}, ...],
+                'imports': ['os', 'sys', ...],
+                'globals': [{'name': 'VAR', 'line': 5, 'is_constant': True, ...}, ...]
             },
             'total_lines': 100
         }
         실패: {'ok': False, 'error': 에러메시지}
     """
+    # 헬퍼 함수: 타입 표현 추출
+    def get_type_repr(node) -> Optional[str]:
+        if node is None:
+            return None
+
+        # Python 3.9+ ast.unparse 지원
+        if hasattr(ast, 'unparse'):
+            try:
+                return ast.unparse(node)
+            except:
+                pass
+
+        # Fallback for older versions
+        if isinstance(node, ast.Name):
+            return node.id
+        elif isinstance(node, ast.Constant):
+            return repr(node.value)
+        elif isinstance(node, ast.Attribute):
+            value = get_type_repr(node.value)
+            return f"{value}.{node.attr}" if value else node.attr
+        else:
+            return None
+
+    # AST 수집기 클래스
+    class ASTCollector(ast.NodeVisitor):
+        def __init__(self):
+            self.functions = []
+            self.classes = []
+            self.imports = []
+            self.globals = []
+            self._current_class = None
+
+        def visit_FunctionDef(self, node):
+            self._collect_function(node, is_async=False)
+            self.generic_visit(node)
+
+        def visit_AsyncFunctionDef(self, node):
+            self._collect_function(node, is_async=True)
+            self.generic_visit(node)
+
+        def _collect_function(self, node, is_async):
+            func_info = {
+                'name': node.name,
+                'line': node.lineno,
+                'args': [arg.arg for arg in node.args.args],
+                'is_async': is_async,
+                'decorators': [get_type_repr(d) for d in node.decorator_list],
+                'returns': get_type_repr(node.returns),
+                'docstring': ast.get_docstring(node)
+            }
+
+            if hasattr(node, 'end_lineno'):
+                func_info['end_line'] = node.end_lineno
+
+            if self._current_class is not None:
+                self._current_class['methods'].append(func_info)
+            else:
+                self.functions.append(func_info)
+
+        def visit_ClassDef(self, node):
+            class_info = {
+                'name': node.name,
+                'line': node.lineno,
+                'methods': [],
+                'bases': [get_type_repr(base) for base in node.bases],
+                'decorators': [get_type_repr(d) for d in node.decorator_list],
+                'docstring': ast.get_docstring(node)
+            }
+
+            if hasattr(node, 'end_lineno'):
+                class_info['end_line'] = node.end_lineno
+
+            self.classes.append(class_info)
+
+            old_class = self._current_class
+            self._current_class = class_info
+            self.generic_visit(node)
+            self._current_class = old_class
+
+        def visit_Import(self, node):
+            for alias in node.names:
+                self.imports.append(alias.name)
+
+        def visit_ImportFrom(self, node):
+            if node.module:
+                self.imports.append(node.module)
+
+        def visit_Assign(self, node):
+            if self._current_class is None:
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        self.globals.append({
+                            'name': target.id,
+                            'line': node.lineno,
+                            'is_constant': target.id.isupper()
+                        })
+
+    # 파일 읽기
     try:
         content = Path(path).read_text(encoding='utf-8')
-        tree = ast.parse(content)
-
-        functions = []
-        classes = []
-        imports = []
-
-        # 최상위 노드만 확인
-        for node in tree.body:
-            if isinstance(node, ast.FunctionDef):
-                functions.append({
-                    'name': node.name,
-                    'line': node.lineno,
-                    'args': [arg.arg for arg in node.args.args]
-                })
-
-            elif isinstance(node, ast.ClassDef):
-                methods = []
-                for item in node.body:
-                    if isinstance(item, ast.FunctionDef):
-                        methods.append(item.name)
-
-                classes.append({
-                    'name': node.name,
-                    'line': node.lineno,
-                    'methods': methods
-                })
-
-            elif isinstance(node, ast.Import):
-                imports.extend([alias.name for alias in node.names])
-            elif isinstance(node, ast.ImportFrom):
-                if node.module:
-                    imports.append(node.module)
-
-        return ok({
-            'functions': functions,
-            'classes': classes,
-            'imports': list(set(imports))  # 중복 제거
-        }, total_lines=content.count('\n') + 1, path=path)
-
+    except FileNotFoundError:
+        return err(f'File not found: {path}')
+    except UnicodeDecodeError as e:
+        return err(f'Encoding error: {e}')
     except Exception as e:
-        return err(f"Parse error: {e}", path=path)
+        return err(f'Failed to read file: {e}')
 
+    # AST 파싱
+    try:
+        tree = ast.parse(content, filename=path)
+    except SyntaxError as e:
+        return err(f'Syntax error at line {e.lineno}: {e.msg}')
+    except Exception as e:
+        return err(f'Parse error: {e}')
 
+    # 정보 수집
+    collector = ASTCollector()
+    collector.visit(tree)
+
+    # 중복 제거
+    collector.imports = list(dict.fromkeys(collector.imports))
+
+    return ok({
+        'functions': collector.functions,
+        'classes': collector.classes,
+        'imports': collector.imports,
+        'globals': collector.globals
+    }, total_lines=content.count('\n') + 1, path=path)
 def view(path: str, name: str) -> Dict[str, Any]:
     """특정 함수나 클래스의 코드 보기
 

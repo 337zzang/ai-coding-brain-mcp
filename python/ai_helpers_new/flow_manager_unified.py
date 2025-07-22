@@ -1182,10 +1182,16 @@ Context 시스템:
         recent_tasks_with_context = []
         plans_dict = self.current_flow.get('plans', {})
         for plan_id, plan in plans_dict.items():
-            tasks_dict = plan.get('tasks', {})
-            for task_id, task in tasks_dict.items():
-                if task.get('context') and task['context'].get('actions'):
-                    recent_tasks_with_context.append(task)
+            tasks_data = plan.get('tasks', {})
+            # tasks가 리스트인 경우와 딕셔너리인 경우 모두 처리
+            if isinstance(tasks_data, dict):
+                for task_id, task in tasks_data.items():
+                    if task.get('context') and task['context'].get('actions'):
+                        recent_tasks_with_context.append(task)
+            elif isinstance(tasks_data, list):
+                for task in tasks_data:
+                    if task.get('context') and task['context'].get('actions'):
+                        recent_tasks_with_context.append(task)
 
         if recent_tasks_with_context:
             latest_task = recent_tasks_with_context[-1]
@@ -1950,11 +1956,33 @@ Context 시스템:
         total_tasks = 0
         completed_tasks = 0
 
-        for plan in current.to_dict().get('plans', []):
-            for task in plan.get('tasks', []):
-                total_tasks += 1
-                if task['status'] in ['done', 'completed']:
-                    completed_tasks += 1
+        plans_data = current.to_dict().get('plans', {})
+        if isinstance(plans_data, dict):
+            for plan_id, plan in plans_data.items():
+                tasks_data = plan.get('tasks', {})
+                if isinstance(tasks_data, dict):
+                    for tid, task in tasks_data.items():
+                        total_tasks += 1
+                        if task['status'] in ['done', 'completed']:
+                            completed_tasks += 1
+                elif isinstance(tasks_data, list):
+                    for task in tasks_data:
+                        total_tasks += 1
+                        if task['status'] in ['done', 'completed']:
+                            completed_tasks += 1
+        elif isinstance(plans_data, list):
+            for plan in plans_data:
+                tasks_data = plan.get('tasks', {})
+                if isinstance(tasks_data, dict):
+                    for tid, task in tasks_data.items():
+                        total_tasks += 1
+                        if task['status'] in ['done', 'completed']:
+                            completed_tasks += 1
+                elif isinstance(tasks_data, list):
+                    for task in tasks_data:
+                        total_tasks += 1
+                        if task['status'] in ['done', 'completed']:
+                            completed_tasks += 1
 
         return {
             'flow': current.to_dict()['name'],

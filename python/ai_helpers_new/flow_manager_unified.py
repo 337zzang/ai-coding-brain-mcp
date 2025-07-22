@@ -912,27 +912,37 @@ Context 시스템:
         else:
             result_lines.append(f"⚠️ 프로젝트 디렉토리를 찾을 수 없습니다: {project_path}")
 
-        # 6. 최신 플랜 확인
+        # 6. 모든 Plan 리스트 표시
         if self.current_flow.get('plans'):
-            latest_plan = self.current_flow['plans'][-1]
-            result_lines.append(f"\n📋 최신 플랜: {latest_plan['name']}")
-            tasks = latest_plan.get('tasks', [])
-            completed_tasks = sum(1 for t in tasks if t.get('status') == 'completed')
-            result_lines.append(f"   Tasks: {len(tasks)}개 (완료: {completed_tasks}개)")
+            result_lines.append(f"\n📋 Plans ({len(self.current_flow['plans'])}개):")
+            result_lines.append("-" * 50)
 
-            # 최근 3개 태스크 표시
-            if tasks:
-                result_lines.append("   최근 Tasks:")
-                for task in tasks[-3:]:
-                    status_emoji = {
-                        'todo': '📌',
-                        'planning': '📐',
-                        'in_progress': '🔄',
-                        'reviewing': '🔍',
-                        'completed': '✅',
-                        'error': '❌'
-                    }.get(task.get('status', 'todo'), '❓')
-                    result_lines.append(f"   {status_emoji} {task.get('description', 'No description')}")
+            for i, plan in enumerate(self.current_flow['plans']):
+                # Task 집계
+                tasks = plan.get('tasks', [])
+                total_tasks = len(tasks)
+                completed_tasks = sum(1 for t in tasks if t.get('status') in ['completed', 'reviewing'])
+
+                # 완료 상태 아이콘 결정
+                if plan.get('completed', False):
+                    status_icon = "✅"  # Plan 완료됨
+                elif total_tasks == 0:
+                    status_icon = "📋"  # Task가 없음
+                elif completed_tasks == total_tasks and total_tasks > 0:
+                    status_icon = "🔄"  # 모든 Task 완료했지만 Plan은 미완료
+                elif completed_tasks > 0:
+                    status_icon = "⏳"  # 진행중
+                else:
+                    status_icon = "📝"  # 시작 전
+
+                # Plan 정보 출력
+                result_lines.append(f"\n{i+1}. {status_icon} {plan['name']}")
+                result_lines.append(f"   ID: {plan['id']}")
+                result_lines.append(f"   Tasks: {total_tasks}개 (완료: {completed_tasks}개)")
+                if total_tasks > 0:
+                    progress = (completed_tasks / total_tasks) * 100
+                    result_lines.append(f"   진행률: {completed_tasks}/{total_tasks} ({progress:.0f}%)")
+                result_lines.append(f"   설명: {plan.get('description', '설명 없음')}")
 
         # 7. 최근 Task context 확인
         recent_tasks_with_context = []
@@ -950,6 +960,13 @@ Context 시스템:
                     result_lines.append(f"   - {action.get('action', 'No action')}")
                     if action.get('result'):
                         result_lines.append(f"     → {action['result']}")
+
+        # Plan 선택 안내 추가
+        if self.current_flow.get('plans'):
+            result_lines.append("")
+            result_lines.append("-" * 50)
+            result_lines.append("💡 Plan을 선택하려면 번호를 입력하거나 'Plan 2 선택' 형식으로 입력해주세요.")
+            result_lines.append("   예: '2' 또는 'Plan 2 선택' 또는 '2번 Plan'")
 
         return {'ok': True, 'data': '\n'.join(result_lines)}
 

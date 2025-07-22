@@ -1,117 +1,203 @@
 """
-Flow 비즈니스 로직 서비스
+Flow Service with ProjectContext support
 """
+
 from typing import Dict, List, Optional
 from datetime import datetime
 import uuid
+import os
+from pathlib import Path
 
 from ..domain.models import Flow, Plan, Task
 from ..infrastructure.flow_repository import FlowRepository
+from ..infrastructure.project_context import ProjectContext
 
 
 class FlowService:
-    """Flow 관련 비즈니스 로직"""
+    """Flow management service with project-level isolation"""
 
-    def __init__(self, repository: FlowRepository):
+    def __init__(self, repository: FlowRepository, context: Optional[ProjectContext] = None):
+        """Initialize FlowService
+
+        Args:
+            repository: Flow repository instance
+            context: ProjectContext for project-specific settings (optional)
+        """
         self.repository = repository
+
+        # Use context from repository if not provided
+        if context is None and hasattr(repository, 'context'):
+            self._context = repository.context
+        elif context is not None:
+            self._context = context
+        else:
+            # Fallback to current directory
+            self._context = ProjectContext(Path.cwd())
+
+        self._flows: Dict[str, Flow] = {}
         self._current_flow_id: Optional[str] = None
+        self._sync_with_repository()
+        self._load_current_flow()
+        self._migrate_global_current_flow()
+
+    @property
+    def context(self) -> ProjectContext:
+        """Get current project context"""
+        return self._context
+
+    @property
+    def current_flow_file(self) -> Path:
+        """Get project-specific current flow file path"""
+        return self._context.current_flow_file
+
+    def set_context(self, context: ProjectContext):
+        """Change project context
+
+        Args:
+            context: New project context
+        """
+        self._context = context
+        self._current_flow_id = None
+        self._sync_with_repository()
         self._load_current_flow()
 
-    def create_flow(self, name: str, metadata: Dict = None) -> Flow:
-        """새 Flow 생성"""
+    def _sync_with_repository(self):
+        """Synchronize with repository"""
+        self._flows = self.repository.load_all()
+
+    def _load_current_flow(self):
+        """Load current flow from project-specific file"""
+        if self.current_flow_file.exists():
+            try:
+                flow_id = self.current_flow_file.read_text().strip()
+                if flow_id in self._flows:
+                    self._current_flow_id = flow_id
+                else:
+                    # Invalid flow ID, remove file
+                    self.current_flow_file.unlink()
+                    self._current_flow_id = None
+            except Exception as e:
+                print(f"Error loading current flow: {e}")
+                self._current_flow_id = None
+
+    def _save_current_flow(self):
+        """Save current flow ID to project-specific file"""
+        if self._current_flow_id:
+            try:
+                self.current_flow_file.write_text(self._current_flow_id)
+            except Exception as e:
+                print(f"Error saving current flow: {e}")
+        elif self.current_flow_file.exists():
+            try:
+                self.current_flow_file.unlink()
+            except Exception as e:
+                print(f"Error removing current flow file: {e}")
+
+    def _migrate_global_current_flow(self):
+        """Migrate from global current_flow.txt if exists (one-time migration)"""
+        # Check for legacy global file
+        global_file = Path.home() / ".ai-flow" / "current_flow.txt"
+
+        if global_file.exists() and not self.current_flow_file.exists():
+            try:
+                # Read global current flow
+                flow_id = global_file.read_text().strip()
+
+                # If this flow exists in current project, migrate it
+                if flow_id in self._flows:
+                    self._current_flow_id = flow_id
+                    self._save_current_flow()
+                    print(f"Migrated current flow from global file: {flow_id}")
+
+                    # Optional: Remove global file after successful migration
+                    # global_file.unlink()
+
+            except Exception as e:
+                print(f"Failed to migrate global current flow: {e}")
+
+    def create_flow(self, name: str) -> Flow:
+        """Create a new Flow"""
         flow_id = f"flow_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
 
         flow = Flow(
             id=flow_id,
             name=name,
-            metadata=metadata or {}
+            plans={},
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
+            metadata={}
         )
 
-        # 저장
-        flows = self.repository.load_all()
-        flows[flow_id] = flow
-        self.repository.save_all(flows)
+        self._flows[flow.id] = flow
+        self.repository.save(flow)
+
+        # Set as current if it's the first flow
+        if len(self._flows) == 1:
+            self.set_current_flow(flow.id)
 
         return flow
 
     def get_flow(self, flow_id: str) -> Optional[Flow]:
-        """특정 Flow 조회"""
-        flows = self.repository.load_all()
-        return flows.get(flow_id)
+        """Get a Flow by ID"""
+        return self._flows.get(flow_id)
 
     def list_flows(self) -> List[Flow]:
-        """모든 Flow 목록 조회"""
-        flows = self.repository.load_all()
-        return list(flows.values())
+        """List all Flows"""
+        return list(self._flows.values())
+
+    def update_flow(self, flow: Flow) -> bool:
+        """Update a Flow"""
+        if flow.id in self._flows:
+            flow.updated_at = datetime.now()
+            self._flows[flow.id] = flow
+            self.repository.save(flow)
+            return True
+        return False
 
     def delete_flow(self, flow_id: str) -> bool:
-        """Flow 삭제"""
-        # 현재 Flow인 경우 current 해제
-        if self._current_flow_id == flow_id:
-            self._current_flow_id = None
-            self._save_current_flow()
+        """Delete a Flow"""
+        if flow_id in self._flows:
+            # Clear current flow if it's being deleted
+            if self._current_flow_id == flow_id:
+                self._current_flow_id = None
+                self._save_current_flow()
 
-        return self.repository.delete(flow_id)
+            del self._flows[flow_id]
+            self.repository.delete(flow_id)
+            return True
+        return False
 
     def get_current_flow(self) -> Optional[Flow]:
-        """현재 활성 Flow 조회"""
+        """Get the current Flow"""
         if self._current_flow_id:
-            return self.get_flow(self._current_flow_id)
+            return self._flows.get(self._current_flow_id)
         return None
 
     def set_current_flow(self, flow_id: str) -> bool:
-        """현재 활성 Flow 설정"""
-        if self.repository.exists(flow_id):
+        """Set the current Flow"""
+        if flow_id in self._flows:
             self._current_flow_id = flow_id
             self._save_current_flow()
             return True
         return False
 
-    def update_flow(self, flow: Flow) -> None:
-        """Flow 업데이트"""
-        flow.updated_at = datetime.now()
-        self.repository.save(flow)
+    def sync(self):
+        """Force synchronization with repository"""
+        self._sync_with_repository()
+        self._load_current_flow()
 
-    def add_plan_to_flow(self, flow_id: str, plan: Plan) -> bool:
-        """Flow에 Plan 추가"""
-        flow = self.get_flow(flow_id)
-        if flow:
-            flow.plans[plan.id] = plan
-            self.update_flow(flow)
-            return True
-        return False
+    def get_project_info(self) -> dict:
+        """Get project-specific service information"""
+        return {
+            'project': str(self._context.root),
+            'flows_count': len(self._flows),
+            'current_flow': self._current_flow_id,
+            'current_flow_name': self.get_current_flow().name if self.get_current_flow() else None,
+            'current_flow_file': str(self.current_flow_file),
+            'has_legacy_global': (Path.home() / ".ai-flow" / "current_flow.txt").exists()
+        }
 
-    def remove_plan_from_flow(self, flow_id: str, plan_id: str) -> bool:
-        """Flow에서 Plan 제거"""
-        flow = self.get_flow(flow_id)
-        if flow and plan_id in flow.plans:
-            del flow.plans[plan_id]
-            self.update_flow(flow)
-            return True
-        return False
-
-    def _load_current_flow(self) -> None:
-        """현재 Flow ID 로드 (파일에서)"""
-        try:
-            import os
-            current_file = os.path.join(os.path.expanduser("~"), ".ai-flow", "current_flow.txt")
-            if os.path.exists(current_file):
-                with open(current_file, 'r') as f:
-                    self._current_flow_id = f.read().strip()
-        except Exception:
-            self._current_flow_id = None
-
-    def _save_current_flow(self) -> None:
-        """현재 Flow ID 저장 (파일로)"""
-        try:
-            import os
-            current_file = os.path.join(os.path.expanduser("~"), ".ai-flow", "current_flow.txt")
-            os.makedirs(os.path.dirname(current_file), exist_ok=True)
-
-            if self._current_flow_id:
-                with open(current_file, 'w') as f:
-                    f.write(self._current_flow_id)
-            elif os.path.exists(current_file):
-                os.remove(current_file)
-        except Exception as e:
-            print(f"Warning: Failed to save current flow: {e}")
+    def clear_current_flow(self):
+        """Clear the current flow selection"""
+        self._current_flow_id = None
+        self._save_current_flow()

@@ -54,8 +54,20 @@ class JsonFlowRepository(FlowRepository):
             storage_path: Legacy storage path (deprecated)
         """
         if context is not None:
+            # Type safety check
+            if not isinstance(context, ProjectContext):
+                raise TypeError(
+                    f"context must be ProjectContext instance, "
+                    f"got {type(context).__name__}. "
+                    f"Did you mean to use storage_path parameter?"
+                )
             self._context = context
         elif storage_path is not None:
+            # Type safety check for storage_path
+            if not isinstance(storage_path, str):
+                raise TypeError(
+                    f"storage_path must be string, got {type(storage_path).__name__}"
+                )
             # Legacy mode - create context from path
             import warnings
             warnings.warn(

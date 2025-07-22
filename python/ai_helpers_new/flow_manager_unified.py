@@ -13,6 +13,9 @@ import shutil
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
+# FlowRegistry import
+from .flow_registry import FlowRegistry
+
 # Flow Project v2 import 시도
 from enum import Enum
 import re
@@ -26,6 +29,8 @@ try:
     _has_flow_v2 = True
 except ImportError as e:
     print(f"⚠️ Flow v2 import 실패: {e}")
+    _has_flow_v2 = False
+
     # Fallback 베이스 클래스
     class FlowManagerWithContext:
         def __init__(self):
@@ -113,7 +118,20 @@ class FlowManagerUnified(FlowManagerWithContext):
         # 기본 속성 초기화
         self.current_flow = None
         self.context_manager = None
-        self.flows = []
+        
+        # 프로젝트 설정 (FlowRegistry 초기화 전에 필요)
+        self.project_root = project_root or os.getcwd()
+        self.data_dir = os.path.join(self.project_root, '.ai-brain')
+        self.flows_file = os.path.join(self.data_dir, 'flows.json')
+        
+        # self.flows = []  # FlowRegistry로 대체됨
+        # FlowRegistry 초기화 (Phase 1 통합)
+        self.flow_registry = FlowRegistry(flows_file=self.flows_file)
+        self.flow_registry.load_flows()
+
+        # 기존 코드와의 호환성을 위해 flows 프로퍼티 사용
+        # self.flows는 이제 프로퍼티로 처리됨
+        
         self._has_flow_v2 = _has_flow_v2
         self.debug = False  # 디버그 모드 (기본값: False)
 
@@ -126,9 +144,7 @@ class FlowManagerUnified(FlowManagerWithContext):
                 print(f"⚠️ Flow v2 초기화 부분 실패: {e}")
                 self._has_flow_v2 = False
 
-        # 프로젝트 설정
-        self.project_root = project_root or os.getcwd()
-        self.data_dir = os.path.join(self.project_root, '.ai-brain')
+        # 디렉토리 생성
         self._ensure_directories()
 
         # 명령어 핸들러 초기화
@@ -142,6 +158,44 @@ class FlowManagerUnified(FlowManagerWithContext):
         # 기본 flow가 없으면 생성
         if self._has_flow_v2 and not self.current_flow:
             self._create_default_flow()
+
+    # FlowRegistry 통합: flows 프로퍼티 (하위 호환성)
+    @property
+    def flows(self):
+        """리스트 형태로 반환 (하위 호환성)"""
+        if hasattr(self, 'flow_registry') and self.flow_registry:
+            return [flow.to_dict() for flow in self.flow_registry.list_flows()]
+        return []
+
+    # @flows.setter  # setter 메서드가 없으므로 주석 처리
+
+    @property
+    def current_flow(self):
+        """현재 활성 Flow 반환"""
+        if hasattr(self, 'flow_registry'):
+            flow = self.flow_registry.get_current_flow()
+            return flow.to_dict() if flow else None
+        return self._current_flow if hasattr(self, '_current_flow') else None
+
+    @current_flow.setter
+    def current_flow(self, value):
+        """현재 Flow 설정"""
+        if hasattr(self, 'flow_registry') and value and 'id' in value:
+            self.flow_registry.switch_flow(value['id'])
+        self._current_flow = value
+
+    def flows(self, value):
+        """직접 설정 시 경고 (deprecated)"""
+        print("⚠️ Warning: 직접 flows 설정은 deprecated. create_flow() 메서드를 사용하세요.")
+        if hasattr(self, 'flow_registry') and isinstance(value, list):
+            # 기존 flows 모두 삭제
+            for flow_id in list(self.flow_registry._flows.keys()):
+                self.flow_registry.delete_flow(flow_id)
+            # 새 flows 추가
+            for flow_data in value:
+                if isinstance(flow_data, dict) and 'name' in flow_data:
+                    self.flow_registry.create_flow(flow_data['name'])
+
 
     def _generate_unique_id(self, prefix: str) -> str:
         """
@@ -163,23 +217,30 @@ class FlowManagerUnified(FlowManagerWithContext):
         os.makedirs(os.path.join(self.data_dir, 'backups'), exist_ok=True)
 
     def _create_default_flow(self):
-        """기본 flow 생성"""
+        """기본 Flow 생성 (FlowRegistry 사용)"""
         try:
-            if hasattr(self, 'create_flow') and callable(self.create_flow):
-                # Flow 데이터 구조 직접 생성 (FlowManagerWithContext가 없을 경우)
-                if not self.current_flow:
-                    self.current_flow = {
-                        'id': f'flow_{datetime.now().strftime("%Y%m%d_%H%M%S")}',
-                        'name': 'default',
-                        'plans': [],
-                        'created_at': datetime.now().isoformat()
-                    }
-                    if hasattr(self, 'flows'):
-                        self.flows.append(self.current_flow)
-                    print("✅ 기본 flow 생성됨")
+            if hasattr(self, 'flow_registry'):
+                # FlowRegistry 사용
+                existing_flows = self.flow_registry.list_flows()
+                if not existing_flows:
+                    flow = self.flow_registry.create_flow("default")
+                    self.flow_registry.save_flows()
+                    print("✅ 기본 flow 생성 완료")
+                    return flow.to_dict()
+            else:
+                # 폴백: 기존 방식
+                default_flow = {
+                    'id': self._generate_unique_id("flow"),
+                    'name': 'default',
+                    'plans': [],
+                    'created_at': datetime.now().isoformat(),
+                    'updated_at': datetime.now().isoformat()
+                }
+                self.current_flow = default_flow
+                return default_flow
         except Exception as e:
             print(f"⚠️ 기본 flow 생성 실패: {e}")
-
+            return None
     def _ensure_directories(self):
         """필요한 디렉토리 생성"""
         os.makedirs(self.data_dir, exist_ok=True)
@@ -936,8 +997,9 @@ Context 시스템:
 
     def _handle_flow_command(self, args: str) -> Dict[str, Any]:
         """Flow 명령어 처리"""
-        if not self._has_flow_v2:
-            return {'ok': False, 'error': 'Flow v2가 활성화되지 않았습니다'}
+        # Flow v2 체크 제거 - 기본 기능도 동작하도록
+        # if not self._has_flow_v2:
+        #     return {'ok': False, 'error': 'Flow v2가 활성화되지 않았습니다'}
 
         if not args:
             # 현재 flow 정보 표시
@@ -988,9 +1050,11 @@ Context 시스템:
         matching_flows = []
 
         # 이름이 일치하는 모든 Flow 찾기
-        for flow in self.flows:
-            if flow['name'].lower() == project_name.lower():
-                matching_flows.append(flow)
+        flows_list = self.flow_registry.list_flows() if hasattr(self, 'flow_registry') else []
+        for flow in flows_list:
+            flow_dict = flow.to_dict() if hasattr(flow, 'to_dict') else flow
+            if flow_dict.get('name', '').lower() == project_name.lower():
+                matching_flows.append(flow_dict)
 
         if not matching_flows:
             return {'ok': False, 'error': f"프로젝트 '{project_name}'를 찾을 수 없습니다"}
@@ -1255,8 +1319,9 @@ Context 시스템:
 
     def _handle_plan_command(self, args: str) -> Dict[str, Any]:
         """Plan 명령어 처리"""
-        if not self._has_flow_v2:
-            return {'ok': False, 'error': 'Flow v2가 활성화되지 않았습니다'}
+        # Flow v2 체크 제거 - 기본 기능도 동작하도록
+        # if not self._has_flow_v2:
+        #     return {'ok': False, 'error': 'Flow v2가 활성화되지 않았습니다'}
 
         if not args:
             return {'ok': False, 'error': 'Usage: /plan <add|list|complete|reopen|status>'}
@@ -1290,13 +1355,18 @@ Context 시스템:
             return {'ok': False, 'error': f'Unknown plan command: {subcmd}. Available: add, list, complete, reopen, status'}
 
     def _add_plan(self, name: str) -> Dict[str, Any]:
-        """Plan 추가"""
+        """Plan 추가 (중복 체크 포함)"""
         if not name:
             name = f"Plan_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
         try:
             if hasattr(self, 'create_plan'):
                 plan = self.create_plan(name)
+
+                # create_plan이 중복 에러를 반환했는지 확인
+                if isinstance(plan, dict) and 'ok' in plan and not plan['ok']:
+                    return plan
+
                 return {'ok': True, 'data': f'Plan 생성됨: {name}'}
             else:
                 return {'ok': False, 'error': 'Plan 생성 기능 없음'}
@@ -1309,14 +1379,15 @@ Context 시스템:
             if not self.current_flow:
                 return {'ok': False, 'error': 'Flow가 선택되지 않았습니다'}
 
-            plans = self.current_flow.get('plans', [])
+            plans = self.current_flow.get('plans', {})
             if not plans:
                 return {'ok': True, 'data': 'Plan이 없습니다'}
 
             lines = ["📋 Plan 목록:"]
-            for plan in plans:
-                task_count = len(plan.get('tasks', []))
-                lines.append(f"- [{plan['id']}] {plan['name']} ({task_count}개 태스크)")
+            for plan_id, plan in plans.items():
+                task_count = len(plan.get('tasks', {}))
+                completed = '✅' if plan.get('completed', False) else '⏳'
+                lines.append(f"{completed} [{plan_id}] {plan['name']} ({task_count}개 태스크)")
 
             return {'ok': True, 'data': '\n'.join(lines)}
 
@@ -1485,60 +1556,68 @@ Context 시스템:
     # === Flow v2 핵심 메서드 직접 구현 ===
 
     def create_flow(self, name: str) -> Dict[str, Any]:
-        """새 Flow 생성"""
-        flow_id = self._generate_unique_id("flow")
-        new_flow = {
-            'id': flow_id,
-            'name': name,
-            'plans': [],
-            'created_at': datetime.now().isoformat(),
-            'updated_at': datetime.now().isoformat()
-        }
+        """새 Flow 생성 (FlowRegistry 사용)"""
+        # FlowRegistry를 통해 생성
+        flow = self.flow_registry.create_flow(name)
 
-        if not hasattr(self, 'flows'):
-            self.flows = []
+        # 딕셔너리로 변환하여 반환 (하위 호환성)
+        flow_dict = flow.to_dict()
 
-        self.flows.append(new_flow)
-        self.current_flow = new_flow
+        # Plan 관련 필드 추가 (기존 호환성)
+        if 'plans' not in flow_dict:
+            flow_dict['plans'] = []
 
         # 저장
-        self._save_flows()
+        self.flow_registry.save_flows()
 
-        return new_flow
+        if hasattr(self, 'context_manager') and self.context_manager:
+            self.context_manager.add_event('flow_created', {'flow_id': flow.id, 'name': name})
 
+        return flow_dict
     def list_flows(self) -> List[Dict[str, Any]]:
-        """모든 Flow 목록 반환"""
-        if not hasattr(self, 'flows'):
-            self.flows = []
-            self._load_flows()
-
-        return self.flows
-
+        """모든 Flow 목록 반환 (FlowRegistry 사용)"""
+        flows = self.flow_registry.list_flows()
+        # 딕셔너리 리스트로 변환 (하위 호환성)
+        return [flow.to_dict() for flow in flows]
     def switch_flow(self, flow_id: str) -> bool:
-        """Flow 전환"""
-        for flow in self.flows:
-            if flow['id'] == flow_id:
-                self.current_flow = flow
+        """Flow 전환 (FlowRegistry 사용)"""
+        result = self.flow_registry.switch_flow(flow_id)
+
+        if result:
+            flow = self.flow_registry.get_current_flow()
+            if flow:
+                # Context Manager 이벤트
+                if hasattr(self, 'context_manager') and self.context_manager:
+                    self.context_manager.add_event('flow_switched', {
+                        'flow_id': flow_id,
+                        'name': flow.name
+                    })
+
+                # 현재 Flow 정보 저장
                 self._save_current_flow_id(flow_id)
-                return True
 
-        raise ValueError(f"Flow not found: {flow_id}")
-
+        return result
     def delete_flow(self, flow_id: str) -> bool:
-        """Flow 삭제"""
-        if self.current_flow and self.current_flow['id'] == flow_id:
+        """Flow 삭제 (FlowRegistry 사용)"""
+        # 현재 Flow인지 확인
+        current = self.flow_registry.get_current_flow()
+        if current and current.id == flow_id:
             raise ValueError("Cannot delete current flow")
 
-        # Flow 존재 여부 확인
-        flow_exists = any(f['id'] == flow_id for f in self.flows)
-        if not flow_exists:
-            return False  # Flow가 없으면 False 반환
+        # 삭제 실행
+        result = self.flow_registry.delete_flow(flow_id)
 
-        self.flows = [f for f in self.flows if f['id'] != flow_id]
-        self._save_flows()
-        return True
+        if result:
+            # 저장
+            self.flow_registry.save_flows()
+
+            # Context Manager 이벤트
+            if hasattr(self, 'context_manager') and self.context_manager:
+                self.context_manager.add_event('flow_deleted', {'flow_id': flow_id})
+
+        return result
     def create_plan(self, name: str, flow_id: str = None) -> Dict[str, Any]:
-        """Plan 생성"""
+        """Plan 생성 (중복 방지 로직 포함)"""
         if not self.current_flow and not flow_id:
             self._create_default_flow()
 
@@ -1547,6 +1626,25 @@ Context 시스템:
             target_flow = next((f for f in self.flows if f['id'] == flow_id), None)
             if not target_flow:
                 raise ValueError(f"Flow not found: {flow_id}")
+
+        # 중복 이름 체크 (대소문자 무시)
+        existing_plans = target_flow.get('plans', {})
+        name_lower = name.strip().lower()
+
+        for plan_id, existing_plan in existing_plans.items():
+            if existing_plan.get('name', '').strip().lower() == name_lower:
+                # 중복 발견 시 상세 정보와 함께 에러 반환
+                return {
+                    'ok': False,
+                    'error': f"이미 동일한 이름의 Plan이 존재합니다: '{existing_plan['name']}'",
+                    'existing_plan': {
+                        'id': existing_plan['id'],
+                        'name': existing_plan['name'],
+                        'created_at': existing_plan.get('created_at', 'Unknown'),
+                        'task_count': len(existing_plan.get('tasks', []))
+                    },
+                    'suggestion': f"다른 이름을 사용하거나 '{name} (2)' 같은 형식으로 시도해보세요."
+                }
 
         plan_id = self._generate_unique_id("plan")
         new_plan = {
@@ -1558,9 +1656,10 @@ Context 시스템:
         }
 
         if 'plans' not in target_flow:
-            target_flow['plans'] = []
+            target_flow['plans'] = {}
 
-        target_flow['plans'].append(new_plan)
+        # 딕셔너리 방식으로 Plan 추가
+        target_flow['plans'][plan_id] = new_plan
         self._save_flows()
 
         return new_plan
@@ -1818,21 +1917,22 @@ Context 시스템:
 
     def get_current_flow_status(self) -> Dict[str, Any]:
         """현재 Flow 상태 반환"""
-        if not self.current_flow:
+        current = self.flow_registry.get_current_flow()
+        if not current:
             return {'error': 'No active flow'}
 
         total_tasks = 0
         completed_tasks = 0
 
-        for plan in self.current_flow.get('plans', []):
+        for plan in current.to_dict().get('plans', []):
             for task in plan.get('tasks', []):
                 total_tasks += 1
                 if task['status'] in ['done', 'completed']:
                     completed_tasks += 1
 
         return {
-            'flow': self.current_flow['name'],
-            'plans': len(self.current_flow.get('plans', [])),
+            'flow': current.to_dict()['name'],
+            'plans': len(current.to_dict().get('plans', [])),
             'total_tasks': total_tasks,
             'completed_tasks': completed_tasks,
             'progress': (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
@@ -1841,48 +1941,16 @@ Context 시스템:
     # === 저장/로드 메서드 ===
 
     def _load_flows(self):
-        """
-        flows.json에서 flow 데이터 로드
+        """flows.json에서 flow 데이터 로드 (FlowRegistry 사용)"""
+        # FlowRegistry가 이미 로드를 처리함
+        result = self.flow_registry.load_flows()
 
-        flows.json 구조:
-        {
-            "flows": [...],
-            "current_flow_id": "...",
-            "last_saved": "...",
-            "version": "2.0"
-        }
-        """
-        flows_path = os.path.join(self.data_dir, 'flows.json')
+        if self.debug:
+            stats = self.flow_registry.get_stats()
+            print(f"📊 Flow 로드 완료: {stats['total_flows']}개 Flow")
+            print(f"   캐시 적중률: {stats['cache_hit_rate']}")
 
-        if os.path.exists(flows_path):
-            try:
-                with open(flows_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    self.flows = data.get('flows', [])
-
-                    # current_flow_id가 있으면 해당 flow 찾기
-                    current_id = data.get('current_flow_id')
-                    if current_id:
-                        for flow in self.flows:
-                            if flow['id'] == current_id:
-                                self.current_flow = flow
-                                break
-
-                    # Debug 로그 (debug 속성 확인)
-                    if hasattr(self, 'debug') and self.debug:
-                        print(f"✅ Flow 데이터 로드 완료: {len(self.flows)}개 flow")
-
-            except Exception as e:
-                if hasattr(self, 'debug') and self.debug:
-                    print(f'❌ Flow 데이터 로드 실패: {e}')
-                self.flows = []
-        else:
-            # flows.json이 없으면 빈 리스트로 초기화
-            self.flows = []
-            if hasattr(self, 'debug') and self.debug:
-                print("📝 flows.json 파일이 없습니다. 새로 생성됩니다.")
-
-
+        return result
     def _save_current_flow_id(self, flow_id: str) -> bool:
         """
         현재 flow ID를 flows.json에 저장
@@ -1922,51 +1990,10 @@ Context 시스템:
 
 
     def _save_flows(self, force: bool = False) -> bool:
-        """
-        Flow 데이터 저장 (개선된 버전)
+        """Flow 데이터 저장 (FlowRegistry 사용)"""
+        result = self.flow_registry.save_flows()
 
-        Args:
-            force: 강제 저장 여부
+        if result and self.debug:
+            print("💾 Flows 저장 완료 (FlowRegistry)")
 
-        Returns:
-            bool: 저장 성공 여부
-        """
-        flows_path = os.path.join(self.data_dir, 'flows.json')
-
-        try:
-            # 저장할 데이터 준비
-            save_data = {
-                'flows': self.flows,
-                'current_flow_id': self.current_flow['id'] if self.current_flow else None,
-                'last_saved': datetime.now().isoformat(),
-                'version': '2.0'
-            }
-
-            # 임시 파일에 먼저 저장
-            temp_path = flows_path + '.tmp'
-            with open(temp_path, 'w', encoding='utf-8') as f:
-                json.dump(save_data, f, indent=2, ensure_ascii=False)
-
-            # 원자적 이동
-            shutil.move(temp_path, flows_path)
-
-            # 로깅
-            if hasattr(self, '_last_save_time'):
-                elapsed = (datetime.now() - self._last_save_time).total_seconds()
-                if elapsed > 60:
-                    print(f"💾 Flows 자동 저장 ({len(self.flows)} flows)")
-
-            self._last_save_time = datetime.now()
-            self._save_error_count = 0
-            return True
-
-        except Exception as e:
-            if not hasattr(self, '_save_error_count'):
-                self._save_error_count = 0
-            self._save_error_count += 1
-
-            if self._save_error_count <= 3:
-                print(f"⚠️ Flow 저장 실패 ({self._save_error_count}회): {e}")
-
-            return False
-# 클래스 종료
+        return result

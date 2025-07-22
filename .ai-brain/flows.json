@@ -279,7 +279,92 @@
       "plan_17531907290957730_54c8de": {
         "id": "plan_17531907290957730_54c8de",
         "name": "Repository-개선",
-        "tasks": {},
+        "tasks": {
+          "task_17531923490421780_08cfcd": {
+            "id": "task_17531923490421780_08cfcd",
+            "name": "JsonFlowRepository-ProjectContext-통합",
+            "status": "in_progress",
+            "created_at": "2025-07-22T22:52:29.042178",
+            "updated_at": "2025-07-22T22:52:29.106165",
+            "started_at": "2025-07-22T22:52:29.106165",
+            "completed_at": null,
+            "context": {
+              "plan": "",
+              "actions": [],
+              "results": {},
+              "files": {
+                "created": [],
+                "modified": [],
+                "analyzed": []
+              },
+              "errors": [],
+              "notes": []
+            }
+          },
+          "task_17531923490551700_ea3170": {
+            "id": "task_17531923490551700_ea3170",
+            "name": "동적-경로-지원-구현",
+            "status": "todo",
+            "created_at": "2025-07-22T22:52:29.055170",
+            "updated_at": "2025-07-22T22:52:29.055170",
+            "started_at": null,
+            "completed_at": null,
+            "context": {
+              "plan": "",
+              "actions": [],
+              "results": {},
+              "files": {
+                "created": [],
+                "modified": [],
+                "analyzed": []
+              },
+              "errors": [],
+              "notes": []
+            }
+          },
+          "task_17531923490691700_6dd133": {
+            "id": "task_17531923490691700_6dd133",
+            "name": "백업-및-복원-기능-개선",
+            "status": "todo",
+            "created_at": "2025-07-22T22:52:29.069170",
+            "updated_at": "2025-07-22T22:52:29.069170",
+            "started_at": null,
+            "completed_at": null,
+            "context": {
+              "plan": "",
+              "actions": [],
+              "results": {},
+              "files": {
+                "created": [],
+                "modified": [],
+                "analyzed": []
+              },
+              "errors": [],
+              "notes": []
+            }
+          },
+          "task_17531923490791680_44c9fd": {
+            "id": "task_17531923490791680_44c9fd",
+            "name": "Repository-테스트-작성",
+            "status": "todo",
+            "created_at": "2025-07-22T22:52:29.079168",
+            "updated_at": "2025-07-22T22:52:29.079168",
+            "started_at": null,
+            "completed_at": null,
+            "context": {
+              "plan": "",
+              "actions": [],
+              "results": {},
+              "files": {
+                "created": [],
+                "modified": [],
+                "analyzed": []
+              },
+              "errors": [],
+              "notes": []
+            }
+          }
+        },
         "created_at": "2025-07-22T22:25:29.095773",
         "completed": false,
         "completed_at": null
@@ -310,7 +395,7 @@
       }
     },
     "created_at": "2025-07-22T22:23:42.218744",
-    "updated_at": "2025-07-22T22:50:29.143745",
+    "updated_at": "2025-07-22T22:52:29.106165",
     "metadata": {}
   },
   "flow_20250722_222447_3dc7c1": {

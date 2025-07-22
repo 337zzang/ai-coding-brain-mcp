@@ -1,56 +1,151 @@
 """
-Flow 데이터 저장소 구현
+Flow Repository implementation with ProjectContext support
 """
-import json
-import os
-from pathlib import Path
-from typing import Dict, List, Optional
-from datetime import datetime
 
-from ..domain.models import Flow, Plan, Task
+import os
+import json
+import shutil
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, Optional
+
+from ..domain.models import Flow
+from .project_context import ProjectContext
 
 
 class FlowRepository:
-    """Flow 데이터 저장소 추상 클래스"""
+    """Base repository interface for Flow storage"""
+
+    def get(self, flow_id: str) -> Optional[Flow]:
+        """Get a single Flow by ID"""
+        flows = self.load_all()
+        return flows.get(flow_id)
 
     def load_all(self) -> Dict[str, Flow]:
-        """모든 Flow 로드"""
+        """Load all Flows"""
         raise NotImplementedError
 
     def save(self, flow: Flow) -> None:
-        """Flow 저장"""
+        """Save a single Flow"""
         raise NotImplementedError
 
     def save_all(self, flows: Dict[str, Flow]) -> None:
-        """모든 Flow 저장"""
+        """Save all Flows"""
         raise NotImplementedError
 
     def delete(self, flow_id: str) -> bool:
-        """Flow 삭제"""
-        raise NotImplementedError
-
-    def exists(self, flow_id: str) -> bool:
-        """Flow 존재 여부 확인"""
-        raise NotImplementedError
+        """Delete a Flow by ID"""
+        flows = self.load_all()
+        if flow_id in flows:
+            del flows[flow_id]
+            self.save_all(flows)
+            return True
+        return False
 
 
 class JsonFlowRepository(FlowRepository):
-    """JSON 파일 기반 Flow 저장소"""
+    """JSON file-based Flow repository with ProjectContext support"""
 
-    def __init__(self, storage_path: str = None):
-        if storage_path is None:
-            # 프로젝트별 .ai-brain 디렉토리 사용
-            storage_path = os.path.join(os.getcwd(), ".ai-brain", "flows.json")
+    def __init__(self, context: Optional[ProjectContext] = None, storage_path: Optional[str] = None):
+        """Initialize repository with ProjectContext or legacy path
 
-        self.storage_path = Path(storage_path)
-        self.storage_path.parent.mkdir(parents=True, exist_ok=True)
+        Args:
+            context: ProjectContext for dynamic path management (preferred)
+            storage_path: Legacy storage path (deprecated)
+        """
+        if context is not None:
+            self._context = context
+        elif storage_path is not None:
+            # Legacy mode - create context from path
+            import warnings
+            warnings.warn(
+                "Using storage_path is deprecated. Use ProjectContext instead.",
+                DeprecationWarning,
+                stacklevel=2
+            )
+            self._context = self._create_context_from_path(storage_path)
+        else:
+            # Default to current directory
+            self._context = ProjectContext(Path.cwd())
 
-        # 파일이 없으면 빈 파일 생성
+        self._ensure_file()
+        self._cache: Optional[Dict[str, Flow]] = None
+
+    @classmethod
+    def from_path(cls, storage_path: Optional[str] = None) -> 'JsonFlowRepository':
+        """Create repository from storage path (legacy compatibility)
+
+        Args:
+            storage_path: Path to flows.json file
+
+        Returns:
+            JsonFlowRepository instance
+        """
+        if storage_path:
+            context = cls._create_context_from_path(storage_path)
+        else:
+            context = ProjectContext(Path.cwd())
+
+        return cls(context=context)
+
+    @staticmethod
+    def _create_context_from_path(storage_path: str) -> ProjectContext:
+        """Create ProjectContext from storage path
+
+        Args:
+            storage_path: Path to flows.json
+
+        Returns:
+            ProjectContext for the project
+        """
+        path = Path(storage_path)
+
+        # Try to infer project root from path
+        if path.name == "flows.json" and path.parent.name == ".ai-brain":
+            # Standard structure: project/.ai-brain/flows.json
+            project_root = path.parent.parent
+        elif path.parent.exists() and path.parent.is_dir():
+            # Use parent directory as project root
+            project_root = path.parent
+        else:
+            # Fall back to current directory
+            project_root = Path.cwd()
+
+        return ProjectContext(project_root)
+
+    @property
+    def storage_path(self) -> Path:
+        """Get current storage path dynamically from context"""
+        return self._context.flow_file
+
+    @property
+    def context(self) -> ProjectContext:
+        """Get current project context"""
+        return self._context
+
+    def set_context(self, context: ProjectContext):
+        """Change project context
+
+        Args:
+            context: New project context
+        """
+        self._context = context
+        self._cache = None  # Invalidate cache
+        self._ensure_file()
+
+    def _ensure_file(self):
+        """Ensure flows.json file exists"""
         if not self.storage_path.exists():
             self._write_data({})
 
     def load_all(self) -> Dict[str, Flow]:
-        """모든 Flow를 로드하여 도메인 객체로 변환"""
+        """Load all Flows with caching"""
+        if self._cache is None:
+            self._cache = self._load_from_disk()
+        return self._cache.copy()
+
+    def _load_from_disk(self) -> Dict[str, Flow]:
+        """Load Flows from disk"""
         try:
             data = self._read_data()
             flows = {}
@@ -61,7 +156,6 @@ class JsonFlowRepository(FlowRepository):
                         flows[flow_id] = Flow.from_dict(flow_data)
                     except Exception as e:
                         print(f"Warning: Failed to load flow {flow_id}: {e}")
-                        # 로드 실패한 flow는 건너뜀
                         continue
 
             return flows
@@ -71,25 +165,33 @@ class JsonFlowRepository(FlowRepository):
             return {}
 
     def save(self, flow: Flow) -> None:
-        """단일 Flow 저장"""
+        """Save a single Flow"""
         flows = self.load_all()
         flows[flow.id] = flow
         self.save_all(flows)
 
     def save_all(self, flows: Dict[str, Flow]) -> None:
-        """모든 Flow를 딕셔너리로 변환하여 저장"""
+        """Save all Flows with automatic backup"""
+        # Create backup before saving
+        self._create_backup()
+
+        # Convert to dict format
         data = {}
         for flow_id, flow in flows.items():
             if isinstance(flow, Flow):
                 data[flow_id] = flow.to_dict()
             else:
-                # 레거시 호환성: dict인 경우 그대로 저장
+                # Legacy compatibility
                 data[flow_id] = flow
 
+        # Write data
         self._write_data(data)
 
+        # Update cache
+        self._cache = flows.copy()
+
     def delete(self, flow_id: str) -> bool:
-        """Flow 삭제"""
+        """Delete a Flow"""
         flows = self.load_all()
         if flow_id in flows:
             del flows[flow_id]
@@ -97,37 +199,80 @@ class JsonFlowRepository(FlowRepository):
             return True
         return False
 
-    def exists(self, flow_id: str) -> bool:
-        """Flow 존재 여부 확인"""
-        flows = self.load_all()
-        return flow_id in flows
+    def _create_backup(self):
+        """Create automatic backup of flows.json"""
+        if self.storage_path.exists():
+            backup_dir = self._context.ai_brain_dir / "backups"
+            backup_dir.mkdir(exist_ok=True)
 
-    def _read_data(self) -> Dict:
-        """JSON 파일 읽기"""
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_path = backup_dir / f"flows_backup_{timestamp}.json"
+
+            # Clean old backups (keep last 10)
+            self._cleanup_old_backups(backup_dir, max_backups=10)
+
+            # Copy current file to backup
+            shutil.copy2(self.storage_path, backup_path)
+
+    def _cleanup_old_backups(self, backup_dir: Path, max_backups: int):
+        """Remove old backup files"""
+        backups = sorted(backup_dir.glob("flows_backup_*.json"))
+        if len(backups) > max_backups:
+            for backup in backups[:-max_backups]:
+                backup.unlink()
+
+    def _read_data(self) -> dict:
+        """Read JSON data from file"""
         try:
             with open(self.storage_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
+        except json.JSONDecodeError:
+            print(f"Warning: Invalid JSON in {self.storage_path}, returning empty dict")
+            return {}
+        except Exception as e:
+            print(f"Error reading {self.storage_path}: {e}")
             return {}
 
-    def _write_data(self, data: Dict) -> None:
-        """JSON 파일 쓰기"""
-        # 백업 생성
-        if self.storage_path.exists():
-            backup_path = self.storage_path.with_suffix('.backup')
-            try:
-                import shutil
-                shutil.copy2(self.storage_path, backup_path)
-            except Exception as e:
-                print(f"Warning: Failed to create backup: {e}")
+    def _write_data(self, data: dict):
+        """Write JSON data to file (atomic write)"""
+        # Write to temporary file first
+        temp_path = self.storage_path.with_suffix('.tmp')
 
-        # 데이터 저장
-        with open(self.storage_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+        try:
+            with open(temp_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+
+            # Atomic replace
+            temp_path.replace(self.storage_path)
+
+        except Exception as e:
+            # Clean up temp file on error
+            if temp_path.exists():
+                temp_path.unlink()
+            raise
+
+    def get_project_info(self) -> dict:
+        """Get current project information"""
+        return {
+            'project': str(self._context.root),
+            'storage_path': str(self.storage_path),
+            'flows_count': len(self.load_all()),
+            'file_size': self.storage_path.stat().st_size if self.storage_path.exists() else 0,
+            'has_cache': self._cache is not None
+        }
+
+    def clear_cache(self):
+        """Clear the internal cache"""
+        self._cache = None
+
+    def sync(self):
+        """Force reload from disk"""
+        self.clear_cache()
+        self._cache = self._load_from_disk()
 
 
 class InMemoryFlowRepository(FlowRepository):
-    """메모리 기반 Flow 저장소 (테스트용)"""
+    """In-memory Flow repository for testing"""
 
     def __init__(self):
         self._flows: Dict[str, Flow] = {}
@@ -146,6 +291,3 @@ class InMemoryFlowRepository(FlowRepository):
             del self._flows[flow_id]
             return True
         return False
-
-    def exists(self, flow_id: str) -> bool:
-        return flow_id in self._flows

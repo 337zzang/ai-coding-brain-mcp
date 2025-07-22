@@ -1,0 +1,41 @@
+{
+  "flow_20250722_193754_dbee6a": {
+    "id": "flow_20250722_193754_dbee6a",
+    "name": "디버그 테스트",
+    "plans": {
+      "plan_17531806748367410_f03d0d": {
+        "id": "plan_17531806748367410_f03d0d",
+        "name": "테스트 Plan",
+        "tasks": {
+          "task_17531806748407400_0b12bb": {
+            "id": "task_17531806748407400_0b12bb",
+            "name": "테스트 Task",
+            "status": "in_progress",
+            "created_at": "2025-07-22T19:37:54.840740",
+            "updated_at": "2025-07-22T19:37:54.846740",
+            "started_at": "2025-07-22T19:37:54.846740",
+            "completed_at": null,
+            "context": {
+              "plan": "",
+              "actions": [],
+              "results": {},
+              "files": {
+                "created": [],
+                "modified": [],
+                "analyzed": []
+              },
+              "errors": [],
+              "notes": []
+            }
+          }
+        },
+        "created_at": "2025-07-22T19:37:54.836741",
+        "completed": false,
+        "completed_at": null
+      }
+    },
+    "created_at": "2025-07-22T19:37:54.817741",
+    "updated_at": "2025-07-22T19:37:54.846740",
+    "metadata": {}
+  }
+}

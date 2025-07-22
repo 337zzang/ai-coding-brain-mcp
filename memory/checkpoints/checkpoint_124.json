@@ -1,9 +1,0 @@
-{
-  "updated_files": [
-    "tool-definitions.ts"
-  ],
-  "build_output": "dist 폴더에 12개 JS 파일",
-  "issues_resolved": [
-    "workflow-handlers import 오류 해결"
-  ]
-}

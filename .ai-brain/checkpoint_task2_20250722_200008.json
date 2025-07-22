@@ -1,0 +1,7 @@
+{
+  "timestamp": "2025-07-22T20:00:08.447224",
+  "task": "task_structure_migration",
+  "backup_file": "backups\\flows_backup_20250722_200008_before_task2_migration.json",
+  "issues_count": 10,
+  "total_tasks": 0
+}

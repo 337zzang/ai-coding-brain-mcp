@@ -1,8 +1,0 @@
-{
-  "deleted_files": [
-    "python/workflow_kanban_extension.py",
-    "python/workflow_kanban_integration.py",
-    "docs/kanban_workflow_guide.md"
-  ],
-  "reason": "사용자 요청"
-}

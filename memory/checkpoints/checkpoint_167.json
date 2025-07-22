@@ -1,8 +1,0 @@
-{
-  "modified_files": [
-    "python/json_repl_session.py"
-  ],
-  "commit": "1554da0",
-  "issue": "출력이 표시되지 않음",
-  "solution": "safe_exec 반환값 직접 활용"
-}

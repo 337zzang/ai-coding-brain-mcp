@@ -1,9 +1,0 @@
-{
-  "tested_methods": [
-    "parse_file + lines",
-    "AST analysis",
-    "custom helpers"
-  ],
-  "best_practice": "parse_file + line-based modification",
-  "new_helper": "replace_function"
-}

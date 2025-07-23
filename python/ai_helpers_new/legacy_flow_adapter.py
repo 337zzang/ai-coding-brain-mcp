@@ -5,6 +5,8 @@
 '''
 
 from typing import Dict, Any, Optional
+from .util import ok, err
+import os
 import warnings
 
 from .flow_manager import FlowManager
@@ -21,6 +23,7 @@ class LegacyFlowAdapter:
         self._manager = flow_manager or FlowManager()
         self._flows_cache = None
         self._cache_dirty = True
+        self._previous_flow_id: Optional[str] = None  # o3 권장사항 추가
 
         # 레거시 경고
         warnings.warn(
@@ -165,14 +168,151 @@ class LegacyFlowAdapter:
         """통계 (레거시)"""
         stats = self._manager.get_statistics()
 
-        # 레거시 형식으로 변환
-        return {
-            'flows': stats['total_flows'],
-            'plans': stats['total_plans'],
-            'tasks': stats['total_tasks'],
-            'completed': stats['completed_tasks'],
-            'percentage': int(stats['completion_rate'] * 100)
-        }
+    def switch_project(self, name: str) -> Dict[str, Any]:
+        """프로젝트(Flow) 전환"""
+        # 현재 Flow 저장
+        current = self._manager.current_flow
+        if current:
+            self._previous_flow_id = current.id
+
+        # Flow 찾기 또는 생성
+        flows = self._manager.list_flows()
+        target_flow = None
+        for flow in flows:
+            if flow.name == name:
+                target_flow = flow
+                break
+
+        if not target_flow:
+            # Flow가 없으면 에러 반환
+            return err(f"Flow '{name}'을 찾을 수 없습니다. '/flow create {name}'으로 먼저 생성하세요.")
+
+        # current_flow 설정
+        self._manager._current_flow_id = target_flow.id
+        self._flows_cache = None  # 캐시 무효화
+        self._cache_dirty = True
+
+        return {'ok': True, 'data': {
+            'id': target_flow.id,
+            'name': target_flow.name,
+            'switched': True
+        }}
+
+
+    def switch_to_previous(self) -> Dict[str, Any]:
+        """이전 Flow로 전환"""
+        if not self._previous_flow_id:
+            return {'ok': False, 'error': '이전 Flow가 없습니다'}
+
+        # 현재와 이전 교체
+        current = self._manager._current_flow_id
+        self._manager._current_flow_id = self._previous_flow_id
+        self._previous_flow_id = current
+
+        self._flows_cache = None
+        self._cache_dirty = True
+
+        flow = self._manager.current_flow
+        return {'ok': True, 'data': {
+            'id': flow.id,
+            'name': flow.name,
+            'switched': True
+        }}
+
+
+    def get_status(self) -> Dict[str, Any]:
+        """현재 Flow 상태 정보"""
+        flow = self._manager.current_flow
+        if not flow:
+            return {'ok': False, 'error': '활성 Flow가 없습니다'}
+
+        # 통계 계산
+        total_plans = len(flow.plans)
+        total_tasks = sum(len(plan.tasks) for plan in flow.plans.values())
+        completed_tasks = sum(
+            1 for plan in flow.plans.values()
+            for task in plan.tasks.values()
+            if task.status in ('completed', 'reviewing')
+        )
+
+        progress = 0
+        if total_tasks > 0:
+            progress = int(completed_tasks / total_tasks * 100)
+
+        return {'ok': True, 'data': {
+            'project': {
+                'name': flow.name,
+                'path': os.getcwd()  # 현재 작업 디렉토리 사용
+            },
+            'flow': {
+                'id': flow.id,
+                'plans': total_plans,
+                'tasks': total_tasks,
+                'completed': completed_tasks,
+                'progress': progress,
+                'last_activity': flow.updated_at or flow.created_at
+            }
+        }}
+
+
+    def create_project(self, name: str, template: str = 'default') -> Dict[str, Any]:
+        """새 프로젝트(Flow) 생성"""
+        try:
+            flow = self._manager.create_flow(name=name)
+            return {'ok': True, 'data': {
+                'id': flow.id,
+                'name': flow.name,
+                'created': True,
+                'template': template
+            }}
+        except Exception as e:
+            return {'ok': False, 'error': str(e)}
+
+
+    def archive_flow(self, name: str) -> Dict[str, Any]:
+        """Flow 아카이브 (soft delete)"""
+        flows = self._manager.list_flows()
+        target_flow = None
+
+        for flow in flows:
+            if flow.name == name:
+                target_flow = flow
+                break
+
+        if not target_flow:
+            return {'ok': False, 'error': f"Flow '{name}'를 찾을 수 없습니다"}
+
+        # archived 플래그 설정
+        target_flow.archived = True
+
+        # 저장
+        if hasattr(self._manager, '_service') and self._manager._service:
+            self._manager._service.save_flow(target_flow)
+
+        return {'ok': True, 'data': f"Flow '{name}' 아카이브됨"}
+
+
+    def restore_flow(self, name: str) -> Dict[str, Any]:
+        """아카이브된 Flow 복원"""
+        flows = self._manager.list_flows()
+        target_flow = None
+
+        for flow in flows:
+            if flow.name == name and getattr(flow, 'archived', False):
+                target_flow = flow
+                break
+
+        if not target_flow:
+            return {'ok': False, 'error': f"아카이브된 Flow '{name}'를 찾을 수 없습니다"}
+
+        # archived 플래그 해제
+        target_flow.archived = False
+
+        # 저장
+        if hasattr(self._manager, '_service') and self._manager._service:
+            self._manager._service.save_flow(target_flow)
+
+        return {'ok': True, 'data': f"Flow '{name}' 복원됨"}
 
 
 # 기존 FlowManagerUnified를 대체하는 팩토리 함수
@@ -193,3 +333,42 @@ def create_flow_manager(legacy: bool = False, **kwargs) -> Any:
         return LegacyFlowAdapter(manager)
 
     return manager
+
+    # ========== o3 권장사항에 따른 추가 메서드 ==========
+    # FlowCommandRouter가 필요로 하는 상위 레벨 API
+
+
+# 컨텍스트 관련 레거시 호환 함수
+
+def update_task_context_legacy(flow_id: str, plan_id: str, task_id: str, key: str, value: Any) -> Dict[str, Any]:
+    """레거시 호환용 - key/value 방식을 새 API로 변환"""
+    from .flow_manager import FlowManager
+    fm = FlowManager(context_enabled=True)
+    return fm.update_task_context(flow_id, plan_id, task_id, {key: value}, merge=True)
+
+def save_task_context(task_id: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    """간단한 컨텍스트 저장 - 현재 플로우 자동 감지"""
+    from .flow_manager import FlowManager
+    fm = FlowManager(context_enabled=True)
+
+    # 현재 플로우에서 task 찾기
+    flows = fm.list_flows()
+    for flow in flows:
+        for plan_id, plan in flow.plans.items():
+            if task_id in plan.tasks:
+                return fm.update_task_context(flow.id, plan_id, task_id, context, merge=True)
+
+    # 찾지 못하면 파일로 저장 (fallback)
+    import json
+    from datetime import datetime
+    fallback_file = f"task_contexts/{task_id}_context.json"
+    os.makedirs("task_contexts", exist_ok=True)
+
+    with open(fallback_file, 'w') as f:
+        json.dump({
+            'task_id': task_id,
+            'timestamp': datetime.now().isoformat(),
+            'context': context
+        }, f, indent=2)
+
+    return context

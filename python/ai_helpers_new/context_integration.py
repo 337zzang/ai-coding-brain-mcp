@@ -346,7 +346,7 @@ def get_context_integration() -> ContextIntegration:
                     # 최근 작업 기록
                     if len(summary["recent_actions"]) < 5:
                         summary["recent_actions"].append({
-                            "type": action.get("action_type"),
+                            "type": action.get("type"),
                             "timestamp": action.get("timestamp"),
                             "message": data.get("message", ""),
                             "task_name": data.get("task_name", "")
@@ -359,11 +359,11 @@ def get_context_integration() -> ContextIntegration:
                             summary["key_files"].add(file_path)
 
                     # Task 상태 추적
-                    if action.get("action_type") == "task_completed":
+                    if action.get("type") == "task_completed":
                         task_name = data.get("task_name", "Unknown")
                         if task_name not in summary["completed_tasks"]:
                             summary["completed_tasks"].append(task_name)
-                    elif action.get("action_type") in ["task_started", "progress_update"]:
+                    elif action.get("type") in ["task_started", "progress_update"]:
                         task_name = data.get("task_name", "Unknown")
                         if task_name not in summary["in_progress_tasks"] and task_name not in summary["completed_tasks"]:
                             summary["in_progress_tasks"].append(task_name)

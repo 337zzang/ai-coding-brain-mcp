@@ -285,9 +285,10 @@ class CachedFlowService:
             plan_data = {
                 'id': plan.id,
                 'name': plan.name,
-                'flow_id': plan.flow_id,
                 'created_at': plan.created_at or datetime.now().isoformat(),
+                'updated_at': plan.updated_at or datetime.now().isoformat(),
                 'completed': plan.completed,
+                'metadata': plan.metadata or {},
                 'tasks': {}
             }
 
@@ -296,10 +297,11 @@ class CachedFlowService:
                 task_data = {
                     'id': task.id,
                     'name': task.name,
-                    'plan_id': task.plan_id,
                     'status': task.status,
                     'created_at': task.created_at or datetime.now().isoformat(),
                     'updated_at': task.updated_at or datetime.now().isoformat(),
+                    'started_at': task.started_at,
+                    'completed_at': task.completed_at,
                     'context': task.context
                 }
                 plan_data['tasks'][task_id] = task_data

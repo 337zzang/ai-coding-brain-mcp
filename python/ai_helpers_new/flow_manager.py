@@ -49,7 +49,10 @@ class FlowManager:
             # 현재 프로젝트명 가져오기
             from .project import get_current_project
             current_proj = get_current_project()
-            name = current_proj.get('name', 'default') if current_proj else 'default'
+            if current_proj['ok']:
+                name = current_proj['data'].get('name', 'default')
+            else:
+                name = 'default'
 
         # 2. 기존 Flow 확인 (force가 False인 경우)
         if not force:

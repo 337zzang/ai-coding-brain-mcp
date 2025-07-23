@@ -20,7 +20,7 @@ def get_current_project() -> Dict[str, Any]:
     global _current_project_cache
 
     if _current_project_cache:
-        return _current_project_cache
+        return ok(_current_project_cache)
 
     # 프로젝트 루트 찾기
     current_dir = os.getcwd()
@@ -34,7 +34,7 @@ def get_current_project() -> Dict[str, Any]:
     }
 
     _current_project_cache = project_info
-    return project_info
+    return ok(project_info)
 
 def detect_project_type(path: str) -> str:
     """프로젝트 타입 감지"""

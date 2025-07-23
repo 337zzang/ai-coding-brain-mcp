@@ -45,11 +45,8 @@ def scan_directory_dict(path: str = '.', max_depth: int = 3) -> Dict[str, Any]:
 def get_current_project() -> Dict[str, Any]:
     """get_current_project의 표준화 래퍼"""
     try:
-        result = h.get_current_project()
-        return {
-            'ok': True,
-            'data': result
-        }
+        # 이미 표준 형식으로 반환하므로 그대로 전달
+        return h.get_current_project()
     except Exception as e:
         return {
             'ok': False,

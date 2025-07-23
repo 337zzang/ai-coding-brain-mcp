@@ -251,3 +251,128 @@ def get_context_integration() -> ContextIntegration:
     if _context_integration is None:
         _context_integration = ContextIntegration()
     return _context_integration
+
+    def search_docs(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """문서 검색 기능
+
+        Args:
+            query: 검색어
+            limit: 최대 결과 수
+
+        Returns:
+            검색된 문서 정보 리스트
+        """
+        results = []
+        query_lower = query.lower()
+
+        # docs_context 읽기
+        try:
+            with open(self.docs_context_file, 'r', encoding='utf-8') as f:
+                docs_context = json.load(f)
+        except Exception as e:
+            print(f"docs_context 읽기 실패: {e}")
+            return results
+
+        # 문서 검색
+        for doc_path, doc_info in docs_context.get("documents", {}).items():
+            score = 0
+
+            # 경로에서 검색
+            if query_lower in doc_path.lower():
+                score += 3
+
+            # 카테고리에서 검색
+            doc_category = doc_info.get("category", "")
+            if doc_category and query_lower in doc_category.lower():
+                score += 2
+
+            # 액션 내용에서 검색
+            for action in doc_info.get("actions", []):
+                if query_lower in str(action.get("details", {})).lower():
+                    score += 1
+
+            if score > 0:
+                results.append({
+                    "path": doc_path,
+                    "score": score,
+                    "category": doc_category,
+                    "last_modified": doc_info.get("last_modified"),
+                    "actions_count": len(doc_info.get("actions", []))
+                })
+
+        # 점수 순으로 정렬
+        results.sort(key=lambda x: x["score"], reverse=True)
+
+        return results[:limit]
+
+
+    def get_plan_context_summary(self, flow_id: str, plan_id: str) -> Dict[str, Any]:
+        """Plan의 작업 Context 요약
+
+        Args:
+            flow_id: Flow ID
+            plan_id: Plan ID
+
+        Returns:
+            작업 요약 정보
+        """
+        summary = {
+            "total_actions": 0,
+            "recent_actions": [],
+            "completed_tasks": [],
+            "in_progress_tasks": [],
+            "key_files": set(),
+            "last_activity": None
+        }
+
+        # Flow context 파일 읽기
+        context_file = os.path.join(self.contexts_dir, f"flow_{flow_id}", "context.json")
+        if not os.path.exists(context_file):
+            return summary
+
+        try:
+            with open(context_file, 'r', encoding='utf-8') as f:
+                context_data = json.load(f)
+
+            # Plan 관련 작업 필터링
+            for action in context_data.get("actions", []):
+                data = action.get("data", {})
+
+                # Plan ID 또는 관련 Task 확인
+                if plan_id in str(data) or data.get("plan_id") == plan_id:
+                    summary["total_actions"] += 1
+                    summary["last_activity"] = action.get("timestamp")
+
+                    # 최근 작업 기록
+                    if len(summary["recent_actions"]) < 5:
+                        summary["recent_actions"].append({
+                            "type": action.get("action_type"),
+                            "timestamp": action.get("timestamp"),
+                            "message": data.get("message", ""),
+                            "task_name": data.get("task_name", "")
+                        })
+
+                    # 파일 작업 추적
+                    if "file" in data or "path" in data:
+                        file_path = data.get("file") or data.get("path")
+                        if file_path:
+                            summary["key_files"].add(file_path)
+
+                    # Task 상태 추적
+                    if action.get("action_type") == "task_completed":
+                        task_name = data.get("task_name", "Unknown")
+                        if task_name not in summary["completed_tasks"]:
+                            summary["completed_tasks"].append(task_name)
+                    elif action.get("action_type") in ["task_started", "progress_update"]:
+                        task_name = data.get("task_name", "Unknown")
+                        if task_name not in summary["in_progress_tasks"] and task_name not in summary["completed_tasks"]:
+                            summary["in_progress_tasks"].append(task_name)
+
+            summary["key_files"] = list(summary["key_files"])
+
+        except Exception as e:
+            print(f"Context 읽기 오류: {e}")
+
+        return summary
+
+

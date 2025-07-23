@@ -76,12 +76,36 @@ def run_git_command(args: List[str], cwd: Optional[str] = None) -> Dict[str, Any
 
 def git_status() -> Dict[str, Any]:
     """Git 상태 확인"""
-    result = run_git_command(['status', '--porcelain'])
-    if result['ok']:
-        files = result['data'].strip().split('\n') if result['data'].strip() else []
-        return ok({'files': files, 'count': len(files)})
-    return result
+    result = run_git_command(['status', '--porcelain', '-b'])
+    if not result['ok']:
+        return result
 
+    # result['data']는 stdout과 stderr를 포함한 dict
+    output = result['data'].get('stdout', '') if isinstance(result['data'], dict) else result['data']
+    lines = output.strip().split('\n') if output.strip() else []
+
+    # 브랜치 정보 추출
+    branch = None
+    changes = []
+
+    for line in lines:
+        if line.startswith('## '):
+            # 브랜치 정보
+            branch_info = line[3:]
+            if '...' in branch_info:
+                branch = branch_info.split('...')[0]
+            else:
+                branch = branch_info
+        elif line.strip():
+            # 변경된 파일
+            changes.append(line)
+
+    return ok({
+        'branch': branch,
+        'changes': changes,
+        'files': changes,  # 호환성을 위해 유지
+        'count': len(changes)
+    })
 def git_add(files: List[str]) -> Dict[str, Any]:
     """파일을 스테이징 영역에 추가"""
     if not files:

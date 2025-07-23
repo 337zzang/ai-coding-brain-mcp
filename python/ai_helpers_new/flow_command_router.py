@@ -20,6 +20,10 @@ class FlowCommandRouter:
             'f': self.handle_flow,  # 단축키
             'fs': self.handle_flows,  # 단축키
 
+            # Task 관련 명령어
+            'task': self.handle_task,
+            'tasks': self.handle_task_list,
+
             # 기존 명령어 호환성
             'project': self.handle_flow,  # 리다이렉트
             'projects': self.handle_flows,  # 리다이렉트
@@ -203,6 +207,37 @@ class FlowCommandRouter:
 
         if not flows:
             return ok("생성된 Flow가 없습니다. '/flow create [name]'으로 새 Flow를 생성하세요.")
+
+    def handle_task(self, args: List[str]) -> Dict[str, Any]:
+        """task 명령어 처리"""
+        if not args:
+            return self.handle_task_list([])
+
+        # 서브 명령어 확인
+        subcommand = args[0]
+
+        if subcommand == 'list':
+            return self.handle_task_list(args[1:])
+        elif subcommand == 'start':
+            if len(args) < 2:
+                return err("Task ID를 지정하세요. 예: /task start task_id")
+            return self.manager.start_task(args[1])
+        elif subcommand == 'complete':
+            if len(args) < 2:
+                return err("Task ID를 지정하세요. 예: /task complete task_id [메시지]")
+            task_id = args[1]
+            message = ' '.join(args[2:]) if len(args) > 2 else "작업 완료"
+            return self.manager.complete_task(task_id, message)
+        elif subcommand == 'status':
+            if len(args) < 2:
+                return err("Task ID를 지정하세요. 예: /task status task_id")
+            return self.manager.get_task_status(args[1])
+        else:
+            return err(f"알 수 없는 task 서브커맨드: {subcommand}")
+
+    def handle_task_list(self, args: List[str]) -> Dict[str, Any]:
+        """현재 Plan의 Task 목록 표시"""
+        return self.manager.list_tasks()
 
         # Flow 목록 포맷팅
         lines = ["📋 Flow 목록:"]

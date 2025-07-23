@@ -17,10 +17,9 @@ from .flow_manager_unified import FlowManagerUnified
 # 새 구조 export
 from .domain.models import Flow, Plan, Task, TaskStatus
 from .infrastructure.flow_repository import JsonFlowRepository, InMemoryFlowRepository
-from .service.flow_service import FlowService
 from .service.plan_service import PlanService
 from .service.task_service import TaskService
-from .presentation.command_processor import CommandProcessor
+# from .presentation.command_processor import CommandProcessor  # 사용 안 함
 
 # 추가 기능 모듈들
 from . import backup_utils
@@ -66,7 +65,7 @@ from .file import read, write, append, read_json, write_json, exists, info, list
 from .code import parse, view, replace, insert, functions, classes
 from .search import search_files, search_code, find_function, find_class, grep, find_in_file
 from .llm import ask_o3_async, check_o3_status, get_o3_result, show_o3_progress, save_o3_result, list_o3_tasks, clear_completed_tasks, prepare_o3_context
-from .git import git_status, git_add, git_commit, git_push, git_pull, git_branch, git_log, git_current_branch, git_diff
+from .git import git_status, git_add, git_commit, git_push, git_pull, git_branch, git_log, git_current_branch, git_diff, git_status_string
 from .util import ok, err, is_ok, get_data, get_error
 from .project import get_current_project, fp, scan_directory, detect_project_type, scan_directory_dict, create_project_structure
 
@@ -81,10 +80,9 @@ __all__ = [
     'JsonFlowRepository', 'InMemoryFlowRepository',
 
     # 서비스
-    'FlowService', 'PlanService', 'TaskService',
 
     # 프레젠테이션
-    'CommandProcessor',
+    # 'CommandProcessor',  # 사용 안 함
 
     # 백업 기능
     'backup_utils',

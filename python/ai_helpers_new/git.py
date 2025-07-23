@@ -195,3 +195,30 @@ def git_diff(file: str = None, staged: bool = False, cwd: str = ".") -> Dict[str
         args.append(file)
 
     return run_git_command(args, cwd)
+
+
+
+# git_status 호환성 래퍼
+def git_status_string() -> str:
+    """
+    git_status의 결과를 문자열로 반환 (레거시 호환용)
+    """
+    result = git_status()
+    if result['ok'] and isinstance(result['data'], dict):
+        # dict 형태의 data를 문자열로 변환
+        data = result['data']
+        if 'files' in data:
+            # 파일 리스트를 git status 형식의 문자열로 변환
+            output_lines = []
+            for file in data['files']:
+                output_lines.append(file)
+            return '\n'.join(output_lines)
+        else:
+            return str(data)
+    elif result['ok']:
+        return str(result['data'])
+    else:
+        return f"Error: {result.get('error', 'Unknown error')}"
+
+# 별칭 추가 (기존 코드 호환성)
+git_status_str = git_status_string

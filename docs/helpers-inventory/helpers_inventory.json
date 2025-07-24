@@ -1,0 +1,4460 @@
+{
+  "summary": {
+    "total_modules": 34,
+    "total_functions": 364,
+    "total_duplicates": 40,
+    "total_non_standard": 18,
+    "categories": {
+      "파일 작업": 12,
+      "코드 분석/수정": 15,
+      "검색": 19,
+      "Git": 12,
+      "LLM/AI": 11,
+      "프로젝트 관리": 11,
+      "Flow 관리": 79,
+      "Context 관리": 35,
+      "유틸리티": 11,
+      "도메인/인프라": 61,
+      "서비스": 34,
+      "프레젠테이션": 50,
+      "기타": 14
+    }
+  },
+  "modules": {
+    "backup_utils.py": {
+      "functions": [
+        {
+          "name": "create_backup",
+          "line": 8,
+          "is_private": false,
+          "args": [
+            "reason"
+          ],
+          "returns": "Optional[str]",
+          "has_docstring": true
+        },
+        {
+          "name": "cleanup_old_backups",
+          "line": 48,
+          "is_private": false,
+          "args": [
+            "keep_count"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "list_backups",
+          "line": 65,
+          "is_private": false,
+          "args": [],
+          "returns": "List[Dict]",
+          "has_docstring": true
+        },
+        {
+          "name": "restore_backup",
+          "line": 91,
+          "is_private": false,
+          "args": [
+            "backup_file"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 4,
+      "private_count": 0
+    },
+    "code.py": {
+      "functions": [
+        {
+          "name": "parse",
+          "line": 11,
+          "is_private": false,
+          "args": [
+            "path"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "view",
+          "line": 155,
+          "is_private": false,
+          "args": [
+            "path",
+            "name"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "replace",
+          "line": 202,
+          "is_private": false,
+          "args": [
+            "path",
+            "old",
+            "new",
+            "count"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "insert",
+          "line": 250,
+          "is_private": false,
+          "args": [
+            "path",
+            "marker",
+            "code",
+            "after"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "functions",
+          "line": 298,
+          "is_private": false,
+          "args": [
+            "path"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "classes",
+          "line": 313,
+          "is_private": false,
+          "args": [
+            "path"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_type_repr",
+          "line": 28,
+          "is_private": false,
+          "args": [
+            "node"
+          ],
+          "returns": "Optional[str]",
+          "has_docstring": false
+        },
+        {
+          "name": "__init__",
+          "line": 52,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "visit_FunctionDef",
+          "line": 59,
+          "is_private": false,
+          "args": [
+            "self",
+            "node"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "visit_AsyncFunctionDef",
+          "line": 63,
+          "is_private": false,
+          "args": [
+            "self",
+            "node"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "_collect_function",
+          "line": 67,
+          "is_private": true,
+          "args": [
+            "self",
+            "node",
+            "is_async"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "visit_ClassDef",
+          "line": 86,
+          "is_private": false,
+          "args": [
+            "self",
+            "node"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "visit_Import",
+          "line": 106,
+          "is_private": false,
+          "args": [
+            "self",
+            "node"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "visit_ImportFrom",
+          "line": 110,
+          "is_private": false,
+          "args": [
+            "self",
+            "node"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "visit_Assign",
+          "line": 114,
+          "is_private": false,
+          "args": [
+            "self",
+            "node"
+          ],
+          "returns": null,
+          "has_docstring": false
+        }
+      ],
+      "public_count": 13,
+      "private_count": 2
+    },
+    "context_decorator.py": {
+      "functions": [
+        {
+          "name": "auto_context",
+          "line": 14,
+          "is_private": false,
+          "args": [],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "get_task_context",
+          "line": 86,
+          "is_private": false,
+          "args": [
+            "task_id"
+          ],
+          "returns": "dict",
+          "has_docstring": true
+        },
+        {
+          "name": "with_context",
+          "line": 121,
+          "is_private": false,
+          "args": [
+            "task_id"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "decorator",
+          "line": 28,
+          "is_private": false,
+          "args": [
+            "func"
+          ],
+          "returns": "Callable",
+          "has_docstring": false
+        },
+        {
+          "name": "wrapper",
+          "line": 30,
+          "is_private": false,
+          "args": [],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "__init__",
+          "line": 124,
+          "is_private": true,
+          "args": [
+            "self",
+            "task_id"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "__enter__",
+          "line": 128,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "__exit__",
+          "line": 132,
+          "is_private": true,
+          "args": [
+            "self",
+            "exc_type",
+            "exc_val",
+            "exc_tb"
+          ],
+          "returns": null,
+          "has_docstring": false
+        }
+      ],
+      "public_count": 5,
+      "private_count": 3
+    },
+    "context_integration.py": {
+      "functions": [
+        {
+          "name": "get_context_integration",
+          "line": 251,
+          "is_private": false,
+          "args": [],
+          "returns": "ContextIntegration",
+          "has_docstring": true
+        },
+        {
+          "name": "__init__",
+          "line": 11,
+          "is_private": true,
+          "args": [
+            "self",
+            "base_path"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "_ensure_directories",
+          "line": 17,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "_init_docs_context",
+          "line": 25,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "record_flow_action",
+          "line": 37,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "action_type",
+            "details"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "record_doc_action",
+          "line": 76,
+          "is_private": false,
+          "args": [
+            "self",
+            "doc_path",
+            "action_type",
+            "details"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "record_doc_reference",
+          "line": 124,
+          "is_private": false,
+          "args": [
+            "self",
+            "from_doc",
+            "to_doc",
+            "reference_type"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "get_related_docs",
+          "line": 148,
+          "is_private": false,
+          "args": [
+            "self",
+            "doc_path",
+            "limit"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "_determine_category",
+          "line": 195,
+          "is_private": true,
+          "args": [
+            "self",
+            "doc_path"
+          ],
+          "returns": "str",
+          "has_docstring": true
+        },
+        {
+          "name": "get_context_summary",
+          "line": 215,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "search_docs",
+          "line": 258,
+          "is_private": false,
+          "args": [
+            "self",
+            "query",
+            "limit"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_plan_context_summary",
+          "line": 312,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 8,
+      "private_count": 4
+    },
+    "doc_context_helper.py": {
+      "functions": [
+        {
+          "name": "create_doc_with_context",
+          "line": 6,
+          "is_private": false,
+          "args": [
+            "doc_path",
+            "content",
+            "doc_type",
+            "related_to",
+            "summary"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "update_doc_with_context",
+          "line": 47,
+          "is_private": false,
+          "args": [
+            "doc_path",
+            "content",
+            "update_type",
+            "summary"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "suggest_related_docs_for_new",
+          "line": 94,
+          "is_private": false,
+          "args": [
+            "category",
+            "keywords"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "generate_doc_template",
+          "line": 150,
+          "is_private": false,
+          "args": [
+            "doc_type",
+            "title",
+            "related_docs"
+          ],
+          "returns": "str",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 4,
+      "private_count": 0
+    },
+    "domain\\models.py": {
+      "functions": [
+        {
+          "name": "validate_status",
+          "line": 151,
+          "is_private": false,
+          "args": [
+            "status"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "create_flow_id",
+          "line": 156,
+          "is_private": false,
+          "args": [],
+          "returns": "str",
+          "has_docstring": true
+        },
+        {
+          "name": "create_plan_id",
+          "line": 165,
+          "is_private": false,
+          "args": [],
+          "returns": "str",
+          "has_docstring": true
+        },
+        {
+          "name": "create_task_id",
+          "line": 174,
+          "is_private": false,
+          "args": [],
+          "returns": "str",
+          "has_docstring": true
+        },
+        {
+          "name": "to_dict",
+          "line": 38,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "from_dict",
+          "line": 52,
+          "is_private": false,
+          "args": [
+            "cls",
+            "data"
+          ],
+          "returns": "Task",
+          "has_docstring": true
+        },
+        {
+          "name": "to_dict",
+          "line": 77,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "from_dict",
+          "line": 90,
+          "is_private": false,
+          "args": [
+            "cls",
+            "data"
+          ],
+          "returns": "Plan",
+          "has_docstring": true
+        },
+        {
+          "name": "to_dict",
+          "line": 119,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "from_dict",
+          "line": 132,
+          "is_private": false,
+          "args": [
+            "cls",
+            "data"
+          ],
+          "returns": "Flow",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 10,
+      "private_count": 0
+    },
+    "error_messages.py": {
+      "functions": [
+        {
+          "name": "get_error_message",
+          "line": 3,
+          "is_private": false,
+          "args": [
+            "error_type"
+          ],
+          "returns": "str",
+          "has_docstring": true
+        },
+        {
+          "name": "format_error_response",
+          "line": 60,
+          "is_private": false,
+          "args": [
+            "error_type"
+          ],
+          "returns": "dict",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 2,
+      "private_count": 0
+    },
+    "file.py": {
+      "functions": [
+        {
+          "name": "read",
+          "line": 12,
+          "is_private": false,
+          "args": [
+            "path",
+            "encoding"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "write",
+          "line": 38,
+          "is_private": false,
+          "args": [
+            "path",
+            "content",
+            "encoding",
+            "backup"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "append",
+          "line": 68,
+          "is_private": false,
+          "args": [
+            "path",
+            "content",
+            "encoding"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "read_json",
+          "line": 95,
+          "is_private": false,
+          "args": [
+            "path"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "write_json",
+          "line": 113,
+          "is_private": false,
+          "args": [
+            "path",
+            "data",
+            "indent"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "exists",
+          "line": 127,
+          "is_private": false,
+          "args": [
+            "path"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "info",
+          "line": 143,
+          "is_private": false,
+          "args": [
+            "path"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "list_directory",
+          "line": 180,
+          "is_private": false,
+          "args": [
+            "path"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 8,
+      "private_count": 0
+    },
+    "flow_backup_wrapper.py": {
+      "functions": [
+        {
+          "name": "handle_backup_command",
+          "line": 4,
+          "is_private": false,
+          "args": [
+            "args"
+          ],
+          "returns": null,
+          "has_docstring": true
+        }
+      ],
+      "public_count": 1,
+      "private_count": 0
+    },
+    "flow_batch.py": {
+      "functions": [
+        {
+          "name": "batch_complete_all_todo_tasks",
+          "line": 306,
+          "is_private": false,
+          "args": [],
+          "returns": "Tuple[int, List[Dict[str, Any]]]",
+          "has_docstring": true
+        },
+        {
+          "name": "batch_skip_error_tasks",
+          "line": 314,
+          "is_private": false,
+          "args": [],
+          "returns": "Tuple[int, List[Dict[str, Any]]]",
+          "has_docstring": true
+        },
+        {
+          "name": "batch_cleanup_empty_plans",
+          "line": 322,
+          "is_private": false,
+          "args": [],
+          "returns": "Tuple[int, List[Dict[str, Any]]]",
+          "has_docstring": true
+        },
+        {
+          "name": "batch_add_default_tasks",
+          "line": 327,
+          "is_private": false,
+          "args": [
+            "plan_name_pattern",
+            "default_tasks"
+          ],
+          "returns": "Tuple[int, List[Dict[str, Any]]]",
+          "has_docstring": true
+        },
+        {
+          "name": "__init__",
+          "line": 11,
+          "is_private": true,
+          "args": [
+            "self",
+            "flows_file"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "set_dry_run",
+          "line": 16,
+          "is_private": false,
+          "args": [
+            "self",
+            "dry_run"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "_load_flows",
+          "line": 21,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "_save_flows",
+          "line": 26,
+          "is_private": true,
+          "args": [
+            "self",
+            "data"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "_log_action",
+          "line": 32,
+          "is_private": true,
+          "args": [
+            "self",
+            "action",
+            "target",
+            "details"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "batch_update_task_status",
+          "line": 43,
+          "is_private": false,
+          "args": [
+            "self",
+            "task_filter",
+            "new_status"
+          ],
+          "returns": "Tuple[int, List[Dict[str, Any]]]",
+          "has_docstring": true
+        },
+        {
+          "name": "batch_complete_plans",
+          "line": 95,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Tuple[int, List[Dict[str, Any]]]",
+          "has_docstring": true
+        },
+        {
+          "name": "batch_delete_empty_plans",
+          "line": 149,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Tuple[int, List[Dict[str, Any]]]",
+          "has_docstring": true
+        },
+        {
+          "name": "batch_add_tasks",
+          "line": 193,
+          "is_private": false,
+          "args": [
+            "self",
+            "plan_filter",
+            "task_names"
+          ],
+          "returns": "Tuple[int, List[Dict[str, Any]]]",
+          "has_docstring": true
+        },
+        {
+          "name": "batch_update_flow_names",
+          "line": 252,
+          "is_private": false,
+          "args": [
+            "self",
+            "name_mapper"
+          ],
+          "returns": "Tuple[int, List[Dict[str, Any]]]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_batch_log",
+          "line": 297,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "clear_batch_log",
+          "line": 301,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        }
+      ],
+      "public_count": 12,
+      "private_count": 4
+    },
+    "flow_command_router.py": {
+      "functions": [
+        {
+          "name": "__init__",
+          "line": 14,
+          "is_private": true,
+          "args": [
+            "self",
+            "unified_manager"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "route",
+          "line": 39,
+          "is_private": false,
+          "args": [
+            "self",
+            "command"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "handle_flow",
+          "line": 64,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "handle_flows",
+          "line": 85,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "handle_flow_create",
+          "line": 110,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "handle_flow_status",
+          "line": 125,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "handle_flow_list",
+          "line": 200,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "handle_flow_delete",
+          "line": 216,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "handle_flow_archive",
+          "line": 234,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "handle_flow_restore",
+          "line": 241,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "_format_flow_list",
+          "line": 248,
+          "is_private": true,
+          "args": [
+            "self",
+            "flows"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "handle_plan_select",
+          "line": 275,
+          "is_private": false,
+          "args": [
+            "self",
+            "plan_number"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 10,
+      "private_count": 2
+    },
+    "flow_context_wrapper.py": {
+      "functions": [
+        {
+          "name": "record_flow_action",
+          "line": 6,
+          "is_private": false,
+          "args": [
+            "flow_id",
+            "action_type",
+            "details"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "record_task_action",
+          "line": 15,
+          "is_private": false,
+          "args": [
+            "flow_id",
+            "task_id",
+            "action_type",
+            "details"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "record_plan_action",
+          "line": 27,
+          "is_private": false,
+          "args": [
+            "flow_id",
+            "plan_id",
+            "action_type",
+            "details"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "record_doc_creation",
+          "line": 39,
+          "is_private": false,
+          "args": [
+            "doc_path",
+            "doc_type",
+            "related_to"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "record_doc_update",
+          "line": 59,
+          "is_private": false,
+          "args": [
+            "doc_path",
+            "update_type",
+            "summary"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "get_related_docs",
+          "line": 72,
+          "is_private": false,
+          "args": [
+            "doc_path",
+            "limit"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "get_flow_context_summary",
+          "line": 82,
+          "is_private": false,
+          "args": [
+            "flow_id"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_docs_context_summary",
+          "line": 104,
+          "is_private": false,
+          "args": [],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "with_context",
+          "line": 116,
+          "is_private": false,
+          "args": [
+            "action_type"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "decorator",
+          "line": 118,
+          "is_private": false,
+          "args": [
+            "func"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "wrapper",
+          "line": 119,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": false
+        }
+      ],
+      "public_count": 11,
+      "private_count": 0
+    },
+    "flow_manager.py": {
+      "functions": [
+        {
+          "name": "__init__",
+          "line": 26,
+          "is_private": true,
+          "args": [
+            "self",
+            "base_path",
+            "context_enabled"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "create_flow",
+          "line": 39,
+          "is_private": false,
+          "args": [
+            "self",
+            "name",
+            "project",
+            "force"
+          ],
+          "returns": "Flow",
+          "has_docstring": true
+        },
+        {
+          "name": "get_flow",
+          "line": 87,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": "Optional[Flow]",
+          "has_docstring": true
+        },
+        {
+          "name": "list_flows",
+          "line": 91,
+          "is_private": false,
+          "args": [
+            "self",
+            "project"
+          ],
+          "returns": "List[Flow]",
+          "has_docstring": true
+        },
+        {
+          "name": "delete_flow",
+          "line": 101,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "current_flow",
+          "line": 134,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Optional[Flow]",
+          "has_docstring": true
+        },
+        {
+          "name": "current_flow",
+          "line": 141,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "create_plan",
+          "line": 150,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "name"
+          ],
+          "returns": "Plan",
+          "has_docstring": true
+        },
+        {
+          "name": "update_plan_status",
+          "line": 177,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "completed"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "delete_plan",
+          "line": 195,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "create_task",
+          "line": 212,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "name"
+          ],
+          "returns": "Task",
+          "has_docstring": true
+        },
+        {
+          "name": "update_task_status",
+          "line": 241,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "task_id",
+            "status"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "update_task_context",
+          "line": 260,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "task_id",
+            "context"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "delete_task",
+          "line": 276,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "task_id"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "_check_and_complete_plan",
+          "line": 296,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "current_project",
+          "line": 329,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Optional[str]",
+          "has_docstring": true
+        },
+        {
+          "name": "current_project",
+          "line": 334,
+          "is_private": false,
+          "args": [
+            "self",
+            "project"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "get_statistics",
+          "line": 340,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 16,
+      "private_count": 2
+    },
+    "flow_manager_unified.py": {
+      "functions": [
+        {
+          "name": "get_flow_manager_unified",
+          "line": 50,
+          "is_private": false,
+          "args": [],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "__init__",
+          "line": 18,
+          "is_private": true,
+          "args": [
+            "self",
+            "context_manager",
+            "repository"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "handle_command",
+          "line": 35,
+          "is_private": false,
+          "args": [
+            "self",
+            "command"
+          ],
+          "returns": null,
+          "has_docstring": true
+        }
+      ],
+      "public_count": 2,
+      "private_count": 1
+    },
+    "flow_search.py": {
+      "functions": [
+        {
+          "name": "search_flows_by_name",
+          "line": 248,
+          "is_private": false,
+          "args": [
+            "flows",
+            "name"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_active_flows",
+          "line": 253,
+          "is_private": false,
+          "args": [
+            "flows"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_flows_with_pending_tasks",
+          "line": 265,
+          "is_private": false,
+          "args": [
+            "flows"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_recent_flows",
+          "line": 278,
+          "is_private": false,
+          "args": [
+            "flows",
+            "days"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "__init__",
+          "line": 10,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "search_flows",
+          "line": 13,
+          "is_private": false,
+          "args": [
+            "self",
+            "flows",
+            "query"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "filter_flows",
+          "line": 67,
+          "is_private": false,
+          "args": [
+            "self",
+            "flows"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "filter_plans",
+          "line": 129,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "filter_tasks",
+          "line": 177,
+          "is_private": false,
+          "args": [
+            "self",
+            "plan"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "advanced_search",
+          "line": 225,
+          "is_private": false,
+          "args": [
+            "self",
+            "flows",
+            "search_func"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "is_active",
+          "line": 257,
+          "is_private": false,
+          "args": [
+            "flow"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "has_pending_tasks",
+          "line": 269,
+          "is_private": false,
+          "args": [
+            "flow"
+          ],
+          "returns": null,
+          "has_docstring": false
+        }
+      ],
+      "public_count": 11,
+      "private_count": 1
+    },
+    "git.py": {
+      "functions": [
+        {
+          "name": "find_git_executable",
+          "line": 8,
+          "is_private": false,
+          "args": [],
+          "returns": "Optional[str]",
+          "has_docstring": true
+        },
+        {
+          "name": "run_git_command",
+          "line": 35,
+          "is_private": false,
+          "args": [
+            "args",
+            "cwd"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "git_status",
+          "line": 77,
+          "is_private": false,
+          "args": [],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "git_add",
+          "line": 85,
+          "is_private": false,
+          "args": [
+            "files"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "git_commit",
+          "line": 93,
+          "is_private": false,
+          "args": [
+            "message"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "git_push",
+          "line": 101,
+          "is_private": false,
+          "args": [
+            "remote",
+            "branch"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "git_pull",
+          "line": 110,
+          "is_private": false,
+          "args": [
+            "remote",
+            "branch"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "git_branch",
+          "line": 119,
+          "is_private": false,
+          "args": [
+            "branch_name"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "git_current_branch",
+          "line": 130,
+          "is_private": false,
+          "args": [],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "git_log",
+          "line": 138,
+          "is_private": false,
+          "args": [
+            "limit",
+            "format",
+            "cwd"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "git_diff",
+          "line": 177,
+          "is_private": false,
+          "args": [
+            "file",
+            "staged",
+            "cwd"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "git_status_string",
+          "line": 202,
+          "is_private": false,
+          "args": [],
+          "returns": "str",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 12,
+      "private_count": 0
+    },
+    "helpers_integration.py": {
+      "functions": [
+        {
+          "name": "create_search_engine",
+          "line": 103,
+          "is_private": false,
+          "args": [],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "create_batch_processor",
+          "line": 114,
+          "is_private": false,
+          "args": [
+            "dry_run"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "create_flow_manager",
+          "line": 128,
+          "is_private": false,
+          "args": [],
+          "returns": null,
+          "has_docstring": true
+        }
+      ],
+      "public_count": 3,
+      "private_count": 0
+    },
+    "infrastructure\\flow_repository.py": {
+      "functions": [
+        {
+          "name": "get",
+          "line": 19,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": "Optional[Flow]",
+          "has_docstring": true
+        },
+        {
+          "name": "load_all",
+          "line": 24,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Flow]",
+          "has_docstring": true
+        },
+        {
+          "name": "save",
+          "line": 28,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow"
+          ],
+          "returns": "None",
+          "has_docstring": true
+        },
+        {
+          "name": "save_all",
+          "line": 32,
+          "is_private": false,
+          "args": [
+            "self",
+            "flows"
+          ],
+          "returns": "None",
+          "has_docstring": true
+        },
+        {
+          "name": "delete",
+          "line": 36,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "__init__",
+          "line": 49,
+          "is_private": true,
+          "args": [
+            "self",
+            "context",
+            "storage_path"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "from_path",
+          "line": 87,
+          "is_private": false,
+          "args": [
+            "cls",
+            "storage_path"
+          ],
+          "returns": "'JsonFlowRepository'",
+          "has_docstring": true
+        },
+        {
+          "name": "_create_context_from_path",
+          "line": 104,
+          "is_private": true,
+          "args": [
+            "storage_path"
+          ],
+          "returns": "ProjectContext",
+          "has_docstring": true
+        },
+        {
+          "name": "storage_path",
+          "line": 129,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Path",
+          "has_docstring": true
+        },
+        {
+          "name": "context",
+          "line": 134,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "ProjectContext",
+          "has_docstring": true
+        },
+        {
+          "name": "set_context",
+          "line": 138,
+          "is_private": false,
+          "args": [
+            "self",
+            "context"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "_ensure_file",
+          "line": 148,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "load_all",
+          "line": 153,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Flow]",
+          "has_docstring": true
+        },
+        {
+          "name": "_load_from_disk",
+          "line": 159,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Flow]",
+          "has_docstring": true
+        },
+        {
+          "name": "save",
+          "line": 179,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow"
+          ],
+          "returns": "None",
+          "has_docstring": true
+        },
+        {
+          "name": "save_all",
+          "line": 185,
+          "is_private": false,
+          "args": [
+            "self",
+            "flows"
+          ],
+          "returns": "None",
+          "has_docstring": true
+        },
+        {
+          "name": "delete",
+          "line": 205,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "_create_backup",
+          "line": 214,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "_cleanup_old_backups",
+          "line": 229,
+          "is_private": true,
+          "args": [
+            "self",
+            "backup_dir",
+            "max_backups"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "_read_data",
+          "line": 236,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": "dict",
+          "has_docstring": true
+        },
+        {
+          "name": "_write_data",
+          "line": 248,
+          "is_private": true,
+          "args": [
+            "self",
+            "data"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "get_project_info",
+          "line": 266,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "dict",
+          "has_docstring": true
+        },
+        {
+          "name": "clear_cache",
+          "line": 276,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "sync",
+          "line": 280,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "__init__",
+          "line": 289,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "load_all",
+          "line": 292,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Flow]",
+          "has_docstring": false
+        },
+        {
+          "name": "save",
+          "line": 295,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow"
+          ],
+          "returns": "None",
+          "has_docstring": false
+        },
+        {
+          "name": "save_all",
+          "line": 298,
+          "is_private": false,
+          "args": [
+            "self",
+            "flows"
+          ],
+          "returns": "None",
+          "has_docstring": false
+        },
+        {
+          "name": "delete",
+          "line": 301,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": "bool",
+          "has_docstring": false
+        }
+      ],
+      "public_count": 20,
+      "private_count": 9
+    },
+    "infrastructure\\project_context.py": {
+      "functions": [
+        {
+          "name": "__init__",
+          "line": 30,
+          "is_private": true,
+          "args": [
+            "self",
+            "root"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "root",
+          "line": 44,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Path",
+          "has_docstring": true
+        },
+        {
+          "name": "ai_brain_dir",
+          "line": 49,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Path",
+          "has_docstring": true
+        },
+        {
+          "name": "flow_file",
+          "line": 54,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Path",
+          "has_docstring": true
+        },
+        {
+          "name": "current_flow_file",
+          "line": 59,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Path",
+          "has_docstring": true
+        },
+        {
+          "name": "context_file",
+          "line": 64,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Path",
+          "has_docstring": true
+        },
+        {
+          "name": "backup_dir",
+          "line": 69,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Path",
+          "has_docstring": true
+        },
+        {
+          "name": "docs_dir",
+          "line": 74,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Path",
+          "has_docstring": true
+        },
+        {
+          "name": "test_dir",
+          "line": 79,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Path",
+          "has_docstring": true
+        },
+        {
+          "name": "_validate_project_root",
+          "line": 83,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "ensure_directories",
+          "line": 95,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "get_relative_path",
+          "line": 107,
+          "is_private": false,
+          "args": [
+            "self",
+            "absolute_path"
+          ],
+          "returns": "Path",
+          "has_docstring": true
+        },
+        {
+          "name": "get_absolute_path",
+          "line": 123,
+          "is_private": false,
+          "args": [
+            "self",
+            "relative_path"
+          ],
+          "returns": "Path",
+          "has_docstring": true
+        },
+        {
+          "name": "is_within_project",
+          "line": 134,
+          "is_private": false,
+          "args": [
+            "self",
+            "path"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "get_project_info",
+          "line": 149,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "switch_to",
+          "line": 170,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "get_ai_brain_files",
+          "line": 177,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, int]",
+          "has_docstring": true
+        },
+        {
+          "name": "clean_ai_brain_backups",
+          "line": 190,
+          "is_private": false,
+          "args": [
+            "self",
+            "keep_count"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "__str__",
+          "line": 203,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": true
+        },
+        {
+          "name": "__repr__",
+          "line": 207,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": true
+        },
+        {
+          "name": "__eq__",
+          "line": 211,
+          "is_private": true,
+          "args": [
+            "self",
+            "other"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "__hash__",
+          "line": 217,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": "int",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 16,
+      "private_count": 6
+    },
+    "legacy_flow_adapter.py": {
+      "functions": [
+        {
+          "name": "create_flow_manager",
+          "line": 319,
+          "is_private": false,
+          "args": [
+            "legacy"
+          ],
+          "returns": "Any",
+          "has_docstring": true
+        },
+        {
+          "name": "update_task_context_legacy",
+          "line": 343,
+          "is_private": false,
+          "args": [
+            "flow_id",
+            "plan_id",
+            "task_id",
+            "key",
+            "value"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "save_task_context",
+          "line": 349,
+          "is_private": false,
+          "args": [
+            "task_id",
+            "context"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "__init__",
+          "line": 22,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_manager"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "flows",
+          "line": 39,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "flows",
+          "line": 46,
+          "is_private": false,
+          "args": [
+            "self",
+            "value"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "current_flow",
+          "line": 70,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Optional[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "current_flow",
+          "line": 76,
+          "is_private": false,
+          "args": [
+            "self",
+            "value"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "current_project",
+          "line": 86,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Optional[str]",
+          "has_docstring": true
+        },
+        {
+          "name": "current_project",
+          "line": 91,
+          "is_private": false,
+          "args": [
+            "self",
+            "value"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "create_flow",
+          "line": 97,
+          "is_private": false,
+          "args": [
+            "self",
+            "name"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_flow",
+          "line": 103,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": "Optional[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "list_flows",
+          "line": 108,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "list",
+          "has_docstring": true
+        },
+        {
+          "name": "delete_flow",
+          "line": 113,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "add_plan",
+          "line": 118,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "name"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "add_task",
+          "line": 124,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "name"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "update_task_status",
+          "line": 130,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "task_id",
+            "status"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "update_task_context",
+          "line": 135,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "task_id",
+            "context"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "add_task_action",
+          "line": 140,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "task_id",
+            "action",
+            "details"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "_sync_flows",
+          "line": 150,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "save",
+          "line": 156,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "load",
+          "line": 161,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "get_stats",
+          "line": 167,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "switch_project",
+          "line": 171,
+          "is_private": false,
+          "args": [
+            "self",
+            "name"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "switch_to_previous",
+          "line": 202,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_status",
+          "line": 223,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "create_project",
+          "line": 258,
+          "is_private": false,
+          "args": [
+            "self",
+            "name",
+            "template"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "archive_flow",
+          "line": 272,
+          "is_private": false,
+          "args": [
+            "self",
+            "name"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "restore_flow",
+          "line": 295,
+          "is_private": false,
+          "args": [
+            "self",
+            "name"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 27,
+      "private_count": 2
+    },
+    "llm.py": {
+      "functions": [
+        {
+          "name": "_generate_task_id",
+          "line": 29,
+          "is_private": true,
+          "args": [],
+          "returns": "str",
+          "has_docstring": true
+        },
+        {
+          "name": "_call_o3_api",
+          "line": 37,
+          "is_private": true,
+          "args": [
+            "question",
+            "context",
+            "api_key",
+            "reasoning_effort"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "_run_o3_task",
+          "line": 87,
+          "is_private": true,
+          "args": [
+            "task_id",
+            "question",
+            "context",
+            "api_key",
+            "reasoning_effort"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "ask_o3_async",
+          "line": 118,
+          "is_private": false,
+          "args": [
+            "question",
+            "context",
+            "reasoning_effort",
+            "_api_key"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "check_o3_status",
+          "line": 169,
+          "is_private": false,
+          "args": [
+            "task_id"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_o3_result",
+          "line": 207,
+          "is_private": false,
+          "args": [
+            "task_id"
+          ],
+          "returns": "dict",
+          "has_docstring": true
+        },
+        {
+          "name": "save_o3_result",
+          "line": 232,
+          "is_private": false,
+          "args": [
+            "task_id"
+          ],
+          "returns": "dict",
+          "has_docstring": true
+        },
+        {
+          "name": "list_o3_tasks",
+          "line": 311,
+          "is_private": false,
+          "args": [
+            "status_filter"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "show_o3_progress",
+          "line": 340,
+          "is_private": false,
+          "args": [],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "clear_completed_tasks",
+          "line": 376,
+          "is_private": false,
+          "args": [],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "prepare_o3_context",
+          "line": 391,
+          "is_private": false,
+          "args": [
+            "topic",
+            "files"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 8,
+      "private_count": 3
+    },
+    "plan_auto_complete.py": {
+      "functions": [
+        {
+          "name": "check_and_complete_plan",
+          "line": 6,
+          "is_private": false,
+          "args": [
+            "flow_id",
+            "plan_id"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "check_plan_after_task_complete",
+          "line": 88,
+          "is_private": false,
+          "args": [
+            "task_id"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 2,
+      "private_count": 0
+    },
+    "presentation\\command_interface.py": {
+      "functions": [
+        {
+          "name": "execute",
+          "line": 13,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_help",
+          "line": 18,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": true
+        },
+        {
+          "name": "name",
+          "line": 24,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": true
+        },
+        {
+          "name": "aliases",
+          "line": 29,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "List[str]",
+          "has_docstring": true
+        },
+        {
+          "name": "__init__",
+          "line": 37,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "register",
+          "line": 41,
+          "is_private": false,
+          "args": [
+            "self",
+            "command"
+          ],
+          "returns": "None",
+          "has_docstring": true
+        },
+        {
+          "name": "get",
+          "line": 49,
+          "is_private": false,
+          "args": [
+            "self",
+            "name"
+          ],
+          "returns": "Optional[Command]",
+          "has_docstring": true
+        },
+        {
+          "name": "list_commands",
+          "line": 61,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "List[str]",
+          "has_docstring": true
+        },
+        {
+          "name": "parse",
+          "line": 70,
+          "is_private": false,
+          "args": [
+            "command_string"
+          ],
+          "returns": "tuple[Optional[str], str]",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 8,
+      "private_count": 1
+    },
+    "presentation\\command_processor.py": {
+      "functions": [
+        {
+          "name": "__init__",
+          "line": 25,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_service",
+            "plan_service",
+            "task_service"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "_register_commands",
+          "line": 34,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": "None",
+          "has_docstring": true
+        },
+        {
+          "name": "process",
+          "line": 68,
+          "is_private": false,
+          "args": [
+            "self",
+            "command_string"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "_handle_compound_command",
+          "line": 97,
+          "is_private": true,
+          "args": [
+            "self",
+            "cmd_type",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "_show_help",
+          "line": 126,
+          "is_private": true,
+          "args": [
+            "self",
+            "cmd_type"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "_find_similar_commands",
+          "line": 152,
+          "is_private": true,
+          "args": [
+            "self",
+            "cmd"
+          ],
+          "returns": "list[str]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_current_status",
+          "line": 158,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 2,
+      "private_count": 5
+    },
+    "presentation\\plan_commands.py": {
+      "functions": [
+        {
+          "name": "__init__",
+          "line": 14,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_service",
+            "plan_service"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "name",
+          "line": 19,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "execute",
+          "line": 22,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": false
+        },
+        {
+          "name": "get_help",
+          "line": 41,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "__init__",
+          "line": 48,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_service"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "name",
+          "line": 52,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "aliases",
+          "line": 56,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "List[str]",
+          "has_docstring": false
+        },
+        {
+          "name": "execute",
+          "line": 59,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": false
+        },
+        {
+          "name": "get_help",
+          "line": 88,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "__init__",
+          "line": 95,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_service",
+            "plan_service"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "name",
+          "line": 100,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "execute",
+          "line": 103,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": false
+        },
+        {
+          "name": "get_help",
+          "line": 122,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "__init__",
+          "line": 129,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_service",
+            "plan_service"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "name",
+          "line": 134,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "execute",
+          "line": 137,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": false
+        },
+        {
+          "name": "get_help",
+          "line": 156,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        }
+      ],
+      "public_count": 13,
+      "private_count": 4
+    },
+    "presentation\\task_commands.py": {
+      "functions": [
+        {
+          "name": "__init__",
+          "line": 16,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_service",
+            "plan_service",
+            "task_service"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "name",
+          "line": 22,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "execute",
+          "line": 25,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": false
+        },
+        {
+          "name": "get_help",
+          "line": 61,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "__init__",
+          "line": 68,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_service"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "name",
+          "line": 72,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "aliases",
+          "line": 76,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "List[str]",
+          "has_docstring": false
+        },
+        {
+          "name": "execute",
+          "line": 79,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": false
+        },
+        {
+          "name": "get_help",
+          "line": 132,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "__init__",
+          "line": 139,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_service",
+            "task_service"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "name",
+          "line": 144,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "execute",
+          "line": 147,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": false
+        },
+        {
+          "name": "get_help",
+          "line": 180,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "__init__",
+          "line": 187,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_service",
+            "task_service"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "name",
+          "line": 192,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        },
+        {
+          "name": "execute",
+          "line": 195,
+          "is_private": false,
+          "args": [
+            "self",
+            "args"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": false
+        },
+        {
+          "name": "get_help",
+          "line": 233,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "str",
+          "has_docstring": false
+        }
+      ],
+      "public_count": 13,
+      "private_count": 4
+    },
+    "project.py": {
+      "functions": [
+        {
+          "name": "get_current_project",
+          "line": 18,
+          "is_private": false,
+          "args": [],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "detect_project_type",
+          "line": 39,
+          "is_private": false,
+          "args": [
+            "path"
+          ],
+          "returns": "str",
+          "has_docstring": true
+        },
+        {
+          "name": "scan_directory",
+          "line": 52,
+          "is_private": false,
+          "args": [
+            "path",
+            "max_depth"
+          ],
+          "returns": "List[str]",
+          "has_docstring": true
+        },
+        {
+          "name": "scan_directory_dict",
+          "line": 75,
+          "is_private": false,
+          "args": [
+            "path",
+            "max_depth",
+            "ignore_patterns"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "create_project_structure",
+          "line": 144,
+          "is_private": false,
+          "args": [
+            "project_name",
+            "project_type",
+            "base_path"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "flow_project_with_workflow",
+          "line": 198,
+          "is_private": false,
+          "args": [
+            "project_name"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "extract_files",
+          "line": 59,
+          "is_private": false,
+          "args": [
+            "node",
+            "prefix"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "should_ignore",
+          "line": 85,
+          "is_private": false,
+          "args": [
+            "name"
+          ],
+          "returns": "bool",
+          "has_docstring": false
+        },
+        {
+          "name": "scan_recursive",
+          "line": 94,
+          "is_private": false,
+          "args": [
+            "dir_path",
+            "current_depth"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": false
+        },
+        {
+          "name": "count_files",
+          "line": 125,
+          "is_private": false,
+          "args": [
+            "node"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "get_workflow_manager",
+          "line": 12,
+          "is_private": false,
+          "args": [],
+          "returns": null,
+          "has_docstring": false
+        }
+      ],
+      "public_count": 11,
+      "private_count": 0
+    },
+    "search.py": {
+      "functions": [
+        {
+          "name": "search_files",
+          "line": 13,
+          "is_private": false,
+          "args": [
+            "pattern",
+            "path",
+            "recursive"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "search_code",
+          "line": 63,
+          "is_private": false,
+          "args": [
+            "pattern",
+            "path",
+            "file_pattern",
+            "max_results"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "find_function",
+          "line": 148,
+          "is_private": false,
+          "args": [
+            "name",
+            "path"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "find_class",
+          "line": 185,
+          "is_private": false,
+          "args": [
+            "name",
+            "path"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "grep",
+          "line": 222,
+          "is_private": false,
+          "args": [
+            "pattern",
+            "path",
+            "context"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "_grep_file",
+          "line": 277,
+          "is_private": true,
+          "args": [
+            "file_path",
+            "pattern",
+            "context"
+          ],
+          "returns": "List[Dict[str, Any]]",
+          "has_docstring": true
+        },
+        {
+          "name": "find_in_file",
+          "line": 310,
+          "is_private": false,
+          "args": [
+            "file_path",
+            "pattern"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 6,
+      "private_count": 1
+    },
+    "service\\cached_flow_service.py": {
+      "functions": [
+        {
+          "name": "__init__",
+          "line": 27,
+          "is_private": true,
+          "args": [
+            "self",
+            "ttl_seconds",
+            "max_size"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "get",
+          "line": 38,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": "Optional[Any]",
+          "has_docstring": false
+        },
+        {
+          "name": "put",
+          "line": 61,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "data",
+            "mtime"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "invalidate",
+          "line": 78,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "is_valid",
+          "line": 85,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "current_mtime"
+          ],
+          "returns": "bool",
+          "has_docstring": false
+        },
+        {
+          "name": "_is_expired",
+          "line": 100,
+          "is_private": true,
+          "args": [
+            "self",
+            "entry"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "get_statistics",
+          "line": 106,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "reset_statistics",
+          "line": 122,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "__init__",
+          "line": 133,
+          "is_private": true,
+          "args": [
+            "self",
+            "storage_path",
+            "base_path",
+            "cache_ttl",
+            "cache_size"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "_ensure_directory",
+          "line": 154,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "_get_file_mtime",
+          "line": 158,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": "float",
+          "has_docstring": true
+        },
+        {
+          "name": "_check_file_changes",
+          "line": 166,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "list_flows",
+          "line": 178,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "List[Flow]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_flow",
+          "line": 203,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id"
+          ],
+          "returns": "Optional[Flow]",
+          "has_docstring": true
+        },
+        {
+          "name": "save_flow",
+          "line": 268,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow"
+          ],
+          "returns": "None",
+          "has_docstring": true
+        },
+        {
+          "name": "_save_atomic",
+          "line": 322,
+          "is_private": true,
+          "args": [
+            "self",
+            "file_path",
+            "data"
+          ],
+          "returns": "None",
+          "has_docstring": true
+        },
+        {
+          "name": "update_task_status",
+          "line": 344,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "task_id",
+            "status"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "get_cache_statistics",
+          "line": 362,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "warm_cache",
+          "line": 368,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "None",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 12,
+      "private_count": 7
+    },
+    "service\\plan_service.py": {
+      "functions": [
+        {
+          "name": "__init__",
+          "line": 15,
+          "is_private": true,
+          "args": [
+            "self",
+            "flow_service"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "create_plan",
+          "line": 18,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "name"
+          ],
+          "returns": "Optional[Plan]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_plan",
+          "line": 32,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id"
+          ],
+          "returns": "Optional[Plan]",
+          "has_docstring": true
+        },
+        {
+          "name": "update_plan",
+          "line": 39,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "delete_plan",
+          "line": 48,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "complete_plan",
+          "line": 52,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "reopen_plan",
+          "line": 68,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "check_auto_complete",
+          "line": 77,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 7,
+      "private_count": 1
+    },
+    "service\\task_service.py": {
+      "functions": [
+        {
+          "name": "__init__",
+          "line": 15,
+          "is_private": true,
+          "args": [
+            "self",
+            "plan_service"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "create_task",
+          "line": 18,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "name"
+          ],
+          "returns": "Optional[Task]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_task",
+          "line": 44,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "task_id"
+          ],
+          "returns": "Optional[Task]",
+          "has_docstring": true
+        },
+        {
+          "name": "update_task_status",
+          "line": 51,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "task_id",
+            "new_status"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "update_task_context",
+          "line": 85,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "task_id",
+            "context_updates"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "add_task_action",
+          "line": 115,
+          "is_private": false,
+          "args": [
+            "self",
+            "flow_id",
+            "plan_id",
+            "task_id",
+            "action"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "_is_valid_transition",
+          "line": 122,
+          "is_private": true,
+          "args": [
+            "self",
+            "from_status",
+            "to_status"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 5,
+      "private_count": 2
+    },
+    "unified_manager_prototype.py": {
+      "functions": [
+        {
+          "name": "__init__",
+          "line": 13,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": false
+        },
+        {
+          "name": "load",
+          "line": 18,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "save",
+          "line": 32,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "switch_project",
+          "line": 38,
+          "is_private": false,
+          "args": [
+            "self",
+            "project_name"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "_ensure_primary_flow",
+          "line": 83,
+          "is_private": true,
+          "args": [
+            "self",
+            "project_name"
+          ],
+          "returns": "str",
+          "has_docstring": true
+        },
+        {
+          "name": "create_project",
+          "line": 109,
+          "is_private": false,
+          "args": [
+            "self",
+            "project_name",
+            "template"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_status",
+          "line": 123,
+          "is_private": false,
+          "args": [
+            "self"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "_find_desktop",
+          "line": 153,
+          "is_private": true,
+          "args": [
+            "self"
+          ],
+          "returns": "Path",
+          "has_docstring": true
+        },
+        {
+          "name": "_detect_project_type",
+          "line": 168,
+          "is_private": true,
+          "args": [
+            "self",
+            "path"
+          ],
+          "returns": "str",
+          "has_docstring": true
+        },
+        {
+          "name": "_create_project_structure",
+          "line": 180,
+          "is_private": true,
+          "args": [
+            "self",
+            "path",
+            "template"
+          ],
+          "returns": null,
+          "has_docstring": true
+        }
+      ],
+      "public_count": 5,
+      "private_count": 5
+    },
+    "util.py": {
+      "functions": [
+        {
+          "name": "ok",
+          "line": 7,
+          "is_private": false,
+          "args": [
+            "data"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "err",
+          "line": 20,
+          "is_private": false,
+          "args": [
+            "msg"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "is_ok",
+          "line": 34,
+          "is_private": false,
+          "args": [
+            "result"
+          ],
+          "returns": "bool",
+          "has_docstring": true
+        },
+        {
+          "name": "get_data",
+          "line": 39,
+          "is_private": false,
+          "args": [
+            "result",
+            "default"
+          ],
+          "returns": null,
+          "has_docstring": true
+        },
+        {
+          "name": "get_error",
+          "line": 46,
+          "is_private": false,
+          "args": [
+            "result"
+          ],
+          "returns": "str",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 5,
+      "private_count": 0
+    },
+    "wrappers.py": {
+      "functions": [
+        {
+          "name": "scan_directory",
+          "line": 11,
+          "is_private": false,
+          "args": [
+            "path"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "scan_directory_dict",
+          "line": 28,
+          "is_private": false,
+          "args": [
+            "path",
+            "max_depth"
+          ],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        },
+        {
+          "name": "get_current_project",
+          "line": 45,
+          "is_private": false,
+          "args": [],
+          "returns": "Dict[str, Any]",
+          "has_docstring": true
+        }
+      ],
+      "public_count": 3,
+      "private_count": 0
+    }
+  },
+  "duplicates": {
+    "parse": [
+      "code.py",
+      "presentation\\command_interface.py"
+    ],
+    "with_context": [
+      "context_decorator.py",
+      "flow_context_wrapper.py"
+    ],
+    "decorator": [
+      "context_decorator.py",
+      "flow_context_wrapper.py"
+    ],
+    "wrapper": [
+      "context_decorator.py",
+      "flow_context_wrapper.py"
+    ],
+    "record_flow_action": [
+      "context_integration.py",
+      "flow_context_wrapper.py"
+    ],
+    "get_related_docs": [
+      "context_integration.py",
+      "flow_context_wrapper.py"
+    ],
+    "to_dict": [
+      "domain\\models.py",
+      "domain\\models.py",
+      "domain\\models.py"
+    ],
+    "from_dict": [
+      "domain\\models.py",
+      "domain\\models.py",
+      "domain\\models.py"
+    ],
+    "create_flow": [
+      "flow_manager.py",
+      "legacy_flow_adapter.py"
+    ],
+    "get_flow": [
+      "flow_manager.py",
+      "legacy_flow_adapter.py",
+      "service\\cached_flow_service.py"
+    ],
+    "list_flows": [
+      "flow_manager.py",
+      "legacy_flow_adapter.py",
+      "service\\cached_flow_service.py"
+    ],
+    "delete_flow": [
+      "flow_manager.py",
+      "legacy_flow_adapter.py"
+    ],
+    "current_flow": [
+      "flow_manager.py",
+      "flow_manager.py",
+      "legacy_flow_adapter.py",
+      "legacy_flow_adapter.py"
+    ],
+    "create_plan": [
+      "flow_manager.py",
+      "service\\plan_service.py"
+    ],
+    "delete_plan": [
+      "flow_manager.py",
+      "service\\plan_service.py"
+    ],
+    "create_task": [
+      "flow_manager.py",
+      "service\\task_service.py"
+    ],
+    "update_task_status": [
+      "flow_manager.py",
+      "legacy_flow_adapter.py",
+      "service\\cached_flow_service.py",
+      "service\\task_service.py"
+    ],
+    "update_task_context": [
+      "flow_manager.py",
+      "legacy_flow_adapter.py",
+      "service\\task_service.py"
+    ],
+    "current_project": [
+      "flow_manager.py",
+      "flow_manager.py",
+      "legacy_flow_adapter.py",
+      "legacy_flow_adapter.py"
+    ],
+    "get_statistics": [
+      "flow_manager.py",
+      "service\\cached_flow_service.py"
+    ],
+    "create_flow_manager": [
+      "helpers_integration.py",
+      "legacy_flow_adapter.py"
+    ],
+    "get": [
+      "infrastructure\\flow_repository.py",
+      "presentation\\command_interface.py",
+      "service\\cached_flow_service.py"
+    ],
+    "load_all": [
+      "infrastructure\\flow_repository.py",
+      "infrastructure\\flow_repository.py",
+      "infrastructure\\flow_repository.py"
+    ],
+    "save": [
+      "infrastructure\\flow_repository.py",
+      "infrastructure\\flow_repository.py",
+      "infrastructure\\flow_repository.py",
+      "legacy_flow_adapter.py",
+      "unified_manager_prototype.py"
+    ],
+    "save_all": [
+      "infrastructure\\flow_repository.py",
+      "infrastructure\\flow_repository.py",
+      "infrastructure\\flow_repository.py"
+    ],
+    "delete": [
+      "infrastructure\\flow_repository.py",
+      "infrastructure\\flow_repository.py",
+      "infrastructure\\flow_repository.py"
+    ],
+    "get_project_info": [
+      "infrastructure\\flow_repository.py",
+      "infrastructure\\project_context.py"
+    ],
+    "flows": [
+      "legacy_flow_adapter.py",
+      "legacy_flow_adapter.py"
+    ],
+    "add_task_action": [
+      "legacy_flow_adapter.py",
+      "service\\task_service.py"
+    ],
+    "load": [
+      "legacy_flow_adapter.py",
+      "unified_manager_prototype.py"
+    ],
+    "switch_project": [
+      "legacy_flow_adapter.py",
+      "unified_manager_prototype.py"
+    ],
+    "get_status": [
+      "legacy_flow_adapter.py",
+      "unified_manager_prototype.py"
+    ],
+    "create_project": [
+      "legacy_flow_adapter.py",
+      "unified_manager_prototype.py"
+    ],
+    "execute": [
+      "presentation\\command_interface.py",
+      "presentation\\plan_commands.py",
+      "presentation\\plan_commands.py",
+      "presentation\\plan_commands.py",
+      "presentation\\plan_commands.py",
+      "presentation\\task_commands.py",
+      "presentation\\task_commands.py",
+      "presentation\\task_commands.py",
+      "presentation\\task_commands.py"
+    ],
+    "get_help": [
+      "presentation\\command_interface.py",
+      "presentation\\plan_commands.py",
+      "presentation\\plan_commands.py",
+      "presentation\\plan_commands.py",
+      "presentation\\plan_commands.py",
+      "presentation\\task_commands.py",
+      "presentation\\task_commands.py",
+      "presentation\\task_commands.py",
+      "presentation\\task_commands.py"
+    ],
+    "name": [
+      "presentation\\command_interface.py",
+      "presentation\\plan_commands.py",
+      "presentation\\plan_commands.py",
+      "presentation\\plan_commands.py",
+      "presentation\\plan_commands.py",
+      "presentation\\task_commands.py",
+      "presentation\\task_commands.py",
+      "presentation\\task_commands.py",
+      "presentation\\task_commands.py"
+    ],
+    "aliases": [
+      "presentation\\command_interface.py",
+      "presentation\\plan_commands.py",
+      "presentation\\task_commands.py"
+    ],
+    "get_current_project": [
+      "project.py",
+      "wrappers.py"
+    ],
+    "scan_directory": [
+      "project.py",
+      "wrappers.py"
+    ],
+    "scan_directory_dict": [
+      "project.py",
+      "wrappers.py"
+    ]
+  },
+  "non_standard": {
+    "git.py": [
+      {
+        "name": "find_git_executable",
+        "returns": "Optional[str]",
+        "line": 8
+      },
+      {
+        "name": "git_diff",
+        "returns": "Dict[str, Any]",
+        "line": 177
+      },
+      {
+        "name": "git_status_string",
+        "returns": "str",
+        "line": 202
+      }
+    ],
+    "llm.py": [
+      {
+        "name": "prepare_o3_context",
+        "returns": "Dict[str, Any]",
+        "line": 391
+      }
+    ],
+    "util.py": [
+      {
+        "name": "ok",
+        "returns": "Dict[str, Any]",
+        "line": 7
+      },
+      {
+        "name": "err",
+        "returns": "Dict[str, Any]",
+        "line": 20
+      },
+      {
+        "name": "is_ok",
+        "returns": "bool",
+        "line": 34
+      },
+      {
+        "name": "get_data",
+        "returns": null,
+        "line": 39
+      }
+    ],
+    "project.py": [
+      {
+        "name": "detect_project_type",
+        "returns": "str",
+        "line": 39
+      },
+      {
+        "name": "scan_directory",
+        "returns": "List[str]",
+        "line": 52
+      },
+      {
+        "name": "scan_directory_dict",
+        "returns": "Dict[str, Any]",
+        "line": 75
+      },
+      {
+        "name": "create_project_structure",
+        "returns": "Dict[str, Any]",
+        "line": 144
+      },
+      {
+        "name": "flow_project_with_workflow",
+        "returns": null,
+        "line": 198
+      },
+      {
+        "name": "extract_files",
+        "returns": null,
+        "line": 59
+      },
+      {
+        "name": "should_ignore",
+        "returns": "bool",
+        "line": 85
+      },
+      {
+        "name": "scan_recursive",
+        "returns": "Dict[str, Any]",
+        "line": 94
+      },
+      {
+        "name": "count_files",
+        "returns": null,
+        "line": 125
+      },
+      {
+        "name": "get_workflow_manager",
+        "returns": null,
+        "line": 12
+      }
+    ]
+  }
+}

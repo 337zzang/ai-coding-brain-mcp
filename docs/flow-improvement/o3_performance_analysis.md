@@ -1,3 +1,173 @@
-# o3 Flow 시스템 성능 분석
+# Flow 시스템 성능 분석 보고서
 
-{'answer': '────────────────────────────────────────\n1. 문제 요약\n────────────────────────────────────────\n• 현재 Flow 컨테이너는 list  \n• switch_flow(가장 빈번) : 선형 탐색 O(n)  \n• create_flow\u2006/\u2006delete_flow는 빈도 낮음  \n→ “읽기(검색) 편향” 워크로드\n\n────────────────────────────────────────\n2. 1차 구조 개선 ― list → dict\n────────────────────────────────────────\n목표: switch_flow를 O(1) 로 다운-그레이드\n\n• 키(Key) 후보  \n  - flow_id (가장 일반적)  \n  - (user_id, session_id) 와 같은 복합키 → 다중 세션 지원 시 안전\n\n• 예시\n```python\nflows: dict[int, Flow] = {}\n\ndef switch_flow(fid: int):\n    try:\n        return flows[fid]          # O(1)\n    except KeyError:\n        raise FlowNotFound\n```\n\n결과 (n=21 기준)  \n - 탐색: 21 → 1 step (21× 빠름)  \n - 삭제 / 추가: 여전히 O(1)\n\n────────────────────────────────────────\n3. 2차 최적화 ― ‘읽기 편향’ 캐시·인덱스 기법\n────────────────────────────────────────\nA. “최근 사용” 재진입이 많을 때 – Hot-Cache\n```\nlast_flow: tuple[int, Flow] | None = None\n\ndef switch_flow(fid: int):\n    global last_flow\n    if last_flow and last_flow[0] == fid:       # 0-step hit\n        return last_flow[1]\n    flow = flows[fid]                           # dict lookup\n    last_flow = (fid, flow)\n    return flow\n```\nHit ratio가 50%만 넘어도 전체 평균 지연이 절반 이하로 감소.\n\nB. dict + list 인덱스 테이블 (Sparse-Dense)\n• 삭제가 아주 드문 경우라면  \n  – flows_list : 실제 Flow 객체를 0…N-1 인덱스에 연속 저장  \n  – id2idx(dict) : flow_id ➜ 위치  \n→ 삭제 시 O(1) 로 제거하려면 “swap-with-last” 기법 사용\n\n────────────────────────────────────────\n4. 3차 최적화 ― 메모리/파이썬 내부 오버헤드\n────────────────────────────────────────\nA. __slots__ / dataclass(slots=True)  \n   Flow 인스턴스 수백~수천 개까지 늘 경우, 인스턴스 당 40-60 B 절약  \n\nB. typing.NamedTuple 또는 collections.namedtuple  \n   불변(immutable)\u2006이 허용될 때 메모리를 더 절감\n\nC. 빈번한 문자열 비교 제거  \n   flow_id 를 int 또는 enum.IntEnum 으로 관리 → 해시와 비교가 2-3배 빠름\n\n────────────────────────────────────────\n5. 동시성 & Lock-Contention\n────────────────────────────────────────\n멀티스레드(또는 asyncio) 환경이라면  \n• CPython: dict 연산 자체는 atomic 하지만,  \n  create/delete 시점에 구조 변경이 일어나면 다른 스레드에서 KeyError 가능  \n• 해결책  \n  - RLock 으로 create/delete 묶기  \n  - reader-writer lock (fast-path : reader) → `pyreadline`·`fasteners` 라이브러리  \n  - asyncio : `asyncio.Lock`, `asyncio.Queue` 등\n\n────────────────────────────────────────\n6. 실측(Python 3.11, 50 µs 함수 10⁶회)\n────────────────────────────────────────\n                 list(21)  dict     dict+hot-cache\n--------------------------------------------------\nswitch_flow      51 ms      2.6 ms   1.3 ms\ndelete_flow       3 ms      3 µs     3 µs\ncreate_flow       1 µs      1 µs     1 µs\n--------------------------------------------------\n→ 주력 호출부가 20×~40× 빨라짐\n\n────────────────────────────────────────\n7. 유지보수/확장 관점 제언\n────────────────────────────────────────\n• 인터페이스 고정  \n  – `FlowRegistry` 클래스로 list/dict 내부구현 캡슐화 → 미래에 구조 바꾸더라도 외부코드 무영향\n\n• 용량 트래픽 모니터링  \n  – prometheus/StatsD 로 flow 수, miss율, 삭제 빈도 지표화  \n  – 1,000개 이상으로 상승하면 dict > LRU 캐시 또는 sharded-dict(분산해시) 고려\n\n• 불필요한 Flow 객체 재할당 방지  \n  – object pool (queue.SimpleQueue) 또는 reuse 패턴\n\n────────────────────────────────────────\n8. TODO 체크리스트\n────────────────────────────────────────\n[ ] dict 기반 FlowRegistry 구현  \n[ ] hot-cache(HR≥50%) 벤치마크  \n[ ] __slots__ 적용 후 메모리 확인  \n[ ] 멀티스레드 읽기 락 전략 결정  \n[ ] 모니터링 지표 대시보드 추가  \n\n────────────────────────────────────────\n결론\n────────────────────────────────────────\n1) list → dict 는 가장 큰 체감 개선 (읽기 O(1))  \n2) “최근 사용 캐시” 로 추가 latency 절감  \n3) __slots__, int key, lock 최적화로 CPU·메모리 최소화  \n4) 구조체를 FlowRegistry 로 숨겨 확장성과 안전성을 확보  \n\n위 단계를 순차적으로 적용하면, 현 21개의 소규모 환경은 물론 수천 Flow까지 성능저하 없이 확장 가능합니다.', 'reasoning_effort': 'medium', 'usage': {'prompt_tokens': 194, 'completion_tokens': 1557, 'total_tokens': 1751, 'reasoning_tokens': 0}}
+생성일: 2025-07-23T00:43:18.130835
+분석 도구: o3 (high effort)
+
+## 분석 결과
+
+1. 병목 지점 정리
+
+┌──────────────┬────────────────────────────────────────────────────────────┐
+│ 구간         │ 현재 동작                                                │
+├──────────────┼────────────────────────────────────────────────────────────┤
+│ flows 프로퍼티│ 접근할 때마다 _sync_flows_from_service()                  │
+│              │ – 전체 JSON 다시 로드, File I/O                           │
+│              │ – dict → Flow 변환 반복                                   │
+├──────────────┼────────────────────────────────────────────────────────────┤
+│ JsonFlowRepo │ save() → load_all() → _load_from_disk()                   │
+│              │ – 캐시가 있어도 파일 쓰기 뒤에 무효화 됨 → 다음 호출 때   │
+│              │   다시 전체 로드                                          │
+│              │ – save_all() 은 매번 전체 JSON 파일 백-업 및 재-쓰기       │
+├──────────────┼────────────────────────────────────────────────────────────┤
+│ 데이터 변환   │ _load_from_disk : dict → Flow                            │
+│              │ save_all          : Flow → dict                           │
+│              │ load_all          : 깊은 복사(copy())                     │
+└──────────────┴────────────────────────────────────────────────────────────┘
+
+이 구조 때문에  
+ • 호출 한 번마다 O(N) I/O · JSON 파싱 · 직렬화  
+ • N(Flow 수) × K(호출 횟수) 만큼 중복 비용 발생  
+ • 파일 크기가 커질수록 save/backup 시간 선형 증가  
+
+2. 최적화 목표
+
+A. “읽기” : flows 프로퍼티가 자주 호출돼도 디스크 접근 0 ~ 1 회  
+B. “쓰기” : 단일 Flow 저장 시 전체 JSON 재-쓰기를 피하거나 최소화  
+C. 데이터 변환 / 깊은 복사 제거  
+D. 백업∙동기화는 필요한 시점에만 수행
+
+3. 개선 방안
+
+─────────────────────────────────────────────────────────────────────────
+3-1. 캐싱 + TTL/버전 체크
+─────────────────────────────────────────────────────────────────────────
+class FlowService:
+    _flows_cache: Dict[str, Flow] = {}
+    _last_synced: float = 0
+    _sync_interval = 5          # seconds or use etag/time-stamp
+
+    @property
+    def flows(self) -> Mapping[str, Flow]:
+        now = time.time()
+        if not self._flows_cache or now - self._last_synced > self._sync_interval:
+            self._sync_flows_from_service()           # ← 실제 동기화
+            self._last_synced = now
+        return self._flows_cache                     # 깊은 복사 X
+
+✓ flows 접근 10 만 번 → 디스크 1 ~ 2 회  
+✓ 필요 시 force_refresh() 제공
+
+─────────────────────────────────────────────────────────────────────────
+3-2. JsonFlowRepository 구조 개선
+─────────────────────────────────────────────────────────────────────────
+(1) 읽기 캐시 고정
+    • _cache 는 최초 1회만 채우고, save/flush 가 끝난 뒤 직접 갱신  
+    • load_all() 에서 copy() 대신 MappingProxyType 반환해 불변성을 보장  
+      (깊은 복사 제거):
+
+from types import MappingProxyType
+def load_all(self) -> Mapping[str, Flow]:
+    if self._cache is None:
+        self._cache = self._load_from_disk()
+    return MappingProxyType(self._cache)
+
+(2) Dirty-set & 지연 플러시
+    • 메모리 캐시만 갱신하고 실제 파일 쓰기는
+      ‑ 명시적 flush()  
+      ‑ 일정 주기 background-thread  
+      ‑ contextmanager (__enter__/__exit__) 중 선택
+
+class JsonFlowRepository:
+    _dirty: set[str] = set()
+
+    def save(self, flow: Flow, flush: bool = False) -> None:
+        if self._cache is None:
+            self.load_all()           # 캐시 확보
+        self._cache[flow.id] = flow
+        self._dirty.add(flow.id)
+        if flush:
+            self.flush()
+
+    def flush(self) -> None:
+        if not self._dirty:
+            return
+        self._rewrite_partial()
+        self._dirty.clear()
+
+(3) 부분 재-쓰기(_rewrite_partial)
+    방법 ① Flow 단위 파일 분리
+         ./flows/{flow_id}.json  로 저장  
+         • 저장/백업 시 O(1) I/O  
+         • load_all 는 glob() 으로 병렬 파싱 가능
+    방법 ② JSONL(Newline-delimited)
+         flows.jsonl 마지막에 {"id":…, "op":"upsert", ...} append  
+         → flush 시에는 append 만, 주기적으로 compaction
+    방법 ③ SQLite/Key-Value(DBM, TinyDB 등)
+         update flows set blob=? where id=?  
+         → 가장 단순하면서 신뢰성 높음
+
+▶ 간단한 예 – “폴더 분리” 방식
+
+def _path(self, flow_id): return self.base / f"{flow_id}.json"
+
+def save(self, flow: Flow, flush=True):
+    with open(self._path(flow.id), "w") as f:
+        json.dump(flow.to_dict(), f, indent=2)
+    self._cache[flow.id] = flow     # 캐시 유지
+    if flush and self._enable_backup:
+        self._backup_file(self._path(flow.id))
+
+전체 flows.json 을 다시 쓰지 않으므로 시간 복잡도 O(1).
+
+(4) 백업 최적화
+    • 파일 전체 백업 대신 changed-file 백업  
+    • 보존 주기는 날짜/버전으로 제한 (예: 하루 1회)  
+    • gzip 압축해 디스크 사용량 ↓
+
+─────────────────────────────────────────────────────────────────────────
+3-3. 데이터 변환/메모리
+─────────────────────────────────────────────────────────────────────────
+• Flow 를 dataclass(slots=True) 로 선언 → 인스턴스 메모리 40-60 % 절감  
+• _load_from_disk 단계에서 dict 그대로 cache 하고, Flow 객체는 필요할 때만
+  lazy conversion:
+
+class LazyFlow(dict):
+    _obj: Flow | None = None
+    def as_flow(self) -> Flow:
+        if self._obj is None:
+            self._obj = Flow.from_dict(self)
+        return self._obj
+
+• to_dict() 역시 Flow 안에 _original_dict caching
+
+─────────────────────────────────────────────────────────────────────────
+3-4. 동시성 / 멀티프로세스
+─────────────────────────────────────────────────────────────────────────
+• 파일 기반 유지 시 fcntl/flock 으로 쓰기 잠금  
+• SQLite 선택 시 WAL 모드 + connection-pool 사용
+
+4. 예상 효과(폴더 분리 + 캐시 기준)
+
+                         기존                 개선(예상)
+────────────────────────────────────────────────────────
+flows 1,000개, save 1개  1,000 × R/W         1 × R/W
+save 시간               200-300 ms           < 5 ms
+메모리 복사량           N×size               0 (view 반환)
+flows 속성 1만 번 호출  1만 × disk scan      1 × disk scan
+────────────────────────────────────────────────────────
+
+5. 단계별 적용 로드맵
+
+Step 1  flows 캐싱 + TTL                           (변경 최소)
+Step 2  JsonFlowRepository 캐시 고정 + dirty-flush (코드 50줄 내)
+Step 3  저장 방식 분리(JSONL or per-file)          (데이터 마이그레이션)
+Step 4  장기적으로 SQLite 등으로 이동             (트랜잭션, 스키마 관리)
+
+6. 결론
+
+핵심은  
+• “읽기”-측 캐시 고정으로 I/O 제거  
+• “쓰기”-측 부분 업데이트로 전체 재-쓰기를 없애는 것.  
+두 가지만 반영해도 호출당 소요 시간이 10-100 배 단축된다.  
+장기적으로는 파일 포맷을 로그 구조(JSONL) 또는 경량 DB 로 전환해
+백업/동시성까지 자연스럽게 해결하는 것을 권장한다.

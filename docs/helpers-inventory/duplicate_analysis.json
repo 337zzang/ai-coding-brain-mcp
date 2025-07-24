@@ -1,0 +1,1016 @@
+{
+  "parse": [
+    {
+      "module": "code.py",
+      "args": [
+        "path"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "presentation\\command_interface.py",
+      "args": [
+        "command_string"
+      ],
+      "returns": "tuple[Optional[str], str]"
+    }
+  ],
+  "with_context": [
+    {
+      "module": "context_decorator.py",
+      "args": [
+        "task_id"
+      ],
+      "returns": null
+    },
+    {
+      "module": "flow_context_wrapper.py",
+      "args": [
+        "action_type"
+      ],
+      "returns": null
+    }
+  ],
+  "decorator": [
+    {
+      "module": "context_decorator.py",
+      "args": [
+        "func"
+      ],
+      "returns": "Callable"
+    },
+    {
+      "module": "flow_context_wrapper.py",
+      "args": [
+        "func"
+      ],
+      "returns": null
+    }
+  ],
+  "wrapper": [
+    {
+      "module": "context_decorator.py",
+      "args": [],
+      "returns": null
+    },
+    {
+      "module": "flow_context_wrapper.py",
+      "args": [
+        "self"
+      ],
+      "returns": null
+    }
+  ],
+  "record_flow_action": [
+    {
+      "module": "context_integration.py",
+      "args": [
+        "self",
+        "flow_id",
+        "action_type",
+        "details"
+      ],
+      "returns": null
+    },
+    {
+      "module": "flow_context_wrapper.py",
+      "args": [
+        "flow_id",
+        "action_type",
+        "details"
+      ],
+      "returns": null
+    }
+  ],
+  "get_related_docs": [
+    {
+      "module": "context_integration.py",
+      "args": [
+        "self",
+        "doc_path",
+        "limit"
+      ],
+      "returns": "List[Dict[str, Any]]"
+    },
+    {
+      "module": "flow_context_wrapper.py",
+      "args": [
+        "doc_path",
+        "limit"
+      ],
+      "returns": null
+    }
+  ],
+  "to_dict": [
+    {
+      "module": "domain\\models.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "domain\\models.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "domain\\models.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Any]"
+    }
+  ],
+  "from_dict": [
+    {
+      "module": "domain\\models.py",
+      "args": [
+        "cls",
+        "data"
+      ],
+      "returns": "Task"
+    },
+    {
+      "module": "domain\\models.py",
+      "args": [
+        "cls",
+        "data"
+      ],
+      "returns": "Task"
+    },
+    {
+      "module": "domain\\models.py",
+      "args": [
+        "cls",
+        "data"
+      ],
+      "returns": "Task"
+    }
+  ],
+  "create_flow": [
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self",
+        "name",
+        "project",
+        "force"
+      ],
+      "returns": "Flow"
+    },
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self",
+        "name"
+      ],
+      "returns": "Dict[str, Any]"
+    }
+  ],
+  "get_flow": [
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self",
+        "flow_id"
+      ],
+      "returns": "Optional[Flow]"
+    },
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self",
+        "flow_id"
+      ],
+      "returns": "Optional[Dict[str, Any]]"
+    },
+    {
+      "module": "service\\cached_flow_service.py",
+      "args": [
+        "self",
+        "flow_id"
+      ],
+      "returns": "Optional[Flow]"
+    }
+  ],
+  "list_flows": [
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self",
+        "project"
+      ],
+      "returns": "List[Flow]"
+    },
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self"
+      ],
+      "returns": "list"
+    },
+    {
+      "module": "service\\cached_flow_service.py",
+      "args": [
+        "self"
+      ],
+      "returns": "List[Flow]"
+    }
+  ],
+  "delete_flow": [
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self",
+        "flow_id"
+      ],
+      "returns": null
+    },
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self",
+        "flow_id"
+      ],
+      "returns": null
+    }
+  ],
+  "current_flow": [
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Optional[Flow]"
+    },
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Optional[Flow]"
+    },
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Optional[Dict[str, Any]]"
+    },
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Optional[Dict[str, Any]]"
+    }
+  ],
+  "create_plan": [
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self",
+        "flow_id",
+        "name"
+      ],
+      "returns": "Plan"
+    },
+    {
+      "module": "service\\plan_service.py",
+      "args": [
+        "self",
+        "flow_id",
+        "name"
+      ],
+      "returns": "Optional[Plan]"
+    }
+  ],
+  "delete_plan": [
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self",
+        "flow_id",
+        "plan_id"
+      ],
+      "returns": null
+    },
+    {
+      "module": "service\\plan_service.py",
+      "args": [
+        "self",
+        "flow_id",
+        "plan_id"
+      ],
+      "returns": "bool"
+    }
+  ],
+  "create_task": [
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self",
+        "flow_id",
+        "plan_id",
+        "name"
+      ],
+      "returns": "Task"
+    },
+    {
+      "module": "service\\task_service.py",
+      "args": [
+        "self",
+        "flow_id",
+        "plan_id",
+        "name"
+      ],
+      "returns": "Optional[Task]"
+    }
+  ],
+  "update_task_status": [
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self",
+        "flow_id",
+        "plan_id",
+        "task_id",
+        "status"
+      ],
+      "returns": null
+    },
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self",
+        "flow_id",
+        "plan_id",
+        "task_id",
+        "status"
+      ],
+      "returns": null
+    },
+    {
+      "module": "service\\cached_flow_service.py",
+      "args": [
+        "self",
+        "flow_id",
+        "task_id",
+        "status"
+      ],
+      "returns": "bool"
+    },
+    {
+      "module": "service\\task_service.py",
+      "args": [
+        "self",
+        "flow_id",
+        "plan_id",
+        "task_id",
+        "new_status"
+      ],
+      "returns": "bool"
+    }
+  ],
+  "update_task_context": [
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self",
+        "flow_id",
+        "plan_id",
+        "task_id",
+        "context"
+      ],
+      "returns": null
+    },
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self",
+        "flow_id",
+        "plan_id",
+        "task_id",
+        "context"
+      ],
+      "returns": null
+    },
+    {
+      "module": "service\\task_service.py",
+      "args": [
+        "self",
+        "flow_id",
+        "plan_id",
+        "task_id",
+        "context_updates"
+      ],
+      "returns": "bool"
+    }
+  ],
+  "current_project": [
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Optional[str]"
+    },
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Optional[str]"
+    },
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Optional[str]"
+    },
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Optional[str]"
+    }
+  ],
+  "get_statistics": [
+    {
+      "module": "flow_manager.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "service\\cached_flow_service.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Any]"
+    }
+  ],
+  "create_flow_manager": [
+    {
+      "module": "helpers_integration.py",
+      "args": [],
+      "returns": null
+    },
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "legacy"
+      ],
+      "returns": "Any"
+    }
+  ],
+  "get": [
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self",
+        "flow_id"
+      ],
+      "returns": "Optional[Flow]"
+    },
+    {
+      "module": "presentation\\command_interface.py",
+      "args": [
+        "self",
+        "name"
+      ],
+      "returns": "Optional[Command]"
+    },
+    {
+      "module": "service\\cached_flow_service.py",
+      "args": [
+        "self",
+        "flow_id"
+      ],
+      "returns": "Optional[Any]"
+    }
+  ],
+  "load_all": [
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Flow]"
+    },
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Flow]"
+    },
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Flow]"
+    }
+  ],
+  "save": [
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self",
+        "flow"
+      ],
+      "returns": "None"
+    },
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self",
+        "flow"
+      ],
+      "returns": "None"
+    },
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self",
+        "flow"
+      ],
+      "returns": "None"
+    },
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self"
+      ],
+      "returns": null
+    },
+    {
+      "module": "unified_manager_prototype.py",
+      "args": [
+        "self"
+      ],
+      "returns": null
+    }
+  ],
+  "save_all": [
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self",
+        "flows"
+      ],
+      "returns": "None"
+    },
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self",
+        "flows"
+      ],
+      "returns": "None"
+    },
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self",
+        "flows"
+      ],
+      "returns": "None"
+    }
+  ],
+  "delete": [
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self",
+        "flow_id"
+      ],
+      "returns": "bool"
+    },
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self",
+        "flow_id"
+      ],
+      "returns": "bool"
+    },
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self",
+        "flow_id"
+      ],
+      "returns": "bool"
+    }
+  ],
+  "get_project_info": [
+    {
+      "module": "infrastructure\\flow_repository.py",
+      "args": [
+        "self"
+      ],
+      "returns": "dict"
+    },
+    {
+      "module": "infrastructure\\project_context.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Any]"
+    }
+  ],
+  "flows": [
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Dict[str, Any]]"
+    },
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Dict[str, Any]]"
+    }
+  ],
+  "add_task_action": [
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self",
+        "flow_id",
+        "plan_id",
+        "task_id",
+        "action",
+        "details"
+      ],
+      "returns": null
+    },
+    {
+      "module": "service\\task_service.py",
+      "args": [
+        "self",
+        "flow_id",
+        "plan_id",
+        "task_id",
+        "action"
+      ],
+      "returns": "bool"
+    }
+  ],
+  "load": [
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self"
+      ],
+      "returns": null
+    },
+    {
+      "module": "unified_manager_prototype.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Any]"
+    }
+  ],
+  "switch_project": [
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self",
+        "name"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "unified_manager_prototype.py",
+      "args": [
+        "self",
+        "project_name"
+      ],
+      "returns": "Dict[str, Any]"
+    }
+  ],
+  "get_status": [
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "unified_manager_prototype.py",
+      "args": [
+        "self"
+      ],
+      "returns": "Dict[str, Any]"
+    }
+  ],
+  "create_project": [
+    {
+      "module": "legacy_flow_adapter.py",
+      "args": [
+        "self",
+        "name",
+        "template"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "unified_manager_prototype.py",
+      "args": [
+        "self",
+        "project_name",
+        "template"
+      ],
+      "returns": "Dict[str, Any]"
+    }
+  ],
+  "execute": [
+    {
+      "module": "presentation\\command_interface.py",
+      "args": [
+        "self",
+        "args"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "presentation\\plan_commands.py",
+      "args": [
+        "self",
+        "args"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "presentation\\plan_commands.py",
+      "args": [
+        "self",
+        "args"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "presentation\\plan_commands.py",
+      "args": [
+        "self",
+        "args"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "presentation\\plan_commands.py",
+      "args": [
+        "self",
+        "args"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "presentation\\task_commands.py",
+      "args": [
+        "self",
+        "args"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "presentation\\task_commands.py",
+      "args": [
+        "self",
+        "args"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "presentation\\task_commands.py",
+      "args": [
+        "self",
+        "args"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "presentation\\task_commands.py",
+      "args": [
+        "self",
+        "args"
+      ],
+      "returns": "Dict[str, Any]"
+    }
+  ],
+  "get_help": [
+    {
+      "module": "presentation\\command_interface.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\plan_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\plan_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\plan_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\plan_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\task_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\task_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\task_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\task_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    }
+  ],
+  "name": [
+    {
+      "module": "presentation\\command_interface.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\plan_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\plan_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\plan_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\plan_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\task_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\task_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\task_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    },
+    {
+      "module": "presentation\\task_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "str"
+    }
+  ],
+  "aliases": [
+    {
+      "module": "presentation\\command_interface.py",
+      "args": [
+        "self"
+      ],
+      "returns": "List[str]"
+    },
+    {
+      "module": "presentation\\plan_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "List[str]"
+    },
+    {
+      "module": "presentation\\task_commands.py",
+      "args": [
+        "self"
+      ],
+      "returns": "List[str]"
+    }
+  ],
+  "get_current_project": [
+    {
+      "module": "project.py",
+      "args": [],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "wrappers.py",
+      "args": [],
+      "returns": "Dict[str, Any]"
+    }
+  ],
+  "scan_directory": [
+    {
+      "module": "project.py",
+      "args": [
+        "path",
+        "max_depth"
+      ],
+      "returns": "List[str]"
+    },
+    {
+      "module": "wrappers.py",
+      "args": [
+        "path"
+      ],
+      "returns": "Dict[str, Any]"
+    }
+  ],
+  "scan_directory_dict": [
+    {
+      "module": "project.py",
+      "args": [
+        "path",
+        "max_depth",
+        "ignore_patterns"
+      ],
+      "returns": "Dict[str, Any]"
+    },
+    {
+      "module": "wrappers.py",
+      "args": [
+        "path",
+        "max_depth"
+      ],
+      "returns": "Dict[str, Any]"
+    }
+  ]
+}

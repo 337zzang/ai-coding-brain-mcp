@@ -1,0 +1,31 @@
+{
+  "project_name": "sales_ocr",
+  "purpose": "매출증빙과 증빙내역 대사 시스템",
+  "total_files": 191,
+  "main_components": {
+    "entry_point": "run_gui.py",
+    "api_layer": {
+      "api_handlers.py": "Claude & Gemini API 통합",
+      "claude_module.py": "Claude API 전용 모듈",
+      "langchain_patch.py": "LangChain 패치"
+    },
+    "processing": {
+      "processing_flow.py": "데이터 처리 파이프라인",
+      "ocr_module.py": "OCR 처리 모듈",
+      "excel_module.py": "Excel 처리"
+    },
+    "gui": {
+      "main.py": "GUI 초기화",
+      "main_window.py": "메인 윈도우 (68KB)",
+      "tabs/": "탭 구성요소들",
+      "managers/": "데이터 및 처리 관리자",
+      "widgets/": "커스텀 위젯"
+    },
+    "utils": {
+      "auto_split_integration.py": "자동 분할 통합",
+      "pdf_splitter.py": "PDF 분할",
+      "preprocess_evidence.py": "증빙 전처리"
+    }
+  },
+  "backup_files_count": 106
+}

@@ -78,20 +78,20 @@ def help_wf(command: Optional[str] = None) -> str:
 def current_flow() -> Optional[str]:
     """현재 선택된 Flow"""
     manager = get_flow_manager()
-    flow = manager.get_current_flow()
+    flow = manager.current_flow
     return flow.name if flow else None
 
 
 def current_project() -> Optional[str]:
     """현재 프로젝트"""
     manager = get_flow_manager()
-    return manager.get_project()
+    return manager._current_project
 
 
 def set_project(project: str):
     """프로젝트 설정"""
     manager = get_flow_manager()
-    manager.set_project(project)
+    manager._current_project = project
     print(f"프로젝트 설정: {project}")
 
 

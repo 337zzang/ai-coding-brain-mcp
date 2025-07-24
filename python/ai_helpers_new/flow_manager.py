@@ -1,241 +1,351 @@
-"""
-통합 Flow Manager
-레거시 없는 깔끔한 구조
-"""
-from typing import Dict, List, Optional, Any, Tuple
-from datetime import datetime
-import logging
+# flow_manager.py
+'''
+단순화된 Flow Manager
+Phase 2 구조 개선 - 계층 단순화
+'''
 
-from .service.flow_service import FlowService
-from .domain.models import Flow, Plan, Task, TaskStatus
+from typing import Dict, List, Optional, Any
+from datetime import datetime, timezone
+import threading
+
+from .service.cached_flow_service import CachedFlowService
+from .domain.models import Flow, Plan, Task, TaskStatus, create_flow_id, create_plan_id, create_task_id
 from .exceptions import FlowError, ValidationError
-
-logger = logging.getLogger(__name__)
+from .context_integration import ContextIntegration
+from .flow_context_wrapper import record_flow_action, record_plan_action, record_task_action
 
 
 class FlowManager:
     """
-    통합 Flow Manager
-    - 단순하고 직관적인 API
-    - 3단계 상태 관리 (TODO, DOING, DONE)
+    단순화된 Flow Manager
+    - 직접적인 비즈니스 로직 처리
+    - CachedFlowService를 통한 저장소 접근
     - Context 자동 통합
     """
 
-    def __init__(self, base_path: str = '.ai-brain'):
-        self._service = FlowService()
+    def __init__(self, base_path: str = '.ai-brain', context_enabled: bool = True):
+        self._service = CachedFlowService(base_path)
+        self._context_enabled = context_enabled
         self._current_flow_id: Optional[str] = None
         self._current_project: Optional[str] = None
+        self._lock = threading.RLock()
+
+        # Context 통합
+        if self._context_enabled:
+            self._context = ContextIntegration()
 
     # === Flow 관리 ===
 
-    def create_flow(self, name: str, project: Optional[str] = None) -> str:
-        """Flow 생성 - flow_id 반환"""
-        flow = self._service.create_flow(name, project or self._current_project)
-        self._current_flow_id = flow.id
-        return flow.id
+    def create_flow(self, name: str, project: Optional[str] = None) -> Flow:
+        """Flow 생성"""
+        flow_id = create_flow_id()
+        flow = Flow(
+            id=flow_id,
+            name=name,
+            plans={},
+            project=project or self._current_project
+        )
 
-    def select_flow(self, flow_id: str) -> bool:
-        """Flow 선택"""
-        if self._service.get_flow(flow_id):
-            self._current_flow_id = flow_id
-            self._service.current_flow = flow_id
-            return True
-        return False
+        self._service.save_flow(flow)
+        self._current_flow_id = flow_id
 
-    def get_current_flow(self) -> Optional[Flow]:
-        """현재 선택된 Flow"""
-        if self._current_flow_id:
-            return self._service.get_flow(self._current_flow_id)
-        return None
+        # Context 기록
+        if self._context_enabled:
+            record_flow_action(flow_id, 'flow_created', {
+                'name': name,
+                'project': flow.project
+            })
 
-    def list_flows(self, project: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Flow 목록 (간단한 정보만)"""
-        flows = self._service.list_flows(project)
-        return [{
-            'id': f.id,
-            'name': f.name,
-            'project': f.project,
-            'created': f.created_at,
-            'plans': len(f.plans),
-            'tasks': len(f.get_all_tasks())
-        } for f in flows]
+        return flow
 
-    def delete_flow(self, flow_id: str) -> bool:
+    def get_flow(self, flow_id: str) -> Optional[Flow]:
+        """Flow 조회"""
+        return self._service.get_flow(flow_id)
+
+    def list_flows(self, project: Optional[str] = None) -> List[Flow]:
+        """Flow 목록 조회"""
+        flows = self._service.list_flows()
+
+        # 프로젝트 필터링
+        if project:
+            flows = [f for f in flows if f.project == project]
+
+        return flows
+
+    def delete_flow(self, flow_id: str):
         """Flow 삭제"""
+        # 현재 CachedFlowService는 개별 삭제를 지원하지 않으므로
+        # 전체를 다시 저장하는 방식으로 구현
+        from pathlib import Path
+        import json
+
+        flows_file = Path(self._service.base_path) / 'flows.json'
+
+        if flows_file.exists():
+            # 전체 flows 로드
+            with open(flows_file, 'r', encoding='utf-8') as f:
+                all_flows = json.load(f)
+
+            # 해당 Flow 삭제
+            if flow_id in all_flows:
+                del all_flows[flow_id]
+
+                # 다시 저장
+                with open(flows_file, 'w', encoding='utf-8') as f:
+                    json.dump(all_flows, f, ensure_ascii=False, indent=2)
+
+                # 캐시 무효화
+                self._service._cache.invalidate(flow_id)
+
         if self._current_flow_id == flow_id:
             self._current_flow_id = None
-        return self._service.delete_flow(flow_id)
+
+        # Context 기록
+        if self._context_enabled:
+            record_flow_action(flow_id, 'flow_deleted', {})
+
+    @property
+    def current_flow(self) -> Optional[Flow]:
+        """현재 Flow"""
+        if self._current_flow_id:
+            return self.get_flow(self._current_flow_id)
+        return None
+
+    @current_flow.setter
+    def current_flow(self, flow_id: str):
+        """현재 Flow 설정"""
+        if flow_id and self.get_flow(flow_id):
+            self._current_flow_id = flow_id
+        else:
+            raise ValidationError(f"Flow를 찾을 수 없음: {flow_id}")
+
+    # === Project 관리 ===
+    def get_project(self) -> Optional[str]:
+        """현재 프로젝트 반환"""
+        return self._current_project
+
+    def set_project(self, project: str) -> None:
+        """프로젝트 설정"""
+        with self._lock:
+            self._current_project = project
+            if self._context_enabled:
+                self._context.record_flow_action(
+                    flow_id="system",
+                    action="project_changed",
+                    data={'project': project}
+                )
 
     # === Plan 관리 ===
 
-    def add_plan(self, name: str, description: str = "", flow_id: Optional[str] = None) -> str:
-        """Plan 추가 - plan_id 반환"""
-        flow_id = flow_id or self._current_flow_id
-        if not flow_id:
-            raise ValidationError("No flow selected")
+    def create_plan(self, flow_id: str, name: str) -> Plan:
+        """Plan 생성"""
+        flow = self.get_flow(flow_id)
+        if not flow:
+            raise ValidationError(f"Flow를 찾을 수 없음: {flow_id}")
 
-        plan = self._service.add_plan(flow_id, name, description)
-        return plan.id
+        plan_id = create_plan_id()
+        plan = Plan(
+            id=plan_id,
+            name=name,
+            tasks={}
+        )
 
-    def get_plans(self, flow_id: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Plan 목록"""
-        flow_id = flow_id or self._current_flow_id
-        if not flow_id:
-            return []
+        # Flow에 Plan 추가
+        flow.plans[plan_id] = plan
+        flow.updated_at = datetime.now(timezone.utc).isoformat()
 
-        plans = self._service.list_plans(flow_id)
-        return [{
-            'id': p.id,
-            'name': p.name,
-            'status': p.status,
-            'tasks': len(p.tasks),
-            'completed_tasks': sum(1 for t in p.tasks.values() if t.status == TaskStatus.DONE)
-        } for p in plans]
+        self._service.save_flow(flow)
 
-    def complete_plan(self, plan_id: str) -> bool:
-        """Plan 수동 완료"""
-        if not self._current_flow_id:
-            return False
-        return self._service.complete_plan(self._current_flow_id, plan_id)
+        # Context 기록
+        if self._context_enabled:
+            record_plan_action(flow_id, plan_id, 'plan_created', {
+                'name': name
+            })
+
+        return plan
+
+    def update_plan_status(self, flow_id: str, plan_id: str, completed: bool):
+        """Plan 완료 상태 업데이트"""
+        flow = self.get_flow(flow_id)
+        if not flow or plan_id not in flow.plans:
+            raise ValidationError(f"Plan을 찾을 수 없음: {plan_id}")
+
+        plan = flow.plans[plan_id]
+        plan.completed = completed
+        plan.updated_at = datetime.now(timezone.utc).isoformat()
+
+        self._service.save_flow(flow)
+
+        # Context 기록
+        if self._context_enabled:
+            record_plan_action(flow_id, plan_id, 'plan_status_updated', {
+                'completed': completed
+            })
+
+    def delete_plan(self, flow_id: str, plan_id: str):
+        """Plan 삭제"""
+        flow = self.get_flow(flow_id)
+        if not flow or plan_id not in flow.plans:
+            raise ValidationError(f"Plan을 찾을 수 없음: {plan_id}")
+
+        del flow.plans[plan_id]
+        flow.updated_at = datetime.now(timezone.utc).isoformat()
+
+        self._service.save_flow(flow)
+
+        # Context 기록
+        if self._context_enabled:
+            record_plan_action(flow_id, plan_id, 'plan_deleted', {})
 
     # === Task 관리 ===
 
-    def add_task(self, plan_id: str, name: str, description: str = "") -> str:
-        """Task 추가 - task_id 반환"""
-        if not self._current_flow_id:
-            raise ValidationError("No flow selected")
+    def create_task(self, flow_id: str, plan_id: str, name: str) -> Task:
+        """Task 생성"""
+        flow = self.get_flow(flow_id)
+        if not flow or plan_id not in flow.plans:
+            raise ValidationError(f"Plan을 찾을 수 없음: {plan_id}")
 
-        task = self._service.add_task(self._current_flow_id, plan_id, name, description)
-        return task.id
-
-    def get_tasks(self, plan_id: str) -> List[Dict[str, Any]]:
-        """Task 목록"""
-        if not self._current_flow_id:
-            return []
-
-        tasks = self._service.list_tasks(self._current_flow_id, plan_id)
-        return [{
-            'id': t.id,
-            'name': t.name,
-            'status': t.status.value,
-            'created': t.created_at,
-            'started': t.started_at,
-            'completed': t.completed_at
-        } for t in tasks]
-
-    def start_task(self, task_id: str) -> bool:
-        """Task 시작 (TODO → DOING)"""
-        plan_id, task = self._find_task(task_id)
-        if not plan_id:
-            return False
-
-        return self._service.start_task(self._current_flow_id, plan_id, task_id)
-
-    def complete_task(self, task_id: str, message: str = "") -> bool:
-        """Task 완료 (DOING → DONE)"""
-        plan_id, task = self._find_task(task_id)
-        if not plan_id:
-            return False
-
-        return self._service.complete_task(self._current_flow_id, plan_id, task_id, message)
-
-    def update_task_status(self, task_id: str, status: str) -> bool:
-        """Task 상태 직접 변경"""
-        plan_id, task = self._find_task(task_id)
-        if not plan_id:
-            return False
-
-        return self._service.update_task_status(self._current_flow_id, plan_id, task_id, status)
-
-    # === Context 관리 ===
-
-    def add_task_note(self, task_id: str, note: str) -> bool:
-        """Task에 노트 추가"""
-        plan_id, task = self._find_task(task_id)
-        if not plan_id:
-            return False
-
-        return self._service.add_task_action(
-            self._current_flow_id, plan_id, task_id, 'note', {'content': note}
+        task_id = create_task_id()
+        task = Task(
+            id=task_id,
+            name=name,
+            status=TaskStatus.TODO.value
         )
 
-    def get_task_context(self, task_id: str) -> Optional[Dict[str, Any]]:
-        """Task Context 조회"""
-        plan_id, task = self._find_task(task_id)
-        if task:
-            return task.context
-        return None
+        plan = flow.plans[plan_id]
+        plan.tasks[task_id] = task
+        plan.updated_at = datetime.now(timezone.utc).isoformat()
+        flow.updated_at = datetime.now(timezone.utc).isoformat()
 
-    # === 조회 및 통계 ===
+        self._service.save_flow(flow)
 
-    def get_flow_summary(self, flow_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
-        """Flow 요약 정보"""
-        flow_id = flow_id or self._current_flow_id
-        flow = self._service.get_flow(flow_id) if flow_id else None
+        # Context 기록
+        if self._context_enabled:
+            record_task_action(flow_id, task_id, 'task_created', {
+                'name': name,
+                'plan_id': plan_id
+            })
 
-        if not flow:
-            return None
+        return task
 
-        all_tasks = flow.get_all_tasks()
-        return {
-            'id': flow.id,
-            'name': flow.name,
-            'project': flow.project,
-            'created': flow.created_at,
-            'plans': {
-                'total': len(flow.plans),
-                'completed': sum(1 for p in flow.plans.values() if p.status == 'completed')
-            },
-            'tasks': {
-                'total': len(all_tasks),
-                'todo': sum(1 for t in all_tasks if t.status == TaskStatus.TODO),
-                'doing': sum(1 for t in all_tasks if t.status == TaskStatus.DOING),
-                'done': sum(1 for t in all_tasks if t.status == TaskStatus.DONE)
-            }
-        }
+    def update_task_status(self, flow_id: str, plan_id: str, task_id: str, status: str):
+        """Task 상태 업데이트"""
+        # 상태 검증
+        if status not in [s.value for s in TaskStatus]:
+            raise ValidationError(f"유효하지 않은 상태: {status}")
 
-    def get_stats(self) -> Dict[str, Any]:
-        """전체 통계"""
-        return self._service.get_stats()
+        # CachedFlowService의 최적화된 메서드 사용
+        self._service.update_task_status(flow_id, plan_id, task_id, status)
 
-    def search_tasks(self, query: str) -> List[Tuple[str, str, Task]]:
-        """Task 검색 - (flow_id, plan_id, task) 반환"""
-        results = []
-        query_lower = query.lower()
+        # Context 기록
+        if self._context_enabled:
+            record_task_action(flow_id, task_id, 'task_status_updated', {
+                'status': status,
+                'plan_id': plan_id
+            })
 
-        for flow in self._service.list_flows(include_archived=False):
-            for plan in flow.plans.values():
-                for task in plan.tasks.values():
-                    if (query_lower in task.name.lower() or 
-                        query_lower in task.description.lower()):
-                        results.append((flow.id, plan.id, task))
+        # Plan 자동 완료 체크
+        self._check_and_complete_plan(flow_id, plan_id)
 
-        return results
+    def update_task_context(self, flow_id: str, plan_id: str, task_id: str, context: Dict[str, Any]):
+        """Task context 업데이트"""
+        flow = self.get_flow(flow_id)
+        if not flow or plan_id not in flow.plans or task_id not in flow.plans[plan_id].tasks:
+            raise ValidationError(f"Task를 찾을 수 없음: {task_id}")
+
+        task = flow.plans[plan_id].tasks[task_id]
+        task.context.update(context)
+        task.updated_at = datetime.now(timezone.utc).isoformat()
+
+        self._service.save_flow(flow)
+
+        # Context 기록
+        if self._context_enabled:
+            record_task_action(flow_id, task_id, 'task_context_updated', context)
+
+    def delete_task(self, flow_id: str, plan_id: str, task_id: str):
+        """Task 삭제"""
+        flow = self.get_flow(flow_id)
+        if not flow or plan_id not in flow.plans or task_id not in flow.plans[plan_id].tasks:
+            raise ValidationError(f"Task를 찾을 수 없음: {task_id}")
+
+        del flow.plans[plan_id].tasks[task_id]
+        flow.plans[plan_id].updated_at = datetime.now(timezone.utc).isoformat()
+        flow.updated_at = datetime.now(timezone.utc).isoformat()
+
+        self._service.save_flow(flow)
+
+        # Context 기록
+        if self._context_enabled:
+            record_task_action(flow_id, task_id, 'task_deleted', {
+                'plan_id': plan_id
+            })
+
+    # === 헬퍼 메서드 ===
+
+    def _check_and_complete_plan(self, flow_id: str, plan_id: str):
+        """Plan의 모든 Task가 완료되었는지 확인하고 자동 완료"""
+        flow = self.get_flow(flow_id)
+        if not flow or plan_id not in flow.plans:
+            return
+
+        plan = flow.plans[plan_id]
+        if plan.completed:
+            return  # 이미 완료됨
+
+        # 모든 Task가 completed 또는 reviewing 상태인지 확인
+        all_tasks = list(plan.tasks.values())
+        if not all_tasks:
+            return  # Task가 없으면 자동 완료하지 않음
+
+        completed_tasks = [t for t in all_tasks if t.status in ['completed', 'reviewing']]
+
+        if len(completed_tasks) == len(all_tasks):
+            # 모든 Task 완료 - Plan 자동 완료
+            self.update_plan_status(flow_id, plan_id, True)
+
+            # Context에 자동 완료 기록
+            if self._context_enabled:
+                record_plan_action(flow_id, plan_id, 'plan_auto_completed', {
+                    'total_tasks': len(all_tasks),
+                    'trigger': 'all_tasks_completed'
+                })
+
+            print(f"🎉 Plan '{plan.name}'의 모든 Task가 완료되어 Plan이 자동으로 완료되었습니다!")
 
     # === 프로젝트 관리 ===
 
-    def set_project(self, project: str):
-        """현재 프로젝트 설정"""
-        self._current_project = project
-        self._service.current_project = project
-
-    def get_project(self) -> Optional[str]:
+    @property
+    def current_project(self) -> Optional[str]:
         """현재 프로젝트"""
         return self._current_project
 
-    # === 유틸리티 ===
+    @current_project.setter
+    def current_project(self, project: str):
+        """현재 프로젝트 설정"""
+        self._current_project = project
 
-    def _find_task(self, task_id: str) -> Tuple[Optional[str], Optional[Task]]:
-        """Task 찾기 - (plan_id, task) 반환"""
-        if not self._current_flow_id:
-            return None, None
+    # === 통계 ===
 
-        for plan_id, task in self._service.get_all_tasks(self._current_flow_id):
-            if task.id == task_id:
-                return plan_id, task
+    def get_statistics(self) -> Dict[str, Any]:
+        """전체 통계"""
+        flows = self.list_flows()
 
-        return None, None
+        total_plans = 0
+        total_tasks = 0
+        completed_tasks = 0
 
-    def reload(self):
-        """데이터 새로고침"""
-        self._service.reload()
+        for flow in flows:
+            total_plans += len(flow.plans)
+            for plan in flow.plans.values():
+                total_tasks += len(plan.tasks)
+                completed_tasks += sum(1 for t in plan.tasks.values() 
+                                     if t.status in ['completed', 'reviewing'])
+
+        return {
+            'total_flows': len(flows),
+            'total_plans': total_plans,
+            'total_tasks': total_tasks,
+            'completed_tasks': completed_tasks,
+            'completion_rate': completed_tasks / total_tasks if total_tasks > 0 else 0
+        }

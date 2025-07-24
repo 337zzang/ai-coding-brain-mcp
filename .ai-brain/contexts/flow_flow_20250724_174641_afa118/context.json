@@ -16,10 +16,26 @@
       "details": {
         "flow_name": "status"
       }
+    },
+    {
+      "timestamp": "2025-07-24T19:01:03.382077",
+      "type": "select_flow_completed",
+      "details": {
+        "call_id": "d70207df",
+        "source": "auto",
+        "method": "select_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 2.02,
+        "params": {
+          "flow_id": "flow_20250724_173412_0ccca7"
+        },
+        "result": true
+      }
     }
   ],
   "statistics": {
     "flow_created": 1,
-    "flow_selected": 1
+    "flow_selected": 1,
+    "select_flow_completed": 1
   }
 }

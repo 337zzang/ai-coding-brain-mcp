@@ -45,11 +45,18 @@
         },
         "result": true
       }
+    },
+    {
+      "timestamp": "2025-07-24T19:01:03.380077",
+      "type": "flow_selected",
+      "details": {
+        "flow_name": "create"
+      }
     }
   ],
   "statistics": {
     "flow_created": 1,
-    "flow_selected": 3,
+    "flow_selected": 4,
     "select_flow_completed": 1
   }
 }

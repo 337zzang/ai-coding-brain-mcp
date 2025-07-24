@@ -1,0 +1,35 @@
+{
+  "flow_id": "flow_20250724_180655_2d568f",
+  "created_at": "2025-07-24T18:06:55.063801",
+  "actions": [
+    {
+      "timestamp": "2025-07-24T18:06:55.063801",
+      "type": "flow_created",
+      "details": {
+        "name": "test_auto_record",
+        "project": "phase3"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:06:55.071810",
+      "type": "create_plan_failed",
+      "details": {
+        "call_id": "7ef3e976",
+        "source": "auto",
+        "method": "create_plan",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 2.95,
+        "error": "'Plan' object has no attribute 'flow_id'",
+        "error_type": "AttributeError",
+        "params": {
+          "flow_id": "flow_20250724_180655_2d568f",
+          "name": "Test Plan"
+        }
+      }
+    }
+  ],
+  "statistics": {
+    "flow_created": 1,
+    "create_plan_failed": 1
+  }
+}

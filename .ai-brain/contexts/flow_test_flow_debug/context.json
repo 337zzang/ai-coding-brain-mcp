@@ -1,0 +1,16 @@
+{
+  "flow_id": "test_flow_debug",
+  "created_at": "2025-07-24T18:01:21.295426",
+  "actions": [
+    {
+      "timestamp": "2025-07-24T18:01:21.295426",
+      "type": "manual_test",
+      "details": {
+        "message": "\ub514\ubc84\uae45 \ud14c\uc2a4\ud2b8"
+      }
+    }
+  ],
+  "statistics": {
+    "manual_test": 1
+  }
+}

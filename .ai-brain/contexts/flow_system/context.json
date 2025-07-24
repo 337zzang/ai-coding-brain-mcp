@@ -8,9 +8,26 @@
       "details": {
         "project": "phase1-final-test"
       }
+    },
+    {
+      "timestamp": "2025-07-24T18:06:55.066771",
+      "type": "create_flow_completed",
+      "details": {
+        "call_id": "1ee61612",
+        "source": "auto",
+        "method": "create_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 6.06,
+        "params": {
+          "name": "test_auto_record",
+          "project": "phase3"
+        },
+        "result": "<Flow object>"
+      }
     }
   ],
   "statistics": {
-    "project_changed": 1
+    "project_changed": 1,
+    "create_flow_completed": 1
   }
 }

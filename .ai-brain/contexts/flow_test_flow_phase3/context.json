@@ -1,0 +1,39 @@
+{
+  "flow_id": "test_flow_phase3",
+  "created_at": "2025-07-24T18:00:59.900546",
+  "actions": [
+    {
+      "timestamp": "2025-07-24T18:00:59.900546",
+      "type": "simple_method_completed",
+      "details": {
+        "call_id": "0117275a",
+        "source": "auto",
+        "method": "simple_method",
+        "module": "__main__",
+        "elapsed_ms": 0.0,
+        "params": {
+          "name": "World"
+        },
+        "result": "Hello, World!"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:00:59.902547",
+      "type": "no_result_method_completed",
+      "details": {
+        "call_id": "7cb117a1",
+        "source": "auto",
+        "method": "no_result_method",
+        "module": "__main__",
+        "elapsed_ms": 0.0,
+        "params": {
+          "count": 5
+        }
+      }
+    }
+  ],
+  "statistics": {
+    "simple_method_completed": 1,
+    "no_result_method_completed": 1
+  }
+}

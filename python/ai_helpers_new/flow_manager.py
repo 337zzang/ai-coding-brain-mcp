@@ -13,6 +13,7 @@ from .domain.models import Flow, Plan, Task, TaskStatus, create_flow_id, create_
 from .exceptions import FlowError, ValidationError
 from .context_integration import ContextIntegration
 from .flow_context_wrapper import record_flow_action, record_plan_action, record_task_action
+from .decorators import auto_record
 
 
 class FlowManager:
@@ -36,6 +37,7 @@ class FlowManager:
 
     # === Flow 관리 ===
 
+    @auto_record(capture_result=True)
     def create_flow(self, name: str, project: Optional[str] = None) -> Flow:
         """Flow 생성"""
         flow_id = create_flow_id()
@@ -72,6 +74,7 @@ class FlowManager:
 
         return flows
 
+    @auto_record(capture_result=True)
     def delete_flow(self, flow_id: str):
         """Flow 삭제"""
         # 현재 CachedFlowService는 개별 삭제를 지원하지 않으므로
@@ -135,6 +138,7 @@ class FlowManager:
                     {'project': project}
                 )
 
+    @auto_record(capture_result=True)
     def select_flow(self, flow_id: str) -> bool:
         """Flow 선택"""
         with self._lock:
@@ -152,6 +156,7 @@ class FlowManager:
 
     # === Plan 관리 ===
 
+    @auto_record(capture_result=True)
     def create_plan(self, flow_id: str, name: str) -> Plan:
         """Plan 생성"""
         flow = self.get_flow(flow_id)
@@ -179,6 +184,7 @@ class FlowManager:
 
         return plan
 
+    @auto_record(capture_result=False)
     def update_plan_status(self, flow_id: str, plan_id: str, completed: bool):
         """Plan 완료 상태 업데이트"""
         flow = self.get_flow(flow_id)
@@ -214,6 +220,7 @@ class FlowManager:
 
     # === Task 관리 ===
 
+    @auto_record(capture_result=True)
     def create_task(self, flow_id: str, plan_id: str, name: str) -> Task:
         """Task 생성"""
         flow = self.get_flow(flow_id)
@@ -243,6 +250,7 @@ class FlowManager:
 
         return task
 
+    @auto_record(capture_result=False)
     def update_task_status(self, flow_id: str, plan_id: str, task_id: str, status: str):
         """Task 상태 업데이트"""
         # 상태 검증
@@ -278,6 +286,7 @@ class FlowManager:
         if self._context_enabled:
             record_task_action(flow_id, task_id, 'task_context_updated', context)
 
+    @auto_record(capture_result=True)
     def delete_task(self, flow_id: str, plan_id: str, task_id: str):
         """Task 삭제"""
         flow = self.get_flow(flow_id)

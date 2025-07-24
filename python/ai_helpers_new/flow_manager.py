@@ -135,6 +135,21 @@ class FlowManager:
                     {'project': project}
                 )
 
+    def select_flow(self, flow_id: str) -> bool:
+        """Flow 선택"""
+        with self._lock:
+            flow = self.get_flow(flow_id)
+            if flow:
+                self._current_flow_id = flow_id
+                if self._context_enabled:
+                    self._context.record_flow_action(
+                        flow_id,
+                        "flow_selected",
+                        {'flow_name': flow.name}
+                    )
+                return True
+            return False
+
     # === Plan 관리 ===
 
     def create_plan(self, flow_id: str, name: str) -> Plan:

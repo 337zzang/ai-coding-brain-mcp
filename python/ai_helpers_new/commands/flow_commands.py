@@ -16,8 +16,11 @@ def flow_command(manager, args: List[str]) -> Dict[str, Any]:
 
         lines = ["Flow 목록:", "-" * 40]
         for i, flow in enumerate(flows, 1):
-            status = f"{flow['plans']} plans, {flow['tasks']} tasks"
-            lines.append(f"{i}. {flow['name']} ({status})")
+            # Flow 객체의 속성에 접근
+            plan_count = len(flow.plans) if hasattr(flow, 'plans') else 0
+            task_count = sum(len(plan.tasks) for plan in flow.plans.values()) if hasattr(flow, 'plans') else 0
+            status = f"{plan_count} plans, {task_count} tasks"
+            lines.append(f"{i}. {flow.name} ({status})")
 
         return {'ok': True, 'message': '\n'.join(lines)}
 
@@ -27,8 +30,8 @@ def flow_command(manager, args: List[str]) -> Dict[str, Any]:
     # 기존 Flow 찾기
     flows = manager.list_flows()
     for flow in flows:
-        if flow['name'] == flow_name or flow['id'] == flow_name:
-            success = manager.select_flow(flow['id'])
+        if flow.name == flow_name or flow.id == flow_name:
+            success = manager.select_flow(flow.id)
             if success:
                 # v30.0: Flow 선택 시 Plan 목록 표시
                 try:

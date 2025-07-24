@@ -36,8 +36,6 @@ from .flow_context_wrapper import (
 )
 
 # 레거시 호환
-from .flow_manager_unified import FlowManagerUnified
-from .legacy_flow_adapter import LegacyFlowAdapter
 
 # 헬퍼 함수들 - v2.1에서 복원
 from .file import read, write, append, read_json, write_json, exists, info
@@ -79,8 +77,6 @@ __all__ = [
     'set_project',
 
     # 레거시 호환
-    'FlowManagerUnified',
-    'LegacyFlowAdapter',
     'ContextIntegration',
 
     # 파일 I/O

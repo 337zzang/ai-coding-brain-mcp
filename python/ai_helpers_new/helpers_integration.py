@@ -62,7 +62,7 @@ from .flow_batch import (
 )
 
 # Flow 관리
-from .flow_manager_unified import FlowManagerUnified
+from .flow_manager import FlowManager
 
 class FlowHelpers:
     """Flow 관련 헬퍼 함수 통합 클래스"""
@@ -126,8 +126,8 @@ class FlowHelpers:
     # Flow Manager
     @staticmethod
     def create_flow_manager():
-        """FlowManagerUnified 인스턴스 생성"""
-        return FlowManagerUnified()
+        """FlowManager 인스턴스 생성"""
+        return FlowManager()
 
 # 싱글톤 인스턴스
 flow_helpers = FlowHelpers()

@@ -1,7 +1,8 @@
-"""
-Flow 시스템 예외 클래스
-"""
-
+# exceptions.py
+'''
+Flow 시스템 예외 계층
+o3 분석 결과를 기반으로 구현
+'''
 
 class FlowError(Exception):
     """Flow 시스템 기본 예외"""
@@ -9,20 +10,25 @@ class FlowError(Exception):
 
 
 class ValidationError(FlowError):
-    """검증 오류"""
+    """도메인 검증 실패"""
     pass
 
 
-class NotFoundError(FlowError):
-    """리소스를 찾을 수 없음"""
+class SerializationError(FlowError):
+    """직렬화/역직렬화 오류"""
     pass
 
 
-class ConflictError(FlowError):
-    """충돌 오류 (중복 등)"""
+class StorageError(FlowError):
+    """파일 I/O 오류"""
     pass
 
 
-class PersistenceError(FlowError):
-    """저장소 오류"""
+class ConcurrencyError(FlowError):
+    """동시성 제어 오류"""
+    pass
+
+
+class ContextError(FlowError):
+    """Context 통합 오류"""
     pass

@@ -1,0 +1,23 @@
+{
+  "flow_files": [
+    "flow_backup_wrapper.py",
+    "flow_batch.py",
+    "flow_context_wrapper.py",
+    "flow_manager.py",
+    "flow_manager_unified.py",
+    "flow_search.py",
+    "legacy_flow_adapter.py",
+    "migrate_flows.py",
+    "workflow_commands.py"
+  ],
+  "context_files": [
+    "context_integration.py",
+    "doc_context_helper.py",
+    "flow_context_wrapper.py"
+  ],
+  "backup_dirs": [
+    "domain_backup_20250724_170133",
+    "service_backup_20250724_170133"
+  ],
+  "analysis_timestamp": "2025-07-24T17:17:13.875282"
+}

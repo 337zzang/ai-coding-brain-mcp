@@ -128,11 +128,12 @@ def load_helpers():
 
         # 워크플로우 시스템
         try:
-            from workflow_wrapper import wf
+            from ai_helpers_new.workflow_commands import wf
             globals()['wf'] = wf
             globals()['workflow'] = wf
-        except ImportError:
-            print("⚠️ 워크플로우 시스템 로드 실패", file=sys.stderr)
+            print("✅ 워크플로우 시스템 로드 완료", file=sys.stderr)
+        except ImportError as e:
+            print(f"⚠️ 워크플로우 시스템 로드 실패: {e}", file=sys.stderr)
 
         # flow_project 함수
         try:
@@ -154,10 +155,11 @@ wf = None
 WORKFLOW_AVAILABLE = False
 
 try:
-    from workflow_wrapper import wf
+    from ai_helpers_new.workflow_commands import wf
     WORKFLOW_AVAILABLE = True
-except ImportError:
-    print("⚠️ Workflow wrapper 로드 실패", file=sys.stderr)
+    print("✅ Workflow 시스템 로드 완료", file=sys.stderr)
+except ImportError as e:
+    print(f"⚠️ Workflow 시스템 로드 실패: {e}", file=sys.stderr)
 
 # 전역 REPL 환경
 repl_globals = {

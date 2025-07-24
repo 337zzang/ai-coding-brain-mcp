@@ -130,9 +130,9 @@ class FlowManager:
             self._current_project = project
             if self._context_enabled:
                 self._context.record_flow_action(
-                    flow_id="system",
-                    action="project_changed",
-                    data={'project': project}
+                    "system",
+                    "project_changed",
+                    {'project': project}
                 )
 
     # === Plan 관리 ===

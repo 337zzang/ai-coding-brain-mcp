@@ -1,0 +1,16 @@
+{
+  "flow_id": "system",
+  "created_at": "2025-07-24T17:34:12.160322",
+  "actions": [
+    {
+      "timestamp": "2025-07-24T17:34:12.160322",
+      "type": "project_changed",
+      "details": {
+        "project": "phase1-final-test"
+      }
+    }
+  ],
+  "statistics": {
+    "project_changed": 1
+  }
+}

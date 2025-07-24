@@ -1,6 +1,6 @@
 """
-AI Helpers New - Flow 시스템 v2.0
-레거시 제거, 완전 리팩토링 버전
+AI Helpers New - Flow 시스템 v2.1 (헬퍼 함수 복원)
+레거시 제거 버전에서 필수 헬퍼 함수들을 다시 추가
 """
 
 # 도메인 모델
@@ -28,23 +28,37 @@ from .workflow_commands import (
     get_flow_manager
 )
 
-# Context (더미 - 호환성)
-class ContextIntegration:
-    """레거시 호환용 더미"""
-    def record_flow_action(self, *args, **kwargs):
-        pass
-    def record_doc_action(self, *args, **kwargs):
-        pass
+# Context 통합
+from .context_integration import ContextIntegration
+from .flow_context_wrapper import (
+    record_flow_action, record_task_action, record_plan_action,
+    record_doc_creation, record_doc_update
+)
 
-# 레거시 호환 (임시)
-FlowManagerUnified = FlowManager
-LegacyFlowAdapter = FlowManager
+# 레거시 호환
+from .flow_manager_unified import FlowManagerUnified
+from .legacy_flow_adapter import LegacyFlowAdapter
+
+# 헬퍼 함수들 - v2.1에서 복원
+from .file import read, write, append, read_json, write_json, exists, info
+from .code import parse, view, replace, insert, functions, classes
+from .search import search_files, search_code, find_function, find_class, grep
+from .llm import ask_o3_async, check_o3_status, get_o3_result, show_o3_progress
+from .git import (
+    git_status, git_add, git_commit, git_push, git_pull, 
+    git_branch, git_log, git_current_branch, git_diff
+)
+from .util import ok, err, is_ok, get_data, get_error
+from .project import get_current_project, fp, scan_directory, scan_directory_dict
+
+# 헬퍼 통합
+from .helpers_integration import FlowHelpers, flow_helpers, fh
 
 # 초기화
 import logging
 logging.basicConfig(level=logging.INFO)
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 
 __all__ = [
     # 핵심
@@ -67,8 +81,36 @@ __all__ = [
     # 레거시 호환
     'FlowManagerUnified',
     'LegacyFlowAdapter',
-    'ContextIntegration'
+    'ContextIntegration',
+
+    # 파일 I/O
+    'read', 'write', 'append', 'read_json', 'write_json', 'exists', 'info',
+
+    # 코드 분석
+    'parse', 'view', 'replace', 'insert', 'functions', 'classes',
+
+    # 검색
+    'search_files', 'search_code', 'find_function', 'find_class', 'grep',
+
+    # LLM
+    'ask_o3_async', 'check_o3_status', 'get_o3_result', 'show_o3_progress',
+
+    # Git
+    'git_status', 'git_add', 'git_commit', 'git_push', 'git_pull',
+    'git_branch', 'git_log', 'git_current_branch', 'git_diff',
+
+    # 유틸리티
+    'ok', 'err', 'is_ok', 'get_data', 'get_error',
+
+    # 프로젝트
+    'get_current_project', 'fp', 'scan_directory', 'scan_directory_dict',
+
+    # Context
+    'record_flow_action', 'record_task_action', 'record_plan_action',
+    'record_doc_creation', 'record_doc_update',
+
+    # 헬퍼 통합
+    'FlowHelpers', 'flow_helpers', 'fh'
 ]
 
-# 초기화 메시지는 실제 사용시에만
-print("✅ Flow 시스템 v2.0 로드됨")
+print("✅ Flow 시스템 v2.1 로드됨 - 헬퍼 함수 복원 완료")

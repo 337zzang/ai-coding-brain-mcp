@@ -1,0 +1,16 @@
+{
+  "flow_id": "test_flow_no_actions",
+  "created_at": "2025-01-01T00:00:00",
+  "statistics": {
+    "test_after_fix": 1
+  },
+  "actions": [
+    {
+      "timestamp": "2025-07-23T21:14:56.180653",
+      "type": "test_after_fix",
+      "details": {
+        "fixed": true
+      }
+    }
+  ]
+}

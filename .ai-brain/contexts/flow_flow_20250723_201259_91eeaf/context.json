@@ -1,0 +1,17 @@
+{
+  "flow_id": "flow_20250723_201259_91eeaf",
+  "created_at": "2025-07-23T21:15:27.203211",
+  "actions": [
+    {
+      "timestamp": "2025-07-23T21:15:27.203211",
+      "type": "compatibility_test",
+      "details": {
+        "flow_name": "flow_20250723_102930_ai-cod",
+        "test_time": "after_fix"
+      }
+    }
+  ],
+  "statistics": {
+    "compatibility_test": 1
+  }
+}

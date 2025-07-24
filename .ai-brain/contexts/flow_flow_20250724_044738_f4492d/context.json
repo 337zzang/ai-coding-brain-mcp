@@ -1,0 +1,18 @@
+{
+  "flow_id": "flow_20250724_044738_f4492d",
+  "created_at": "2025-07-24T04:47:38.708635",
+  "actions": [
+    {
+      "timestamp": "2025-07-24T04:47:38.708635",
+      "type": "flow_created",
+      "details": {
+        "name": "task",
+        "project": null,
+        "force": false
+      }
+    }
+  ],
+  "statistics": {
+    "flow_created": 1
+  }
+}

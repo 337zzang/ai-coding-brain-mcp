@@ -1,0 +1,17 @@
+{
+  "flow_id": "flow_20250723_083632_44d3d9",
+  "created_at": "2025-07-23T08:36:32.847265",
+  "actions": [
+    {
+      "timestamp": "2025-07-23T08:36:32.847265",
+      "type": "flow_created",
+      "details": {
+        "name": "ai-coding-brain-mcp",
+        "project": null
+      }
+    }
+  ],
+  "statistics": {
+    "flow_created": 1
+  }
+}

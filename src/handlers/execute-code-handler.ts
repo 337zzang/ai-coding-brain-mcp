@@ -487,6 +487,35 @@ export class ExecuteCodeHandler {
   static async handleExecuteCode(args: { code: string; language?: string }): Promise<{ content: Array<{ type: string; text: string }> }> {
     const DEBUG_MODE = true;
     logger.info('🚀 JSON REPL 강제 활성화 모드 - execute_code 핸들러');
+    
+    // arguments 검증
+    if (!args || typeof args !== 'object') {
+      logger.error('Invalid arguments received:', args);
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            success: false,
+            error: 'Invalid arguments: args object is required',
+            timestamp: new Date().toISOString()
+          }, null, 2)
+        }]
+      };
+    }
+    
+    if (!args.code) {
+      logger.error('Missing code parameter:', args);
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            success: false,
+            error: 'Missing required parameter: code',
+            timestamp: new Date().toISOString()
+          }, null, 2)
+        }]
+      };
+    }
 
     // 세션 명령어 처리
     if (args.code.startsWith('/')) {
@@ -728,8 +757,10 @@ export class ExecuteCodeHandler {
    * 🔄 JSON REPL 세션 재시작
    */
   static async handleRestartJsonRepl(args: { reason?: string; keep_helpers?: boolean }): Promise<{ content: Array<{ type: string; text: string }> }> {
-    const reason = args.reason || '세션 새로고침';
-    const keepHelpers = args.keep_helpers !== false; // 기본값 true
+    // arguments 검증
+    const validArgs = args && typeof args === 'object' ? args : {};
+    const reason = validArgs.reason || '세션 새로고침';
+    const keepHelpers = validArgs.keep_helpers !== false; // 기본값 true
     
     logger.info(`🔄 JSON REPL 세션 재시작 요청: ${reason} (헬퍼 유지: ${keepHelpers})`);
     

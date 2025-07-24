@@ -1,0 +1,37 @@
+{
+  "flow_id": "flow_20250723_211732_6d69b2",
+  "created_at": "2025-07-23T21:17:32.027997",
+  "actions": [
+    {
+      "timestamp": "2025-07-23T21:17:32.027997",
+      "type": "flow_created",
+      "details": {
+        "name": "final-test-flow",
+        "project": null,
+        "force": false
+      }
+    },
+    {
+      "timestamp": "2025-07-23T21:17:32.034000",
+      "type": "plan_plan_created",
+      "details": {
+        "plan_id": "plan_20250723_211732_675499",
+        "name": "final-test-plan"
+      }
+    },
+    {
+      "timestamp": "2025-07-23T21:17:32.038997",
+      "type": "task_task_created",
+      "details": {
+        "task_id": "task_20250723_211732_85f311",
+        "name": "final-test-task",
+        "plan_id": "plan_20250723_211732_675499"
+      }
+    }
+  ],
+  "statistics": {
+    "flow_created": 1,
+    "plan_plan_created": 1,
+    "task_task_created": 1
+  }
+}

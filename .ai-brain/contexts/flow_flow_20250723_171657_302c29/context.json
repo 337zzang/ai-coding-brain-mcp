@@ -1,0 +1,35 @@
+{
+  "flow_id": "flow_20250723_171657_302c29",
+  "created_at": "2025-07-23T17:16:57.773275",
+  "actions": [
+    {
+      "timestamp": "2025-07-23T17:16:57.773275",
+      "type": "flow_created",
+      "details": {
+        "name": "list",
+        "project": null,
+        "force": false
+      }
+    },
+    {
+      "timestamp": "2025-07-23T21:15:27.200213",
+      "type": "compatibility_test",
+      "details": {
+        "flow_name": "list",
+        "test_time": "after_fix"
+      }
+    },
+    {
+      "timestamp": "2025-07-23T21:17:32.070997",
+      "type": "final_test",
+      "details": {
+        "timestamp": "2025-07-23T21:17:32.069999"
+      }
+    }
+  ],
+  "statistics": {
+    "flow_created": 1,
+    "compatibility_test": 1,
+    "final_test": 1
+  }
+}

@@ -5,8 +5,8 @@ import { Tool } from '@modelcontextprotocol/sdk/types';
  * 
  * 영속적 Python REPL 세션과 프로젝트 관리를 위한 MCP 도구 모음
  * 
- * @version 4.1.0
- * @updated 2025-07-17
+ * @version 4.2.0
+ * @updated 2025-07-23
  * @author AI Coding Brain Team
  */
 
@@ -34,8 +34,9 @@ AI Helpers v2.0 모듈 구조:
 • file.py - 파일 작업 (read, write, append, exists, info, read_json, write_json)
 • code.py - 코드 분석/수정 (parse, view, replace, insert, functions, classes)
 • search.py - 검색 기능 (search_files, search_code, find_function, find_class, grep)
-• llm.py - LLM 작업 (ask_o3, ask_o3_async, check_o3_status, show_o3_progress)
+• llm.py - LLM 작업 (ask_o3, ask_o3_async, check_o3_status, show_o3_progress, get_o3_result)
 • util.py - 유틸리티 (ok, err, is_ok, get_data, get_error)
+• git.py - Git 작업 (status, add, commit, diff, log, branch, push, pull)
 
 사용 예시:
 import ai_helpers_new as h
@@ -48,7 +49,7 @@ h.append('log.txt', 'new line\\n')
 # exists 함수 (v19.0 업데이트 - 이제 dict 반환)
 result = h.exists('file.txt')  # {'ok': True, 'data': True/False, 'path': 'file.txt'}
 
-# JSON
+# JSON 작업
 data = h.read_json('config.json')['data']
 h.write_json('output.json', data)
 
@@ -59,14 +60,24 @@ if info['ok']:
     classes = info['data']['classes']
 
 # 코드 수정
-h.replace('file.py', 'old', 'new')
+h.replace('file.py', 'old_code', 'new_code')
 h.view('file.py', 'function_name')
+h.insert('file.py', 'line content', line_number)
 
 # 검색 (v19.0 개선 - 와일드카드 자동 처리)
 results = h.search_files('test')  # 자동으로 *test*로 변환
 results = h.search_files('*.py')  # 모든 Python 파일
 results = h.search_code('pattern', '.')  # 코드 내용 검색
 files = h.find_function('main', '.')
+classes = h.find_class('MyClass', '.')
+
+# Git 작업
+git_result = h.git_status()
+if git_result['ok']:
+    print(git_result['data'])
+h.git_add('.')
+h.git_commit('feat: 새 기능 추가')
+h.git_push()
 
 # o3 백그라운드 실행 (병렬 처리)
 task_id = h.ask_o3_async("복잡한 질문")['data']
@@ -80,18 +91,29 @@ if not h.is_ok(result):
     print(h.get_error(result))
 
 워크플로우 시스템:
-• wf("/status") - 현재 상태
-• wf("/task 작업명") - 작업 추가
-• wf("/next") - 다음 작업
-• wf("/done") - 작업 완료
+• wf("/status") - 현재 상태 확인
+• wf("/task 작업명") - 새 작업 추가
+• wf("/next") - 다음 작업으로 이동
+• wf("/done") - 현재 작업 완료
+• wf("/list") - 전체 작업 목록 보기
+• wf("/delete 번호") - 특정 작업 삭제
 
 프로젝트 관리:
 • helpers.fp("project-name") - 프로젝트 전환
-• helpers.get_current_project() - 현재 프로젝트
+• helpers.get_current_project() - 현재 프로젝트 확인
+• helpers.list_projects() - 모든 프로젝트 목록
 • helpers.scan_directory(".", max_depth=2) - 디렉토리 스캔 (v19.0 개선)
+• helpers.project_info() - 프로젝트 정보 조회
+
+Flow 시스템 (대화 컨텍스트 관리):
+• flow_project("project-name") - Flow 프로젝트로 전환
+• flow_list() - 모든 Flow 목록 조회
+• flow_save("flow-name", {"key": "value"}) - Flow 데이터 저장
+• flow_load("flow-name") - Flow 데이터 로드
+• flow_context() - 현재 Flow 컨텍스트 조회
 
 모든 헬퍼 함수는 일관된 dict 형식 반환:
-{'ok': bool, 'data': 결과, ...추가정보}`,
+{'ok': bool, 'data': 결과, 'error': 에러메시지(실패시), ...추가정보}`,
     inputSchema: executeCodeSchema
   },
   {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * AI Coding Brain MCP Server v3.0.0 - Simplified Edition
- * Python REPL with persistent helpers
+ * AI Coding Brain MCP Server v4.2.0 - Enhanced Edition
+ * Python REPL with persistent helpers and improved tool definitions
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -36,7 +36,7 @@ class AICodingBrainMCP {
     this.server = new Server(
       {
         name: 'ai-coding-brain-mcp',
-        version: '3.0.0',
+        version: '4.2.0',
         description: 'AI Coding Brain MCP - Simplified Python REPL with persistent helpers'
       },
       {
@@ -102,7 +102,7 @@ class AICodingBrainMCP {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
 
-    logger.info('AI Coding Brain MCP v3.0.0 - Simplified Edition');
+    logger.info('AI Coding Brain MCP v4.2.0 - Enhanced Edition');
     logger.info('2 tools loaded: execute_code, restart_json_repl');
     logger.info('Python REPL session with persistent helpers ready');
   }

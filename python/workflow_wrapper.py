@@ -13,17 +13,22 @@ def get_workflow_manager():
 
     if _manager is None:
         try:
-            # FlowManagerUnified 사용
-            from ai_helpers_new.flow_manager_unified import FlowManagerUnified
-            _manager = FlowManagerUnified()
-            print("✅ FlowManagerUnified 초기화됨")
+            # o3 권장사항: LegacyFlowAdapter를 통해 연결
+            from ai_helpers_new.flow_manager import FlowManager
+            from ai_helpers_new.legacy_flow_adapter import LegacyFlowAdapter
+            from ai_helpers_new.flow_command_router import FlowCommandRouter
+
+            flow_manager = FlowManager(context_enabled=True)
+            adapter = LegacyFlowAdapter(flow_manager)
+            _manager = FlowCommandRouter(adapter)
+            print("✅ FlowManager + LegacyFlowAdapter + FlowCommandRouter 초기화됨")
         except ImportError as e:
-            print(f"⚠️ FlowManagerUnified import 실패: {e}")
-            # Fallback to basic manager
+            print(f"⚠️ import 실패: {e}")
+            # Fallback to FlowManagerUnified
             try:
-                from ai_helpers_new.workflow_manager import WorkflowManager
-                _manager = WorkflowManager()
-                print("⚠️ 기존 WorkflowManager로 fallback")
+                from ai_helpers_new.flow_manager_unified import FlowManagerUnified
+                _manager = FlowManagerUnified()
+                print("⚠️ FlowManagerUnified로 fallback")
             except ImportError:
                 print("❌ 워크플로우 매니저를 찾을 수 없습니다")
                 _manager = None
@@ -46,8 +51,17 @@ def wf(command: str, verbose: bool = False) -> Dict[str, Any]:
             return {'ok': False, 'error': '워크플로우 매니저를 초기화할 수 없습니다'}
 
         # FlowManagerUnified의 process_command 사용
-        if hasattr(manager, 'process_command'):
+        # FlowCommandRouter의 route 메서드 직접 사용
+        if hasattr(manager, 'route'):
+            result = manager.route(command)
+        elif hasattr(manager, '_router') and hasattr(manager._router, 'route'):
+            # FlowManagerUnified를 통한 명령 처리
+            result = manager._router.route(command)
+        elif hasattr(manager, 'process_command'):
             result = manager.process_command(command)
+        elif hasattr(manager, 'handle_command'):
+            # FlowManagerUnified의 handle_command 사용
+            result = manager.handle_command(command)
         elif hasattr(manager, 'wf_command'):
             # 기존 WorkflowManager 호환성
             result = manager.wf_command(command, verbose)

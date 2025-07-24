@@ -1,409 +1,559 @@
 {
-  "flow_20250722_213712_3cb917": {
-    "id": "flow_20250722_213712_3cb917",
-    "name": "프로젝트별-테스트",
-    "plans": {
-      "plan_17531879234719998_8eb575": {
-        "id": "plan_17531879234719998_8eb575",
-        "name": "프로젝트별-테스트-계획",
-        "tasks": {
-          "task_17531879234810040_644697": {
-            "id": "task_17531879234810040_644697",
-            "name": "첫번째-테스트-작업",
-            "status": "todo",
-            "created_at": "2025-07-22T21:38:43.481004",
-            "updated_at": "2025-07-22T21:38:43.481004",
-            "started_at": null,
-            "completed_at": null,
-            "context": {
-              "plan": "",
-              "actions": [],
-              "results": {},
-              "files": {
-                "created": [],
-                "modified": [],
-                "analyzed": []
-              },
-              "errors": [],
-              "notes": []
-            }
-          }
-        },
-        "created_at": "2025-07-22T21:38:43.472000",
-        "completed": false,
-        "completed_at": null
-      },
-      "plan_17531906431801750_e39b9a": {
-        "id": "plan_17531906431801750_e39b9a",
-        "name": "분석-및-설계",
-        "tasks": {},
-        "created_at": "2025-07-22T22:24:03.180175",
-        "completed": false,
-        "completed_at": null
-      },
-      "plan_17531906431901742_82ab01": {
-        "id": "plan_17531906431901742_82ab01",
-        "name": "ProjectContext-구현",
-        "tasks": {},
-        "created_at": "2025-07-22T22:24:03.190174",
-        "completed": false,
-        "completed_at": null
-      },
-      "plan_17531906431971732_1a5321": {
-        "id": "plan_17531906431971732_1a5321",
-        "name": "Repository-개선",
-        "tasks": {},
-        "created_at": "2025-07-22T22:24:03.197173",
-        "completed": false,
-        "completed_at": null
-      },
-      "plan_17531906432061720_b7617f": {
-        "id": "plan_17531906432061720_b7617f",
-        "name": "FlowService-개선",
-        "tasks": {},
-        "created_at": "2025-07-22T22:24:03.206172",
-        "completed": false,
-        "completed_at": null
-      },
-      "plan_17531906432141760_56dacf": {
-        "id": "plan_17531906432141760_56dacf",
-        "name": "FlowManager-개선",
-        "tasks": {},
-        "created_at": "2025-07-22T22:24:03.214176",
-        "completed": false,
-        "completed_at": null
-      },
-      "plan_17531906432231740_d02210": {
-        "id": "plan_17531906432231740_d02210",
-        "name": "테스트-및-검증",
-        "tasks": {},
-        "created_at": "2025-07-22T22:24:03.223174",
-        "completed": false,
-        "completed_at": null
-      }
-    },
-    "created_at": "2025-07-22T21:37:12.758685",
-    "updated_at": "2025-07-22T22:24:03.223174",
-    "metadata": {}
-  },
-  "flow_20250722_222342_4665d6": {
-    "id": "flow_20250722_222342_4665d6",
-    "name": "flow-path-improvement",
-    "plans": {
-      "plan_17531907290757598_eac1c8": {
-        "id": "plan_17531907290757598_eac1c8",
-        "name": "분석-및-설계",
-        "tasks": {
-          "task_17531907525020650_f8947c": {
-            "id": "task_17531907525020650_f8947c",
-            "name": "o3-분석-결과-문서화",
-            "status": "completed",
-            "created_at": "2025-07-22T22:25:52.502065",
-            "updated_at": "2025-07-22T22:29:59.655794",
-            "started_at": "2025-07-22T22:27:47.789981",
-            "completed_at": "2025-07-22T22:29:59.655794",
-            "context": {
-              "plan": "",
-              "actions": [],
-              "results": {},
-              "files": {
-                "created": [],
-                "modified": [],
-                "analyzed": []
-              },
-              "errors": [],
-              "notes": []
-            }
-          },
-          "task_17531907525440770_54be50": {
-            "id": "task_17531907525440770_54be50",
-            "name": "현재-코드-백업",
-            "status": "completed",
-            "created_at": "2025-07-22T22:25:52.544077",
-            "updated_at": "2025-07-22T22:30:58.721905",
-            "started_at": "2025-07-22T22:29:59.668795",
-            "completed_at": "2025-07-22T22:30:58.721905",
-            "context": {
-              "plan": "",
-              "actions": [],
-              "results": {},
-              "files": {
-                "created": [],
-                "modified": [],
-                "analyzed": []
-              },
-              "errors": [],
-              "notes": []
-            }
-          },
-          "task_17531907525829970_817621": {
-            "id": "task_17531907525829970_817621",
-            "name": "개선-설계-문서-작성",
-            "status": "completed",
-            "created_at": "2025-07-22T22:25:52.582997",
-            "updated_at": "2025-07-22T22:36:23.236237",
-            "started_at": "2025-07-22T22:31:43.475466",
-            "completed_at": "2025-07-22T22:36:23.236237",
-            "context": {
-              "plan": "",
-              "actions": [],
-              "results": {},
-              "files": {
-                "created": [],
-                "modified": [],
-                "analyzed": []
-              },
-              "errors": [],
-              "notes": []
-            }
-          },
-          "task_17531907526039842_c7434a": {
-            "id": "task_17531907526039842_c7434a",
-            "name": "ProjectContext-클래스-설계",
-            "status": "todo",
-            "created_at": "2025-07-22T22:25:52.603984",
-            "updated_at": "2025-07-22T22:25:52.603984",
-            "started_at": null,
-            "completed_at": null,
-            "context": {
-              "plan": "",
-              "actions": [],
-              "results": {},
-              "files": {
-                "created": [],
-                "modified": [],
-                "analyzed": []
-              },
-              "errors": [],
-              "notes": []
-            }
-          }
-        },
-        "created_at": "2025-07-22T22:25:29.075760",
-        "completed": false,
-        "completed_at": null
-      },
-      "plan_17531907290857580_5e493a": {
-        "id": "plan_17531907290857580_5e493a",
-        "name": "ProjectContext-구현",
-        "tasks": {
-          "task_17531914171894482_4fd745": {
-            "id": "task_17531914171894482_4fd745",
-            "name": "ProjectContext-클래스-구현",
-            "status": "completed",
-            "created_at": "2025-07-22T22:36:57.189448",
-            "updated_at": "2025-07-22T22:39:06.809986",
-            "started_at": "2025-07-22T22:36:57.235444",
-            "completed_at": "2025-07-22T22:39:06.809986",
-            "context": {
-              "plan": "",
-              "actions": [],
-              "results": {},
-              "files": {
-                "created": [],
-                "modified": [],
-                "analyzed": []
-              },
-              "errors": [],
-              "notes": []
-            }
-          },
-          "task_17531914171994440_44bb1f": {
-            "id": "task_17531914171994440_44bb1f",
-            "name": "ProjectContext-단위-테스트-작성",
-            "status": "completed",
-            "created_at": "2025-07-22T22:36:57.199444",
-            "updated_at": "2025-07-22T22:50:29.142745",
-            "started_at": "2025-07-22T22:44:28.226348",
-            "completed_at": "2025-07-22T22:50:29.142745",
-            "context": {
-              "plan": "",
-              "actions": [],
-              "results": {},
-              "files": {
-                "created": [],
-                "modified": [],
-                "analyzed": []
-              },
-              "errors": [],
-              "notes": []
-            }
-          },
-          "task_17531914172094480_6defab": {
-            "id": "task_17531914172094480_6defab",
-            "name": "ProjectContext-통합-테스트",
-            "status": "todo",
-            "created_at": "2025-07-22T22:36:57.209448",
-            "updated_at": "2025-07-22T22:36:57.209448",
-            "started_at": null,
-            "completed_at": null,
-            "context": {
-              "plan": "",
-              "actions": [],
-              "results": {},
-              "files": {
-                "created": [],
-                "modified": [],
-                "analyzed": []
-              },
-              "errors": [],
-              "notes": []
-            }
-          },
-          "task_17531914172184442_7abfdf": {
-            "id": "task_17531914172184442_7abfdf",
-            "name": "ProjectContext-문서화",
-            "status": "todo",
-            "created_at": "2025-07-22T22:36:57.218444",
-            "updated_at": "2025-07-22T22:36:57.218444",
-            "started_at": null,
-            "completed_at": null,
-            "context": {
-              "plan": "",
-              "actions": [],
-              "results": {},
-              "files": {
-                "created": [],
-                "modified": [],
-                "analyzed": []
-              },
-              "errors": [],
-              "notes": []
-            }
-          }
-        },
-        "created_at": "2025-07-22T22:25:29.085758",
-        "completed": false,
-        "completed_at": null
-      },
-      "plan_17531907290957730_54c8de": {
-        "id": "plan_17531907290957730_54c8de",
-        "name": "Repository-개선",
-        "tasks": {
-          "task_17531923490421780_08cfcd": {
-            "id": "task_17531923490421780_08cfcd",
-            "name": "JsonFlowRepository-ProjectContext-통합",
-            "status": "in_progress",
-            "created_at": "2025-07-22T22:52:29.042178",
-            "updated_at": "2025-07-22T22:52:29.106165",
-            "started_at": "2025-07-22T22:52:29.106165",
-            "completed_at": null,
-            "context": {
-              "plan": "",
-              "actions": [],
-              "results": {},
-              "files": {
-                "created": [],
-                "modified": [],
-                "analyzed": []
-              },
-              "errors": [],
-              "notes": []
-            }
-          },
-          "task_17531923490551700_ea3170": {
-            "id": "task_17531923490551700_ea3170",
-            "name": "동적-경로-지원-구현",
-            "status": "todo",
-            "created_at": "2025-07-22T22:52:29.055170",
-            "updated_at": "2025-07-22T22:52:29.055170",
-            "started_at": null,
-            "completed_at": null,
-            "context": {
-              "plan": "",
-              "actions": [],
-              "results": {},
-              "files": {
-                "created": [],
-                "modified": [],
-                "analyzed": []
-              },
-              "errors": [],
-              "notes": []
-            }
-          },
-          "task_17531923490691700_6dd133": {
-            "id": "task_17531923490691700_6dd133",
-            "name": "백업-및-복원-기능-개선",
-            "status": "todo",
-            "created_at": "2025-07-22T22:52:29.069170",
-            "updated_at": "2025-07-22T22:52:29.069170",
-            "started_at": null,
-            "completed_at": null,
-            "context": {
-              "plan": "",
-              "actions": [],
-              "results": {},
-              "files": {
-                "created": [],
-                "modified": [],
-                "analyzed": []
-              },
-              "errors": [],
-              "notes": []
-            }
-          },
-          "task_17531923490791680_44c9fd": {
-            "id": "task_17531923490791680_44c9fd",
-            "name": "Repository-테스트-작성",
-            "status": "todo",
-            "created_at": "2025-07-22T22:52:29.079168",
-            "updated_at": "2025-07-22T22:52:29.079168",
-            "started_at": null,
-            "completed_at": null,
-            "context": {
-              "plan": "",
-              "actions": [],
-              "results": {},
-              "files": {
-                "created": [],
-                "modified": [],
-                "analyzed": []
-              },
-              "errors": [],
-              "notes": []
-            }
-          }
-        },
-        "created_at": "2025-07-22T22:25:29.095773",
-        "completed": false,
-        "completed_at": null
-      },
-      "plan_17531907291037632_a84445": {
-        "id": "plan_17531907291037632_a84445",
-        "name": "FlowService-개선",
-        "tasks": {},
-        "created_at": "2025-07-22T22:25:29.103763",
-        "completed": false,
-        "completed_at": null
-      },
-      "plan_17531907291117600_e72693": {
-        "id": "plan_17531907291117600_e72693",
-        "name": "FlowManager-개선",
-        "tasks": {},
-        "created_at": "2025-07-22T22:25:29.111760",
-        "completed": false,
-        "completed_at": null
-      },
-      "plan_17531907291197640_8bbef9": {
-        "id": "plan_17531907291197640_8bbef9",
-        "name": "테스트-및-검증",
-        "tasks": {},
-        "created_at": "2025-07-22T22:25:29.119764",
-        "completed": false,
-        "completed_at": null
-      }
-    },
-    "created_at": "2025-07-22T22:23:42.218744",
-    "updated_at": "2025-07-22T22:52:29.106165",
-    "metadata": {}
-  },
-  "flow_20250722_222447_3dc7c1": {
-    "id": "flow_20250722_222447_3dc7c1",
-    "name": "test-direct-flow",
+  "flow_20250723_101943_6b9635": {
+    "id": "flow_20250723_101943_6b9635",
+    "name": "test-flow-analysis",
+    "project": null,
+    "created_at": "2025-07-23T01:19:43.526160+00:00",
+    "updated_at": "2025-07-23T10:19:43.526160",
     "plans": {},
-    "created_at": "2025-07-22T22:24:47.194409",
-    "updated_at": "2025-07-22T22:24:47.194409",
-    "metadata": {}
+    "metadata": {},
+    "archived": false
+  },
+  "flow_20250723_171657_302c29": {
+    "id": "flow_20250723_171657_302c29",
+    "name": "list",
+    "project": null,
+    "created_at": "2025-07-23T08:16:57.768275+00:00",
+    "updated_at": "2025-07-23T17:16:57.768275",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "flow_20250723_171657_6efc8f": {
+    "id": "flow_20250723_171657_6efc8f",
+    "name": "test-project",
+    "project": null,
+    "created_at": "2025-07-23T08:16:57.797275+00:00",
+    "updated_at": "2025-07-23T17:16:57.797275",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "flow_20250723_201259_91eeaf": {
+    "id": "flow_20250723_201259_91eeaf",
+    "name": "flow_20250723_102930_ai-cod",
+    "project": null,
+    "created_at": "2025-07-23T11:12:59.642245+00:00",
+    "updated_at": "2025-07-23T20:12:59.642245",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "flow_20250723_201314_fc7bc4": {
+    "id": "flow_20250723_201314_fc7bc4",
+    "name": "test-flow-debug",
+    "project": null,
+    "created_at": "2025-07-23T11:13:14.314185+00:00",
+    "updated_at": "2025-07-23T20:13:14.314185",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "flow_20250723_201349_8c58a8": {
+    "id": "flow_20250723_201349_8c58a8",
+    "name": "flow_20250723_201314_fc7bc4",
+    "project": null,
+    "created_at": "2025-07-23T11:13:49.354769+00:00",
+    "updated_at": "2025-07-23T20:13:49.354769",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "flow_20250723_204906_fc5131": {
+    "id": "flow_20250723_204906_fc5131",
+    "name": "context-test-flow-1753271346",
+    "project": null,
+    "created_at": "2025-07-23T11:49:06.861528+00:00",
+    "updated_at": "2025-07-23T20:49:06.861528",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "flow_20250723_211244_1a8512": {
+    "id": "flow_20250723_211244_1a8512",
+    "name": "test-context-error",
+    "project": null,
+    "created_at": "2025-07-23T12:12:44.971324+00:00",
+    "updated_at": "2025-07-23T21:12:44.971324",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "flow_20250724_044527_a86f8a": {
+    "id": "flow_20250724_044527_a86f8a",
+    "name": "plan",
+    "project": null,
+    "created_at": "2025-07-23T19:45:27.019615+00:00",
+    "updated_at": "2025-07-24T04:45:27.019615",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "flow_20250724_044738_f4492d": {
+    "id": "flow_20250724_044738_f4492d",
+    "name": "task",
+    "project": null,
+    "created_at": "2025-07-23T19:47:38.708635+00:00",
+    "updated_at": "2025-07-24T04:47:38.708635",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "flow_20250724_044752_ad35fc": {
+    "id": "flow_20250724_044752_ad35fc",
+    "name": "switch",
+    "project": null,
+    "created_at": "2025-07-23T19:47:52.951447+00:00",
+    "updated_at": "2025-07-24T04:47:52.951447",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "flow_20250724_044842_5d548e": {
+    "id": "flow_20250724_044842_5d548e",
+    "name": "start",
+    "project": null,
+    "created_at": "2025-07-23T19:48:42.168741+00:00",
+    "updated_at": "2025-07-24T04:48:42.168741",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "flow_20250724_045348_a7c0a9": {
+    "id": "flow_20250724_045348_a7c0a9",
+    "name": "test-flow",
+    "project": null,
+    "created_at": "2025-07-23T19:53:48.303371+00:00",
+    "updated_at": "2025-07-24T04:53:48.303371",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "test-flow-1753315234": {
+    "id": "test-flow-1753315234",
+    "name": "test-flow-1753315234",
+    "project": null,
+    "created_at": "2025-07-24T00:00:34.694403+00:00",
+    "updated_at": "2025-07-24T00:00:34.694403+00:00",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "test-flow-1753315277": {
+    "id": "test-flow-1753315277",
+    "name": "test-flow-1753315277",
+    "project": null,
+    "created_at": "2025-07-24T00:01:17.986760+00:00",
+    "updated_at": "2025-07-24T00:01:17.986760+00:00",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "sales_ocr": {
+    "id": "sales_ocr",
+    "name": "sales_ocr",
+    "project": null,
+    "created_at": "2025-07-24T00:43:03.778365+00:00",
+    "updated_at": "2025-07-24T00:43:03.778365+00:00",
+    "plans": {},
+    "metadata": {},
+    "archived": false
+  },
+  "ai-coding-brain-mcp": {
+    "id": "ai-coding-brain-mcp",
+    "name": "ai-coding-brain-mcp",
+    "project": null,
+    "created_at": "2025-07-24T04:52:15.361043+00:00",
+    "updated_at": "2025-07-24T05:04:01.635440+00:00",
+    "plans": {
+      "plan_20250724_135226_60cbd5": {
+        "id": "plan_20250724_135226_60cbd5",
+        "name": "Flow 시스템 리팩토링",
+        "description": "",
+        "created_at": "2025-07-24T04:52:26.315726+00:00",
+        "updated_at": "2025-07-24T04:53:22.037037+00:00",
+        "completed_at": "2025-07-24T04:53:22.037037+00:00",
+        "tasks": {
+          "task_20250724_135241_524f76": {
+            "id": "task_20250724_135241_524f76",
+            "name": "레거시 코드 분석 및 문제점 정리",
+            "description": "",
+            "status": "done",
+            "created_at": "2025-07-24T04:52:41.645337+00:00",
+            "updated_at": "2025-07-24T04:53:00.062034+00:00",
+            "started_at": null,
+            "completed_at": "2025-07-24T04:53:00.056035+00:00",
+            "context": {
+              "actions": [
+                {
+                  "action": "created",
+                  "timestamp": "2025-07-24T04:52:41.649338+00:00",
+                  "data": {
+                    "flow_id": "ai-coding-brain-mcp",
+                    "plan_id": "plan_20250724_135226_60cbd5"
+                  }
+                },
+                {
+                  "action": "status_changed",
+                  "timestamp": "2025-07-24T04:53:00.060034+00:00",
+                  "data": {
+                    "from": "todo",
+                    "to": "done"
+                  }
+                },
+                {
+                  "action": "completed",
+                  "timestamp": "2025-07-24T04:53:00.062034+00:00",
+                  "data": {
+                    "message": "o3 분석을 통해 10가지 주요 문제점 도출"
+                  }
+                }
+              ]
+            }
+          },
+          "task_20250724_135241_994d9d": {
+            "id": "task_20250724_135241_994d9d",
+            "name": "새로운 3계층 아키텍처 설계",
+            "description": "",
+            "status": "done",
+            "created_at": "2025-07-24T04:52:41.653336+00:00",
+            "updated_at": "2025-07-24T04:53:00.069035+00:00",
+            "started_at": null,
+            "completed_at": "2025-07-24T04:53:00.064034+00:00",
+            "context": {
+              "actions": [
+                {
+                  "action": "created",
+                  "timestamp": "2025-07-24T04:52:41.656334+00:00",
+                  "data": {
+                    "flow_id": "ai-coding-brain-mcp",
+                    "plan_id": "plan_20250724_135226_60cbd5"
+                  }
+                },
+                {
+                  "action": "status_changed",
+                  "timestamp": "2025-07-24T04:53:00.066034+00:00",
+                  "data": {
+                    "from": "todo",
+                    "to": "done"
+                  }
+                },
+                {
+                  "action": "completed",
+                  "timestamp": "2025-07-24T04:53:00.069035+00:00",
+                  "data": {
+                    "message": "Facade-Service-Repository 3계층 구조 설계"
+                  }
+                }
+              ]
+            }
+          },
+          "task_20250724_135241_270929": {
+            "id": "task_20250724_135241_270929",
+            "name": "도메인 모델 구현 (Flow, Plan, Task)",
+            "description": "",
+            "status": "done",
+            "created_at": "2025-07-24T04:52:41.658334+00:00",
+            "updated_at": "2025-07-24T04:53:00.076034+00:00",
+            "started_at": null,
+            "completed_at": "2025-07-24T04:53:00.071035+00:00",
+            "context": {
+              "actions": [
+                {
+                  "action": "created",
+                  "timestamp": "2025-07-24T04:52:41.660334+00:00",
+                  "data": {
+                    "flow_id": "ai-coding-brain-mcp",
+                    "plan_id": "plan_20250724_135226_60cbd5"
+                  }
+                },
+                {
+                  "action": "status_changed",
+                  "timestamp": "2025-07-24T04:53:00.073034+00:00",
+                  "data": {
+                    "from": "todo",
+                    "to": "done"
+                  }
+                },
+                {
+                  "action": "completed",
+                  "timestamp": "2025-07-24T04:53:00.076034+00:00",
+                  "data": {
+                    "message": "dataclass 기반 도메인 모델 구현 완료"
+                  }
+                }
+              ]
+            }
+          },
+          "task_20250724_135241_087bd0": {
+            "id": "task_20250724_135241_087bd0",
+            "name": "JsonRepository 구현 (FileLock 포함)",
+            "description": "",
+            "status": "done",
+            "created_at": "2025-07-24T04:52:41.662334+00:00",
+            "updated_at": "2025-07-24T04:53:00.083034+00:00",
+            "started_at": null,
+            "completed_at": "2025-07-24T04:53:00.078034+00:00",
+            "context": {
+              "actions": [
+                {
+                  "action": "created",
+                  "timestamp": "2025-07-24T04:52:41.664334+00:00",
+                  "data": {
+                    "flow_id": "ai-coding-brain-mcp",
+                    "plan_id": "plan_20250724_135226_60cbd5"
+                  }
+                },
+                {
+                  "action": "status_changed",
+                  "timestamp": "2025-07-24T04:53:00.081034+00:00",
+                  "data": {
+                    "from": "todo",
+                    "to": "done"
+                  }
+                },
+                {
+                  "action": "completed",
+                  "timestamp": "2025-07-24T04:53:00.083034+00:00",
+                  "data": {
+                    "message": "FileLock과 자동 백업 기능 포함하여 구현"
+                  }
+                }
+              ]
+            }
+          },
+          "task_20250724_135241_d83ad9": {
+            "id": "task_20250724_135241_d83ad9",
+            "name": "FlowService 비즈니스 로직 구현",
+            "description": "",
+            "status": "done",
+            "created_at": "2025-07-24T04:52:41.666335+00:00",
+            "updated_at": "2025-07-24T04:53:00.090034+00:00",
+            "started_at": null,
+            "completed_at": "2025-07-24T04:53:00.085035+00:00",
+            "context": {
+              "actions": [
+                {
+                  "action": "created",
+                  "timestamp": "2025-07-24T04:52:41.670334+00:00",
+                  "data": {
+                    "flow_id": "ai-coding-brain-mcp",
+                    "plan_id": "plan_20250724_135226_60cbd5"
+                  }
+                },
+                {
+                  "action": "status_changed",
+                  "timestamp": "2025-07-24T04:53:00.088035+00:00",
+                  "data": {
+                    "from": "todo",
+                    "to": "done"
+                  }
+                },
+                {
+                  "action": "completed",
+                  "timestamp": "2025-07-24T04:53:00.090034+00:00",
+                  "data": {
+                    "message": "비즈니스 로직 완전 구현"
+                  }
+                }
+              ]
+            }
+          },
+          "task_20250724_135241_622c0b": {
+            "id": "task_20250724_135241_622c0b",
+            "name": "FlowManager 통합 인터페이스 구현",
+            "description": "",
+            "status": "done",
+            "created_at": "2025-07-24T04:52:41.672334+00:00",
+            "updated_at": "2025-07-24T04:53:00.098034+00:00",
+            "started_at": null,
+            "completed_at": "2025-07-24T04:53:00.093034+00:00",
+            "context": {
+              "actions": [
+                {
+                  "action": "created",
+                  "timestamp": "2025-07-24T04:52:41.674334+00:00",
+                  "data": {
+                    "flow_id": "ai-coding-brain-mcp",
+                    "plan_id": "plan_20250724_135226_60cbd5"
+                  }
+                },
+                {
+                  "action": "status_changed",
+                  "timestamp": "2025-07-24T04:53:00.095034+00:00",
+                  "data": {
+                    "from": "todo",
+                    "to": "done"
+                  }
+                },
+                {
+                  "action": "completed",
+                  "timestamp": "2025-07-24T04:53:00.098034+00:00",
+                  "data": {
+                    "message": "통합 인터페이스 구현 완료"
+                  }
+                }
+              ]
+            }
+          },
+          "task_20250724_135241_1c9eb6": {
+            "id": "task_20250724_135241_1c9eb6",
+            "name": "데코레이터 기반 명령어 시스템 구현",
+            "description": "",
+            "status": "done",
+            "created_at": "2025-07-24T04:52:41.676334+00:00",
+            "updated_at": "2025-07-24T04:53:00.109063+00:00",
+            "started_at": null,
+            "completed_at": "2025-07-24T04:53:00.100034+00:00",
+            "context": {
+              "actions": [
+                {
+                  "action": "created",
+                  "timestamp": "2025-07-24T04:52:41.679333+00:00",
+                  "data": {
+                    "flow_id": "ai-coding-brain-mcp",
+                    "plan_id": "plan_20250724_135226_60cbd5"
+                  }
+                },
+                {
+                  "action": "status_changed",
+                  "timestamp": "2025-07-24T04:53:00.103037+00:00",
+                  "data": {
+                    "from": "todo",
+                    "to": "done"
+                  }
+                },
+                {
+                  "action": "completed",
+                  "timestamp": "2025-07-24T04:53:00.109063+00:00",
+                  "data": {
+                    "message": "@command 데코레이터 시스템 구현"
+                  }
+                }
+              ]
+            }
+          },
+          "task_20250724_135241_8caf9d": {
+            "id": "task_20250724_135241_8caf9d",
+            "name": "데이터 마이그레이션",
+            "description": "",
+            "status": "done",
+            "created_at": "2025-07-24T04:52:41.681334+00:00",
+            "updated_at": "2025-07-24T04:53:00.121630+00:00",
+            "started_at": null,
+            "completed_at": "2025-07-24T04:53:00.114630+00:00",
+            "context": {
+              "actions": [
+                {
+                  "action": "created",
+                  "timestamp": "2025-07-24T04:52:41.684334+00:00",
+                  "data": {
+                    "flow_id": "ai-coding-brain-mcp",
+                    "plan_id": "plan_20250724_135226_60cbd5"
+                  }
+                },
+                {
+                  "action": "status_changed",
+                  "timestamp": "2025-07-24T04:53:00.117629+00:00",
+                  "data": {
+                    "from": "todo",
+                    "to": "done"
+                  }
+                },
+                {
+                  "action": "completed",
+                  "timestamp": "2025-07-24T04:53:00.121630+00:00",
+                  "data": {
+                    "message": "5단계→3단계 상태 마이그레이션 완료"
+                  }
+                }
+              ]
+            }
+          },
+          "task_20250724_135241_a27ded": {
+            "id": "task_20250724_135241_a27ded",
+            "name": "테스트 및 검증",
+            "description": "",
+            "status": "done",
+            "created_at": "2025-07-24T04:52:41.687334+00:00",
+            "updated_at": "2025-07-24T04:54:31.865577+00:00",
+            "started_at": null,
+            "completed_at": "2025-07-24T04:53:22.024036+00:00",
+            "context": {
+              "actions": [
+                {
+                  "action": "created",
+                  "timestamp": "2025-07-24T04:52:41.689334+00:00",
+                  "data": {
+                    "flow_id": "ai-coding-brain-mcp",
+                    "plan_id": "plan_20250724_135226_60cbd5"
+                  }
+                },
+                {
+                  "action": "status_changed",
+                  "timestamp": "2025-07-24T04:53:22.031036+00:00",
+                  "data": {
+                    "from": "todo",
+                    "to": "done"
+                  }
+                },
+                {
+                  "action": "completed",
+                  "timestamp": "2025-07-24T04:53:22.042036+00:00",
+                  "data": {
+                    "message": "새 시스템 성공적으로 작동 확인"
+                  }
+                },
+                {
+                  "action": "status_changed",
+                  "timestamp": "2025-07-24T04:53:48.463185+00:00",
+                  "data": {
+                    "from": "done",
+                    "to": "done"
+                  }
+                },
+                {
+                  "action": "completed",
+                  "timestamp": "2025-07-24T04:53:48.465214+00:00",
+                  "data": {
+                    "message": "새 시스템 성공적으로 작동 확인"
+                  }
+                },
+                {
+                  "action": "status_changed",
+                  "timestamp": "2025-07-24T04:54:31.862577+00:00",
+                  "data": {
+                    "from": "done",
+                    "to": "done"
+                  }
+                },
+                {
+                  "action": "completed",
+                  "timestamp": "2025-07-24T04:54:31.865577+00:00",
+                  "data": {
+                    "message": "새 시스템 성공적으로 작동 확인"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "status": "completed",
+        "metadata": {}
+      },
+      "plan_20250724_140401_3767e9": {
+        "id": "plan_20250724_140401_3767e9",
+        "name": "Flow 시스템 문서화",
+        "description": "",
+        "created_at": "2025-07-24T05:04:01.635440+00:00",
+        "updated_at": "2025-07-24T05:04:01.635440+00:00",
+        "completed_at": null,
+        "tasks": {},
+        "status": "active",
+        "metadata": {}
+      }
+    },
+    "metadata": {},
+    "archived": false
   }
 }

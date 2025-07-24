@@ -1,0 +1,6 @@
+{
+  "task_id": "o3_task_0001",
+  "prompt": "\nAI Coding Brain MCP 프로젝트의 컨텍스트 저장 방식을 분석하고 개선 방안을 제시해주세요.\n\n\n현재 컨텍스트 저장 방식 분석:\n\n1. 현재 상황:\n   - FlowManager의 update_task_context 메서드가 예상과 다른 시그니처를 가짐\n   - 직접적인 Flow 시스템 통합이 어려움\n   - 임시 방편으로 JSON 파일로 저장 중\n\n2. 문제점:\n   - Flow 시스템과 분리된 별도 저장\n   - 작업 간 컨텍스트 연결성 부족\n   - 수동 파일 관리 필요\n   - Flow 명령어로 컨텍스트 조회 불가\n\n3. 개선 필요사항:\n   - Flow 시스템과 통합된 컨텍스트 저장\n   - 자동화된 컨텍스트 추적\n   - 작업 상태와 컨텍스트 동기화\n   - 컨텍스트 기반 작업 추천\n\n4. 관련 파일들:\n   - python/ai_helpers_new/flow_manager.py\n   - python/ai_helpers_new/service/cached_flow_service.py\n   - python/ai_helpers_new/legacy_flow_adapter.py\n   - python/ai_helpers_new/context_integration.py\n\n\n구체적으로 다음을 분석해주세요:\n\n1. FlowManager와 CachedFlowService의 현재 구조 분석\n2. update_task_context 메서드의 올바른 사용법\n3. 컨텍스트 저장을 Flow 시스템과 통합하는 최선의 방법\n4. 작업별 컨텍스트 자동 저장 메커니즘 구현 방안\n5. 기존 코드를 최소한으로 수정하면서 통합하는 방법\n\n코드 예시와 함께 구체적인 구현 방안을 제시해주세요.\n",
+  "requested_at": "2025-07-23T18:49:51.964498",
+  "purpose": "context_storage_improvement"
+}

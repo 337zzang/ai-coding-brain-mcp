@@ -1,0 +1,25 @@
+{
+  "flow_id": "flow_20250723_101943_6b9635",
+  "created_at": "2025-07-23T21:15:27.197212",
+  "actions": [
+    {
+      "timestamp": "2025-07-23T21:15:27.197212",
+      "type": "compatibility_test",
+      "details": {
+        "flow_name": "test-flow-analysis",
+        "test_time": "after_fix"
+      }
+    },
+    {
+      "timestamp": "2025-07-23T21:17:32.069999",
+      "type": "final_test",
+      "details": {
+        "timestamp": "2025-07-23T21:17:32.069013"
+      }
+    }
+  ],
+  "statistics": {
+    "compatibility_test": 1,
+    "final_test": 1
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "flow_id": "flow_20250722_231255_29220a",
+  "created_at": "2025-07-23T00:18:14.573465",
+  "actions": [
+    {
+      "timestamp": "2025-07-23T00:18:14.573465",
+      "type": "flow_analysis",
+      "details": {
+        "action": "Context \ucd94\uc801 \ubd84\uc11d \uc2dc\uc791",
+        "timestamp": "2025-07-23T00:18:14.562055",
+        "purpose": "Flow \uc9c4\ud589 \uc911 Context \uad00\ub9ac \ubc29\uc2dd \ud655\uc778"
+      }
+    },
+    {
+      "timestamp": "2025-07-23T00:18:14.577468",
+      "type": "plan_plan_created",
+      "details": {
+        "plan_id": "plan_demo_001",
+        "name": "Context \ucd94\uc801 \ub370\ubaa8 Plan",
+        "description": "Context\uac00 \uc5b4\ub5bb\uac8c \uae30\ub85d\ub418\ub294\uc9c0 \ud655\uc778\ud558\ub294 Plan"
+      }
+    },
+    {
+      "timestamp": "2025-07-23T00:18:14.580473",
+      "type": "task_task_started",
+      "details": {
+        "task_id": "task_demo_001",
+        "name": "Context \ud30c\uc77c \ubd84\uc11d",
+        "status": "in_progress",
+        "assigned_to": "AI Assistant"
+      }
+    },
+    {
+      "timestamp": "2025-07-23T00:18:14.583470",
+      "type": "task_progress_update",
+      "details": {
+        "task_id": "task_demo_001",
+        "progress": 50,
+        "message": "Context \ud30c\uc77c \uad6c\uc870 \ubd84\uc11d \uc644\ub8cc",
+        "next_step": "Context \ub0b4\uc6a9 \uc0c1\uc138 \ubd84\uc11d"
+      }
+    },
+    {
+      "timestamp": "2025-07-23T00:18:14.585482",
+      "type": "task_task_completed",
+      "details": {
+        "task_id": "task_demo_001",
+        "status": "completed",
+        "result": "Context \ucd94\uc801 \uc2dc\uc2a4\ud15c\uc774 \uc815\uc0c1 \uc791\ub3d9\ud568\uc744 \ud655\uc778",
+        "insights": [
+          "Flow, Plan, Task \uac01\uac01\uc758 \uc791\uc5c5\uc774 \uac1c\ubcc4\uc801\uc73c\ub85c \uae30\ub85d\ub428",
+          "\ud0c0\uc784\uc2a4\ud0ec\ud504\uc640 \ud568\uaed8 \uc0c1\uc138 \uc815\ubcf4 \uc800\uc7a5",
+          "\ubb38\uc11c \uc0dd\uc131\ub3c4 \ucd94\uc801 \uac00\ub2a5"
+        ]
+      }
+    },
+    {
+      "timestamp": "2025-07-23T00:47:31.100072",
+      "type": "flow_analysis_completed",
+      "details": {
+        "analysis_type": "comprehensive",
+        "tools_used": [
+          "o3_parallel_analysis"
+        ],
+        "problems_identified": [
+          "\uacfc\ub3c4\ud55c \uacc4\uce35\ud654",
+          "\uce90\uc2f1 \ubd80\uc7ac",
+          "\ud0c0\uc785 \uc548\uc804\uc131 \ubd80\uc871"
+        ],
+        "solutions_implemented": [
+          "CachedFlowService",
+          "Exception hierarchy",
+          "Atomic file operations"
+        ],
+        "documents_created": 5,
+        "phase1_completion": "30%",
+        "next_steps": "Integration testing"
+      }
+    }
+  ],
+  "statistics": {
+    "flow_analysis": 1,
+    "plan_plan_created": 1,
+    "task_task_started": 1,
+    "task_progress_update": 1,
+    "task_task_completed": 1,
+    "flow_analysis_completed": 1
+  }
+}

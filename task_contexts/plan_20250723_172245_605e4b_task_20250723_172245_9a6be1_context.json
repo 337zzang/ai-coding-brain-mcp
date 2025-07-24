@@ -1,0 +1,50 @@
+{
+  "task_id": "task_20250723_172245_9a6be1",
+  "plan_id": "plan_20250723_172245_605e4b",
+  "flow_id": "flow_20250723_093507_d41323",
+  "timestamp": "2025-07-23T17:59:41.682387",
+  "status": "completed",
+  "context": {
+    "task_name": "핵심 헬퍼함수 동작 테스트",
+    "total_tests": 18,
+    "passed": 17,
+    "failed": 0,
+    "errors": 1,
+    "success_rate": "94.4%",
+    "test_categories": {
+      "file_operations": [
+        "h.read",
+        "h.write",
+        "h.append",
+        "h.exists"
+      ],
+      "code_analysis": [
+        "h.parse",
+        "h.functions",
+        "h.classes",
+        "h.view"
+      ],
+      "search": [
+        "h.search_files",
+        "h.search_code",
+        "h.find_function",
+        "h.find_class"
+      ],
+      "git": [
+        "h.git_status",
+        "h.git_diff",
+        "h.git_current_branch"
+      ],
+      "json": [
+        "h.read_json",
+        "h.write_json"
+      ]
+    },
+    "issues_found": [
+      [
+        "h.git_status",
+        "'dict' object has no attribute 'split'"
+      ]
+    ]
+  }
+}

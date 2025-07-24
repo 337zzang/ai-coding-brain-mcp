@@ -1,0 +1,81 @@
+{
+  "flow_id": "flow_redesign",
+  "created_at": "2025-07-24T05:49:06.224379",
+  "actions": [
+    {
+      "timestamp": "2025-07-24T05:49:06.224379",
+      "type": "task_backup_completed",
+      "details": {
+        "task_id": "backup",
+        "backed_up_count": 0,
+        "backup_location": null
+      }
+    },
+    {
+      "timestamp": "2025-07-24T05:50:01.553837",
+      "type": "task_backup_completed",
+      "details": {
+        "task_id": "task1",
+        "backup_dir": "backups/flow_system_backup_20250724_055001",
+        "files_backed_up": 1
+      }
+    },
+    {
+      "timestamp": "2025-07-24T05:50:46.110405",
+      "type": "task_id_generator_created",
+      "details": {
+        "task_id": "task2",
+        "location": "python/ai_helpers_new/utils",
+        "files": [
+          "__init__.py",
+          "id_generator.py"
+        ]
+      }
+    },
+    {
+      "timestamp": "2025-07-24T05:51:27.994349",
+      "type": "task_migration_completed",
+      "details": {
+        "task_id": "task3",
+        "migration_date": "2025-07-24T05:51:27.979484",
+        "old_flow_id": "flow_20250723_111054_ai-cod",
+        "new_flow_id": "ai-coding-brain-mcp",
+        "plans_migrated": 1,
+        "tasks_migrated": 4,
+        "backup_location": "backups/flow_system_backup_20250724_055001"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T05:52:00.838901",
+      "type": "task_system_applied",
+      "details": {
+        "task_id": "task4",
+        "new_flow_id": "ai-coding-brain-mcp",
+        "old_files_moved": 0,
+        "backup_created": true
+      }
+    },
+    {
+      "timestamp": "2025-07-24T05:52:43.884240",
+      "type": "task_services_updated",
+      "details": {
+        "task_id": "task5",
+        "updated_files": [
+          "plan_service.py",
+          "task_service.py"
+        ],
+        "methods_updated": [
+          "create_plan",
+          "create_task"
+        ]
+      }
+    }
+  ],
+  "statistics": {
+    "task_backup_completed": 2,
+    "task_id_generator_created": 1,
+    "task_migration_completed": 1,
+    "task_system_applied": 1,
+    "task_services_updated": 1
+  }
+}

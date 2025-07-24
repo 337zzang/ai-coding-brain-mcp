@@ -1,0 +1,76 @@
+{
+  "flow_id": "flow_20250724_191628_5c94f4",
+  "created_at": "2025-07-24T19:16:28.309591",
+  "actions": [
+    {
+      "timestamp": "2025-07-24T19:16:28.309591",
+      "type": "flow_created",
+      "details": {
+        "name": "ai-coding-brain-mcp",
+        "project": "ai-coding-brain-mcp"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T19:19:01.294499",
+      "type": "create_plan_failed",
+      "details": {
+        "call_id": "9a067c0b",
+        "source": "auto",
+        "method": "create_plan",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 0.2,
+        "error": "Flow\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc74c: analysis",
+        "error_type": "ValidationError",
+        "params": {
+          "flow_id": "analysis",
+          "name": "Flow \uc2dc\uc2a4\ud15c \ubd84\uc11d \ubc0f \ubb38\uc11c\ud654"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-24T19:19:27.778460",
+      "type": "create_plan_failed",
+      "details": {
+        "call_id": "0b3a9caf",
+        "source": "auto",
+        "method": "create_plan",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 0.28,
+        "error": "'Plan' object has no attribute 'flow_id'",
+        "error_type": "AttributeError",
+        "params": {
+          "flow_id": "flow_20250724_191628_5c94f4",
+          "name": "flow_analysis"
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-24T19:40:59.555070",
+      "type": "flow_selected",
+      "details": {
+        "flow_name": "ai-coding-brain-mcp"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T19:40:59.560070",
+      "type": "get_plans_completed",
+      "details": {
+        "call_id": "c1eea495",
+        "source": "auto",
+        "method": "get_plans",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 0.4,
+        "params": {
+          "flow_id": null
+        },
+        "result": []
+      }
+    }
+  ],
+  "statistics": {
+    "flow_created": 1,
+    "create_plan_failed": 2,
+    "flow_selected": 1,
+    "get_plans_completed": 1
+  }
+}

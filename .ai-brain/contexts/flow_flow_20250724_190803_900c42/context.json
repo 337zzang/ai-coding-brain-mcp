@@ -1,0 +1,51 @@
+{
+  "flow_id": "flow_20250724_190803_900c42",
+  "created_at": "2025-07-24T19:08:03.598056",
+  "actions": [
+    {
+      "timestamp": "2025-07-24T19:08:03.598056",
+      "type": "flow_created",
+      "details": {
+        "name": "phase4_test",
+        "project": "integration_test"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T19:08:03.604054",
+      "type": "get_plans_completed",
+      "details": {
+        "call_id": "dadb6824",
+        "source": "auto",
+        "method": "get_plans",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 1.78,
+        "params": {
+          "flow_id": "flow_20250724_190803_900c42"
+        },
+        "result": []
+      }
+    },
+    {
+      "timestamp": "2025-07-24T19:08:03.607058",
+      "type": "create_plan_failed",
+      "details": {
+        "call_id": "8564ecb0",
+        "source": "auto",
+        "method": "create_plan",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 0.24,
+        "error": "'Plan' object has no attribute 'flow_id'",
+        "error_type": "AttributeError",
+        "params": {
+          "flow_id": "flow_20250724_190803_900c42",
+          "name": "Test Plan 1"
+        }
+      }
+    }
+  ],
+  "statistics": {
+    "flow_created": 1,
+    "get_plans_completed": 1,
+    "create_plan_failed": 1
+  }
+}

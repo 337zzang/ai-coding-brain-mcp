@@ -1,0 +1,12 @@
+{
+  "task": "folder_based_flow_implementation",
+  "phase": "start",
+  "timestamp": "2025-07-24T19:58:29.670622",
+  "files_to_create": {
+    "repository": "python/ai_helpers_new/repository/folder_based_repository.py",
+    "cache": "python/ai_helpers_new/service/lru_cache.py",
+    "service": "python/ai_helpers_new/service/folder_based_flow_service.py",
+    "manager": "python/ai_helpers_new/folder_flow_manager.py",
+    "migration": "python/ai_helpers_new/migrate_to_folder_flow.py"
+  }
+}

@@ -87,11 +87,90 @@
         },
         "result": "<Flow object>"
       }
+    },
+    {
+      "timestamp": "2025-07-24T19:08:03.601056",
+      "type": "create_flow_completed",
+      "details": {
+        "call_id": "563f0577",
+        "source": "auto",
+        "method": "create_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 2.93,
+        "params": {
+          "name": "phase4_test",
+          "project": "integration_test"
+        },
+        "result": "<Flow object>"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T19:08:24.668827",
+      "type": "create_flow_completed",
+      "details": {
+        "call_id": "53754a91",
+        "source": "auto",
+        "method": "create_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 2.56,
+        "params": {
+          "name": "test_flow_only",
+          "project": null
+        },
+        "result": "<Flow object>"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T19:08:52.306438",
+      "type": "create_flow_completed",
+      "details": {
+        "call_id": "b042f070",
+        "source": "auto",
+        "method": "create_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 2.65,
+        "params": {
+          "name": "phase4_complete_test",
+          "project": "final"
+        },
+        "result": "<Flow object>"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T19:16:28.310591",
+      "type": "create_flow_completed",
+      "details": {
+        "call_id": "4a836acc",
+        "source": "auto",
+        "method": "create_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 3.23,
+        "params": {
+          "name": "ai-coding-brain-mcp",
+          "project": "ai-coding-brain-mcp"
+        },
+        "result": "<Flow object>"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T19:40:59.558069",
+      "type": "select_flow_completed",
+      "details": {
+        "call_id": "c0d64f37",
+        "source": "auto",
+        "method": "select_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 1.54,
+        "params": {
+          "flow_id": "flow_20250724_191628_5c94f4"
+        },
+        "result": true
+      }
     }
   ],
   "statistics": {
     "project_changed": 1,
-    "create_flow_completed": 4,
-    "select_flow_completed": 1
+    "create_flow_completed": 8,
+    "select_flow_completed": 2
   }
 }

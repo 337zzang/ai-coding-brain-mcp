@@ -1,0 +1,57 @@
+{
+  "id": "plan_20250724_005",
+  "name": "Flow",
+  "description": "",
+  "status": "active",
+  "priority": 0,
+  "created_at": "2025-07-24T23:16:34.502321",
+  "updated_at": "2025-07-24T23:16:51.005381",
+  "start_date": null,
+  "due_date": null,
+  "tags": [],
+  "tasks": {
+    "task_20250724_231634_ee332b": {
+      "id": "task_20250724_231634_ee332b",
+      "title": "Task 관리 기능 테스트",
+      "description": "",
+      "status": "in_progress",
+      "priority": 0,
+      "created_at": "2025-07-24T23:16:34.505345",
+      "updated_at": "2025-07-24T23:16:50.999764",
+      "completed_at": null,
+      "assignee": null,
+      "tags": [],
+      "metadata": {}
+    },
+    "task_20250724_231634_9a0577": {
+      "id": "task_20250724_231634_9a0577",
+      "title": "Context 자동 로드 검증",
+      "description": "",
+      "status": "done",
+      "priority": 0,
+      "created_at": "2025-07-24T23:16:34.507355",
+      "updated_at": "2025-07-24T23:16:51.005381",
+      "completed_at": "2025-07-24T23:16:51.005381",
+      "assignee": null,
+      "tags": [],
+      "metadata": {}
+    },
+    "task_20250724_231634_3b2f96": {
+      "id": "task_20250724_231634_3b2f96",
+      "title": "통계 기능 확인",
+      "description": "",
+      "status": "todo",
+      "priority": 0,
+      "created_at": "2025-07-24T23:16:34.511373",
+      "updated_at": "2025-07-24T23:16:34.511373",
+      "completed_at": null,
+      "assignee": null,
+      "tags": [],
+      "metadata": {}
+    }
+  },
+  "metadata": {
+    "description": ""
+  },
+  "context": {}
+}

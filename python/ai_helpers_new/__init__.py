@@ -1,112 +1,43 @@
 """
-AI Helpers New - Flow 시스템 v2.1 (헬퍼 함수 복원)
-레거시 제거 버전에서 필수 헬퍼 함수들을 다시 추가
+AI Helpers New - Ultra Simple Flow System
+Flow 개념 없이 Plan만으로 작업하는 극단순 시스템
 """
 
-# 도메인 모델
-from .domain.models import Flow, Plan, Task, TaskStatus
+# 도메인 모델 (Flow 제외)
+from .domain.models import Plan, Task, TaskStatus
 
-# 저장소
-from .repository.json_repository import JsonRepository
+# Ultra Simple Manager
+from .ultra_simple_flow_manager import UltraSimpleFlowManager
 
-# 서비스
-from .service.flow_service import FlowService
+# Flow 명령어 시스템
+from .simple_flow_commands import flow, wf, help_flow
 
-# 매니저
-from .flow_manager import FlowManager
+# AI Helpers 핵심 함수들
+from .file import *
+from .code import *
+from .search import *
+from .git import *
+from .llm import *
+from .util import *
+from .project import *
+from .wrappers import *
+from .helpers_integration import *
+from .context_integration import *
+from .context_reporter import *
+from .doc_context_helper import *
+from .backup_utils import *
 
-# 명령어
-from .commands import CommandRouter, command
-
-# 워크플로우
-from .workflow_commands import (
-    wf, 
-    help_wf,
-    current_flow,
-    current_project,
-    set_project,
-    get_flow_manager
-)
-
-# Context 통합
-from .context_integration import ContextIntegration
-from .flow_context_wrapper import (
-    record_flow_action, record_task_action, record_plan_action,
-    record_doc_creation, record_doc_update
-)
-
-# 레거시 호환
-
-# 헬퍼 함수들 - v2.1에서 복원
-from .file import read, write, append, read_json, write_json, exists, info
-from .code import parse, view, replace, insert, functions, classes
-from .search import search_files, search_code, find_function, find_class, grep
-from .llm import ask_o3_async, check_o3_status, get_o3_result, show_o3_progress
-from .git import (
-    git_status, git_add, git_commit, git_push, git_pull, 
-    git_branch, git_log, git_current_branch, git_diff
-)
-from .util import ok, err, is_ok, get_data, get_error
-from .project import get_current_project, fp, scan_directory, scan_directory_dict
-
-# 헬퍼 통합
-from .helpers_integration import FlowHelpers, flow_helpers, fh
-
-# 초기화
-import logging
-logging.basicConfig(level=logging.INFO)
-
-__version__ = "2.1.0"
+# 편의 함수
+def get_flow_manager(project_path=None):
+    return UltraSimpleFlowManager(project_path)
 
 __all__ = [
-    # 핵심
-    'FlowManager',
-    'CommandRouter',
-    'wf',
-    'help_wf',
-
-    # 모델
-    'Flow',
-    'Plan', 
-    'Task',
+    'UltraSimpleFlowManager',
+    'Plan',
+    'Task', 
     'TaskStatus',
-
-    # 유틸리티
-    'current_flow',
-    'current_project',
-    'set_project',
-
-    # 레거시 호환
-    'ContextIntegration',
-
-    # 파일 I/O
-    'read', 'write', 'append', 'read_json', 'write_json', 'exists', 'info',
-
-    # 코드 분석
-    'parse', 'view', 'replace', 'insert', 'functions', 'classes',
-
-    # 검색
-    'search_files', 'search_code', 'find_function', 'find_class', 'grep',
-
-    # LLM
-    'ask_o3_async', 'check_o3_status', 'get_o3_result', 'show_o3_progress',
-
-    # Git
-    'git_status', 'git_add', 'git_commit', 'git_push', 'git_pull',
-    'git_branch', 'git_log', 'git_current_branch', 'git_diff',
-
-    # 유틸리티
-    'ok', 'err', 'is_ok', 'get_data', 'get_error',
-
-    # 프로젝트
-    'get_current_project', 'fp', 'scan_directory', 'scan_directory_dict',
-
-    # Context
-    'record_flow_action', 'record_task_action', 'record_plan_action',
-    'record_doc_creation', 'record_doc_update',
-
-    # 헬퍼 통합
-    'FlowHelpers', 'flow_helpers', 'fh'
+    'get_flow_manager',
+    'flow',
+    'wf',
+    'help_flow',
 ]
-
-print("✅ Flow 시스템 v2.1 로드됨 - 헬퍼 함수 복원 완료")

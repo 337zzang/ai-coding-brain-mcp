@@ -1,0 +1,17 @@
+{
+  "id": "plan_20250724_001",
+  "name": "🚀 극단순화 완료 기념 Plan",
+  "description": "",
+  "status": "active",
+  "priority": 0,
+  "created_at": "2025-07-24T20:38:15.707337",
+  "updated_at": "2025-07-24T20:38:15.707337",
+  "start_date": null,
+  "due_date": null,
+  "tags": [],
+  "tasks": {},
+  "metadata": {
+    "description": "Flow 시스템을 극단적으로 단순화했습니다!"
+  },
+  "context": {}
+}

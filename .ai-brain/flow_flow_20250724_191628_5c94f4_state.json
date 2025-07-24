@@ -1,0 +1,27 @@
+{
+  "flow_id": "flow_20250724_191628_5c94f4",
+  "flow_name": "ai-coding-brain-mcp",
+  "project": null,
+  "metadata": {
+    "tasks": [
+      {
+        "name": "analyze_structure",
+        "status": "pending"
+      },
+      {
+        "name": "document_findings",
+        "status": "pending"
+      }
+    ],
+    "current_work": {
+      "task": "Flow 시스템 분석",
+      "status": "completed",
+      "findings": [
+        "Flow 레벨 기능만 작동",
+        "Plan/Task 미구현",
+        "메모리 기반 저장"
+      ]
+    }
+  },
+  "timestamp": "2025-07-24T19:20:18.974991"
+}

@@ -110,7 +110,7 @@ class DummyContextManager:
 
 
 # 레거시 호환
-FlowManagerUnified = FlowManager
+FlowManager = FlowManager
 LegacyFlowAdapter = FlowManager
 FlowCommandRouter = CommandRouter
 

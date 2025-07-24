@@ -281,7 +281,7 @@ class CachedFlowService:
             plan_data = {
                 'id': plan.id,
                 'name': plan.name,
-                'flow_id': plan.flow_id,
+                # 'flow_id': plan.flow_id,  # Plan은 flow_id를 가지지 않음
                 'created_at': plan.created_at or datetime.now().isoformat(),
                 'completed': plan.completed,
                 'tasks': {}

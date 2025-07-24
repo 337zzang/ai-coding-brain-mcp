@@ -23,10 +23,33 @@
       "details": {
         "flow_name": "create"
       }
+    },
+    {
+      "timestamp": "2025-07-24T18:23:22.658600",
+      "type": "flow_selected",
+      "details": {
+        "flow_name": "create"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:23:22.665602",
+      "type": "select_flow_completed",
+      "details": {
+        "call_id": "c9e5f660",
+        "source": "auto",
+        "method": "select_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 1.72,
+        "params": {
+          "flow_id": "flow_20250724_174641_f5cb86"
+        },
+        "result": true
+      }
     }
   ],
   "statistics": {
     "flow_created": 1,
-    "flow_selected": 2
+    "flow_selected": 3,
+    "select_flow_completed": 1
   }
 }

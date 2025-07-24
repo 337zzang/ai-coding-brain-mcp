@@ -16,10 +16,33 @@
       "details": {
         "flow_name": "plan"
       }
+    },
+    {
+      "timestamp": "2025-07-24T18:23:22.661601",
+      "type": "flow_selected",
+      "details": {
+        "flow_name": "plan"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:23:22.667603",
+      "type": "select_flow_completed",
+      "details": {
+        "call_id": "f9da50df",
+        "source": "auto",
+        "method": "select_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 2.45,
+        "params": {
+          "flow_id": "flow_20250724_174641_984a28"
+        },
+        "result": true
+      }
     }
   ],
   "statistics": {
     "flow_created": 1,
-    "flow_selected": 1
+    "flow_selected": 2,
+    "select_flow_completed": 1
   }
 }

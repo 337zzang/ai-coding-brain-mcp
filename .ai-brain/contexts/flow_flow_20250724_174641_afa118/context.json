@@ -9,9 +9,17 @@
         "name": "status",
         "project": null
       }
+    },
+    {
+      "timestamp": "2025-07-24T18:23:22.671601",
+      "type": "flow_selected",
+      "details": {
+        "flow_name": "status"
+      }
     }
   ],
   "statistics": {
-    "flow_created": 1
+    "flow_created": 1,
+    "flow_selected": 1
   }
 }

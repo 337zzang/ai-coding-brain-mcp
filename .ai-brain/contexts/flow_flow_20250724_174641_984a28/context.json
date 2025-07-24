@@ -16,10 +16,62 @@
       "details": {
         "flow_name": "task"
       }
+    },
+    {
+      "timestamp": "2025-07-24T18:23:22.663602",
+      "type": "flow_selected",
+      "details": {
+        "flow_name": "task"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:23:22.667603",
+      "type": "flow_selected",
+      "details": {
+        "flow_name": "task"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:23:22.669601",
+      "type": "flow_selected",
+      "details": {
+        "flow_name": "task"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:23:22.672606",
+      "type": "select_flow_completed",
+      "details": {
+        "call_id": "29e9f26d",
+        "source": "auto",
+        "method": "select_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 2.17,
+        "params": {
+          "flow_id": "flow_20250724_174641_984a28"
+        },
+        "result": true
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:23:22.674603",
+      "type": "select_flow_completed",
+      "details": {
+        "call_id": "8f7e050d",
+        "source": "auto",
+        "method": "select_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 1.64,
+        "params": {
+          "flow_id": "flow_20250724_174641_afa118"
+        },
+        "result": true
+      }
     }
   ],
   "statistics": {
     "flow_created": 1,
-    "flow_selected": 1
+    "flow_selected": 4,
+    "select_flow_completed": 2
   }
 }

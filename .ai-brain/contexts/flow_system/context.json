@@ -56,10 +56,42 @@
         },
         "result": "<Flow object>"
       }
+    },
+    {
+      "timestamp": "2025-07-24T18:23:22.660602",
+      "type": "select_flow_completed",
+      "details": {
+        "call_id": "51b2f915",
+        "source": "auto",
+        "method": "select_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 1.6,
+        "params": {
+          "flow_id": "flow_20250724_173412_0ccca7"
+        },
+        "result": true
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:25:01.909586",
+      "type": "create_flow_completed",
+      "details": {
+        "call_id": "815bf869",
+        "source": "auto",
+        "method": "create_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 2.59,
+        "params": {
+          "name": "context_reporter_project",
+          "project": "demo"
+        },
+        "result": "<Flow object>"
+      }
     }
   ],
   "statistics": {
     "project_changed": 1,
-    "create_flow_completed": 3
+    "create_flow_completed": 4,
+    "select_flow_completed": 1
   }
 }

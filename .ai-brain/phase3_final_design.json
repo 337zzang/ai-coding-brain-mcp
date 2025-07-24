@@ -1,0 +1,111 @@
+{
+  "title": "Phase 3: Context 자동 기록 구현",
+  "based_on": "o3 analysis + practical adjustments",
+  "estimated_time": "3-4시간",
+  "core_concepts_from_o3": {
+    "auto_record_decorator": {
+      "2_phase_logging": "start/finish/error 이벤트 분리",
+      "source_flag": "auto/manual 구분으로 충돌 방지",
+      "safe_serialize": "파라미터 안전 직렬화",
+      "fast_path": "CONTEXT_OFF 환경변수로 완전 비활성화",
+      "non_blocking": "ThreadPoolExecutor로 비동기 기록",
+      "call_id": "UUID로 하나의 작업 추적"
+    },
+    "pattern_analysis": {
+      "simplified_version": "엔터프라이즈 레벨 대신 로컬 JSON 기반",
+      "sessionization": "30분 비활성 시 새 세션",
+      "sequence_mining": "간단한 n-gram 패턴",
+      "inefficiency_metrics": "IdleTime, ReworkCount, Detour"
+    }
+  },
+  "tasks": {
+    "P3-T1": {
+      "title": "auto_record decorator 구현",
+      "estimated_time": "1시간",
+      "files_to_create": [
+        "python/ai_helpers_new/decorators/__init__.py",
+        "python/ai_helpers_new/decorators/auto_record.py"
+      ],
+      "implementation_details": {
+        "core_decorator": "o3 제안 코드 기반",
+        "safe_serialize": "JSON 직렬화 가능한 데이터만 저장",
+        "thread_pool": "1개 스레드로 비동기 Context 기록",
+        "error_handling": "예외 발생해도 원본 로직 영향 없음"
+      }
+    },
+    "P3-T2": {
+      "title": "FlowManager 메서드에 적용",
+      "estimated_time": "45분",
+      "steps": [
+        "기존 수동 Context 기록 코드 제거",
+        "@auto_record decorator 적용",
+        "중복 기록 방지 확인",
+        "테스트 및 검증"
+      ],
+      "methods_to_decorate": [
+        "create_flow",
+        "delete_flow",
+        "select_flow",
+        "create_plan",
+        "update_plan_status",
+        "delete_plan",
+        "create_task",
+        "update_task_status",
+        "delete_task",
+        "batch_update",
+        "add_note"
+      ]
+    },
+    "P3-T3": {
+      "title": "간소화된 패턴 분석 시스템",
+      "estimated_time": "1시간 30분",
+      "files_to_create": [
+        "python/ai_helpers_new/pattern_analyzer.py"
+      ],
+      "features": {
+        "session_analyzer": "30분 간격으로 세션 구분",
+        "sequence_extractor": "연속된 action 패턴 추출",
+        "inefficiency_detector": {
+          "rework": "동일 작업 3회 이상 반복",
+          "idle": "5분 이상 비활성",
+          "detour": "일반 패턴 대비 긴 경로"
+        },
+        "simple_recommender": "규칙 기반 추천"
+      }
+    },
+    "P3-T4": {
+      "title": "통합 테스트 및 문서화",
+      "estimated_time": "45분",
+      "activities": [
+        "전체 워크플로우 테스트",
+        "Context 파일 크기 모니터링",
+        "성능 벤치마크 (decorator overhead)",
+        "사용 가이드 문서 작성"
+      ]
+    }
+  },
+  "implementation_order": [
+    "1. decorators 디렉토리 생성",
+    "2. auto_record.py 구현 (o3 코드 기반)",
+    "3. FlowManager 한 메서드로 테스트",
+    "4. 전체 메서드에 적용",
+    "5. 패턴 분석기 구현",
+    "6. 통합 테스트"
+  ],
+  "success_criteria": {
+    "functionality": [
+      "모든 FlowManager 작업이 자동으로 기록됨",
+      "수동 기록과 충돌 없음",
+      "에러 발생해도 서비스 정상 작동"
+    ],
+    "performance": [
+      "decorator overhead < 1ms",
+      "Context 기록이 main thread 블로킹하지 않음"
+    ],
+    "insights": [
+      "사용 패턴 통계 제공",
+      "비효율 패턴 감지",
+      "개선 추천 생성"
+    ]
+  }
+}

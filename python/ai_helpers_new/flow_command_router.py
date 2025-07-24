@@ -1,7 +1,7 @@
 """
 Flow 중심 명령어 라우터
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 import re
 import os
 import json
@@ -22,13 +22,23 @@ class FlowCommandRouter:
 
             # Task 관련 명령어
             'task': self.handle_task,
-            'tasks': self.handle_task_list,
+            'task_list': self.handle_task_list,
 
             # 기존 명령어 호환성
             'project': self.handle_flow,  # 리다이렉트
             'projects': self.handle_flows,  # 리다이렉트
             'fp': self.handle_flow,  # 기존 fp 명령
-        }
+        
+            # 새로운 명령어 (v31.0)
+            'plans': self.handle_plans,
+            'start': self.handle_start,
+            'complete': self.handle_complete,
+            'status': self.handle_status,
+            'tasks': self.handle_tasks,
+
+            # Plan 관련 명령어 (v31.0)
+            'plan': self.handle_plans,  # plan 단독 명령어
+}
 
         # 서브 명령어
         self.flow_subcommands = {
@@ -84,7 +94,16 @@ class FlowCommandRouter:
             return self.manager.switch_to_previous()
 
         # 일반 Flow 전환
-        return self.manager.switch_project(flow_name)
+        result = self.manager.switch_project(flow_name)
+        if result['ok']:
+            # Flow 전환 성공 시 Plan 리스트도 표시
+            status_result = self.handle_flow_status([])
+            if status_result['ok']:
+                # 전환 메시지와 Plan 리스트 결합
+                switch_msg = f"✅ Flow '{flow_name}'로 전환됨"
+                combined_data = f"{switch_msg}\n\n{status_result['data']}"
+                return {'ok': True, 'data': combined_data}
+        return result
 
     def handle_flows(self, args: List[str]) -> Dict[str, Any]:
         """flows 목록 명령어"""
@@ -208,6 +227,24 @@ class FlowCommandRouter:
         if not flows:
             return ok("생성된 Flow가 없습니다. '/flow create [name]'으로 새 Flow를 생성하세요.")
 
+        # Flow 목록 생성
+        flow_list = []
+        for i, flow in enumerate(flows):
+            # flow가 dict인지 객체인지 확인
+            if isinstance(flow, dict):
+                flow_id = flow.get('id', 'unknown')
+                flow_name = flow.get('name', 'unknown')
+                plans_count = len(flow.get('plans', {}))
+            else:
+                flow_id = getattr(flow, 'id', 'unknown')
+                flow_name = getattr(flow, 'name', 'unknown')
+                plans_count = len(getattr(flow, 'plans', {}))
+
+            flow_list.append(f"{i+1}. {flow_name} (ID: {flow_id}, Plans: {plans_count})")
+
+        result = "📋 Flow 목록:\n" + "\n".join(flow_list)
+        return ok(result)
+
     def handle_task(self, args: List[str]) -> Dict[str, Any]:
         """task 명령어 처리"""
         if not args:
@@ -236,18 +273,63 @@ class FlowCommandRouter:
             return err(f"알 수 없는 task 서브커맨드: {subcommand}")
 
     def handle_task_list(self, args: List[str]) -> Dict[str, Any]:
-        """현재 Plan의 Task 목록 표시"""
-        return self.manager.list_tasks()
+        """Task 목록 표시"""
+        # 현재 flow_id 가져오기
+        flow_id = self._get_current_flow_id()
+        if not flow_id:
+            return {'ok': False, 'error': '활성 Flow가 없습니다. /flow [name]으로 Flow를 선택하세요.'}
 
-        # Flow 목록 포맷팅
-        lines = ["📋 Flow 목록:"]
-        for i, flow in enumerate(flows, 1):
-            status = "✅" if flow.get('active') else "⏸️"
-            lines.append(f"{i}. {status} {flow['name']} (ID: {flow['id']})")
-            if flow.get('plans'):
-                lines.append(f"   Plans: {len(flow['plans'])}개")
+        # flows에서 직접 가져오기
+        if hasattr(self.manager, 'flows') and flow_id in self.manager.flows:
+            flow_data = self.manager.flows[flow_id]
+        else:
+            # 또는 list_flows에서 찾기
+            flows = self.manager.list_flows()
+            flow_data = None
+            for flow in flows:
+                if isinstance(flow, dict) and flow.get('id') == flow_id:
+                    flow_data = flow
+                    break
 
-        return ok('\n'.join(lines))
+            if not flow_data:
+                return {'ok': False, 'error': f'Flow {flow_id}를 찾을 수 없습니다'}
+
+        plans = flow_data.get('plans', {})
+
+        if not plans:
+            return {'ok': True, 'data': '📋 Task가 없습니다. Plan을 먼저 생성하세요.'}
+
+        # 특정 plan_id가 제공된 경우
+        if args and len(args) > 0:
+            plan_id = args[0]
+            if plan_id in plans:
+                plan = plans[plan_id]
+                tasks = plan.get('tasks', {})
+                if not tasks:
+                    return {'ok': True, 'data': f'📋 Plan {plan_id}에 Task가 없습니다.'}
+
+                lines = [f"📋 Plan '{plan['name']}'의 Task 목록:"]
+                for task_id, task in tasks.items():
+                    status_icon = self._get_task_status_icon(task.get('status', 'todo'))
+                    lines.append(f"  - {status_icon} [{task_id}] {task['name']}")
+                return {'ok': True, 'data': '\n'.join(lines)}
+            else:
+                return {'ok': False, 'error': f'Plan {plan_id}를 찾을 수 없습니다'}
+
+        # 모든 Plan의 Task 표시
+        lines = [f"📋 {flow_id}의 전체 Task 목록:"]
+        lines.append("")
+
+        for plan_id, plan in plans.items():
+            tasks = plan.get('tasks', {})
+            if tasks:
+                lines.append(f"Plan: {plan['name']} ({plan_id})")
+                for task_id, task in tasks.items():
+                    status_icon = self._get_task_status_icon(task.get('status', 'todo'))
+                    lines.append(f"  - {status_icon} [{task_id}] {task['name']}")
+                lines.append("")
+
+        return {'ok': True, 'data': '\n'.join(lines)}
     def handle_flow_delete(self, args: List[str]) -> Dict[str, Any]:
         """flow delete 명령어"""
         if not args:
@@ -412,3 +494,191 @@ class FlowCommandRouter:
         except Exception as e:
             return {'ok': False, 'error': f'Plan 선택 중 오류 발생: {str(e)}'}
 
+
+
+    # === 새로 추가되는 명령어 핸들러 (v31.0) ===
+
+    def handle_plans(self, args: List[str]) -> Dict[str, Any]:
+        """현재 Flow의 Plan 목록 표시"""
+        flow_id = self._get_current_flow_id()
+        if not flow_id:
+            return {'ok': False, 'error': '활성 Flow가 없습니다'}
+
+        result = self.manager.list_plans(flow_id)
+        if not result['ok']:
+            return result
+
+        plans = result['data']
+        if not plans:
+            return {'ok': True, 'data': '📋 생성된 Plan이 없습니다'}
+
+        # Plan 목록 포맷팅
+        lines = [f"📋 {flow_id}의 Plan 목록:"]
+        lines.append("")
+
+        for i, plan in enumerate(plans, 1):
+            status_icon = "✅" if plan.get('completed') else "⏳"
+            lines.append(f"{i}. {status_icon} {plan['name']} ({plan['id']})")
+            lines.append(f"   Tasks: {plan.get('task_count', 0)}개")
+            if plan.get('description'):
+                lines.append(f"   설명: {plan['description']}")
+            lines.append("")
+
+        return {'ok': True, 'data': '\n'.join(lines)}
+
+    def handle_start(self, args: List[str]) -> Dict[str, Any]:
+        """Task 시작 (상태를 in_progress로 변경)"""
+        if not args:
+            return {'ok': False, 'error': 'Task ID를 지정하세요. 예: /start task_001_01'}
+
+        task_id = args[0]
+
+        # Task ID에서 plan_id 추출
+        plan_id, flow_id = self._extract_ids_from_task(task_id)
+        if not plan_id or not flow_id:
+            return {'ok': False, 'error': 'Task ID 형식이 올바르지 않습니다'}
+
+        result = self.manager.start_task(flow_id, plan_id, task_id)
+        if result['ok']:
+            return {'ok': True, 'data': f"✅ Task '{task_id}' 시작됨 (상태: in_progress)"}
+        return result
+
+    def handle_complete(self, args: List[str]) -> Dict[str, Any]:
+        """Task 완료 (상태를 completed로 변경)"""
+        if not args:
+            return {'ok': False, 'error': 'Task ID를 지정하세요. 예: /complete task_001_01'}
+
+        task_id = args[0]
+
+        # Task ID에서 plan_id 추출
+        plan_id, flow_id = self._extract_ids_from_task(task_id)
+        if not plan_id or not flow_id:
+            return {'ok': False, 'error': 'Task ID 형식이 올바르지 않습니다'}
+
+        result = self.manager.complete_task(flow_id, plan_id, task_id)
+        if result['ok']:
+            return {'ok': True, 'data': f"✅ Task '{task_id}' 완료됨 (상태: completed)"}
+        return result
+
+    def handle_status(self, args: List[str]) -> Dict[str, Any]:
+        """Task 상태 조회"""
+        if not args:
+            # 인자가 없으면 현재 Flow 상태 표시
+            return self.handle_flow_status([])
+
+        task_id = args[0]
+
+        # Task ID에서 plan_id 추출
+        plan_id, flow_id = self._extract_ids_from_task(task_id)
+        if not plan_id or not flow_id:
+            return {'ok': False, 'error': 'Task ID 형식이 올바르지 않습니다'}
+
+        result = self.manager.get_task_status(flow_id, plan_id, task_id)
+        if not result['ok']:
+            return result
+
+        task_data = result['data']
+        lines = [
+            f"📊 Task 상태: {task_id}",
+            f"상태: {task_data.get('status', 'unknown')}",
+            f"이름: {task_data.get('name', '')}",
+            f"생성: {task_data.get('created_at', 'N/A')}",
+            f"시작: {task_data.get('started_at', 'N/A')}",
+            f"완료: {task_data.get('completed_at', 'N/A')}"
+        ]
+
+        return {'ok': True, 'data': '\n'.join(lines)}
+
+    def handle_tasks(self, args: List[str]) -> Dict[str, Any]:
+        """특정 Plan의 Task 목록 조회"""
+        if not args:
+            return {'ok': False, 'error': 'Plan ID를 지정하세요. 예: /tasks plan_001_flow'}
+
+        plan_id = args[0]
+        flow_id = self._get_current_flow_id()
+        if not flow_id:
+            return {'ok': False, 'error': '활성 Flow가 없습니다'}
+
+        result = self.manager.list_tasks(flow_id, plan_id)
+        if not result['ok']:
+            return result
+
+        tasks = result['data']
+        if not tasks:
+            return {'ok': True, 'data': f'📋 Plan {plan_id}에 Task가 없습니다'}
+
+        # Task 목록 포맷팅
+        lines = [f"📋 Plan {plan_id}의 Task 목록:"]
+        lines.append("")
+
+        for i, task in enumerate(tasks, 1):
+            status_icons = {
+                'todo': '📝',
+                'in_progress': '🔄',
+                'completed': '✅',
+                'reviewing': '🔍',
+                'error': '❌'
+            }
+            icon = status_icons.get(task.get('status', 'todo'), '❓')
+
+            lines.append(f"{i}. {icon} {task['name']} ({task['id']})")
+            lines.append(f"   상태: {task.get('status', 'todo')}")
+            if task.get('started_at'):
+                lines.append(f"   시작: {task['started_at']}")
+            if task.get('completed_at'):
+                lines.append(f"   완료: {task['completed_at']}")
+            lines.append("")
+
+        return {'ok': True, 'data': '\n'.join(lines)}
+
+    # === 헬퍼 메서드 ===
+
+    def _get_current_flow_id(self) -> Optional[str]:
+        """현재 활성 Flow ID 가져오기"""
+        try:
+            # current_flow.txt에서 읽기
+            with open('.ai-brain/current_flow.txt', 'r') as f:
+                return f.read().strip()
+        except:
+            # 또는 manager에서 가져오기
+            if hasattr(self.manager, 'current_flow'):
+                flow = self.manager.current_flow
+                if flow and hasattr(flow, 'id'):
+                    return flow.id
+                elif isinstance(flow, dict) and 'id' in flow:
+                    return flow['id']
+        return None
+
+    def _get_task_status_icon(self, status: str) -> str:
+        """Task 상태에 따른 아이콘 반환"""
+        status_icons = {
+            'todo': '⏳',
+            'planning': '📐',
+            'in_progress': '🔄',
+            'reviewing': '🔍',
+            'completed': '✅',
+            'error': '❌',
+            'blocked': '🚫'
+        }
+        return status_icons.get(status, '❓')
+
+    def _extract_ids_from_task(self, task_id: str) -> Tuple[Optional[str], Optional[str]]:
+        """Task ID에서 plan_id와 flow_id 추출"""
+        # task_001_01 형식에서 plan_id 추출
+        import re
+        match = re.match(r'task_(\d{3})_(\d{2})', task_id)
+        if match:
+            plan_number = int(match.group(1))
+            # 현재 Flow에서 해당 번호의 Plan 찾기
+            flow_id = self._get_current_flow_id()
+            if flow_id:
+                result = self.manager.list_plans(flow_id)
+                if result['ok']:
+                    plans = result['data']
+                    # plan_number에 해당하는 plan 찾기
+                    for plan in plans:
+                        # plan_001_xxx 형식에서 번호 추출
+                        plan_match = re.match(r'plan_(\d{3})', plan['id'])
+                        if plan_match and int(plan_match.group(1)) == plan_number:
+                            return plan['id'], flow_id
+        return None, None

@@ -1,0 +1,94 @@
+{
+  "flow_id": "test_flow",
+  "created_at": "2025-07-24T18:17:19.636925",
+  "actions": [
+    {
+      "timestamp": "2025-07-24T18:17:19.636925",
+      "type": "real_work_completed",
+      "details": {
+        "call_id": "7cfcb252",
+        "source": "auto",
+        "method": "real_work",
+        "module": "__main__",
+        "elapsed_ms": 10.89,
+        "params": {
+          "data": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        "result": {
+          "processed": 100
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:17:19.648722",
+      "type": "real_work_completed",
+      "details": {
+        "call_id": "5b43d670",
+        "source": "auto",
+        "method": "real_work",
+        "module": "__main__",
+        "elapsed_ms": 10.83,
+        "params": {
+          "data": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        "result": {
+          "processed": 100
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:17:19.660725",
+      "type": "real_work_completed",
+      "details": {
+        "call_id": "0ed7a9e1",
+        "source": "auto",
+        "method": "real_work",
+        "module": "__main__",
+        "elapsed_ms": 10.9,
+        "params": {
+          "data": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        "result": {
+          "processed": 100
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:17:19.670722",
+      "type": "real_work_completed",
+      "details": {
+        "call_id": "1e0a83ee",
+        "source": "auto",
+        "method": "real_work",
+        "module": "__main__",
+        "elapsed_ms": 10.6,
+        "params": {
+          "data": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        "result": {
+          "processed": 100
+        }
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:17:19.682731",
+      "type": "real_work_completed",
+      "details": {
+        "call_id": "d1850830",
+        "source": "auto",
+        "method": "real_work",
+        "module": "__main__",
+        "elapsed_ms": 10.86,
+        "params": {
+          "data": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        },
+        "result": {
+          "processed": 100
+        }
+      }
+    }
+  ],
+  "statistics": {
+    "real_work_completed": 5
+  }
+}

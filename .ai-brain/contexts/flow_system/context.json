@@ -24,10 +24,42 @@
         },
         "result": "<Flow object>"
       }
+    },
+    {
+      "timestamp": "2025-07-24T18:16:05.539854",
+      "type": "create_flow_completed",
+      "details": {
+        "call_id": "7b0aa732",
+        "source": "auto",
+        "method": "create_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 3.32,
+        "params": {
+          "name": "integration_test_flow",
+          "project": "phase3_test"
+        },
+        "result": "<Flow object>"
+      }
+    },
+    {
+      "timestamp": "2025-07-24T18:16:34.903752",
+      "type": "create_flow_completed",
+      "details": {
+        "call_id": "fb774aee",
+        "source": "auto",
+        "method": "create_flow",
+        "module": "ai_helpers_new.flow_manager",
+        "elapsed_ms": 2.92,
+        "params": {
+          "name": "simple_test",
+          "project": "phase3"
+        },
+        "result": "<Flow object>"
+      }
     }
   ],
   "statistics": {
     "project_changed": 1,
-    "create_flow_completed": 1
+    "create_flow_completed": 3
   }
 }

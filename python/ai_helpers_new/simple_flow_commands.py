@@ -257,26 +257,269 @@ def switch_project(project_name: Optional[str]) -> None:
 
     # 안전한 프로젝트 전환
     try:
-        # flow_project_with_workflow 사용
-        project_path = flow_project_with_workflow(project_name)
+        # flow_project_with_workflow 사용 - dict 반환
+        result = flow_project_with_workflow(project_name)
 
-        # Flow 매니저 재초기화
-        _manager = None
-        _current_plan_id = None
+        # 전환 성공 확인
+        if isinstance(result, dict) and result.get('success'):
+            # Flow 매니저 재초기화
+            _manager = None
+            _current_plan_id = None
 
-        print(f"✅ 프로젝트 전환 완료: {project_name}")
-        print(f"   경로: {project_path}")
+            project_info = result.get('project', {})
+            print(f"✅ 프로젝트 전환 완료: {project_name}")
+            print(f"   경로: {project_info.get('path', '')}")
 
-        # Flow 상태 확인
-        manager = get_manager()
-        plans = manager.list_plans()
-        if plans:
-            print(f"   Flow Plans: {len(plans)}개")
-    except FileNotFoundError as e:
-        print(f"❌ 프로젝트를 찾을 수 없습니다: {project_name}")
-        print(f"   {str(e)}")
+            # ========== 개선된 부분 ==========
+            # 프로젝트 문서 요약 표시
+            _show_project_summary()
+
+            # Flow Plan 목록 표시
+            print("")  # 빈 줄
+            manager = get_manager()
+            show_plans(manager)
+            # ========== 개선 끝 ==========
+        else:
+            print(f"❌ 프로젝트 전환 실패: {project_name}")
+            if isinstance(result, dict):
+                print(f"   오류: {result.get('error', 'Unknown error')}")
+
     except Exception as e:
-        print(f"❌ 프로젝트 전환 실패: {str(e)}")
+        print(f"❌ 프로젝트 전환 중 오류: {e}")
+
+
+
+def _show_project_summary():
+    """프로젝트 문서 요약 표시"""
+    try:
+        # file 모듈의 read 함수 import
+        from .file import read as h_read
+        import os
+
+        readme_exists = False
+        file_dir_exists = False
+
+        # readme.md 확인 및 요약
+        try:
+            readme = h_read('readme.md')
+            if readme['ok']:
+                readme_exists = True
+                lines = readme['data'].split('\n')
+
+                print("\n📄 README.md 요약")
+                print("=" * 60)
+
+                # 주요 기능 찾기
+                in_features = False
+                feature_count = 0
+                for line in lines:
+                    if '주요 기능' in line and line.startswith('#'):
+                        in_features = True
+                        continue
+                    elif in_features and line.startswith('#'):
+                        break
+                    elif in_features and line.strip() and feature_count < 3:
+                        print(f"  {line.strip()}")
+                        feature_count += 1
+        except:
+            pass
+
+        # file_directory.md 확인 및 구조 표시
+        try:
+            file_dir = h_read('file_directory.md')
+            if file_dir['ok']:
+                file_dir_exists = True
+                lines = file_dir['data'].split('\n')
+
+                # 통계 정보
+                print("\n📁 파일 구조 통계")
+                print("=" * 60)
+
+                for line in lines[:20]:
+                    if '총 파일 수:' in line:
+                        print(f"  {line.strip()}")
+                    elif '총 디렉토리 수:' in line:
+                        print(f"  {line.strip()}")
+
+                # 디렉토리 트리 표시
+                print("\n📂 프로젝트 구조")
+                print("=" * 60)
+
+                tree_lines = []
+                i = 0
+
+                while i < len(lines):
+                    line = lines[i]
+
+                    # 디렉토리 트리 섹션 찾기
+                    if '디렉토리 트리' in line:
+                        # ``` 코드 블록 시작 찾기
+                        for j in range(i+1, min(i+5, len(lines))):
+                            if lines[j].strip() == '```':
+                                # 코드 블록 내용 수집
+                                for k in range(j+1, len(lines)):
+                                    if lines[k].strip() == '```':
+                                        i = k  # 루프 인덱스 업데이트
+                                        break
+                                    else:
+                                        tree_lines.append(lines[k].rstrip())
+                                break
+                        break
+                    i += 1
+
+                # 트리 출력 (전체)
+                for line in tree_lines:
+                    print(line)
+
+                # 주요 파일 찾기
+                print("\n📌 주요 파일")
+                print("-" * 60)
+
+                # 진입점 파일 찾기
+                entry_points = ['main.py', 'index.js', 'index.ts', 'app.py', 'server.js', 
+                              'server.py', '__main__.py', 'run.py', 'json_repl_session.py']
+                config_files = ['config.py', 'settings.py', 'package.json', 'pyproject.toml',
+                              'requirements.txt', 'setup.py', 'tsconfig.json']
+                important_files = ['README.md', 'readme.md', 'LICENSE', '.gitignore']
+
+                found_files = []
+
+                # file_directory.md에서 파일 찾기
+                for line in lines:
+                    # 진입점 파일
+                    for entry in entry_points:
+                        if entry in line and ('│' in line or '├' in line or '└' in line):
+                            file_entry = f"  🎯 진입점: {entry}"
+                            if file_entry not in found_files:
+                                found_files.append(file_entry)
+
+                    # 설정 파일
+                    for config in config_files:
+                        if config in line and ('│' in line or '├' in line or '└' in line):
+                            file_entry = f"  ⚙️ 설정: {config}"
+                            if file_entry not in found_files:
+                                found_files.append(file_entry)
+
+                    # 중요 파일
+                    for imp_file in important_files:
+                        if imp_file in line and ('│' in line or '├' in line or '└' in line):
+                            file_entry = f"  📋 문서: {imp_file}"
+                            if file_entry not in found_files:
+                                found_files.append(file_entry)
+
+                # 출력 (모든 찾은 파일)
+                for file in found_files:
+                    print(file)
+
+            else:
+                # file_directory.md가 없을 때 직접 스캔
+                _show_direct_structure()
+
+        except Exception as e:
+            # 오류 시 직접 스캔
+            _show_direct_structure()
+
+        # 문서 존재 여부 표시
+        if readme_exists or file_dir_exists:
+            print("\n📚 프로젝트 문서:")
+            if readme_exists:
+                print("  - readme.md ✅")
+            if file_dir_exists:
+                print("  - file_directory.md ✅")
+            print("  💡 팁: /a 명령어로 문서를 업데이트할 수 있습니다.")
+        else:
+            print("\n💡 팁: /a 명령어로 프로젝트 문서를 생성할 수 있습니다.")
+
+    except Exception as e:
+        # 조용히 실패
+        pass
+def _show_direct_structure():
+    """file_directory.md가 없을 때 직접 디렉토리 구조 표시"""
+    try:
+        import os
+        from pathlib import Path
+
+        print("\n📂 프로젝트 구조")
+        print("=" * 60)
+
+        def show_tree(path, prefix="", is_last=True, level=0, max_level=3):
+            """디렉토리 트리를 재귀적으로 표시"""
+            if level > max_level:
+                return
+
+            # 현재 디렉토리의 항목들
+            try:
+                items = sorted(os.listdir(path))
+                # 숨김 파일과 특정 폴더 제외
+                items = [item for item in items 
+                        if not item.startswith('.') 
+                        and item not in ['node_modules', '__pycache__', 'venv', 'dist', 'build']]
+
+                dirs = [item for item in items if os.path.isdir(os.path.join(path, item))]
+                files = [item for item in items if os.path.isfile(os.path.join(path, item))]
+
+                # 디렉토리 먼저, 파일 나중에
+                all_items = dirs + files
+
+                for i, item in enumerate(all_items):
+                    is_last_item = (i == len(all_items) - 1)
+                    item_path = os.path.join(path, item)
+
+                    # 트리 문자 선택
+                    if is_last_item:
+                        print(prefix + "└── ", end="")
+                        new_prefix = prefix + "    "
+                    else:
+                        print(prefix + "├── ", end="")
+                        new_prefix = prefix + "│   "
+
+                    # 아이템 표시
+                    if os.path.isdir(item_path):
+                        print(f"📂 {item}/")
+                        # 재귀적으로 하위 디렉토리 표시
+                        show_tree(item_path, new_prefix, is_last_item, level + 1, max_level)
+                    else:
+                        # 파일 아이콘 선택
+                        if item.endswith('.py'):
+                            icon = "🐍"
+                        elif item.endswith(('.js', '.ts', '.jsx', '.tsx')):
+                            icon = "📜"
+                        elif item.endswith('.json'):
+                            icon = "📋"
+                        elif item.endswith('.md'):
+                            icon = "📝"
+                        else:
+                            icon = "📄"
+                        print(f"{icon} {item}")
+
+            except PermissionError:
+                pass
+
+        # 프로젝트 이름 표시
+        project_name = os.path.basename(os.getcwd())
+        print(f"{project_name}/")
+
+        # 트리 표시 (3단계 깊이까지)
+        show_tree(".", "", True, 0, 3)
+
+        # 주요 파일 찾기
+        print("\n📌 주요 파일")
+        print("-" * 60)
+
+        # 루트 디렉토리의 주요 파일들
+        entry_points = ['main.py', 'index.js', 'index.ts', 'app.py', 'server.js']
+        config_files = ['package.json', 'requirements.txt', 'pyproject.toml']
+
+        for file in entry_points:
+            if os.path.exists(file):
+                print(f"  🎯 진입점: {file}")
+
+        for file in config_files:
+            if os.path.exists(file):
+                print(f"  ⚙️ 설정: {file}")
+
+    except Exception as e:
+        print(f"  디렉토리 구조를 읽을 수 없습니다: {e}")
 def show_help() -> None:
     """도움말 표시"""
     print("""

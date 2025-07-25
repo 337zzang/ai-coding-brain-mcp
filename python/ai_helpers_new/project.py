@@ -190,7 +190,8 @@ def create_project_structure(
 # 사용 가능한 함수 목록
 __all__ = [
     'get_current_project', 'scan_directory_dict',
-    'create_project_structure'
+    'create_project_structure',
+    'flow_project_with_workflow',
 ]
 
 

@@ -128,16 +128,18 @@ def load_helpers():
 
         # 워크플로우 시스템
         try:
-            from ai_helpers_new.workflow_commands import wf
+            from ai_helpers_new.simple_flow_commands import flow, wf
             globals()['wf'] = wf
             globals()['workflow'] = wf
+            globals()['flow'] = flow
+            globals()['wf'] = wf
             print("✅ 워크플로우 시스템 로드 완료", file=sys.stderr)
         except ImportError as e:
             print(f"⚠️ 워크플로우 시스템 로드 실패: {e}", file=sys.stderr)
 
         # flow_project 함수
         try:
-            from flow_project_wrapper import flow_project, fp
+            from ai_helpers_new.project import flow_project, fp
             globals()['flow_project'] = flow_project
             globals()['fp'] = fp
         except ImportError:
@@ -155,7 +157,7 @@ wf = None
 WORKFLOW_AVAILABLE = False
 
 try:
-    from ai_helpers_new.workflow_commands import wf
+    from ai_helpers_new.simple_flow_commands import flow, wf
     WORKFLOW_AVAILABLE = True
     print("✅ Workflow 시스템 로드 완료", file=sys.stderr)
 except ImportError as e:
@@ -201,11 +203,14 @@ def execute_code(code: str) -> Dict[str, Any]:
     global execution_count, repl_globals, helpers
     execution_count += 1
     
-    # 첫 실행 시 helpers 로드 시도
-    if execution_count == 1 and not HELPERS_AVAILABLE:
+    # 헬퍼가 로드되지 않았으면 즉시 로드
+    if not HELPERS_AVAILABLE:
         if load_helpers():
             repl_globals['helpers'] = helpers
-            repl_globals['fp'] = helpers.fp if helpers and hasattr(helpers, 'fp') else None
+            repl_globals['h'] = helpers  # h 별칭도 추가
+            repl_globals['fp'] = fp if 'fp' in globals() else None
+            repl_globals['flow'] = flow if 'flow' in globals() else None
+            repl_globals['wf'] = wf if 'wf' in globals() else None
 
     result = {
         'success': True,
@@ -352,82 +357,4 @@ if __name__ == '__main__':
 
 
 
-def load_global_context_on_start():
-    """새 세션 시작 시 글로벌 컨텍스트 확인"""
-    try:
-        from workflow.global_context import get_global_context_manager
-        ctx = get_global_context_manager()
-        summary = ctx.get_all_projects_summary()
-
-        if summary:
-            print("\n" + "="*60)
-            print("🔄 이전 작업 히스토리")
-            print("="*60)
-
-            # 최근 프로젝트 순으로 표시
-            recent = ctx.get_recent_projects(5)
-            for proj_name in recent:
-                if proj_name in summary:
-                    info = summary[proj_name]
-                    print(f"📂 {proj_name}")
-                    print(f"   최종: {info.get('last_opened', 'Unknown')[:19]}")  # 날짜 시간만
-                    print(f"   태스크: {info.get('tasks_count', 0)}개")
-
-            # 현재 프로젝트 확인
-            current_project = ctx.global_context.get('current_project')
-            if current_project:
-                print(f"\n💡 마지막 작업: {current_project}")
-                print(f"   계속하려면: fp('{current_project}')")
-
-            print("="*60)
-    except Exception as e:
-        pass  # 조용히 무시
-
-
-
-# 글로벌 컨텍스트 명령어
-def gc():
-    """모든 프로젝트 컨텍스트 표시"""
-    from workflow.global_context import get_global_context_manager
-    ctx = get_global_context_manager()
-    summary = ctx.get_all_projects_summary()
-
-    print("\n🌍 글로벌 프로젝트 컨텍스트")
-    print("="*60)
-
-    if not summary:
-        print("아직 저장된 프로젝트가 없습니다.")
-        return
-
-    # 최근 프로젝트 순으로 정렬
-    recent = ctx.get_recent_projects(10)
-    for proj_name in recent:
-        if proj_name in summary:
-            info = summary[proj_name]
-            print(f"\n📂 {proj_name}")
-            print(f"   경로: {info.get('path', 'Unknown')}")
-            print(f"   최종: {info.get('last_opened', 'Unknown')[:19]}")
-            print(f"   태스크: {info.get('tasks_count', 0)}개")
-            print(f"   최근: {info.get('recent_work', '')}")
-
-def project_history(limit=10):
-    """최근 프로젝트 이동 히스토리"""
-    from workflow.global_context import get_global_context_manager
-    ctx = get_global_context_manager()
-    history = ctx.get_project_history(limit)
-
-    print(f"\n📜 최근 프로젝트 이동 (최근 {limit}개)")
-    print("="*60)
-
-    if not history:
-        print("이동 히스토리가 없습니다.")
-        return
-
-    for item in history:
-        timestamp = item['timestamp'][:19]  # 날짜 시간만
-        print(f"{timestamp}: {item['project']}")
-        print(f"   경로: {item['path']}")
-
-
-# REPL 초기화 시 글로벌 컨텍스트 로드
-load_global_context_on_start()
+# Global context functions removed - module does not exist

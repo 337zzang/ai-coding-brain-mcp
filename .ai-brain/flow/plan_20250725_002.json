@@ -1,0 +1,57 @@
+{
+  "id": "plan_20250725_002",
+  "name": "통합",
+  "description": "",
+  "status": "active",
+  "priority": 0,
+  "created_at": "2025-07-25T10:22:11.433044",
+  "updated_at": "2025-07-25T11:15:12.590934",
+  "start_date": null,
+  "due_date": null,
+  "tags": [],
+  "tasks": {
+    "task_20250725_102211_dcc1c5": {
+      "id": "task_20250725_102211_dcc1c5",
+      "title": "파일 분석 및 백업",
+      "description": "",
+      "status": "done",
+      "priority": 0,
+      "created_at": "2025-07-25T10:22:11.436043",
+      "updated_at": "2025-07-25T10:22:25.741199",
+      "completed_at": "2025-07-25T10:22:25.741199",
+      "assignee": null,
+      "tags": [],
+      "metadata": {}
+    },
+    "task_20250725_102211_44fdc3": {
+      "id": "task_20250725_102211_44fdc3",
+      "title": "코드 수정 및 테스트",
+      "description": "",
+      "status": "done",
+      "priority": 0,
+      "created_at": "2025-07-25T10:22:11.438044",
+      "updated_at": "2025-07-25T10:22:45.528533",
+      "completed_at": "2025-07-25T10:22:45.528533",
+      "assignee": null,
+      "tags": [],
+      "metadata": {}
+    },
+    "task_20250725_102211_89e3da": {
+      "id": "task_20250725_102211_89e3da",
+      "title": "Git 커밋 준비",
+      "description": "",
+      "status": "in_progress",
+      "priority": 0,
+      "created_at": "2025-07-25T10:22:11.441044",
+      "updated_at": "2025-07-25T11:15:12.590934",
+      "completed_at": null,
+      "assignee": null,
+      "tags": [],
+      "metadata": {}
+    }
+  },
+  "metadata": {
+    "description": ""
+  },
+  "context": {}
+}

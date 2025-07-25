@@ -4,14 +4,17 @@ AI Helpers 표준화 래퍼
 기존 함수를 수정하지 않고 표준 API 패턴 제공
 """
 from typing import Dict, Any, List, Optional
-import ai_helpers_new as h
+# 순환 참조 방지를 위해 직접 import
+from .project import get_current_project as _get_current_project
+from .project import scan_directory as _scan_directory
+from .project import scan_directory_dict as _scan_directory_dict
 
 # 표준 패턴: {ok: bool, data: Any, error?: str}
 
 def scan_directory(path: str = '.') -> Dict[str, Any]:
     """scan_directory의 표준화 래퍼"""
     try:
-        result = h.scan_directory(path)
+        result = _scan_directory(path)
         return {
             'ok': True,
             'data': result,
@@ -28,7 +31,7 @@ def scan_directory(path: str = '.') -> Dict[str, Any]:
 def scan_directory_dict(path: str = '.', max_depth: int = 3) -> Dict[str, Any]:
     """scan_directory_dict의 표준화 래퍼"""
     try:
-        result = h.scan_directory_dict(path, max_depth)
+        result = _scan_directory_dict(path, max_depth)
         return {
             'ok': True,
             'data': result,
@@ -45,7 +48,7 @@ def scan_directory_dict(path: str = '.', max_depth: int = 3) -> Dict[str, Any]:
 def get_current_project() -> Dict[str, Any]:
     """get_current_project의 표준화 래퍼"""
     try:
-        result = h.get_current_project()
+        result = _get_current_project()
         return {
             'ok': True,
             'data': result

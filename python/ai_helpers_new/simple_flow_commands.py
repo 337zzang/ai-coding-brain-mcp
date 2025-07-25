@@ -1,10 +1,12 @@
 """
+import os
 극단순화된 Workflow 명령어 시스템
 Flow 개념 없이 Plan과 Task만으로 작업 관리
 """
 from typing import Optional, List, Dict, Any
 from .ultra_simple_flow_manager import UltraSimpleFlowManager
 from .project import get_current_project
+from .project import flow_project_with_workflow
 
 # 전역 매니저 인스턴스
 _manager: Optional[UltraSimpleFlowManager] = None
@@ -239,27 +241,42 @@ def delete_plan(manager: UltraSimpleFlowManager, plan_id: Optional[str]) -> None
             print(f"❌ Plan 삭제 실패")
 
 def switch_project(project_name: Optional[str]) -> None:
-    """프로젝트 전환"""
+    """프로젝트 전환 - flow_project_with_workflow 사용"""
     global _manager, _current_plan_id
 
     if not project_name:
         # 현재 프로젝트 표시
         current = get_current_project()
-        print(f"\n현재 프로젝트: {current['name']}")
+        if current['ok']:
+            project_info = current['data']
+            print(f"\n현재 프로젝트: {project_info.get('name', 'Unknown')}")
+            print(f"경로: {project_info.get('path', os.getcwd())}")
+        else:
+            print(f"\n현재 프로젝트 확인 실패: {current.get('error', 'Unknown error')}")
         return
 
-    # 프로젝트 전환 (디렉토리 변경 방식)
+    # 안전한 프로젝트 전환
     try:
-        if os.path.exists(project_name):
-            os.chdir(project_name)
-            _manager = None  # 매니저 재생성 필요
-            _current_plan_id = None
-            print(f"✅ 프로젝트 전환: {os.path.basename(project_name)}")
-        else:
-            print(f"❌ 프로젝트 경로를 찾을 수 없습니다: {project_name}")
-    except Exception as e:
-        print(f"❌ 프로젝트 전환 실패: {e}")
+        # flow_project_with_workflow 사용
+        project_path = flow_project_with_workflow(project_name)
 
+        # Flow 매니저 재초기화
+        _manager = None
+        _current_plan_id = None
+
+        print(f"✅ 프로젝트 전환 완료: {project_name}")
+        print(f"   경로: {project_path}")
+
+        # Flow 상태 확인
+        manager = get_manager()
+        plans = manager.list_plans()
+        if plans:
+            print(f"   Flow Plans: {len(plans)}개")
+    except FileNotFoundError as e:
+        print(f"❌ 프로젝트를 찾을 수 없습니다: {project_name}")
+        print(f"   {str(e)}")
+    except Exception as e:
+        print(f"❌ 프로젝트 전환 실패: {str(e)}")
 def show_help() -> None:
     """도움말 표시"""
     print("""

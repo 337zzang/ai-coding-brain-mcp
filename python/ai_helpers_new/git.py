@@ -74,14 +74,56 @@ def run_git_command(args: List[str], cwd: Optional[str] = None) -> Dict[str, Any
     except Exception as e:
         return err(f"Git command error: {str(e)}")
 
-def git_status() -> Dict[str, Any]:
-    """Git 상태 확인"""
-    result = run_git_command(['status', '--porcelain'])
-    if result['ok']:
-        files = result['data'].strip().split('\n') if result['data'].strip() else []
-        return ok({'files': files, 'count': len(files)})
-    return result
+def git_status(include_log: bool = False) -> Dict[str, Any]:
+    """Git 상태 확인 (개선됨 - 브랜치 정보 포함)
 
+    Args:
+        include_log: 최근 커밋 정보 포함 여부
+
+    Returns:
+        {
+            'ok': True,
+            'data': {
+                'files': [...],      # 변경된 파일 목록
+                'count': 0,          # 변경된 파일 수
+                'branch': 'master',  # 현재 브랜치 (신규)
+                'clean': True,       # 깨끗한 상태 여부 (신규)
+                'latest_commit': {}  # 최근 커밋 (include_log=True인 경우)
+            }
+        }
+    """
+    # 파일 상태 (기존 로직)
+    result = run_git_command(['status', '--porcelain'])
+    if not result['ok']:
+        return result
+
+    files = result['data'].strip().split('\n') if result['data'].strip() else []
+
+    # 브랜치 정보 추가
+    branch_info = git_current_branch()
+    branch = branch_info['data'] if branch_info['ok'] else 'unknown'
+
+    # 결과 구성
+    data = {
+        'files': files,
+        'count': len(files),
+        'branch': branch,         # 신규 추가
+        'clean': len(files) == 0  # 신규 추가
+    }
+
+    # 최근 커밋 정보 (옵션)
+    if include_log:
+        log_info = git_log(limit=1)
+        if log_info['ok'] and log_info['data']:
+            latest = log_info['data'][0]
+            data['latest_commit'] = {
+                'hash': latest.get('hash', '')[:7],
+                'message': latest.get('message', ''),
+                'author': latest.get('author', ''),
+                'date': latest.get('date', '')
+            }
+
+    return ok(data)
 def git_add(files: List[str]) -> Dict[str, Any]:
     """파일을 스테이징 영역에 추가"""
     if not files:
@@ -135,6 +177,11 @@ def git_current_branch() -> Dict[str, Any]:
     return result
 
 
+
+
+
+# DEPRECATED: git_status() 함수가 이제 모든 기능을 포함합니다.
+# 이 함수는 하위 호환성을 위해 유지되지만 git_status()를 사용하세요.
 def git_log(limit: int = 10, format: str = "oneline", cwd: str = ".") -> Dict[str, Any]:
     """Git 커밋 히스토리 조회
 

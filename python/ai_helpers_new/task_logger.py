@@ -6,8 +6,33 @@ Enhanced Task Logger for AI Coding Brain
 import json
 import os
 from datetime import datetime
+import re
 from typing import Any, Dict, List, Optional, Union
 from pathlib import Path
+
+from .project import get_current_project
+
+
+
+def normalize_task_name(name: str) -> str:
+    """Task 이름을 안전한 파일명으로 변환
+
+    Args:
+        name: 원본 task 이름
+
+    Returns:
+        파일시스템에 안전한 이름
+    """
+    # 한글, 특수문자를 언더스코어로
+    safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name)
+    # 연속된 언더스코어 제거
+    safe_name = re.sub(r'_{2,}', '_', safe_name)
+    # 앞뒤 언더스코어 제거
+    safe_name = safe_name.strip('_')
+    # 길이 제한 (30자)
+    safe_name = safe_name[:30]
+    # 빈 문자열 방지
+    return safe_name or "task"
 
 
 class EnhancedTaskLogger:
@@ -29,9 +54,18 @@ class EnhancedTaskLogger:
         self.task_number = task_number
         self.task_name = task_name
 
-        # 경로 설정
-        self.plan_dir = Path(f".ai-brain/flow/plans/{plan_id}")
-        self.log_file = self.plan_dir / f"{task_number}.{task_name}.jsonl"
+        # 경로 설정 - 프로젝트 루트 기준
+        project_info = get_current_project()
+        if isinstance(project_info, dict) and 'path' in project_info:
+            project_root = Path(project_info['path'])
+        else:
+            # 폴백: 현재 디렉토리 사용
+            project_root = Path.cwd()
+
+        self.plan_dir = project_root / ".ai-brain" / "flow" / "plans" / plan_id
+        # 파일명 정규화 적용
+        safe_name = normalize_task_name(task_name)
+        self.log_file = self.plan_dir / f"{task_number}.{safe_name}.jsonl"
 
         # 디렉토리 생성
         self.plan_dir.mkdir(parents=True, exist_ok=True)
@@ -46,9 +80,15 @@ class EnhancedTaskLogger:
         Returns:
             기록된 이벤트 딕셔너리
         """
+        timestamp = datetime.now().isoformat()
         event = {
-            "ts": datetime.now().isoformat(),
+            # 새 필드명
+            "timestamp": timestamp,
+            "event_type": event_type,
+            # 구 필드명도 유지 (호환성)
+            "ts": timestamp,
             "type": event_type,
+            # 데이터
             **data
         }
 
@@ -198,7 +238,29 @@ class EnhancedTaskLogger:
         if next_steps:
             data["next_steps"] = next_steps
 
-        return self._log("COMPLETE", **data)
+        # 기존 로직: TaskLogger에 기록
+        result = self._log("COMPLETE", **data)
+
+        # 추가: FlowManager 자동 업데이트
+        try:
+            # Task 번호로 Task ID 찾아서 완료 처리
+            from .ultra_simple_flow_manager import UltraSimpleFlowManager
+            manager = UltraSimpleFlowManager()
+            plan = manager.get_plan(self.plan_id)
+
+            if plan:
+                # Task 번호로 task_id 찾기
+                for task_id, task in plan.tasks.items():
+                    # Task 제목이 "번호. " 형식으로 시작하는지 확인
+                    if task.title.startswith(f"{self.task_number}."):
+                        # Task 상태를 DONE으로 업데이트
+                        manager.update_task_status(self.plan_id, task_id, "done")
+                        break
+        except Exception as e:
+            # 실패해도 TaskLogger는 정상 동작
+            print(f"[TaskLogger] Flow 업데이트 실패 (무시됨): {e}")
+
+        return result
 
     def get_events(self, 
                    n: Optional[int] = None,
@@ -460,7 +522,7 @@ def display_plan_tasks(plan_id: str) -> None:
 
                 # Task 정보
                 task_info_data = summary.get('task_info', {})
-                progress = summary['progress']
+                progress = summary.get('progress', {})
 
                 # 추가 정보 표시
                 if task_info_data.get('priority'):
@@ -482,7 +544,7 @@ def display_plan_tasks(plan_id: str) -> None:
 
             except Exception as e:
                 print(f"   TaskLogger: ⚠️ 정보 읽기 오류")
-                logger2.note(f"TaskLogger 읽기 오류: {e}")
+                # 오류 로깅 제거 - 이미 print로 출력 중
         else:
             # TaskLogger 정보가 없는 경우 - 기본 정보만
             print(f"   TaskLogger: 📭 작업 미시작")

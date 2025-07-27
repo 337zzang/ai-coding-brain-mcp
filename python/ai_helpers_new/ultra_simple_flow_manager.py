@@ -31,7 +31,8 @@ class UltraSimpleFlowManager:
         base_path = self.project_path / '.ai-brain' / 'flow'
         # Repository 초기화 (폴더 기반 or 단일 파일)
         if use_enhanced:
-            self._repo = EnhancedUltraSimpleRepository(str(base_path))
+            # 상대경로로 전달 (Repository에서 resolve 처리)
+            self._repo = EnhancedUltraSimpleRepository('.ai-brain/flow')
         else:
             self._repo = UltraSimpleRepository(str(base_path))
 
@@ -57,28 +58,41 @@ class UltraSimpleFlowManager:
 
     def get_plan(self, plan_id: str) -> Optional[Plan]:
         """Plan 조회"""
-        # 캐시 확인
-        cached = self._plan_cache.get(plan_id)
+        # 캐시 확인 (dict와 LRUCache 모두 호환)
+        if hasattr(self._plan_cache, 'get'):
+            cached = self._plan_cache.get(plan_id)
+        else:
+            cached = self._plan_cache.get(plan_id) if isinstance(self._plan_cache, dict) else None
+
         if cached:
             return cached
 
         # Repository에서 로드
         plan = self._repo.load_plan(plan_id)
         if plan:
-            self._plan_cache.set(plan_id, plan)
+            # 캐시에 저장 (dict와 LRUCache 모두 호환)
+            if hasattr(self._plan_cache, 'set'):
+                self._plan_cache.set(plan_id, plan)
+            elif isinstance(self._plan_cache, dict):
+                self._plan_cache[plan_id] = plan
 
         return plan
 
     def list_plans(self) -> List[Plan]:
         """모든 Plan 목록"""
         plan_ids = self._repo.list_plan_ids()
-        return [self.get_plan(pid) for pid in plan_ids if self.get_plan(pid)]
+        plans = []
+        for pid in plan_ids:
+            plan = self.get_plan(pid)
+            if plan is not None:  # None 체크를 명시적으로
+                plans.append(plan)
+        return plans
 
     @auto_record()
     def update_plan(self, plan_id: str, **updates) -> bool:
         """Plan 업데이트"""
         plan = self.get_plan(plan_id)
-        if not plan:
+        if plan is None:
             return False
 
         for key, value in updates.items():
@@ -105,7 +119,7 @@ class UltraSimpleFlowManager:
     def create_task(self, plan_id: str, name: str) -> Optional[Task]:
         """Task 생성"""
         plan = self.get_plan(plan_id)
-        if not plan:
+        if plan is None:
             return None
 
         task_id = self._generate_task_id()

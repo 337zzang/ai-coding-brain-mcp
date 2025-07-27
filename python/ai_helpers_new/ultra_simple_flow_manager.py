@@ -9,7 +9,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 import uuid
 
-from .repository.ultra_simple_repository import UltraSimpleRepository
+from .repository import UltraSimpleRepository, EnhancedUltraSimpleRepository
 from .domain.models import Plan, Task, TaskStatus
 from .decorators import auto_record
 from .service.lru_cache import LRUCache
@@ -18,17 +18,22 @@ from .service.lru_cache import LRUCache
 class UltraSimpleFlowManager:
     """극단적으로 단순한 Flow 관리자"""
 
-    def __init__(self, project_path: Optional[str] = None):
+    def __init__(self, project_path: Optional[str] = None, use_enhanced: bool = True):
         """
         Args:
             project_path: 프로젝트 경로 (None이면 현재 디렉토리)
+            use_enhanced: 폴더 기반 저장소 사용 여부 (기본값: True)
         """
         self.project_path = Path(project_path or os.getcwd())
         self.project_name = self.project_path.name
 
         # Repository 초기화
         base_path = self.project_path / '.ai-brain' / 'flow'
-        self._repo = UltraSimpleRepository(str(base_path))
+        # Repository 초기화 (폴더 기반 or 단일 파일)
+        if use_enhanced:
+            self._repo = EnhancedUltraSimpleRepository(str(base_path))
+        else:
+            self._repo = UltraSimpleRepository(str(base_path))
 
         # 캐시
         self._plan_cache = LRUCache(max_size=50, ttl=60)
@@ -38,7 +43,7 @@ class UltraSimpleFlowManager:
     @auto_record()
     def create_plan(self, name: str, description: str = "") -> Plan:
         """Plan 생성"""
-        plan_id = self._generate_plan_id()
+        plan_id = self._generate_plan_id(name)
 
         plan = Plan(
             id=plan_id,
@@ -159,14 +164,32 @@ class UltraSimpleFlowManager:
 
     # --- 유틸리티 ---
 
-    def _generate_plan_id(self) -> str:
-        """Plan ID 생성"""
+    def _generate_plan_id(self, name: str = "") -> str:
+        """Plan ID 생성 (이름 포함)"""
+        import re
         timestamp = datetime.now().strftime("%Y%m%d")
         existing = self._repo.list_plan_ids()
-        today_plans = [p for p in existing if p.startswith(f"plan_{timestamp}_")]
-        seq = len(today_plans) + 1
-        return f"plan_{timestamp}_{seq:03d}"
 
+        # 오늘 날짜의 plan들에서 순번 추출 (정규식 사용)
+        pattern = f"^plan_{timestamp}_(\d{{3}})(_|$)"
+        seq_numbers = []
+        for plan_id in existing:
+            match = re.match(pattern, plan_id)
+            if match:
+                seq_numbers.append(int(match.group(1)))
+
+        seq = max(seq_numbers) + 1 if seq_numbers else 1
+
+        # Plan 이름을 안전한 문자열로 변환
+        safe_name = name.strip()[:30]  # 최대 30자
+        safe_name = re.sub(r'[^a-zA-Z0-9가-힣_-]', '_', safe_name)
+        safe_name = re.sub(r'_+', '_', safe_name)  # 연속된 _를 하나로
+        safe_name = safe_name.strip('_')  # 앞뒤 _ 제거
+
+        if safe_name:
+            return f"plan_{timestamp}_{seq:03d}_{safe_name}"
+        else:
+            return f"plan_{timestamp}_{seq:03d}"
     def _generate_task_id(self) -> str:
         """Task ID 생성"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

@@ -1,0 +1,6 @@
+{"ts": "2025-07-27T08:14:16.652574", "type": "TASK_INFO", "title": "복잡한 리팩토링 작업", "priority": "high", "estimate": "2h", "description": ""}
+{"ts": "2025-07-27T08:14:16.653591", "type": "TODO", "items": ["코드 분석", "설계", "구현", "테스트", "문서화"]}
+{"ts": "2025-07-27T08:14:16.654592", "type": "ANALYZE", "target": "legacy_code.py", "findings": "1000줄, 복잡도 높음"}
+{"ts": "2025-07-27T08:14:16.654592", "type": "BLOCKER", "issue": "순환 참조 발견", "severity": "high", "solution": "모듈 분리 필요"}
+{"ts": "2025-07-27T08:14:16.655591", "type": "CODE", "action": "refactor", "file": "module_a.py", "summary": "순환 참조 해결"}
+{"ts": "2025-07-27T08:14:16.663039", "type": "TODO_UPDATE", "completed": ["코드 분석"], "remaining": ["설계", "구현", "테스트", "문서화"]}

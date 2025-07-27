@@ -1,0 +1,8 @@
+{"ts": "2025-07-27T08:12:28.096555", "type": "TASK_INFO", "title": "필터 테스트", "priority": "low", "estimate": null, "description": ""}
+{"ts": "2025-07-27T08:12:28.096555", "type": "NOTE", "content": "노트 1"}
+{"ts": "2025-07-27T08:12:28.096555", "type": "NOTE", "content": "노트 2"}
+{"ts": "2025-07-27T08:12:28.096555", "type": "ANALYZE", "target": "분석 1", "findings": "결과 1"}
+{"ts": "2025-07-27T08:12:28.096555", "type": "ANALYZE", "target": "분석 2", "findings": "결과 2"}
+{"ts": "2025-07-27T08:12:28.096555", "type": "CODE", "action": "modify", "file": "test.py", "summary": "테스트 수정"}
+{"ts": "2025-07-27T08:12:28.112922", "type": "BLOCKER", "issue": "문제 발생", "severity": "low"}
+{"ts": "2025-07-27T08:12:28.113883", "type": "TODO", "items": ["할일1", "할일2"]}

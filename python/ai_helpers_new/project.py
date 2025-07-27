@@ -121,22 +121,26 @@ def scan_directory_dict(path: str = ".", max_depth: int = 5,
 
     # 통계 계산
     total_files = 0
+    total_dirs = 0
 
-    def count_files(node):
-        nonlocal total_files
+    def count_items(node):
+        nonlocal total_files, total_dirs
         if node.get('type') == 'file':
             total_files += 1
-        elif 'children' in node:
-            for child in node['children'].values():
-                count_files(child)
+        elif node.get('type') == 'directory':
+            total_dirs += 1
+            if 'children' in node:
+                for child in node['children'].values():
+                    count_items(child)
 
-    count_files(structure)
+    count_items(structure)
 
     return {
         'root': root_path,
         'structure': structure.get('children', {}),
         'stats': {
-            'total_files': total_files
+            'total_files': total_files,
+            'total_dirs': total_dirs
         }
     }
 
@@ -259,25 +263,25 @@ def flow_project_with_workflow(project_name: str):
             
 
             # 글로벌 컨텍스트 저장
-            try:
-                global_ctx = get_global_context_manager()
+            # 글로벌 컨텍스트 저장 (미구현 - TODO: 향후 구현)
+            pass
 
                 # 컨텍스트 데이터 준비
-                context_data = {
-                    'project_name': project_name,
-                    'project_info': project_info,
-                    'recent_work': f"프로젝트 전환: {project_name}"
-                }
+            # context_data = {
+            # 'project_name': project_name,
+            # 'project_info': project_info,
+            # 'recent_work': f"프로젝트 전환: {project_name}"
+            # }
 
                 # 글로벌 컨텍스트에 저장
-                global_ctx.save_project_context(project_name, context_data)
+            # global_ctx.save_project_context(project_name, context_data)
 
                 # AI 컨텍스트 파일 생성
-                ai_context = global_ctx.create_ai_context_file(project_name)
+            # ai_context = global_ctx.create_ai_context_file(project_name)
 
-                print("📋 글로벌 컨텍스트 저장 완료")
-            except Exception as e:
-                print(f"⚠️ 글로벌 컨텍스트 저장 중 오류: {e}")
+            # print("📋 글로벌 컨텍스트 저장 완료")
+            # except Exception as e:
+            # print(f"⚠️ 글로벌 컨텍스트 저장 중 오류: {e}")
 
             result = {
                 "success": True,

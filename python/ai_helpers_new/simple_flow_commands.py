@@ -1,5 +1,5 @@
-"""
 import os
+"""
 극단순화된 Workflow 명령어 시스템
 Flow 개념 없이 Plan과 Task만으로 작업 관리
 """
@@ -11,13 +11,34 @@ from .project import flow_project_with_workflow
 # 전역 매니저 인스턴스
 _manager: Optional[UltraSimpleFlowManager] = None
 _current_plan_id: Optional[str] = None
+_current_project_path: Optional[str] = None
 
 def get_manager() -> UltraSimpleFlowManager:
-    """현재 프로젝트의 매니저 가져오기"""
+    """현재 프로젝트의 매니저 가져오기 (작업 디렉토리 기반)"""
     global _manager
-    if _manager is None:
-        _manager = UltraSimpleFlowManager()
+
+    # 현재 작업 디렉토리를 프로젝트 경로로 사용
+    project_path = os.getcwd()
+
+    # 프로젝트가 변경되었는지 확인
+    if not hasattr(get_manager, '_current_project_path'):
+        get_manager._current_project_path = None
+
+    # 매니저가 없거나 프로젝트가 변경된 경우 재생성
+    if _manager is None or get_manager._current_project_path != project_path:
+        _manager = UltraSimpleFlowManager(project_path=project_path, use_enhanced=True)
+        get_manager._current_project_path = project_path
+
+        # 프로젝트별 .ai-brain 디렉토리 생성 알림
+        project_name = os.path.basename(project_path)
+        ai_brain_path = os.path.join(project_path, '.ai-brain', 'flow')
+        if not os.path.exists(ai_brain_path):
+            print(f"📁 새로운 Flow 저장소 생성: {project_name}/.ai-brain/flow/")
+        else:
+            print(f"📁 Flow 저장소 사용: {project_name}/.ai-brain/flow/")
+
     return _manager
+
 
 def flow(command: str = "") -> None:
     """
@@ -47,7 +68,7 @@ def flow(command: str = "") -> None:
     # 명령어 매핑
     commands = {
         "/list": lambda: show_plans(manager),
-        "/create": lambda: create_plan(manager, parts[1] if len(parts) > 1 else None),
+        "/create": lambda: create_plan(manager, " ".join(parts[1:]) if len(parts) > 1 else None),
         "/select": lambda: select_plan(parts[1] if len(parts) > 1 else None),
         "/task": lambda: handle_task_command(manager, parts[1:] if len(parts) > 1 else []),
         "/delete": lambda: delete_plan(manager, parts[1] if len(parts) > 1 else None),
@@ -124,7 +145,7 @@ def create_plan(manager: UltraSimpleFlowManager, name: Optional[str]) -> None:
     print(f"✅ 자동으로 선택됨")
 
 def select_plan(plan_id: Optional[str]) -> None:
-    """Plan 선택"""
+    """Plan 선택 - 순번, 부분 매칭, 인덱스 모두 지원"""
     global _current_plan_id
 
     if not plan_id:
@@ -132,14 +153,74 @@ def select_plan(plan_id: Optional[str]) -> None:
         return
 
     manager = get_manager()
-    plan = manager.get_plan(plan_id)
 
-    if not plan:
-        print(f"❌ Plan을 찾을 수 없습니다: {plan_id}")
+    # 1. 정확한 매칭 시도 (기존 로직)
+    plan = manager.get_plan(plan_id)
+    if plan:
+        _current_plan_id = plan_id
+        print(f"✅ Plan 선택됨: {plan.name}")
         return
 
-    _current_plan_id = plan_id
-    print(f"✅ Plan 선택됨: {plan.name}")
+    # 2. 순번 매칭 (o3 권장 방식)
+    if plan_id.isdigit() and len(plan_id) <= 3:
+        seq = plan_id.zfill(3)  # 10 → 010
+        matches = []
+
+        for plan in manager.list_plans():
+            parts = plan.id.split('_')
+            if len(parts) >= 3 and parts[2] == seq:
+                matches.append(plan)
+
+        if len(matches) == 1:
+            _current_plan_id = matches[0].id
+            print(f"✅ Plan 선택됨: {matches[0].name}")
+            print(f"   (순번 매칭: {plan_id} → {matches[0].id})")
+            return
+        elif len(matches) > 1:
+            # 가장 최근 것 선택 (날짜 역순)
+            matches.sort(key=lambda p: p.created_at, reverse=True)
+            _current_plan_id = matches[0].id
+            print(f"✅ Plan 선택됨: {matches[0].name}")
+            print(f"   (순번 {plan_id} 중복 → 가장 최근 선택)")
+            if len(matches) > 1:
+                print(f"   💡 동일 순번 {len(matches)}개 존재")
+            return
+
+    # 3. 부분 매칭 시도
+    all_plans = manager.list_plans()
+    matches = [p for p in all_plans if plan_id in p.id or plan_id in p.name]
+
+    if len(matches) == 0:
+        print(f"❌ Plan을 찾을 수 없습니다: {plan_id}")
+
+        # 유사한 순번 제안
+        if plan_id.isdigit():
+            similar_seq = []
+            target = int(plan_id)
+            for p in all_plans:
+                parts = p.id.split('_')
+                if len(parts) >= 3 and parts[2].isdigit():
+                    seq_num = int(parts[2])
+                    if abs(seq_num - target) <= 2:  # ±2 범위
+                        similar_seq.append((seq_num, p))
+
+            if similar_seq:
+                print("\n💡 유사한 순번:")
+                for seq, p in sorted(similar_seq, key=lambda x: x[0])[:3]:
+                    print(f"  - {seq:03d}: {p.name}")
+
+    elif len(matches) == 1:
+        _current_plan_id = matches[0].id
+        print(f"✅ Plan 선택됨: {matches[0].name}")
+        print(f"   (부분 매칭: {plan_id} → {matches[0].id})")
+    else:
+        print(f"🔍 여러 Plan이 '{plan_id}'와 일치합니다:")
+        for i, p in enumerate(matches[:5], 1):
+            parts = p.id.split('_')
+            seq = parts[2] if len(parts) >= 3 else "???"
+            print(f"  [{seq}] {p.id}")
+            print(f"       이름: {p.name}")
+        print("\n순번이나 전체 ID를 입력하여 선택하세요.")
 
 def handle_task_command(manager: UltraSimpleFlowManager, args: List[str]) -> None:
     """Task 관련 명령어 처리"""
@@ -247,12 +328,12 @@ def switch_project(project_name: Optional[str]) -> None:
     if not project_name:
         # 현재 프로젝트 표시
         current = get_current_project()
-        if current['ok']:
-            project_info = current['data']
-            print(f"\n현재 프로젝트: {project_info.get('name', 'Unknown')}")
-            print(f"경로: {project_info.get('path', os.getcwd())}")
+        current = get_current_project()
+        if current:  # dict가 반환되므로 단순 존재 여부만 체크
+            print(f"\n현재 프로젝트: {current.get('name', 'Unknown')}")
+            print(f"경로: {current.get('path', get_current_project().get('path', '.'))}")
         else:
-            print(f"\n현재 프로젝트 확인 실패: {current.get('error', 'Unknown error')}")
+            print(f"\n현재 프로젝트 확인 실패")
         return
 
     # 안전한 프로젝트 전환
@@ -294,7 +375,6 @@ def _show_project_summary():
     try:
         # file 모듈의 read 함수 import
         from .file import read as h_read
-        import os
 
         readme_exists = False
         file_dir_exists = False
@@ -436,7 +516,6 @@ def _show_project_summary():
 def _show_direct_structure():
     """file_directory.md가 없을 때 직접 디렉토리 구조 표시"""
     try:
-        import os
         from pathlib import Path
 
         print("\n📂 프로젝트 구조")
@@ -496,7 +575,7 @@ def _show_direct_structure():
                 pass
 
         # 프로젝트 이름 표시
-        project_name = os.path.basename(os.getcwd())
+        project_name = os.path.basename(get_current_project().get('path', '.'))
         print(f"{project_name}/")
 
         # 트리 표시 (3단계 깊이까지)

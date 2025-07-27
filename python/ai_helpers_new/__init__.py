@@ -11,6 +11,7 @@ from .ultra_simple_flow_manager import UltraSimpleFlowManager
 
 # Flow 명령어 시스템
 from .simple_flow_commands import flow, wf, help_flow
+from .task_logger import EnhancedTaskLogger, create_task_logger, display_plan_tasks
 
 # AI Helpers 핵심 함수들
 from .file import *
@@ -40,4 +41,12 @@ __all__ = [
     'flow',
     'wf',
     'help_flow',
+    "EnhancedTaskLogger",
+    "TaskLogger",  # EnhancedTaskLogger의 alias
+    "create_task_logger",
+    "display_plan_tasks",
 ]
+
+
+# TaskLogger alias for backward compatibility
+TaskLogger = EnhancedTaskLogger

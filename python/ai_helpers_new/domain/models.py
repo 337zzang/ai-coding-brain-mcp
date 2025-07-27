@@ -121,7 +121,16 @@ class Plan:
     def from_dict(cls, data: Dict[str, Any]) -> 'Plan':
         """딕셔너리에서 생성"""
         tasks_data = data.pop('tasks', {})
-        plan = cls(**data)
+
+        # Plan 클래스가 받을 수 있는 필드만 필터링
+        valid_fields = {
+            'id', 'name', 'description', 'status', 'priority',
+            'created_at', 'updated_at', 'start_date', 'due_date',
+            'tags', 'metadata', 'context'
+        }
+        filtered_data = {k: v for k, v in data.items() if k in valid_fields}
+
+        plan = cls(**filtered_data)
 
         # Task 복원
         for task_id, task_data in tasks_data.items():

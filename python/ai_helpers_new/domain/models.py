@@ -139,3 +139,17 @@ class Plan:
                 plan.tasks[task_id] = task
 
         return plan
+
+    # --- 하위 호환성을 위한 property ---
+    @property
+    def tasks_list(self) -> List[Task]:
+        """리스트 형태로 tasks 접근 (읽기 전용)"""
+        return list(self.tasks.values())
+
+    def __iter__(self):
+        """for task in plan: 형태 지원"""
+        return iter(self.tasks.values())
+
+    def __len__(self):
+        """len(plan) 지원"""
+        return len(self.tasks)

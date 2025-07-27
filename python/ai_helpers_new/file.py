@@ -9,8 +9,14 @@ from .util import ok, err
 from typing import Any, Dict
 
 
-def read(path: str, encoding: str = 'utf-8') -> Dict[str, Any]:
-    """파일을 읽어서 내용 반환
+def read(path: str, encoding: str = 'utf-8', offset: int = 0, length: int = None) -> Dict[str, Any]:
+    """파일을 읽어서 내용 반환 (부분 읽기 지원)
+
+    Args:
+        path: 파일 경로
+        encoding: 파일 인코딩 (기본: utf-8)
+        offset: 시작 라인 번호 (0-based, 음수는 끝에서부터)
+        length: 읽을 라인 수 (None이면 끝까지)
 
     Returns:
         성공: {'ok': True, 'data': 내용, 'path': 경로, 'lines': 줄수, 'size': 크기}
@@ -21,15 +27,66 @@ def read(path: str, encoding: str = 'utf-8') -> Dict[str, Any]:
         if not p.exists():
             return err(f"File not found: {path}", path=path)
 
-        content = p.read_text(encoding=encoding)
+        # 전체 읽기 (기존 동작)
+        if offset == 0 and length is None:
+            content = p.read_text(encoding=encoding)
+            stat = p.stat()
+            return ok(
+                content,
+                path=str(p.absolute()),
+                lines=content.count('\n') + 1,
+                size=stat.st_size,
+                encoding=encoding
+            )
+
+        # 부분 읽기
+        lines = []
+        total_lines = 0
+
+        with open(p, 'r', encoding=encoding) as f:
+            # offset < 0: 마지막 N줄 읽기
+            if offset < 0:
+                from collections import deque
+                lines = deque(maxlen=abs(offset))
+                for line in f:
+                    lines.append(line.rstrip('\n'))
+                    total_lines += 1
+                lines = list(lines)
+                if length is not None:
+                    lines = lines[:length]
+            else:
+                # offset >= 0: 특정 위치부터 읽기
+                # offset까지 스킵
+                for i in range(offset):
+                    if f.readline() == '':
+                        break
+                    total_lines += 1
+
+                # length만큼 읽기
+                if length is None:
+                    for line in f:
+                        lines.append(line.rstrip('\n'))
+                        total_lines += 1
+                else:
+                    for i in range(length):
+                        line = f.readline()
+                        if line == '':
+                            break
+                        lines.append(line.rstrip('\n'))
+                        total_lines += 1
+
+        content = '\n'.join(lines)
         stat = p.stat()
 
         return ok(
             content,
             path=str(p.absolute()),
-            lines=content.count('\n') + 1,
+            lines=len(lines),
+            total_lines=total_lines + offset if offset >= 0 else total_lines,
             size=stat.st_size,
-            encoding=encoding
+            encoding=encoding,
+            offset=offset,
+            length=length
         )
     except Exception as e:
         return err(str(e), path=path)

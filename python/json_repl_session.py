@@ -149,6 +149,20 @@ def load_helpers():
         print("✅ AI Helpers v2.0 로드 완료", file=sys.stderr)
         return True
 
+    except SyntaxError as e:
+        # f-string 백슬래시 특별 처리
+        if 'f-string expression part cannot include a backslash' in str(e):
+            result['success'] = False
+            result['error'] = format_fstring_error(e, code)
+            result['error_type'] = 'fstring_backslash'
+            result['suggestion'] = 'Use \\\\ instead of \\ in f-strings'
+            return result
+        else:
+            # 다른 SyntaxError는 기존 방식으로 처리
+            result['success'] = False
+            result['error'] = f"SyntaxError: {str(e)}"
+            result['traceback'] = traceback.format_exc()
+            return result
     except Exception as e:
         print(f"❌ 헬퍼 로드 실패: {e}", file=sys.stderr)
         return False
@@ -197,6 +211,39 @@ def capture_output():
     finally:
         sys.stdout = old_stdout
         sys.stderr = old_stderr
+
+
+def format_fstring_error(e: SyntaxError, code: str) -> str:
+    """f-string 백슬래시 오류를 위한 친화적 메시지 생성"""
+    lines = code.split('\n')
+    line_no = e.lineno if e.lineno else 1
+    problem_line = lines[line_no - 1].strip() if line_no <= len(lines) else ''
+
+    error_msg = f"""[ERROR] f-string 백슬래시 오류
+
+문제: f-string 내부에서 백슬래시(\\)를 직접 사용할 수 없습니다.
+위치: Line {line_no}
+코드: {problem_line}
+
+[해결 방법]
+
+1. 백슬래시 두 번 사용:
+   f"{{path.replace('\\\\', '/')}}"
+
+2. chr(92) 사용:
+   f"{{path.replace(chr(92), '/')}}"
+
+3. 변수로 분리:
+   sep = "\\\\"
+   f"{{path.replace(sep, '/')}}"
+
+4. f-string 밖에서 처리:
+   clean_path = path.replace("\\\\", "/")
+   f"{{clean_path}}"
+
+TIP: 가장 간단한 방법은 백슬래시를 두 번(\\\\) 쓰는 것입니다.
+"""
+    return error_msg
 
 def execute_code(code: str) -> Dict[str, Any]:
     """Python 코드 실행"""

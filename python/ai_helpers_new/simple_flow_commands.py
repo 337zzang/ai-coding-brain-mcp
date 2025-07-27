@@ -94,6 +94,17 @@ def show_status(manager: UltraSimpleFlowManager) -> None:
     plans = manager.list_plans()
     print(f"\nPlan 개수: {len(plans)}개")
 
+    # 최근 Plan 3개 표시
+    if plans:
+        recent_plans = sorted(plans, key=lambda p: p.created_at, reverse=True)[:3]
+        print("\n📌 최근 Plan (최대 3개):")
+        for i, plan in enumerate(recent_plans):
+            task_count = len(plan.tasks) if hasattr(plan, 'tasks') else 0
+            if i == 0:
+                print(f"  • {plan.id}: {plan.name} (Task {task_count}개) 🔥 가장 최근")
+            else:
+                print(f"  • {plan.id}: {plan.name} (Task {task_count}개)")
+
     if _current_plan_id:
         plan = manager.get_plan(_current_plan_id)
         if plan:

@@ -1,7 +1,0 @@
-{"ts": "2025-07-27T13:33:05.250283", "type": "TASK_INFO", "title": "테스트 작업", "priority": "high", "estimate": "1h", "description": ""}
-{"ts": "2025-07-27T13:33:05.250283", "type": "TODO", "items": ["테스트 TODO 1", "테스트 TODO 2"]}
-{"ts": "2025-07-27T13:33:05.250283", "type": "TODO_UPDATE", "completed": ["테스트 TODO 1"], "remaining": ["테스트 TODO 2"]}
-{"ts": "2025-07-27T13:33:05.257097", "type": "COMPLETE", "summary": "테스트 완료!"}
-{"ts": "2025-07-27T13:33:26.406619", "type": "TASK_INFO", "title": "테스트 작업", "priority": "high", "estimate": null, "description": ""}
-{"ts": "2025-07-27T13:33:26.420308", "type": "TODO", "items": ["TODO 1", "TODO 2"]}
-{"ts": "2025-07-27T13:33:26.420308", "type": "COMPLETE", "summary": "테스트 완료!"}

@@ -1,5 +1,0 @@
-{"ts": "2025-07-26T15:32:30.935729", "type": "TASK_INFO", "title": "첫 번째 작업", "priority": "high", "estimate": "2h", "description": "폴더 기반 저장소 통합 테스트"}
-{"ts": "2025-07-26T15:32:30.947623", "type": "DESIGN", "content": "\n통합 테스트 설계:\n- FlowManager: 폴더 구조로 Plan 저장\n- TaskLogger: 같은 폴더에 작업 로그 저장\n- 완벽한 통합 확인\n"}
-{"ts": "2025-07-26T15:32:30.947623", "type": "TODO", "items": ["Plan 생성 테스트", "Task 추가 테스트", "TaskLogger 기록 테스트", "폴더 구조 확인"]}
-{"ts": "2025-07-26T15:32:30.947623", "type": "TODO_UPDATE", "completed": ["Plan 생성 테스트", "Task 추가 테스트"], "remaining": ["TaskLogger 기록 테스트", "폴더 구조 확인"]}
-{"ts": "2025-07-26T15:32:30.947623", "type": "NOTE", "content": "폴더 기반 저장소가 성공적으로 작동합니다!"}

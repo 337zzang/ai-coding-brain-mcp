@@ -199,6 +199,153 @@ def view(path: str, name: str) -> Dict[str, Any]:
         return err(f"View error: {e}", path=path)
 
 
+def safe_replace(path: str, old: str, new: str, preview: bool = False) -> Dict[str, Any]:
+    """지능형 코드 교체 - 자동으로 최적의 방법 선택
+    
+    Args:
+        path: 파일 경로
+        old: 찾을 패턴
+        new: 교체할 패턴
+        preview: True면 미리보기만, False면 실제 수정
+    
+    Returns:
+        성공: {'ok': True, 'data': {'replacements': N, 'mode': 'ast'/'text', 'backup': path}, 'preview': diff}
+        실패: {'ok': False, 'error': 메시지}
+    
+    Examples:
+        # 함수 호출 변경 (AST 모드 자동 감지)
+        safe_replace("app.py", "print", "logger.info")
+        
+        # 미리보기
+        result = safe_replace("test.py", "old_var", "new_var", preview=True)
+        print(result['preview'])
+    """
+    try:
+        from pathlib import Path
+        import shutil
+        import difflib
+        
+        p = Path(path)
+        if not p.exists():
+            return err(f"File not found: {path}")
+            
+        # 파일 읽기
+        content = p.read_text(encoding='utf-8')
+        
+        # 모드 자동 감지
+        mode = "text"  # 기본값
+        
+        # Python 파일이고 유효한 식별자면 AST 모드 고려
+        if path.endswith('.py') and old.isidentifier() and new.isidentifier():
+            try:
+                # libcst 사용 가능한지 확인
+                import libcst as cst
+                
+                # 간단한 AST 파싱 테스트
+                tree = cst.parse_module(content)
+                mode = "ast"
+            except:
+                mode = "text"
+        
+        # 교체 수행
+        if mode == "text":
+            # 단순 텍스트 교체
+            occurrences = content.count(old)
+            if occurrences == 0:
+                return ok({'replacements': 0, 'mode': mode}, message="No matches found")
+                
+            new_content = content.replace(old, new)
+            replacements = occurrences
+            
+        else:  # mode == "ast"
+            try:
+                import libcst as cst
+                
+                # AST 기반 교체를 위한 Transformer
+                class NameReplacer(cst.CSTTransformer):
+                    def __init__(self, old_name: str, new_name: str):
+                        self.old_name = old_name
+                        self.new_name = new_name
+                        self.replacements = 0
+                        
+                    def visit_Name(self, node: cst.Name) -> None:
+                        # 변수명/함수명 방문
+                        pass
+                        
+                    def leave_Name(self, original_node: cst.Name, updated_node: cst.Name) -> cst.Name:
+                        # 이름 교체
+                        if updated_node.value == self.old_name:
+                            self.replacements += 1
+                            return updated_node.with_changes(value=self.new_name)
+                        return updated_node
+                    
+                    def leave_Call(self, original_node: cst.Call, updated_node: cst.Call) -> cst.Call:
+                        # 함수 호출 처리
+                        if isinstance(updated_node.func, cst.Name) and updated_node.func.value == self.old_name:
+                            # 이미 leave_Name에서 처리됨
+                            pass
+                        return updated_node
+                
+                # 파싱 및 변환
+                tree = cst.parse_module(content)
+                replacer = NameReplacer(old, new)
+                modified_tree = tree.visit(replacer)
+                new_content = modified_tree.code
+                replacements = replacer.replacements
+                
+                if replacements == 0:
+                    return ok({'replacements': 0, 'mode': mode}, message="No matches found")
+                    
+                # 문법 검증
+                compile(new_content, path, 'exec')
+                
+            except SyntaxError as e:
+                # AST 모드 실패 시 텍스트 모드로 폴백
+                mode = "text"
+                occurrences = content.count(old)
+                if occurrences == 0:
+                    return ok({'replacements': 0, 'mode': mode}, message="No matches found")
+                new_content = content.replace(old, new)
+                replacements = occurrences
+            except Exception as e:
+                # libcst 관련 오류
+                return err(f"AST parsing failed: {e}")
+        
+        # 미리보기 모드
+        if preview:
+            diff = difflib.unified_diff(
+                content.splitlines(keepends=True),
+                new_content.splitlines(keepends=True),
+                fromfile=f"{path} (original)",
+                tofile=f"{path} (modified)",
+                n=3
+            )
+            diff_text = ''.join(diff)
+            
+            return ok({
+                'replacements': replacements,
+                'mode': mode,
+                'preview': diff_text
+            })
+        
+        # 실제 수정
+        # 백업 생성
+        backup_path = f"{path}.backup"
+        shutil.copy2(path, backup_path)
+        
+        # 파일 쓰기
+        p.write_text(new_content, encoding='utf-8')
+        
+        return ok({
+            'replacements': replacements,
+            'mode': mode,
+            'backup': backup_path
+        })
+        
+    except Exception as e:
+        return err(f"Replace failed: {e}")
+
+
 def replace(path: str, old: str, new: str, count: int = 1) -> Dict[str, Any]:
     """파일에서 텍스트 교체
 

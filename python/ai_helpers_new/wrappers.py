@@ -6,27 +6,29 @@ AI Helpers 표준화 래퍼
 from typing import Dict, Any, List, Optional
 # 순환 참조 방지를 위해 직접 import
 from .project import get_current_project as _get_current_project
-from .project import scan_directory as _scan_directory
+from .core.fs import scan_directory as core_scan_directory, ScanOptions
 from .project import scan_directory_dict as _scan_directory_dict
 
 # 표준 패턴: {ok: bool, data: Any, error?: str}
 
 def scan_directory(path: str = '.') -> Dict[str, Any]:
-    """scan_directory의 표준화 래퍼"""
-    try:
-        result = _scan_directory(path)
-        return {
-            'ok': True,
-            'data': result,
-            'count': len(result) if isinstance(result, list) else 0,
-            'path': path
-        }
-    except Exception as e:
-        return {
-            'ok': False,
-            'error': str(e),
-            'path': path
-        }
+    """
+    scan_directory의 표준화 래퍼
+
+    기존 API와의 호환성을 위해 유지
+    """
+    # 기본값으로 flat 리스트 반환
+    options = ScanOptions(output="flat")
+    result = core_scan_directory(path, options=options)
+
+    # core.fs가 이미 표준 형식을 반환하므로 추가 정보만 포함
+    if result["ok"]:
+        result["count"] = len(result["data"]) if isinstance(result["data"], list) else 0
+        result["path"] = path
+    else:
+        result["path"] = path
+
+    return result
 
 def scan_directory_dict(path: str = '.', max_depth: int = 3) -> Dict[str, Any]:
     """scan_directory_dict의 표준화 래퍼"""

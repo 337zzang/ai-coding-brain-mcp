@@ -26,7 +26,8 @@ class EnhancedUltraSimpleRepository:
     """
 
     def __init__(self, base_path: str = ".ai-brain/flow"):
-        self.base = Path(base_path)
+        # Windows/Linux 호환을 위해 절대경로로 변환
+        self.base = Path(base_path).resolve()
         self.plans_dir = self.base / "plans"
         self.plans_dir.mkdir(parents=True, exist_ok=True)
 
@@ -75,7 +76,7 @@ class EnhancedUltraSimpleRepository:
             # 레거시 파일 로드
             data = self._safe_read(legacy_file)
             if data:
-                return Plan.from_dict(data)
+                return Plan.from_dict(plan_data)(data)
 
         # 새 구조에서 로드
         plan_file = plan_dir / "plan.json"
@@ -173,7 +174,7 @@ class EnhancedUltraSimpleRepository:
         try:
             with open(path, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except:
+        except Exception as e:
             return None
 
     def _migrate_legacy_plans(self) -> None:

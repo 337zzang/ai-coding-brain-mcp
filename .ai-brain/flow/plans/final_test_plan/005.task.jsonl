@@ -1,3 +1,0 @@
-{"timestamp": "2025-07-27T13:34:48.585328", "event_type": "TASK_INFO", "ts": "2025-07-27T13:34:48.585328", "type": "TASK_INFO", "title": "데이터 분석 작업", "priority": "high", "estimate": "3h", "description": ""}
-{"timestamp": "2025-07-27T13:34:48.587349", "event_type": "TODO", "ts": "2025-07-27T13:34:48.587349", "type": "TODO", "items": ["데이터 로드", "전처리", "시각화"]}
-{"timestamp": "2025-07-27T13:34:48.589364", "event_type": "COMPLETE", "ts": "2025-07-27T13:34:48.589364", "type": "COMPLETE", "summary": "분석 완료! 차트 3개 생성"}

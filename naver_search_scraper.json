@@ -1,0 +1,49 @@
+{
+  "project_name": "naver_test",
+  "start_time": "2025-07-27T16:55:40.142520",
+  "total_duration": 50.96691,
+  "actions": [
+    {
+      "type": "navigate",
+      "timestamp": "2025-07-27T16:55:47.418678",
+      "success": false,
+      "params": {
+        "url": "https://www.naver.com",
+        "error": null
+      },
+      "elapsed_time": 7.276158
+    },
+    {
+      "type": "input",
+      "timestamp": "2025-07-27T16:55:50.867008",
+      "success": false,
+      "params": {
+        "selector": "input[name=\"query\"]",
+        "text": "파이썬",
+        "error": null
+      },
+      "elapsed_time": 10.724488
+    },
+    {
+      "type": "click",
+      "timestamp": "2025-07-27T16:55:52.690680",
+      "success": false,
+      "params": {
+        "selector": "button[type=\"submit\"]",
+        "error": null
+      },
+      "elapsed_time": 12.54816
+    },
+    {
+      "type": "extract",
+      "timestamp": "2025-07-27T16:55:54.981635",
+      "success": false,
+      "params": {
+        "selector": "title",
+        "error": null
+      },
+      "elapsed_time": 14.839115
+    }
+  ],
+  "page_info": {}
+}

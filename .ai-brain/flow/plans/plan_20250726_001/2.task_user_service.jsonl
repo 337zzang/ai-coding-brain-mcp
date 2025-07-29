@@ -1,3 +1,0 @@
-{"ts": "2025-07-26T07:05:26.929047", "type": "TASK_INFO", "title": "사용자 서비스 개선", "priority": "medium", "estimate": "2h", "description": "새로운 auth 모듈을 사용하도록 user service 업데이트"}
-{"ts": "2025-07-26T07:05:26.929047", "type": "TODO", "items": ["UserService 현재 구조 분석", "새 AuthRepository 통합", "에러 처리 개선", "성능 테스트"]}
-{"ts": "2025-07-26T07:05:26.930372", "type": "CONTEXT", "key": "dependencies", "value": ["auth_repository.py", "user_model.py"]}

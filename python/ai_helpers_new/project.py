@@ -3,6 +3,7 @@ import os
 import json
 from pathlib import Path
 from typing import Dict, Any, List, Optional
+from .core.fs import scan_directory as core_scan_directory, ScanOptions
 from .util import ok, err
 # from .workflow_manager import get_workflow_manager  # 레거시
 try:
@@ -48,28 +49,20 @@ def detect_project_type(path: str) -> str:
         return 'go'
     else:
         return 'unknown'
-
 def scan_directory(path: str = ".", max_depth: Optional[int] = None) -> List[str]:
-    """디렉토리 스캔 (파일 리스트 반환)"""
-    result = scan_directory_dict(path, max_depth=max_depth or 5)
+    """
+    디렉토리 스캔 (파일 리스트 반환)
 
-    # dict 결과를 파일 리스트로 변환
-    files = []
+    기존 API 호환성을 위한 wrapper 함수
+    """
+    options = ScanOptions(max_depth=max_depth or 5, output="flat")
+    result = core_scan_directory(path, options=options)
 
-    def extract_files(node, prefix=""):
-        if node.get('type') == 'file':
-            files.append(prefix)
-        elif node.get('type') == 'directory':
-            for name, child in node.get('children', {}).items():
-                extract_files(child, os.path.join(prefix, name))
-
-    if 'structure' in result:
-        for name, node in result['structure'].items():
-            if node.get('type') == 'file':
-                files.append(name)
-            else:
-                extract_files(node, name)
-
+    if result["ok"]:
+        return result["data"]
+    else:
+        # 기존 동작과 동일하게 에러 시 빈 리스트 반환
+        return []
     return sorted(files)
 
 def scan_directory_dict(path: str = ".", max_depth: int = 5, 
@@ -186,7 +179,7 @@ def create_project_structure(
         write_json(str(project_path / 'package.json'), package_json)
 
     return {
-        'success': True,
+        'ok': True,
         'project_path': str(project_path),
         'created_files': list(project_path.rglob('*'))
     }
@@ -202,7 +195,7 @@ __all__ = [
 # Flow Project 함수 (워크플로우 통합)
 def flow_project_with_workflow(project_name: str):
     """프로젝트 전환 시 워크플로우도 자동으로 전환 - 바탕화면에서만 검색"""
-    result = {"success": False}
+    result = {"ok": False}
 
     try:
         from pathlib import Path
@@ -224,7 +217,7 @@ def flow_project_with_workflow(project_name: str):
         
         if not desktop_path:
             result = {
-                "success": False,
+                "ok": False,
                 "error": "바탕화면 경로를 찾을 수 없습니다"
             }
             print("❌ 바탕화면 경로를 찾을 수 없습니다")
@@ -284,9 +277,11 @@ def flow_project_with_workflow(project_name: str):
             # print(f"⚠️ 글로벌 컨텍스트 저장 중 오류: {e}")
 
             result = {
-                "success": True,
-                "project": project_info,
-                "previous": previous_dir
+                "ok": True,
+                "data": {
+                    "project": project_info,
+                    "previous": previous_dir
+                }
             }
             print(f"✅ 프로젝트 전환: {project_name}")
             print(f"📍 경로: {project_path}")
@@ -301,7 +296,7 @@ def flow_project_with_workflow(project_name: str):
 
         else:
             result = {
-                "success": False,
+                "ok": False,
                 "error": f"바탕화면에서 프로젝트를 찾을 수 없음: {project_name}"
             }
             print(f"❌ 바탕화면에서 프로젝트를 찾을 수 없음: {project_name}")
@@ -309,7 +304,7 @@ def flow_project_with_workflow(project_name: str):
 
     except Exception as e:
         result = {
-            "success": False,
+            "ok": False,
             "error": str(e)
         }
         print(f"❌ 프로젝트 전환 실패: {e}")

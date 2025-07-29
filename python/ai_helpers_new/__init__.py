@@ -13,6 +13,9 @@ from .ultra_simple_flow_manager import UltraSimpleFlowManager
 from .simple_flow_commands import flow, wf, help_flow
 from .task_logger import EnhancedTaskLogger, create_task_logger, display_plan_tasks
 
+# Core 모듈
+from .core import *
+
 # AI Helpers 핵심 함수들
 from .file import *
 from .code import *
@@ -44,9 +47,33 @@ __all__ = [
     "EnhancedTaskLogger",
     "TaskLogger",  # EnhancedTaskLogger의 alias
     "create_task_logger",
-    "display_plan_tasks",
+    "display_plan_tasks"
+    "Response",
+    "ScanOptions",
 ]
 
 
 # TaskLogger alias for backward compatibility
 TaskLogger = EnhancedTaskLogger
+
+try:
+    from api.web_automation_helpers import (
+        web_start, web_stop, web_status,
+        web_goto, web_click, web_type,
+        web_extract, web_extract_table, web_wait,
+        web_screenshot, web_generate_script, web_get_data,
+        # 레코딩 함수
+        web_record_start, web_record_stop, web_record_status
+    )
+except ImportError as e:
+    print(f"Warning: Web automation helpers not available: {e}")
+
+# Web Automation Helpers - 추가됨
+from api.web_automation_helpers import (
+    web_start, web_stop, web_status,
+    web_goto, web_click, web_type,
+    web_extract, web_extract_table, web_wait,
+    web_screenshot, web_generate_script, web_get_data,
+    web_demo
+)
+

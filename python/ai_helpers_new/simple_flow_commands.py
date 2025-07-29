@@ -40,7 +40,7 @@ def get_manager() -> UltraSimpleFlowManager:
     return _manager
 
 
-def flow(command: str = "") -> None:
+def flow(command: str = "") -> Dict[str, Any]:
     """
     극단순 Flow 명령어 처리
 
@@ -61,7 +61,15 @@ def flow(command: str = "") -> None:
     if not parts or not command:
         # 현재 상태 표시
         show_status(manager)
-        return
+        plans = manager.list_plans()
+        return {
+            "ok": True,
+            "data": {
+                "plan_count": len(plans),
+                "current_plan": _current_plan_id,
+                "recent_plans": [plan.to_dict() for plan in plans[-3:]]
+            }
+        }
 
     cmd = parts[0].lower()
 
@@ -79,9 +87,35 @@ def flow(command: str = "") -> None:
 
     if cmd in commands:
         commands[cmd]()
+        
+        # 각 명령어에 따른 데이터 반환
+        if cmd == "/list":
+            plans = manager.list_plans()
+            return {
+                "ok": True,
+                "data": {
+                    "plans": [plan.to_dict() for plan in plans]
+                }
+            }
+        elif cmd == "/status":
+            plans = manager.list_plans()
+            return {
+                "ok": True,
+                "data": {
+                    "plan_count": len(plans),
+                    "current_plan": _current_plan_id,
+                    "recent_plans": [plan.to_dict() for plan in plans[-3:]]
+                }
+            }
+        elif cmd == "/project":
+            # 프로젝트 전환은 flow_project_with_workflow가 이미 dict 반환
+            return {"ok": True, "message": "Project command executed"}
+        else:
+            return {"ok": True, "message": f"Command {cmd} executed"}
     else:
         print(f"❌ 알 수 없는 명령어: {cmd}")
         show_help()
+        return {"ok": False, "error": f"Unknown command: {cmd}"}
 
 def show_status(manager: UltraSimpleFlowManager) -> None:
     """현재 상태 표시"""
@@ -252,7 +286,12 @@ def handle_task_command(manager: UltraSimpleFlowManager, args: List[str]) -> Non
         # Task 추가
         title = " ".join(args[1:])
         task = manager.create_task(_current_plan_id, title)
-        print(f"✅ Task 추가됨: {task.title} ({task.id})")
+        if task:
+            print(f"✅ Task 추가됨: {task.title} ({task.id})")
+        else:
+            print(f"❌ Task 추가 실패: Plan '{_current_plan_id}'을 찾을 수 없습니다.")
+            print("   💡 Plan 목록 확인: /list")
+            print("   💡 Plan 선택: /select [plan_id]")
 
     elif subcmd == "done" and len(args) > 1:
         # Task 완료
@@ -339,10 +378,10 @@ def switch_project(project_name: Optional[str]) -> None:
     if not project_name:
         # 현재 프로젝트 표시
         current = get_current_project()
-        current = get_current_project()
-        if current:  # dict가 반환되므로 단순 존재 여부만 체크
-            print(f"\n현재 프로젝트: {current.get('name', 'Unknown')}")
-            print(f"경로: {current.get('path', get_current_project().get('path', '.'))}")
+        if current and current.get('ok'):
+            project_data = current.get('data', {})
+            print(f"\n현재 프로젝트: {project_data.get('name', 'Unknown')}")
+            print(f"경로: {project_data.get('path', '.')}")
         else:
             print(f"\n현재 프로젝트 확인 실패")
         return
@@ -353,12 +392,12 @@ def switch_project(project_name: Optional[str]) -> None:
         result = flow_project_with_workflow(project_name)
 
         # 전환 성공 확인
-        if isinstance(result, dict) and result.get('success'):
+        if isinstance(result, dict) and result.get('ok'):
             # Flow 매니저 재초기화
             _manager = None
             _current_plan_id = None
 
-            project_info = result.get('project', {})
+            project_info = result.get('data', {}).get('project', {})
             print(f"✅ 프로젝트 전환 완료: {project_name}")
             print(f"   경로: {project_info.get('path', '')}")
 
@@ -586,7 +625,10 @@ def _show_direct_structure():
                 pass
 
         # 프로젝트 이름 표시
-        project_name = os.path.basename(get_current_project().get('path', '.'))
+        current = get_current_project()
+        project_name = 'unknown'
+        if current and current.get('ok'):
+            project_name = current.get('data', {}).get('name', 'unknown')
         print(f"{project_name}/")
 
         # 트리 표시 (3단계 깊이까지)

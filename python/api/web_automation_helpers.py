@@ -1,151 +1,247 @@
 """
 웹 자동화 레코딩 헬퍼 함수들
-"""
+REPLBrowserWithRecording을 사용하여 REPL 환경에서 쉽게 웹 자동화를 수행합니다.
 
+작성일: 2025-01-27
+"""
 from typing import Dict, Any, Optional
-from python.api.web_automation_extended import WebAutomationWithRecording
+from python.api.web_automation_integrated import REPLBrowserWithRecording
 
 # 전역 인스턴스 저장
-_recorder_instance: Optional[WebAutomationWithRecording] = None
+_web_instance: Optional[REPLBrowserWithRecording] = None
+
+def _get_web_instance():
+    """전역 _web_instance를 안전하게 가져오기"""
+    # globals()에서 직접 가져오기 (JSON REPL 환경 대응)
+    return globals().get('_web_instance', None)
+
+def _set_web_instance(instance):
+    """전역 _web_instance를 안전하게 설정"""
+    globals()['_web_instance'] = instance
 
 
-def web_record_start(headless: bool = False, project_name: str = "web_automation") -> WebAutomationWithRecording:
-    """웹 자동화 레코딩 시작
+
+def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dict[str, Any]:
+    """
+    웹 자동화 레코딩 시작
 
     Args:
         headless: 헤드리스 모드 여부 (기본값: False - 브라우저 표시)
         project_name: 프로젝트 이름
 
     Returns:
-        WebAutomationWithRecording: 레코딩 가능한 웹 자동화 인스턴스
+        시작 결과
 
     Example:
-        >>> web = web_record_start()
-        >>> web.go_to_page("https://example.com")
-        >>> web.click_element("button", by="css")
-        >>> web_record_stop("my_script.py")
+        >>> web_start()
+        >>> web_goto("https://example.com")
+        >>> web_click("button")
+        >>> web_generate_script("my_scraper.py")
     """
-    global _recorder_instance
+    global _web_instance
 
-    # 기존 인스턴스가 있으면 종료
-    if _recorder_instance:
-        _recorder_instance.close()
+    # 기존 인스턴스가 있으면 먼저 종료
+    if _get_web_instance() and _get_web_instance().browser_started:
+        _web_instance.stop()
 
     # 새 인스턴스 생성
-    _recorder_instance = WebAutomationWithRecording(
-        headless=headless,
-        record_actions=True,
-        project_name=project_name
-    )
+    _web_instance = REPLBrowserWithRecording(headless=headless, project_name=project_name)
 
-    return _recorder_instance
+    # 브라우저 시작
+    result = _web_instance.start()
 
-
-def web_record_stop(output_file: str = None) -> Dict[str, Any]:
-    """레코딩 중지 및 스크립트 생성
-
-    Args:
-        output_file: 출력 파일 경로 (기본값: 자동 생성)
-
-    Returns:
-        Dict: 스크립트 생성 결과
-    """
-    global _recorder_instance
-
-    if not _recorder_instance:
-        return {
-            "success": False,
-            "message": "레코딩 중인 인스턴스가 없습니다. web_record_start()를 먼저 호출하세요."
-        }
-
-    # 스크립트 생성
-    result = _recorder_instance.generate_script(output_file)
-
-    # 브라우저 종료
-    _recorder_instance.close()
-    _recorder_instance = None
+    if result.get('ok'):
+        print(f"✅ 웹 자동화 시작됨 (프로젝트: {project_name})")
+        # 전역 변수에 강제로 설정 (JSON REPL 환경 대응)
+        _set_web_instance(_web_instance)
+    else:
+        print(f"❌ 시작 실패: {result.get('error')}")
 
     return result
 
 
-def web_record_status() -> Dict[str, Any]:
-    """현재 레코딩 상태 조회
+def web_goto(url: str, wait_until: str = 'load') -> Dict[str, Any]:
+    """페이지 이동"""
+    if not _get_web_instance():
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+
+    result = _web_instance.goto(url, wait_until)
+    if result.get('ok'):
+        print(f"📍 이동: {url}")
+    return result
+
+
+def web_click(selector: str) -> Dict[str, Any]:
+    """요소 클릭"""
+    if not _get_web_instance():
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+
+    result = _web_instance.click(selector)
+    if result.get('ok'):
+        print(f"🖱️ 클릭: {selector}")
+    return result
+
+
+def web_type(selector: str, text: str) -> Dict[str, Any]:
+    """텍스트 입력"""
+    if not _get_web_instance():
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+
+    result = _web_instance.type(selector, text)
+    if result.get('ok'):
+        print(f"⌨️ 입력: {selector} <- {text[:20]}...")
+    return result
+
+
+def web_extract(selector: str, name: Optional[str] = None, 
+                extract_type: str = 'text') -> Dict[str, Any]:
+    """
+    데이터 추출
+
+    Args:
+        selector: CSS 선택자
+        name: 데이터 이름 (자동 생성 가능)
+        extract_type: 추출 타입 ('text', 'value', 'href', 'src', 'html')
 
     Returns:
-        Dict: 레코딩 상태 정보
+        추출 결과 {'ok': bool, 'data': 추출값, 'name': 이름}
     """
-    global _recorder_instance
+    if not _get_web_instance():
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
 
-    if not _recorder_instance:
+    result = _web_instance.extract(selector, name, extract_type)
+    if result.get('ok'):
+        data_preview = str(result.get('data', ''))[:50]
+        print(f"📊 추출: {result.get('name')} = {data_preview}...")
+    return result
+
+
+def web_extract_table(table_selector: str, name: Optional[str] = None) -> Dict[str, Any]:
+    """테이블 데이터 추출"""
+    if not _get_web_instance():
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+
+    result = _web_instance.extract_table(table_selector, name)
+    if result.get('ok'):
+        data = result.get('data', {})
+        rows_count = len(data.get('rows', [])) if data else 0
+        print(f"📊 테이블 추출: {result.get('name')} ({rows_count}개 행)")
+    return result
+
+
+def web_wait(seconds: float) -> Dict[str, Any]:
+    """대기"""
+    if not _get_web_instance():
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+
+    print(f"⏳ {seconds}초 대기...")
+    return _get_web_instance().wait(seconds)
+
+
+def web_screenshot(path: Optional[str] = None) -> Dict[str, Any]:
+    """스크린샷 캡처"""
+    if not _get_web_instance():
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+
+    result = _web_instance.screenshot(path)
+    if result.get('ok'):
+        print(f"📸 스크린샷 저장: {path or 'screenshot_*.png'}")
+    return result
+
+
+def web_generate_script(output_file: Optional[str] = None) -> Dict[str, Any]:
+    """
+    레코딩된 액션으로 스크래핑 스크립트 생성
+
+    Args:
+        output_file: 출력 파일 경로 (기본값: generated_scraper_*.py)
+
+    Returns:
+        생성 결과
+    """
+    if not _get_web_instance():
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+
+    result = _web_instance.generate_script(output_file)
+    if result.get('ok'):
+        print(f"✅ 스크립트 생성: {result.get('file')}")
+        print(f"   액션 수: {result.get('actions_count')}")
+    return result
+
+
+def web_stop() -> Dict[str, Any]:
+    """웹 자동화 종료"""
+    global _web_instance
+
+    if not _get_web_instance():
+        return {'ok': False, 'error': '실행 중인 인스턴스가 없습니다'}
+
+    result = _web_instance.stop()
+    if result.get('ok'):
+        print("🛑 웹 자동화 종료")
+
+    _web_instance = None
+    return result
+
+
+def web_status() -> Dict[str, Any]:
+    """현재 상태 조회"""
+    if not _get_web_instance():
         return {
-            "success": True,
-            "recording": False,
-            "message": "레코딩 중인 인스턴스가 없습니다."
+            'ok': True,
+            'running': False,
+            'message': '웹 자동화가 시작되지 않았습니다'
         }
 
-    return _recorder_instance.get_recording_status()
+    return {
+        'ok': True,
+        'running': _web_instance.browser_started,
+        'actions_count': len(_web_instance.recorder.actions),
+        'extracted_data_count': len(_web_instance.extracted_data),
+        'project_name': _web_instance.recorder.project_name
+    }
 
 
-def web_record_demo():
-    """레코딩 기능 데모
+def web_get_data() -> Dict[str, Any]:
+    """추출된 모든 데이터 조회"""
+    if not _web_instance:
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
 
-    간단한 예제를 통해 레코딩 기능을 시연합니다.
-    """
-    print("🎬 웹 자동화 레코딩 데모 시작")
-
-    # 레코딩 시작
-    web = web_record_start(headless=False, project_name="demo")
-
-    try:
-        # 구글 검색 시연
-        print("1️⃣ 구글 홈페이지 접속")
-        result = web.go_to_page("https://www.google.com")
-        if not result['success']:
-            print(f"❌ 페이지 접속 실패: {result['message']}")
-            return
-
-        # 검색어 입력
-        print("2️⃣ 검색어 입력")
-        result = web.input_text("textarea[name='q']", "Playwright Python", by="css")
-        if not result['success']:
-            print(f"❌ 검색어 입력 실패: {result['message']}")
-            return
-
-        # 검색 버튼 클릭
-        print("3️⃣ 검색 실행")
-        result = web.input_text("textarea[name='q']", "", by="css", press_enter=True)
-
-        # 잠시 대기
-        import time
-        time.sleep(3)
-
-        # 스크립트 생성
-        print("4️⃣ 스크립트 생성 중...")
-        result = web_record_stop("generated_scripts/google_search_demo.py")
-
-        if result['success']:
-            print(f"✅ 데모 완료!")
-            print(f"📄 생성된 스크립트: {result['script_path']}")
-            print(f"📊 총 액션 수: {result['total_actions']}")
-            print(f"⏱️ 소요 시간: {result['duration']:.2f}초")
-        else:
-            print(f"❌ 스크립트 생성 실패: {result['message']}")
-
-    except Exception as e:
-        print(f"❌ 데모 중 오류 발생: {e}")
-        if _recorder_instance:
-            _recorder_instance.close()
+    data = _web_instance.get_extracted_data()
+    return {'ok': True, 'data': data, 'count': len(data)}
 
 
-# ai_helpers에 추가할 함수들
-def web_automation_record_start(**kwargs):
-    """헬퍼 함수: 웹 자동화 레코딩 시작"""
-    return web_record_start(**kwargs)
+# 간단한 데모
+def web_demo():
+    """웹 자동화 데모"""
+    print("🎭 웹 자동화 데모 시작")
+    print("-" * 40)
 
-def web_automation_record_stop(**kwargs):
-    """헬퍼 함수: 웹 자동화 레코딩 중지 및 스크립트 생성"""
-    return web_record_stop(**kwargs)
+    # 1. 시작
+    web_start()
 
-def web_automation_record_status():
-    """헬퍼 함수: 웹 자동화 레코딩 상태 조회"""
-    return web_record_status()
+    # 2. 구글 방문
+    web_goto("https://www.google.com")
+    web_wait(1)
+
+    # 3. 검색
+    web_type('textarea[name="q"]', "Python web scraping")
+    web_wait(0.5)
+
+    # 4. 스크린샷
+    web_screenshot("google_search.png")
+
+    # 5. 스크립트 생성
+    web_generate_script("google_search_demo.py")
+
+    # 6. 종료
+    web_stop()
+
+    print("-" * 40)
+    print("✅ 데모 완료!")
+
+
+# 기존 함수명과의 호환성을 위한 별칭
+web_record_start = web_start
+web_record_stop = web_generate_script
+web_record_status = web_status

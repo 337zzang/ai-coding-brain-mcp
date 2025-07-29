@@ -1,0 +1,67 @@
+{
+  "task_20250727_225839_60d505": {
+    "id": "task_20250727_225839_60d505",
+    "title": "✨ 환경 설정 및 초기화",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-07-27T22:58:39.271072",
+    "updated_at": "2025-07-27T22:58:39.271072",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250727_225839_495819": {
+    "id": "task_20250727_225839_495819",
+    "title": "🔧 핵심 기능 구현",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-07-27T22:58:39.279258",
+    "updated_at": "2025-07-27T22:58:39.279258",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250727_225839_de30ce": {
+    "id": "task_20250727_225839_de30ce",
+    "title": "🧪 테스트 코드 작성",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-07-27T22:58:39.289095",
+    "updated_at": "2025-07-27T22:58:39.289095",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250727_225839_de324a": {
+    "id": "task_20250727_225839_de324a",
+    "title": "📚 문서화 및 정리",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-07-27T22:58:39.289095",
+    "updated_at": "2025-07-27T22:58:39.289095",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250727_225839_1ac85d": {
+    "id": "task_20250727_225839_1ac85d",
+    "title": "🚀 배포 준비",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-07-27T22:58:39.320488",
+    "updated_at": "2025-07-27T22:58:39.320488",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  }
+}

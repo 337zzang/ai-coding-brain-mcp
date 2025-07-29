@@ -1,5 +1,0 @@
-{"ts": "2025-07-27T08:11:26.480611", "type": "TASK_INFO", "title": "event_count 테스트", "priority": "medium", "estimate": "5m", "description": ""}
-{"ts": "2025-07-27T08:11:26.480611", "type": "NOTE", "content": "첫 번째 노트"}
-{"ts": "2025-07-27T08:11:26.480611", "type": "NOTE", "content": "두 번째 노트"}
-{"ts": "2025-07-27T08:11:26.480611", "type": "ANALYZE", "target": "테스트", "findings": "event_count 기능 검증"}
-{"ts": "2025-07-27T08:11:26.480611", "type": "TODO", "items": ["항목1", "항목2"]}

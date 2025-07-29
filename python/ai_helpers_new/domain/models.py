@@ -50,12 +50,22 @@ class Task:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Task':
-        """딕셔너리에서 생성"""
-        if 'status' in data and isinstance(data['status'], str):
-            data['status'] = TaskStatus(data['status'])
-        return cls(**data)
+        """딕셔너리에서 Task 생성 (안전한 필터링 포함)"""
+        # Task 클래스가 받을 수 있는 필드만 필터링
+        valid_fields = {
+            'id', 'title', 'description', 'status', 'priority',
+            'created_at', 'updated_at', 'completed_at',
+            'assignee', 'tags', 'metadata'
+        }
 
+        # 필터링된 데이터로 Task 생성
+        filtered_data = {k: v for k, v in data.items() if k in valid_fields}
 
+        # status가 문자열인 경우 TaskStatus enum으로 변환
+        if 'status' in filtered_data and isinstance(filtered_data['status'], str):
+            filtered_data['status'] = TaskStatus(filtered_data['status'])
+
+        return cls(**filtered_data)
 @dataclass
 class Plan:
     """Plan 모델 (Flow 개념 제거)"""
@@ -117,10 +127,48 @@ class Plan:
             "context": self.context
         }
 
+    def __getitem__(self, key):
+        """dict처럼 접근 가능하게 만들기: plan['id']"""
+        return getattr(self, key)
+    
+    def __iter__(self):
+        """dict()로 변환 가능하게 만들기"""
+        # dataclass 필드들을 순회
+        for field_name in self.__dataclass_fields__:
+            yield field_name
+    
+    def keys(self):
+        """dict.keys() 호환성"""
+        return list(self.__dataclass_fields__.keys())
+    
+    def values(self):
+        """dict.values() 호환성"""
+        return [getattr(self, field) for field in self.__dataclass_fields__]
+    
+    def items(self):
+        """dict.items() 호환성"""
+        for field in self.__dataclass_fields__:
+            yield field, getattr(self, field)
+    
+    def __contains__(self, key):
+        """'in' 연산자 지원: 'id' in plan"""
+        return key in self.__dataclass_fields__
+    
+    def get(self, key, default=None):
+        """dict.get() 호환 메서드: plan.get('id', 'default')"""
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            return default
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Plan':
         """딕셔너리에서 생성"""
-        tasks_data = data.pop('tasks', {})
+        # tasks 데이터 추출
+        tasks_data = data.get('tasks', {})
+
+        # 원본 데이터를 수정하지 않도록 새 dict 생성
+        plan_data = {k: v for k, v in data.items() if k != 'tasks'}
 
         # Plan 클래스가 받을 수 있는 필드만 필터링
         valid_fields = {

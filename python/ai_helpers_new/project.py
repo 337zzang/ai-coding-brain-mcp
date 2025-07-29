@@ -288,11 +288,11 @@ def flow_project_with_workflow(project_name: str):
 
             # 워크플로우 전환 시도 (에러 무시)
             try:
-                from ..workflow_wrapper import wf
-                wf(f"/start {project_name}")
-                print(f"✅ 워크플로우도 {project_name}로 전환됨")
+                from .simple_flow_commands import flow
+                flow(f"/project {project_name}")
+                print(f"✅ Flow 시스템도 {project_name}로 전환됨")
             except:
-                pass  # 워크플로우 실패해도 프로젝트 전환은 성공
+                pass  # Flow 실패해도 프로젝트 전환은 성공
 
         else:
             result = {

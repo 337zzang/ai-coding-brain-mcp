@@ -685,13 +685,9 @@ Task 명령어:
 """)
 
 # 별칭 함수들
-def wf(command: str = "") -> None:
-    """flow()의 짧은 별칭"""
-    flow(command)
-
 def help_flow() -> None:
     """도움말 표시"""
     show_help()
 
 # __all__ export
-__all__ = ['flow', 'wf', 'help_flow', 'get_manager']
+__all__ = ['flow', 'help_flow', 'get_manager']

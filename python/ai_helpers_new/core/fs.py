@@ -79,17 +79,26 @@ def _scan_flat(root: Path, max_depth: Optional[int]) -> List[str]:
     result: List[str] = []
 
     def _walk(p: Path, current_depth: int):
-        if max_depth is not None and current_depth > max_depth:
-            return
-
         try:
             for child in p.iterdir():
                 # 상대 경로로 저장
                 relative_path = child.relative_to(root)
-                result.append(str(relative_path).replace(os.sep, '/'))
+                path_str = str(relative_path).replace(os.sep, '/')
 
+                # 현재 아이템의 실제 depth 계산 (슬래시 개수로)
+                item_depth = path_str.count('/')
+
+                # depth 체크를 먼저 수행
+                if max_depth is not None and item_depth > max_depth:
+                    continue
+
+                result.append(path_str)
+
+                # 디렉토리인 경우, 다음 레벨 탐색 여부 결정
                 if child.is_dir():
-                    _walk(child, current_depth + 1)
+                    # 다음 레벨이 max_depth를 초과하지 않는 경우만 탐색
+                    if max_depth is None or item_depth < max_depth:
+                        _walk(child, current_depth + 1)
         except PermissionError:
             # 권한 없는 디렉토리는 건너뛰기
             pass
@@ -101,19 +110,29 @@ def _scan_tree(root: Path, max_depth: Optional[int]) -> Dict[str, Any]:
     """Scan directory and return tree structure"""
 
     def _walk(p: Path, current_depth: int) -> Dict[str, Any]:
-        if max_depth is not None and current_depth > max_depth:
-            return {}
-
         tree: Dict[str, Any] = {
             "type": "directory",
             "name": p.name,
             "children": {}
         }
 
+        # max_depth에 도달하면 children을 탐색하지 않음
+        if max_depth is not None and current_depth >= max_depth:
+            return tree
+
         try:
             for child in sorted(p.iterdir()):
                 if child.is_dir():
-                    tree["children"][child.name] = _walk(child, current_depth + 1)
+                    # 다음 레벨이 max_depth를 초과하지 않는 경우만
+                    if max_depth is None or current_depth < max_depth:
+                        tree["children"][child.name] = _walk(child, current_depth + 1)
+                    else:
+                        # depth 제한으로 하위 탐색 안함
+                        tree["children"][child.name] = {
+                            "type": "directory",
+                            "name": child.name,
+                            "children": {}
+                        }
                 else:
                     tree["children"][child.name] = {
                         "type": "file",

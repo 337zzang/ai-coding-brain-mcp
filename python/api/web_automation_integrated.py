@@ -33,7 +33,7 @@ class REPLBrowserWithRecording:
             headless: 헤드리스 모드 여부
             project_name: 프로젝트 이름 (액션 기록용)
         """
-        self.browser = REPLBrowser()
+        self.browser = REPLBrowser(headless=headless)
         self.recorder = ActionRecorder(project_name)
         self._lock = threading.Lock()  # 스레드 안전성
         self.browser_started = False
@@ -224,8 +224,8 @@ class REPLBrowserWithRecording:
 
             result = self.browser.eval(js_code)
 
-            if result.get('ok'):
-                data = result.get('data')
+            if result.get('ok') or result.get('status') == 'success':
+                data = result.get('data') or result.get('result')
                 if not name:
                     name = f"table_{len(self.extracted_data)}"
 

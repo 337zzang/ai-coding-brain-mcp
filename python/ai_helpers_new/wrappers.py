@@ -11,56 +11,87 @@ from .project import scan_directory_dict as _scan_directory_dict
 
 # 표준 패턴: {ok: bool, data: Any, error?: str}
 
-def scan_directory(path: str = '.') -> Dict[str, Any]:
+
+def ensure_response(data: Any, error: str = None, **extras) -> Dict[str, Any]:
+    """모든 데이터를 표준 응답 형식으로 변환
+
+    Args:
+        data: 반환할 데이터
+        error: 에러 메시지 (있는 경우)
+        **extras: 추가 필드 (count, path 등)
+
+    Returns:
+        {'ok': bool, 'data': Any, 'error': str, ...}
     """
-    scan_directory의 표준화 래퍼
+    if error:
+        return {'ok': False, 'error': error}
+    if isinstance(data, dict) and 'ok' in data:
+        return data  # 이미 표준 응답
 
-    기존 API와의 호환성을 위해 유지
+    response = {'ok': True, 'data': data}
+    response.update(extras)
+    return response
+
+def scan_directory(path: str = '.', 
+                  max_depth: Optional[int] = None,
+                  output: str = 'list') -> Dict[str, Any]:
     """
-    # 기본값으로 flat 리스트 반환
-    options = ScanOptions(output="flat")
-    result = core_scan_directory(path, options=options)
+    통합 디렉토리 스캔
 
-    # core.fs가 이미 표준 형식을 반환하므로 추가 정보만 포함
-    if result["ok"]:
-        result["count"] = len(result["data"]) if isinstance(result["data"], list) else 0
-        result["path"] = path
-    else:
-        result["path"] = path
+    Args:
+        path: 스캔할 경로
+        max_depth: 최대 깊이 (None = 전체)
+        output: 'list' | 'dict' | 'tree'
 
-    return result
+    Returns:
+        {'ok': True, 'data': [...], 'count': N, 'path': path}
+    """
+    try:
+        if output == 'list':
+            # 기존 방식 - core 사용
+            options = ScanOptions(output="flat", max_depth=max_depth)
+            result = core_scan_directory(path, options=options)
+            if result["ok"]:
+                return ensure_response(result["data"], count=len(result["data"]), path=path)
+            else:
+                return ensure_response(None, error=result.get("error", "Unknown error"), path=path)
 
+        elif output == 'dict':
+            # 기존 scan_directory_dict 활용
+            data = _scan_directory_dict(path, max_depth or 5)
+            return ensure_response(data, path=path)
+
+        else:  # tree 등 추가 형식
+            return ensure_response([], count=0, path=path)
+
+    except Exception as e:
+        return ensure_response(None, error=str(e), path=path)
 def scan_directory_dict(path: str = '.', max_depth: int = 3) -> Dict[str, Any]:
-    """scan_directory_dict의 표준화 래퍼"""
-    try:
-        result = _scan_directory_dict(path, max_depth)
-        return {
-            'ok': True,
-            'data': result,
-            'path': path,
-            'max_depth': max_depth
-        }
-    except Exception as e:
-        return {
-            'ok': False,
-            'error': str(e),
-            'path': path
-        }
+    """DEPRECATED: Use scan_directory(path, output='dict') instead
 
+    이 함수는 곧 제거될 예정입니다.
+    scan_directory(path, max_depth=max_depth, output='dict')를 사용하세요.
+    """
+    import warnings
+    warnings.warn(
+        "scan_directory_dict is deprecated. Use scan_directory(output='dict')",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return scan_directory(path, max_depth=max_depth, output='dict')
 def get_current_project() -> Dict[str, Any]:
-    """get_current_project의 표준화 래퍼"""
-    try:
-        result = _get_current_project()
-        return {
-            'ok': True,
-            'data': result
-        }
-    except Exception as e:
-        return {
-            'ok': False,
-            'error': str(e)
-        }
+    """현재 프로젝트 정보 반환 (안전 버전)
 
+    Returns:
+        {'ok': bool, 'data': dict} - 프로젝트 정보 또는 에러
+    """
+    try:
+        project = _get_current_project()
+        if not project:
+            return ensure_response(None, error='No project selected')
+        return ensure_response(project)
+    except Exception as e:
+        return ensure_response(None, error=str(e))
 # 하위 호환성을 위한 별칭
 safe_scan_directory = scan_directory
 safe_scan_directory_dict = scan_directory_dict

@@ -30,6 +30,7 @@ from .context_integration import *
 from .context_reporter import *
 from .doc_context_helper import *
 from .backup_utils import *
+from .excel import *
 
 # 편의 함수
 def get_flow_manager(project_path=None):

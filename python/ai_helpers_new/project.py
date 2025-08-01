@@ -286,13 +286,16 @@ def flow_project_with_workflow(project_name: str):
             print(f"✅ 프로젝트 전환: {project_name}")
             print(f"📍 경로: {project_path}")
 
-            # 워크플로우 전환 시도 (에러 무시)
-            try:
-                from .simple_flow_commands import flow
-                flow(f"/project {project_name}")
-                print(f"✅ Flow 시스템도 {project_name}로 전환됨")
-            except:
-                pass  # Flow 실패해도 프로젝트 전환은 성공
+            # 워크플로우 전환 시도 (재귀 호출 방지를 위해 주석 처리)
+            # try:
+            #     from .simple_flow_commands import flow
+            #     flow(f"/project {project_name}")
+            #     print(f"✅ Flow 시스템도 {project_name}로 전환됨")
+            # except:
+            #     pass  # Flow 실패해도 프로젝트 전환은 성공
+            
+            # Flow 매니저는 get_manager()에서 자동으로 현재 디렉토리 감지
+            print(f"📁 Flow 저장소 사용: {project_name}/.ai-brain/flow/")
 
         else:
             result = {

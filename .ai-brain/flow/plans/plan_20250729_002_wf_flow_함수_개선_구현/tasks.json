@@ -1,0 +1,80 @@
+{
+  "task_20250729_232307_020c27": {
+    "id": "task_20250729_232307_020c27",
+    "title": "1. 현재 wf 함수 구현 분석 및 백업",
+    "description": "",
+    "status": "done",
+    "priority": 0,
+    "created_at": "2025-07-29T23:23:07.856580",
+    "updated_at": "2025-07-29T23:24:18.716577",
+    "completed_at": "2025-07-29T23:24:18.716577",
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250729_232307_a3705a": {
+    "id": "task_20250729_232307_a3705a",
+    "title": "2. 새로운 wf 함수 설계 및 구현",
+    "description": "",
+    "status": "in_progress",
+    "priority": 0,
+    "created_at": "2025-07-29T23:23:07.864232",
+    "updated_at": "2025-07-29T23:24:18.785104",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250729_232307_6aed2a": {
+    "id": "task_20250729_232307_6aed2a",
+    "title": "3. 테스트 케이스 작성 및 검증",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-07-29T23:23:07.879189",
+    "updated_at": "2025-07-29T23:23:07.879189",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250729_232307_fa397e": {
+    "id": "task_20250729_232307_fa397e",
+    "title": "4. 문서 및 유저프리퍼런스 업데이트",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-07-29T23:23:07.885191",
+    "updated_at": "2025-07-29T23:23:07.885191",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250729_232307_e4070c": {
+    "id": "task_20250729_232307_e4070c",
+    "title": "5. 배포 및 최종 확인",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-07-29T23:23:07.891871",
+    "updated_at": "2025-07-29T23:23:07.891871",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250729_232315_51babd": {
+    "id": "task_20250729_232315_51babd",
+    "title": "1. 현재 wf 함수 구현 분석 및 백업",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-07-29T23:23:15.902311",
+    "updated_at": "2025-07-29T23:23:15.902311",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  }
+}

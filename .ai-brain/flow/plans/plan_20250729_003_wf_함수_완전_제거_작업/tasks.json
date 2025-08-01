@@ -1,0 +1,67 @@
+{
+  "task_20250729_232957_27fd39": {
+    "id": "task_20250729_232957_27fd39",
+    "title": "wf 함수 사용 현황 분석",
+    "description": "",
+    "status": "done",
+    "priority": 0,
+    "created_at": "2025-07-29T23:29:57.999547",
+    "updated_at": "2025-07-29T23:31:02.217194",
+    "completed_at": "2025-07-29T23:31:02.217194",
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250729_232958_d7b1f6": {
+    "id": "task_20250729_232958_d7b1f6",
+    "title": "simple_flow_commands.py에서 wf 함수 제거",
+    "description": "",
+    "status": "done",
+    "priority": 0,
+    "created_at": "2025-07-29T23:29:58.020156",
+    "updated_at": "2025-07-29T23:31:47.332401",
+    "completed_at": "2025-07-29T23:31:47.332401",
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250729_232958_b0e96e": {
+    "id": "task_20250729_232958_b0e96e",
+    "title": "__init__.py에서 wf export 제거",
+    "description": "",
+    "status": "done",
+    "priority": 0,
+    "created_at": "2025-07-29T23:29:58.026184",
+    "updated_at": "2025-07-29T23:32:12.186025",
+    "completed_at": "2025-07-29T23:32:12.186025",
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250729_232958_345f03": {
+    "id": "task_20250729_232958_345f03",
+    "title": "help_flow 함수 내 wf 참조 제거",
+    "description": "",
+    "status": "done",
+    "priority": 0,
+    "created_at": "2025-07-29T23:29:58.032461",
+    "updated_at": "2025-07-29T23:32:59.426700",
+    "completed_at": "2025-07-29T23:32:59.426700",
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250729_232958_f66130": {
+    "id": "task_20250729_232958_f66130",
+    "title": "테스트 및 검증",
+    "description": "",
+    "status": "done",
+    "priority": 0,
+    "created_at": "2025-07-29T23:29:58.038469",
+    "updated_at": "2025-07-29T23:33:31.056564",
+    "completed_at": "2025-07-29T23:33:31.056564",
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  }
+}

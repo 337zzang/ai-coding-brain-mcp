@@ -164,9 +164,9 @@ class UltraSimpleFlowManager:
             task.status = status
         task.updated_at = datetime.now().isoformat()
 
-        if status == TaskStatus.IN_PROGRESS.value:
+        if task.status == TaskStatus.IN_PROGRESS:
             task.started_at = datetime.now().isoformat()
-        elif status == TaskStatus.DONE.value:
+        elif task.status == TaskStatus.DONE:
             task.completed_at = datetime.now().isoformat()
 
         plan.updated_at = datetime.now().isoformat()
@@ -179,14 +179,14 @@ class UltraSimpleFlowManager:
             task_num = list(plan.tasks.keys()).index(task_id) + 1
             task_logger = EnhancedTaskLogger(plan_id, task_num, task.title)
             
-            if status == TaskStatus.IN_PROGRESS.value:
+            if task.status == TaskStatus.IN_PROGRESS:
                 task_logger.note(f"Task 시작: {task.title}")
-            elif status == TaskStatus.DONE.value:
+            elif task.status == TaskStatus.DONE:
                 task_logger.complete(f"Task 완료: {task.title}")
             else:
                 task_logger.note(f"상태 변경: → {status}")
                 
-            print(f"✅ 상태 변경 기록: Task {task_num} → {status}")
+            print(f"✅ 상태 변경 기록: Task {task_num} → {task.status.value}")
         except Exception as e:
             print(f"⚠️ 상태 변경 로깅 실패: {e}")
 

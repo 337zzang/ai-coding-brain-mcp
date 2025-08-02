@@ -4,6 +4,7 @@ JSON-REPL, IPython 등에서 브라우저를 계속 열어두고 제어 가능
 
 사용법:
     from python.api.web_automation_repl import REPLBrowser
+from .web_automation_errors import with_error_handling
 
     browser = REPLBrowser()
     browser.start()

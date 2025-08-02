@@ -8,6 +8,7 @@ REPLBrowser와 ActionRecorder를 통합하여 REPL 환경에서
 import threading
 from typing import Dict, Any, Optional
 from datetime import datetime
+from .web_automation_errors import with_error_handling
 
 # 로컬 임포트
 from python.api.web_automation_repl import REPLBrowser
@@ -33,7 +34,7 @@ class REPLBrowserWithRecording:
             headless: 헤드리스 모드 여부
             project_name: 프로젝트 이름 (액션 기록용)
         """
-        self.browser = REPLBrowser(headless=headless)
+        self.browser = REPLBrowser()
         self.recorder = ActionRecorder(project_name)
         self._lock = threading.Lock()  # 스레드 안전성
         self.browser_started = False
@@ -48,6 +49,7 @@ class REPLBrowserWithRecording:
         """컨텍스트 매니저 종료"""
         self.stop()
 
+    @with_error_handling('start', check_instance=False)
     def start(self) -> Dict[str, Any]:
         """
         브라우저 시작
@@ -67,6 +69,7 @@ class REPLBrowserWithRecording:
             else:
                 return {'ok': False, 'error': result.get('message', '알 수 없는 오류')}
 
+    @with_error_handling('stop', check_instance=False)
     def stop(self) -> Dict[str, Any]:
         """
         브라우저 종료
@@ -83,6 +86,7 @@ class REPLBrowserWithRecording:
                 return result
             return {'ok': False, 'error': '브라우저가 시작되지 않았습니다'}
 
+    @with_error_handling('goto')
     def goto(self, url: str, wait_until: str = 'load') -> Dict[str, Any]:
         """
         페이지 이동 + 액션 기록
@@ -106,6 +110,7 @@ class REPLBrowserWithRecording:
                                           error=result.get('error'))
             return result
 
+    @with_error_handling('click')
     def click(self, selector: str) -> Dict[str, Any]:
         """
         요소 클릭 + 액션 기록
@@ -126,6 +131,7 @@ class REPLBrowserWithRecording:
                                           error=result.get('error'))
             return result
 
+    @with_error_handling('type')
     def type(self, selector: str, text: str) -> Dict[str, Any]:
         """
         텍스트 입력 + 액션 기록
@@ -151,6 +157,7 @@ class REPLBrowserWithRecording:
             return result
 
 
+    @with_error_handling('extract')
     def extract(self, selector: str, name: Optional[str] = None, 
                 extract_type: str = 'text') -> Dict[str, Any]:
         """
@@ -193,6 +200,7 @@ class REPLBrowserWithRecording:
                                           error=result.get('message', 'Unknown error'))
                 return {'ok': False, 'error': result.get('message', 'Unknown error')}
 
+    @with_error_handling('extract_table')
     def extract_table(self, table_selector: str, name: Optional[str] = None) -> Dict[str, Any]:
         """
         테이블 데이터 추출
@@ -224,8 +232,8 @@ class REPLBrowserWithRecording:
 
             result = self.browser.eval(js_code)
 
-            if result.get('ok') or result.get('status') == 'success':
-                data = result.get('data') or result.get('result')
+            if result.get('ok'):
+                data = result.get('data')
                 if not name:
                     name = f"table_{len(self.extracted_data)}"
 
@@ -255,6 +263,7 @@ class REPLBrowserWithRecording:
         else:
             return f"document.querySelector('{selector}')?.innerText?.trim() || ''"
 
+    @with_error_handling('screenshot')
     def screenshot(self, path: str = None) -> Dict[str, Any]:
         """스크린샷 캡처"""
         with self._lock:
@@ -266,6 +275,7 @@ class REPLBrowserWithRecording:
                 self.recorder.record_action('screenshot', True, path=path)
             return result
 
+    @with_error_handling('wait')
     def wait(self, seconds: float) -> Dict[str, Any]:
         """대기"""
         with self._lock:

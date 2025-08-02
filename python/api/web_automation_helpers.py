@@ -90,7 +90,7 @@ def web_click(selector: str) -> Dict[str, Any]:
     """요소 클릭 (에러 처리 강화)"""
     return safe_execute('web_click', _web_click_impl, selector)
 
-def web_type(selector: str, text: str) -> Dict[str, Any]:
+def _web_type_impl(selector: str, text: str) -> Dict[str, Any]:
     """텍스트 입력"""
     if not _get_web_instance():
         return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
@@ -137,7 +137,7 @@ def web_extract_table(table_selector: str, name: Optional[str] = None) -> Dict[s
     return result
 
 
-def web_wait(seconds: float) -> Dict[str, Any]:
+def _web_wait_impl(seconds: float) -> Dict[str, Any]:
     """대기"""
     if not _get_web_instance():
         return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
@@ -177,7 +177,7 @@ def web_generate_script(output_file: Optional[str] = None) -> Dict[str, Any]:
     return result
 
 
-def web_stop() -> Dict[str, Any]:
+def _web_stop_impl() -> Dict[str, Any]:
     """웹 자동화 종료"""
     global _web_instance
 
@@ -192,7 +192,7 @@ def web_stop() -> Dict[str, Any]:
     return result
 
 
-def web_status() -> Dict[str, Any]:
+def _web_status_impl() -> Dict[str, Any]:
     """현재 상태 조회"""
     if not _get_web_instance():
         return {
@@ -210,7 +210,7 @@ def web_status() -> Dict[str, Any]:
     }
 
 
-def web_get_data() -> Dict[str, Any]:
+def _web_get_data_impl() -> Dict[str, Any]:
     """추출된 모든 데이터 조회"""
     if not _web_instance:
         return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
@@ -253,3 +253,45 @@ def web_demo():
 web_record_start = web_start
 web_record_stop = web_generate_script
 web_record_status = web_status
+
+# Wrapper 함수들 (에러 처리 강화)
+
+def web_type(selector: str, text: str) -> Dict[str, Any]:
+    """텍스트 입력 (에러 처리 강화)"""
+    return safe_execute('web_type', _web_type_impl, selector, text)
+
+
+def web_extract(selector: str, name: str = None, extract_type: str = "text") -> Dict[str, Any]:
+    """데이터 추출 (에러 처리 강화)"""
+    return safe_execute('web_extract', _web_extract_impl, selector, name, extract_type)
+
+
+def web_extract_table(table_selector: str, name: str = None) -> Dict[str, Any]:
+    """테이블 데이터 추출 (에러 처리 강화)"""
+    return safe_execute('web_extract_table', _web_extract_table_impl, table_selector, name)
+
+
+def web_wait(seconds: float) -> Dict[str, Any]:
+    """대기 (에러 처리 강화)"""
+    return safe_execute('web_wait', _web_wait_impl, seconds)
+
+
+def web_screenshot(path: str = None) -> Dict[str, Any]:
+    """스크린샷 캡처 (에러 처리 강화)"""
+    return safe_execute('web_screenshot', _web_screenshot_impl, path)
+
+def web_generate_script(output_file: str = None) -> Dict[str, Any]:
+    """기록된 액션으로 스크립트 생성 (에러 처리 강화)"""
+    return safe_execute('web_generate_script', _web_generate_script_impl, output_file)
+
+def web_stop() -> Dict[str, Any]:
+    """브라우저 종료 (에러 처리 강화)"""
+    return safe_execute('web_stop', _web_stop_impl, check_instance=False)
+
+def web_status() -> Dict[str, Any]:
+    """현재 상태 확인 (에러 처리 강화)"""
+    return safe_execute('web_status', _web_status_impl, check_instance=False)
+
+def web_get_data() -> Dict[str, Any]:
+    """추출된 데이터 가져오기 (에러 처리 강화)"""
+    return safe_execute('web_get_data', _web_get_data_impl)

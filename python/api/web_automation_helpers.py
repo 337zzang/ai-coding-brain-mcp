@@ -77,7 +77,7 @@ def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dic
     global _web_instance
 
     # 기존 인스턴스가 있으면 먼저 종료
-    if _get_web_instance() and _get_web_instance().browser_started:
+    if _get_web_instance() and hasattr(_get_web_instance(), 'browser_started') and _get_web_instance().browser_started:
         _web_instance.stop()
 
     # 새 인스턴스 생성
@@ -87,11 +87,11 @@ def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dic
     result = _web_instance.start()
 
     if result.get('ok'):
-        print(f"✅ 웹 자동화 시작됨 (프로젝트: {project_name})")
+        print(f"[OK] 웹 자동화 시작됨 (프로젝트: {project_name})")
         # 전역 변수에 강제로 설정 (JSON REPL 환경 대응)
         _set_web_instance(_web_instance)
     else:
-        print(f"❌ 시작 실패: {result.get('error')}")
+        print(f"[ERROR] 시작 실패: {result.get('error')}")
 
     return result
 
@@ -189,7 +189,7 @@ def web_extract(selector: str, name: Optional[str] = None,
     return safe_execute('web_extract', _web_extract_impl, selector, name, extract_type, all)
     if result.get('ok'):
         data_preview = str(result.get('data', ''))[:50]
-        print(f"📊 추출: {result.get('name')} = {data_preview}...")
+        print(f"[DATA] 추출: {result.get('name')} = {data_preview}...")
     return result
 
 
@@ -202,7 +202,7 @@ def web_extract_table(table_selector: str, name: Optional[str] = None) -> Dict[s
     if result.get('ok'):
         data = result.get('data', {})
         rows_count = len(data.get('rows', [])) if data else 0
-        print(f"📊 테이블 추출: {result.get('name')} ({rows_count}개 행)")
+        print(f"[DATA] 테이블 추출: {result.get('name')} ({rows_count}개 행)")
     return result
 
 
@@ -272,7 +272,7 @@ def web_screenshot(path: Optional[str] = None) -> Dict[str, Any]:
 
     result = _web_instance.screenshot(path)
     if result.get('ok'):
-        print(f"📸 스크린샷 저장: {path or 'screenshot_*.png'}")
+        print(f"[SCREENSHOT] 스크린샷 저장: {path or 'screenshot_*.png'}")
     return result
 
 
@@ -291,7 +291,7 @@ def web_generate_script(output_file: Optional[str] = None) -> Dict[str, Any]:
 
     result = _web_instance.generate_script(output_file)
     if result.get('ok'):
-        print(f"✅ 스크립트 생성: {result.get('file')}")
+        print(f"[OK] 스크립트 생성: {result.get('file')}")
         print(f"   액션 수: {result.get('actions_count')}")
     return result
 
@@ -365,7 +365,7 @@ def web_demo():
     web_stop()
 
     print("-" * 40)
-    print("✅ 데모 완료!")
+    print("[OK] 데모 완료!")
 
 
 # 기존 함수명과의 호환성을 위한 별칭
@@ -450,7 +450,7 @@ def web_extract_batch(configs: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     if result.get('ok'):
         data = result.get('data', {})
-        print(f"📊 배치 추출 완료: {len(data)}개 항목")
+        print(f"[DATA] 배치 추출 완료: {len(data)}개 항목")
         for name, value in list(data.items())[:3]:  # 처음 3개만 미리보기
             preview = str(value)[:50] + '...' if len(str(value)) > 50 else str(value)
             print(f"   - {name}: {preview}")
@@ -482,7 +482,7 @@ def web_extract_attributes(selector: str, attributes: List[str]) -> Dict[str, An
 
     if result.get('ok'):
         data = result.get('data', {})
-        print(f"📊 속성 추출: {selector} → {len(data)}개 속성")
+        print(f"[DATA] 속성 추출: {selector} → {len(data)}개 속성")
 
     return result
 
@@ -508,7 +508,7 @@ def web_extract_form(form_selector: str) -> Dict[str, Any]:
 
     if result.get('ok'):
         data = result.get('data', {})
-        print(f"📊 폼 추출: {form_selector} → {len(data)}개 필드")
+        print(f"[DATA] 폼 추출: {form_selector} → {len(data)}개 필드")
         for name, value in data.items():
             value_type = type(value).__name__
             print(f"   - {name}: {value_type}")
@@ -532,8 +532,7 @@ def web_evaluate(script: str, arg: Any = None, strict: bool = False) -> Dict[str
     Returns:
         Response 딕셔너리
     """
-    @safe_execute
-    def _evaluate():
+    def impl():
         instance = _get_web_instance()
         if not instance:
             return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
@@ -566,7 +565,12 @@ def web_evaluate(script: str, arg: Any = None, strict: bool = False) -> Dict[str
 
         return result
 
-    return _evaluate()
+    # safe_execute의 올바른 호출
+    return safe_execute(
+        func_name="web_evaluate",
+        impl_func=impl,
+        check_instance=False  # 이미 impl 내부에서 체크함
+    )
 
 
 def web_execute_script(script: str, *args, sandboxed: bool = True) -> Dict[str, Any]:
@@ -581,8 +585,7 @@ def web_execute_script(script: str, *args, sandboxed: bool = True) -> Dict[str, 
     Returns:
         Response 딕셔너리
     """
-    @safe_execute
-    def _execute():
+    def impl():
         instance = _get_web_instance()
         if not instance:
             return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
@@ -637,8 +640,12 @@ def web_execute_script(script: str, *args, sandboxed: bool = True) -> Dict[str, 
                 "error_type": type(e).__name__
             }
 
-    return _execute()
-
+    # safe_execute의 올바른 호출
+    return safe_execute(
+        func_name="web_execute_script",
+        impl_func=impl,
+        check_instance=False
+    )
 
 def web_evaluate_element(selector: str, script: str) -> Dict[str, Any]:
     """
@@ -655,8 +662,7 @@ def web_evaluate_element(selector: str, script: str) -> Dict[str, Any]:
         >>> web_evaluate_element("button.submit", "element.disabled = true")
         >>> web_evaluate_element("#price", "return element.textContent")
     """
-    @safe_execute
-    def _evaluate_element():
+    def impl():
         instance = _get_web_instance()
         if not instance:
             return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
@@ -690,7 +696,11 @@ def web_evaluate_element(selector: str, script: str) -> Dict[str, Any]:
                 "error_type": type(e).__name__
             }
 
-    return _evaluate_element()
+    return safe_execute(
+        func_name="web_evaluate_element",
+        impl_func=impl,
+        check_instance=False
+    )
 
 
 def web_wait_for_function(script: str, timeout: int = 30000, polling: int = 100) -> Dict[str, Any]:
@@ -709,8 +719,7 @@ def web_wait_for_function(script: str, timeout: int = 30000, polling: int = 100)
         >>> web_wait_for_function("document.readyState === 'complete'")
         >>> web_wait_for_function("document.querySelectorAll('.item').length > 10", timeout=10000)
     """
-    @safe_execute
-    def _wait_for_function():
+    def impl():
         instance = _get_web_instance()
         if not instance:
             return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
@@ -762,4 +771,8 @@ def web_wait_for_function(script: str, timeout: int = 30000, polling: int = 100)
                 "script": script
             }
 
-    return _wait_for_function()
+    return safe_execute(
+        func_name="web_wait_for_function",
+        impl_func=impl,
+        check_instance=False
+    )

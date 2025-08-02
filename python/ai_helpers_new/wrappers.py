@@ -24,13 +24,52 @@ def ensure_response(data: Any, error: str = None, **extras) -> Dict[str, Any]:
         {'ok': bool, 'data': Any, 'error': str, ...}
     """
     if error:
-        return {'ok': False, 'error': error}
+        error_info = {'ok': False, 'error': error}
+        # exception 객체가 전달된 경우 타입 정보 추가
+        if 'exception' in extras:
+            exc = extras.pop('exception')
+            error_info['error_type'] = type(exc).__name__
+        error_info.update(extras)
+        return error_info
+        
     if isinstance(data, dict) and 'ok' in data:
-        return data  # 이미 표준 응답
+        # 이미 표준 응답이지만 extras가 있으면 병합
+        if extras:
+            data.update(extras)
+        return data
 
     response = {'ok': True, 'data': data}
     response.update(extras)
     return response
+
+
+def safe_execution(func):
+    """함수 실행을 안전하게 래핑하는 데코레이터
+    
+    모든 예외를 자동으로 {'ok': False, 'error': ...} 형태로 변환합니다.
+    """
+    import functools
+    
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+            # 이미 표준 응답인 경우 그대로 반환
+            if isinstance(result, dict) and 'ok' in result:
+                return result
+            # 아니면 ensure_response로 래핑
+            return ensure_response(result)
+        except Exception as e:
+            return ensure_response(
+                None, 
+                str(e), 
+                exception=e,
+                function=func.__name__,
+                args=args[:3] if len(args) > 3 else args,  # 긴 인자는 처음 3개만
+                kwargs=list(kwargs.keys())  # 키만 기록
+            )
+    return wrapper
+
 
 def scan_directory(path: str = '.', 
                   max_depth: Optional[int] = None,

@@ -4,7 +4,7 @@ AI Helpers Code Module
 """
 import ast
 from pathlib import Path
-from typing import Dict, Any, List, Optional, List
+from typing import Dict, Any, List, Optional
 from .util import ok, err
 
 
@@ -126,6 +126,8 @@ def parse(path: str) -> Dict[str, Any]:
         content = Path(path).read_text(encoding='utf-8')
     except FileNotFoundError:
         return err(f'File not found: {path}')
+    except PermissionError:
+        return err(f'Permission denied: {path}')
     except UnicodeDecodeError as e:
         return err(f'Encoding error: {e}')
     except Exception as e:

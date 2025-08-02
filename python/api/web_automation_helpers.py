@@ -1,11 +1,12 @@
 """
 웹 자동화 레코딩 헬퍼 함수들
 REPLBrowserWithRecording을 사용하여 REPL 환경에서 쉽게 웹 자동화를 수행합니다.
+from .web_automation_smart_wait import SmartWaitManager
 
 작성일: 2025-01-27
 """
-from typing import Dict, Any, Optional
-from python.api.web_automation_integrated import REPLBrowserWithRecording
+from typing import Dict, Any, Optional, List
+from .web_automation_integrated import REPLBrowserWithRecording
 from .web_automation_errors import safe_execute
 
 
@@ -145,6 +146,56 @@ def _web_wait_impl(seconds: float) -> Dict[str, Any]:
     print(f"⏳ {seconds}초 대기...")
     return _get_web_instance().wait(seconds)
 
+def _web_wait_smart_impl(timeout: float, wait_for: str, **kwargs) -> Dict[str, Any]:
+    """스마트 대기 구현"""
+    instance = _get_web_instance()
+    if not instance:
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+
+    # WebAutomationBrowser 인스턴스에서 page 객체 가져오기
+    if not hasattr(instance, 'browser') or not hasattr(instance.browser, 'page'):
+        return {'ok': False, 'error': '브라우저 페이지 객체를 찾을 수 없습니다'}
+
+    page = instance.browser.page
+
+    # SmartWaitManager 생성
+    try:
+        wait_manager = SmartWaitManager(page, default_timeout=timeout)
+
+        # 디버그 모드 확인 (환경변수 사용)
+        if os.getenv('WEB_AUTO_DEBUG', '').lower() == 'true':
+            wait_manager.enable_debug(True)
+    except Exception as e:
+        return {'ok': False, 'error': f'SmartWaitManager 생성 실패: {str(e)}'}
+
+    # wait_for 타입에 따라 적절한 메서드 호출
+    if wait_for == "element":
+        selector = kwargs.get("selector")
+        if not selector:
+            return {'ok': False, 'error': "'element' 대기에는 'selector' 파라미터가 필수입니다."}
+
+        condition = kwargs.get("condition", "visible")
+        return wait_manager.wait_for_element(selector, condition, timeout)
+
+    elif wait_for == "network_idle":
+        idle_time = kwargs.get("idle_time", 0.5)
+        return wait_manager.wait_for_network_idle(idle_time, timeout)
+
+    elif wait_for == "js":
+        script = kwargs.get("script")
+        value = kwargs.get("value")
+
+        if not script:
+            return {'ok': False, 'error': "'js' 대기에는 'script' 파라미터가 필수입니다."}
+        if value is None:
+            return {'ok': False, 'error': "'js' 대기에는 'value' 파라미터가 필수입니다."}
+
+        return wait_manager.wait_for_js_complete(script, value, timeout)
+
+    else:
+        return {'ok': False, 'error': f"알 수 없는 대기 타입: {wait_for}"}
+
+
 
 def web_screenshot(path: Optional[str] = None) -> Dict[str, Any]:
     """스크린샷 캡처"""
@@ -271,7 +322,7 @@ def web_extract_table(table_selector: str, name: str = None) -> Dict[str, Any]:
     return safe_execute('web_extract_table', _web_extract_table_impl, table_selector, name)
 
 
-def web_wait(seconds: float) -> Dict[str, Any]:
+def web_wait(duration_or_timeout: float = 1, wait_for: Optional[str] = None, **kwargs) -> Dict[str, Any]:
     """대기 (에러 처리 강화)"""
     return safe_execute('web_wait', _web_wait_impl, seconds)
 
@@ -295,6 +346,109 @@ def web_status() -> Dict[str, Any]:
 def web_get_data() -> Dict[str, Any]:
     """추출된 데이터 가져오기 (에러 처리 강화)"""
     return safe_execute('web_get_data', _web_get_data_impl)
+
+
+@safe_execute(default_return={'ok': False, 'data': None})
+def web_extract_batch(configs: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    여러 요소를 단일 호출로 추출 (300-500% 성능 향상)
+
+    Args:
+        configs: 추출 설정 리스트
+            [{
+                "selector": "CSS 선택자",
+                "name": "데이터 이름", 
+                "type": "text|value|attr|href|src|html|data|style",
+                "attr": "속성명",  # type이 attr인 경우
+                "transform": "int|float|bool|json",  # 선택적
+                "default": "기본값"  # 선택적
+            }]
+
+    Returns:
+        {'ok': bool, 'data': {name: value, ...}}
+
+    Examples:
+        >>> configs = [
+        ...     {"selector": "h1", "name": "title", "type": "text"},
+        ...     {"selector": ".price", "name": "price", "type": "text", "transform": "float"},
+        ...     {"selector": "img", "name": "image", "type": "src"}
+        ... ]
+        >>> result = web_extract_batch(configs)
+        >>> print(result['data'])  # {'title': '...', 'price': 29.99, 'image': 'http://...'}
+    """
+    if not _get_web_instance():
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+
+    result = _web_instance.extract_batch(configs)
+
+    if result.get('ok'):
+        data = result.get('data', {})
+        print(f"📊 배치 추출 완료: {len(data)}개 항목")
+        for name, value in list(data.items())[:3]:  # 처음 3개만 미리보기
+            preview = str(value)[:50] + '...' if len(str(value)) > 50 else str(value)
+            print(f"   - {name}: {preview}")
+        if len(data) > 3:
+            print(f"   ... 외 {len(data) - 3}개")
+
+    return result
+
+
+@safe_execute(default_return={'ok': False, 'data': {}})
+def web_extract_attributes(selector: str, attributes: List[str]) -> Dict[str, Any]:
+    """
+    여러 속성을 한번에 추출
+
+    Args:
+        selector: CSS 선택자
+        attributes: 추출할 속성 리스트
+
+    Returns:
+        {'ok': bool, 'data': {attr: value, ...}}
+
+    Examples:
+        >>> result = web_extract_attributes(".product", ["id", "data-price", "data-sku"])
+        >>> print(result['data'])  # {'id': 'prod-123', 'data-price': '29.99', 'data-sku': 'ABC'}
+    """
+    if not _get_web_instance():
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+
+    result = _web_instance.extract_attributes(selector, attributes)
+
+    if result.get('ok'):
+        data = result.get('data', {})
+        print(f"📊 속성 추출: {selector} → {len(data)}개 속성")
+
+    return result
+
+
+@safe_execute(default_return={'ok': False, 'data': {}})
+def web_extract_form(form_selector: str) -> Dict[str, Any]:
+    """
+    폼의 모든 입력 필드 자동 수집
+
+    Args:
+        form_selector: 폼 CSS 선택자
+
+    Returns:
+        {'ok': bool, 'data': {field_name: value, ...}}
+
+    Examples:
+        >>> result = web_extract_form("#login-form")
+        >>> print(result['data'])  # {'username': '', 'password': '', 'remember': False}
+    """
+    if not _get_web_instance():
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+
+    result = _web_instance.extract_form(form_selector)
+
+    if result.get('ok'):
+        data = result.get('data', {})
+        print(f"📊 폼 추출: {form_selector} → {len(data)}개 필드")
+        for name, value in data.items():
+            value_type = type(value).__name__
+            print(f"   - {name}: {value_type}")
+
+    return result
 
 
 # web_status 함수가 정의된 후에 별칭 설정

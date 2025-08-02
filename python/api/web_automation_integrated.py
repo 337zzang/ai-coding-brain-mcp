@@ -248,6 +248,43 @@ class REPLBrowserWithRecording:
             else:
                 return result
 
+
+    def extract_batch(self, configs: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """배치 추출 - AdvancedExtractionManager 사용"""
+        with self._lock:
+            result = self.extraction_manager.extract_batch(configs)
+
+            # 액션 기록
+            self.recorder.record_action('extract_batch', result.get('ok', False),
+                                      configs_count=len(configs),
+                                      results_count=len(result.get('data', {})))
+
+            return result
+
+    def extract_attributes(self, selector: str, attributes: List[str]) -> Dict[str, Any]:
+        """속성 추출 - AdvancedExtractionManager 사용"""
+        with self._lock:
+            result = self.extraction_manager.extract_attributes(selector, attributes)
+
+            # 액션 기록
+            self.recorder.record_action('extract_attributes', result.get('ok', False),
+                                      selector=selector,
+                                      attributes_count=len(attributes))
+
+            return result
+
+    def extract_form(self, form_selector: str) -> Dict[str, Any]:
+        """폼 추출 - AdvancedExtractionManager 사용"""
+        with self._lock:
+            result = self.extraction_manager.extract_form(form_selector)
+
+            # 액션 기록
+            self.recorder.record_action('extract_form', result.get('ok', False),
+                                      selector=form_selector,
+                                      fields_count=len(result.get('data', {})))
+
+            return result
+
     def _generate_extract_js(self, selector: str, extract_type: str) -> str:
         """JavaScript 코드 생성 헬퍼"""
         if extract_type == 'text':
@@ -276,13 +313,64 @@ class REPLBrowserWithRecording:
             return result
 
     @with_error_handling('wait')
-    def wait(self, seconds: float) -> Dict[str, Any]:
-        """대기"""
+    def wait(self, duration_or_timeout: float = 1, wait_for: str = None, **kwargs) -> Dict[str, Any]:
+        """
+        단순 시간 대기 또는 지능형 스마트 대기를 수행합니다.
+
+        Args:
+            duration_or_timeout: 대기 시간(초) 또는 스마트 대기의 타임아웃
+            wait_for: 스마트 대기 타입 ("element", "network_idle", "js")
+            **kwargs: 스마트 대기 옵션
+        """
         with self._lock:
-            result = self.browser.wait(seconds)
-            if result.get('ok'):
-                self.recorder.record_action('wait', True, seconds=seconds)
-            return result
+            # 하위 호환성: wait_for가 없으면 기존 방식
+            if wait_for is None:
+                result = self.browser.wait(duration_or_timeout)
+                if result.get('ok'):
+                    self.recorder.record_action('wait', True, seconds=duration_or_timeout)
+                return result
+
+            # 스마트 대기 사용
+            try:
+                # SmartWaitManager 생성
+                wait_manager = SmartWaitManager(self.browser.page, default_timeout=duration_or_timeout)
+
+                # 디버그 모드 확인
+                if hasattr(self, 'debug') and self.debug:
+                    wait_manager.enable_debug(True)
+
+                # wait_for 타입에 따라 처리
+                if wait_for == "element":
+                    selector = kwargs.get("selector", "")
+                    condition = kwargs.get("condition", "visible")
+                    result = wait_manager.wait_for_element(selector, condition, duration_or_timeout)
+
+                elif wait_for == "network_idle":
+                    idle_time = kwargs.get("idle_time", 0.5)
+                    result = wait_manager.wait_for_network_idle(idle_time, duration_or_timeout)
+
+                elif wait_for == "js":
+                    script = kwargs.get("script", "")
+                    value = kwargs.get("value")
+                    result = wait_manager.wait_for_js_complete(script, value, duration_or_timeout)
+
+                else:
+                    result = {"ok": False, "error": f"알 수 없는 대기 타입: {wait_for}"}
+
+                # 레코더에 기록
+                if result.get('ok'):
+                    wait_info = {
+                        "wait_for": wait_for,
+                        "timeout": duration_or_timeout,
+                        "wait_time": result.get("data", {}).get("wait_time", 0)
+                    }
+                    wait_info.update(kwargs)
+                    self.recorder.record_action('wait_smart', True, **wait_info)
+
+                return result
+
+            except Exception as e:
+                return {"ok": False, "error": f"스마트 대기 실행 중 오류: {str(e)}"}
 
     def eval(self, script: str) -> Dict[str, Any]:
         """JavaScript 실행"""

@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Automation Test Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .product { border: 1px solid #ddd; padding: 10px; margin: 10px 0; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    </style>
+</head>
+<body>
+    <h1>Web Automation Test Page</h1>
+
+    <!-- 배치 추출 테스트용 -->
+    <div class="products">
+        <div class="product" data-id="1" data-price="19.99">
+            <h3>Product 1</h3>
+            <p class="description">This is product 1</p>
+            <span class="price">$19.99</span>
+        </div>
+        <div class="product" data-id="2" data-price="29.99">
+            <h3>Product 2</h3>
+            <p class="description">This is product 2</p>
+            <span class="price">$29.99</span>
+        </div>
+        <div class="product" data-id="3" data-price="39.99">
+            <h3>Product 3</h3>
+            <p class="description">This is product 3</p>
+            <span class="price">$39.99</span>
+        </div>
+    </div>
+
+    <!-- 테이블 테스트용 -->
+    <table id="data-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>John Doe</td>
+                <td>30</td>
+                <td>john@example.com</td>
+            </tr>
+            <tr>
+                <td>Jane Smith</td>
+                <td>25</td>
+                <td>jane@example.com</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 폼 테스트용 -->
+    <form id="test-form">
+        <input type="text" name="username" value="testuser" />
+        <input type="email" name="email" value="test@example.com" />
+        <input type="checkbox" name="subscribe" checked />
+        <select name="country">
+            <option value="us">United States</option>
+            <option value="kr" selected>Korea</option>
+            <option value="jp">Japan</option>
+        </select>
+        <textarea name="comments">Test comments</textarea>
+    </form>
+</body>
+</html>

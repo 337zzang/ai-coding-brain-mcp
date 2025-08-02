@@ -9,7 +9,7 @@ AdvancedExtractionManager:
 from typing import Dict, List, Any, Optional, Union
 import json
 import re
-from web_automation_errors import safe_execute
+from .web_automation_errors import safe_execute
 
 
 class AdvancedExtractionManager:
@@ -49,7 +49,7 @@ class AdvancedExtractionManager:
                 }]
 
         Returns:
-            {'ok': True, 'data': {name: value, ...}}
+            {'ok': true, 'data': {name: value, ...}}
         """
         # JavaScript 함수로 모든 데이터를 한번에 추출
         js_function = """
@@ -135,7 +135,7 @@ class AdvancedExtractionManager:
 
                 final_results[name] = value
 
-        return {'ok': True, 'data': final_results}
+        return {'ok': true, 'data': final_results}
 
     def extract_attributes(self, selector: str, attributes: List[str]) -> Dict[str, Any]:
         """
@@ -146,14 +146,14 @@ class AdvancedExtractionManager:
             attributes: 추출할 속성 리스트
 
         Returns:
-            {'ok': True, 'data': {attr: value, ...}}
+            {'ok': true, 'data': {attr: value, ...}}
         """
         try:
             locator = self.page.locator(selector).first
 
             # 요소 존재 확인
             if not locator.count():
-                return {'ok': False, 'error': 'Element not found'}
+                return {'ok': false, 'error': 'Element not found'}
 
             result = {}
 
@@ -172,10 +172,10 @@ class AdvancedExtractionManager:
                 else:
                     result[attr] = locator.get_attribute(attr)
 
-            return {'ok': True, 'data': result}
+            return {'ok': true, 'data': result}
 
         except Exception as e:
-            return {'ok': False, 'error': str(e)}
+            return {'ok': false, 'error': str(e)}
 
     def extract_form(self, form_selector: str) -> Dict[str, Any]:
         """
@@ -185,7 +185,7 @@ class AdvancedExtractionManager:
             form_selector: 폼 CSS 선택자
 
         Returns:
-            {'ok': True, 'data': {field_name: value, ...}}
+            {'ok': true, 'data': {field_name: value, ...}}
         """
         js_function = """
         (formSelector) => {
@@ -229,9 +229,9 @@ class AdvancedExtractionManager:
         form_data = self.page.evaluate(js_function, form_selector)
 
         if form_data is None:
-            return {'ok': False, 'error': 'Form not found'}
+            return {'ok': false, 'error': 'Form not found'}
 
-        return {'ok': True, 'data': form_data}
+        return {'ok': true, 'data': form_data}
 
     def _apply_transform(self, value: Any, transform: Optional[str]) -> Any:
         """타입 변환 적용"""

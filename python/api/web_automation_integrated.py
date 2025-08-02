@@ -8,8 +8,8 @@ REPLBrowser와 ActionRecorder를 통합하여 REPL 환경에서
 import threading
 from typing import Dict, Any, Optional, List
 from datetime import datetime
-from web_automation_errors import with_error_handling
-from web_automation_extraction import AdvancedExtractionManager
+from .web_automation_errors import with_error_handling
+from .web_automation_extraction import AdvancedExtractionManager
 
 # 로컬 임포트
 from python.api.web_automation_repl import REPLBrowser
@@ -363,6 +363,15 @@ class REPLBrowserWithRecording:
     def extract_form(self, form_selector: str) -> Dict[str, Any]:
         """폼 추출 - AdvancedExtractionManager 사용"""
         with self._lock:
+            # extraction_manager가 None인 경우 처리
+            if self.extraction_manager is None:
+                if hasattr(self, 'browser') and hasattr(self.browser, 'page'):
+                    # 동적으로 초기화
+                    from .web_automation_extraction import AdvancedExtractionManager
+                    self.extraction_manager = AdvancedExtractionManager(self.browser.page)
+                else:
+                    return {'ok': False, 'error': 'Browser not initialized'}
+
             result = self.extraction_manager.extract_form(form_selector)
 
             # 액션 기록
@@ -371,7 +380,6 @@ class REPLBrowserWithRecording:
                                       fields_count=len(result.get('data', {})))
 
             return result
-
     def _generate_extract_js(self, selector: str, extract_type: str) -> str:
         """JavaScript 코드 생성 헬퍼"""
         if extract_type == 'text':

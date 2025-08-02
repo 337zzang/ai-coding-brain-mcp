@@ -1,0 +1,67 @@
+{
+  "task_20250802_214352_1d5757": {
+    "id": "task_20250802_214352_1d5757",
+    "title": "1. BrowserManager 싱글톤 구현 및 전역 상태 관리 개선",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-02T21:43:52.776998",
+    "updated_at": "2025-08-02T21:43:52.776998",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250802_214352_19a0f2": {
+    "id": "task_20250802_214352_19a0f2",
+    "title": "2. 스레드 안전성 강화 - Playwright 작업 통합",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-02T21:43:52.797308",
+    "updated_at": "2025-08-02T21:43:52.797308",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250802_214352_9d44d1": {
+    "id": "task_20250802_214352_9d44d1",
+    "title": "3. 에러 처리 독립성 확보 및 순환 참조 제거",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-02T21:43:52.808491",
+    "updated_at": "2025-08-02T21:43:52.808491",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250802_214352_4464c5": {
+    "id": "task_20250802_214352_4464c5",
+    "title": "4. 안전한 JavaScript 실행 메커니즘 구현",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-02T21:43:52.819077",
+    "updated_at": "2025-08-02T21:43:52.819077",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250802_214352_6bf798": {
+    "id": "task_20250802_214352_6bf798",
+    "title": "5. 기본 테스트 스위트 구축 및 안정성 검증",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-02T21:43:52.829631",
+    "updated_at": "2025-08-02T21:43:52.829631",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  }
+}

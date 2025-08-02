@@ -1,29 +1,62 @@
 """
 웹 자동화 레코딩 헬퍼 함수들
 REPLBrowserWithRecording을 사용하여 REPL 환경에서 쉽게 웹 자동화를 수행합니다.
-from web_automation_smart_wait import SmartWaitManager
+from .web_automation_smart_wait import SmartWaitManager
 
 작성일: 2025-01-27
 """
 from typing import Dict, Any, Optional, List
-from web_automation_integrated import REPLBrowserWithRecording
-from web_automation_errors import safe_execute
+from .web_automation_integrated import REPLBrowserWithRecording
+from .web_automation_errors import safe_execute
+from .web_automation_manager import browser_manager
 
 
-# 전역 인스턴스 저장
+
+# 전역 인스턴스 저장 - 다중 전략
 _web_instance: Optional[REPLBrowserWithRecording] = None
+_WEB_INSTANCES = {}  # 딕셔너리 방식 추가
 
 def _get_web_instance():
-    """전역 _web_instance를 안전하게 가져오기"""
-    # globals()에서 직접 가져오기 (JSON REPL 환경 대응)
-    return globals().get('_web_instance', None)
+    """전역 _web_instance를 안전하게 가져오기 - BrowserManager 사용"""
+    # BrowserManager를 통한 중앙 관리
+    instance = browser_manager.get_instance("default")
 
+    # 하위 호환성을 위한 폴백 (임시)
+    if instance is None:
+        # 기존 방식 시도 (deprecated)
+        import sys
+        import warnings
+
+        warnings.warn(
+            "Direct globals() access is deprecated. Use BrowserManager instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
+        # 기존 코드 유지 (점진적 마이그레이션)
+        if '_web_instance' in globals() and globals()['_web_instance'] is not None:
+            return globals()['_web_instance']
+
+        main_module = sys.modules.get('__main__')
+        if main_module and hasattr(main_module, '_web_instance'):
+            return getattr(main_module, '_web_instance')
+
+    return instance
 def _set_web_instance(instance):
-    """전역 _web_instance를 안전하게 설정"""
+    """전역 _web_instance를 안전하게 설정 - BrowserManager 사용"""
+    # BrowserManager를 통한 중앙 관리
+    if instance is not None:
+        browser_manager.set_instance(instance, "default")
+    else:
+        browser_manager.remove_instance("default")
+
+    # 하위 호환성을 위한 기존 방식도 유지 (임시)
+    import sys
     globals()['_web_instance'] = instance
 
-
-
+    main_module = sys.modules.get('__main__')
+    if main_module:
+        setattr(main_module, '_web_instance', instance)
 def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dict[str, Any]:
     """
     웹 자동화 레코딩 시작
@@ -102,8 +135,43 @@ def _web_type_impl(selector: str, text: str) -> Dict[str, Any]:
     return result
 
 
+
+def _web_extract_impl(selector: str, name: Optional[str] = None, 
+                      extract_type: str = 'text', all: bool = False) -> Dict[str, Any]:
+    """web_extract의 실제 구현"""
+    instance = _get_web_instance()
+    if not instance:
+        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+
+    # all 파라미터 처리
+    if all:
+        # 여러 요소 추출
+        try:
+            elements = instance.browser.page.query_selector_all(selector)
+            results = []
+            for elem in elements:
+                if extract_type == 'text':
+                    value = elem.text_content()
+                elif extract_type == 'value':
+                    value = elem.get_attribute('value')
+                elif extract_type == 'href':
+                    value = elem.get_attribute('href')
+                elif extract_type == 'src':
+                    value = elem.get_attribute('src')
+                elif extract_type == 'html':
+                    value = elem.inner_html()
+                else:
+                    value = elem.get_attribute(extract_type)
+                results.append(value)
+            return {'ok': True, 'data': results, 'name': name or selector}
+        except Exception as e:
+            return {'ok': False, 'error': str(e)}
+    else:
+        # 단일 요소 추출 (기존 방식)
+        return instance.extract(selector, name, extract_type)
+
 def web_extract(selector: str, name: Optional[str] = None, 
-                extract_type: str = 'text') -> Dict[str, Any]:
+                extract_type: str = 'text', all: bool = False) -> Dict[str, Any]:
     """
     데이터 추출
 
@@ -118,7 +186,7 @@ def web_extract(selector: str, name: Optional[str] = None,
     if not _get_web_instance():
         return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
 
-    result = _web_instance.extract(selector, name, extract_type)
+    return safe_execute('web_extract', _web_extract_impl, selector, name, extract_type, all)
     if result.get('ok'):
         data_preview = str(result.get('data', ''))[:50]
         print(f"📊 추출: {result.get('name')} = {data_preview}...")
@@ -314,7 +382,7 @@ def web_type(selector: str, text: str) -> Dict[str, Any]:
 
 def web_extract(selector: str, name: str = None, extract_type: str = "text") -> Dict[str, Any]:
     """데이터 추출 (에러 처리 강화)"""
-    return safe_execute('web_extract', _web_extract_impl, selector, name, extract_type)
+    return safe_execute('web_extract', _web_extract_impl, selector, name, extract_type, all)
 
 
 def web_extract_table(table_selector: str, name: str = None) -> Dict[str, Any]:

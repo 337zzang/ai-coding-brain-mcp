@@ -8,6 +8,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 from pathlib import Path
 from .util import ok, err
+from .wrappers import safe_execution
 from .core.fs import scan_directory as core_scan_directory, ScanOptions
 
 # Workflow manager import (optional)
@@ -35,6 +36,7 @@ def _read_if_exists(path: str, max_lines: int = 80) -> Optional[str]:
     except IOError:
         return None
 
+@safe_execution
 def get_current_project() -> dict:
     """현재 프로젝트 정보 가져오기"""
     global _current_project_cache
@@ -67,6 +69,7 @@ def get_current_project() -> dict:
     except Exception as e:
         return err(str(e))
 
+@safe_execution
 def flow_project_with_workflow(
     project: str,
     *,
@@ -189,6 +192,7 @@ def flow_project_with_workflow(
     )
 
 # 나머지 함수들은 그대로 유지
+@safe_execution
 def scan_directory(path: str = ".", output: str = "list", max_depth: int = None, exclude_patterns: List[str] = None) -> Any:
     """디렉토리 스캔 (core 모듈 사용)"""
     try:
@@ -204,6 +208,7 @@ def scan_directory(path: str = ".", output: str = "list", max_depth: int = None,
         return {}
 
 
+@safe_execution
 def scan_directory_dict(path: str = ".", max_depth: int = 5, 
                        ignore_patterns: Optional[List[str]] = None) -> Dict[str, Any]:
     """디렉토리 구조를 딕셔너리로 스캔"""

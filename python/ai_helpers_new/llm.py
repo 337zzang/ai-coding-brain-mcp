@@ -8,6 +8,7 @@ import threading
 from datetime import datetime
 from typing import Dict, Any, Optional, Union, List
 from .util import ok, err
+from .wrappers import safe_execution
 
 
 # 전역 o3 작업 저장소
@@ -115,6 +116,7 @@ def _run_o3_task(task_id: str, question: str, context: Optional[str] = None,
             _tasks[task_id]['end_time'] = datetime.now()
 
 
+@safe_execution
 def ask_o3_async(question: str, context: Optional[str] = None, 
                  reasoning_effort: Union[str, None] = "high", 
                  _api_key: Optional[str] = None) -> Dict[str, Any]:
@@ -166,6 +168,7 @@ def ask_o3_async(question: str, context: Optional[str] = None,
 
     print(f"🚀 작업 {task_id} 시작됨")
     return ok(task_id)
+@safe_execution
 def check_o3_status(task_id: str) -> Dict[str, Any]:
     """작업 상태 확인
 
@@ -204,6 +207,7 @@ def check_o3_status(task_id: str) -> Dict[str, Any]:
         })
 
 
+@safe_execution
 def get_o3_result(task_id: str) -> dict:
     """o3 작업 결과 가져오기
 
@@ -229,6 +233,7 @@ def get_o3_result(task_id: str) -> dict:
 
     return ok(result)
 
+@safe_execution
 def save_o3_result(task_id: str) -> dict:
     """o3 작업 결과를 파일로 저장
 
@@ -308,6 +313,7 @@ def save_o3_result(task_id: str) -> dict:
     except Exception as e:
         return err(f"Failed to save result: {str(e)}")
 
+@safe_execution
 def list_o3_tasks(status_filter: Optional[str] = None) -> Dict[str, Any]:
     """모든 o3 작업 목록
 
@@ -337,6 +343,7 @@ def list_o3_tasks(status_filter: Optional[str] = None) -> Dict[str, Any]:
         return ok(tasks, count=len(tasks))
 
 
+@safe_execution
 def show_o3_progress() -> Dict[str, Any]:
     """모든 작업의 진행 상황을 보기 좋게 표시"""
     tasks = list_o3_tasks()['data']
@@ -373,6 +380,7 @@ def show_o3_progress() -> Dict[str, Any]:
     return ok(f"Total {len(tasks)} tasks")
 
 
+@safe_execution
 def clear_completed_tasks() -> Dict[str, Any]:
     """완료되거나 에러난 작업들 정리"""
     with _task_lock:
@@ -388,6 +396,7 @@ def clear_completed_tasks() -> Dict[str, Any]:
         return ok(f"Cleared {len(to_remove)} tasks")
 
 
+@safe_execution
 def prepare_o3_context(topic: str, files: Optional[List[str]] = None) -> Dict[str, Any]:
     """o3를 위한 구조화된 컨텍스트 준비
 
@@ -450,6 +459,7 @@ def prepare_o3_context(topic: str, files: Optional[List[str]] = None) -> Dict[st
     }
 
 
+@safe_execution
 def ask_o3_practical(question: str, file_content: str = "", error_info: str = "", 
                     max_lines: int = 10, reasoning_effort: str = "medium") -> Dict[str, Any]:
     """

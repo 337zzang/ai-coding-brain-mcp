@@ -6,13 +6,14 @@ REPLBrowser와 ActionRecorder를 통합하여 REPL 환경에서
 작성일: 2025-01-27
 """
 import threading
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 from .web_automation_errors import with_error_handling
 
 # 로컬 임포트
 from python.api.web_automation_repl import REPLBrowser
 from python.api.web_automation_recorder import ActionRecorder
+from python.api.web_automation_extraction import AdvancedExtractionManager
 
 
 class REPLBrowserWithRecording:
@@ -63,6 +64,9 @@ class REPLBrowserWithRecording:
             # REPLBrowser 반환값 형식을 통합 형식으로 변환
             if result.get('status') == 'started':
                 self.browser_started = True
+                # AdvancedExtractionManager 초기화
+                if hasattr(self.browser, 'page') and self.browser.page:
+                    self.extraction_manager = AdvancedExtractionManager(self.browser.page)
                 self.recorder.record_action('browser_start', True, 
                                           timestamp=datetime.now().isoformat())
                 return {'ok': True, 'message': result.get('message', '브라우저 시작 완료')}

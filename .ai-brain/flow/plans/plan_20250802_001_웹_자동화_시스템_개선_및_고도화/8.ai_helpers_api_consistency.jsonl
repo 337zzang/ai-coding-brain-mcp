@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-02T20:10:58.435657", "event_type": "TASK_INFO", "ts": "2025-08-02T20:10:58.435657", "type": "TASK_INFO", "title": "AI Helpers API 일관성 개선", "priority": "high", "estimate": "3-4h", "description": ""}
+{"timestamp": "2025-08-02T20:10:58.435657", "event_type": "NOTE", "ts": "2025-08-02T20:10:58.435657", "type": "NOTE", "content": "📌 의존성: O3-Claude 통합 분석 완료"}

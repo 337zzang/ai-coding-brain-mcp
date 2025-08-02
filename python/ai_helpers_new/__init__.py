@@ -47,7 +47,7 @@ __all__ = [
     "EnhancedTaskLogger",
     "TaskLogger",  # EnhancedTaskLogger의 alias
     "create_task_logger",
-    "display_plan_tasks"
+    "display_plan_tasks",
     "Response",
     "ScanOptions",
     'ask_o3_practical',
@@ -59,24 +59,28 @@ __all__ = [
 # TaskLogger alias for backward compatibility
 TaskLogger = EnhancedTaskLogger
 
+# Web Automation Helpers
 try:
     from api.web_automation_helpers import (
         web_start, web_stop, web_status,
         web_goto, web_click, web_type,
         web_extract, web_extract_table, web_wait,
         web_screenshot, web_generate_script, web_get_data,
+        web_extract_batch, web_extract_attributes, web_extract_form,
         # 레코딩 함수
-        web_record_start, web_record_stop, web_record_status
+        web_record_start, web_record_stop, web_record_status,
+        web_demo
     )
+    
+    # __all__에 web 함수들 추가
+    __all__.extend([
+        'web_start', 'web_stop', 'web_status',
+        'web_goto', 'web_click', 'web_type',
+        'web_extract', 'web_extract_table', 'web_wait',
+        'web_screenshot', 'web_generate_script', 'web_get_data',
+        'web_extract_batch', 'web_extract_attributes', 'web_extract_form',
+        'web_record_start', 'web_record_stop', 'web_record_status',
+        'web_demo'
+    ])
 except ImportError as e:
     print(f"Warning: Web automation helpers not available: {e}")
-
-# Web Automation Helpers - 추가됨
-from api.web_automation_helpers import (
-    web_start, web_stop, web_status,
-    web_goto, web_click, web_type,
-    web_extract, web_extract_table, web_wait,
-    web_screenshot, web_generate_script, web_get_data,
-    web_demo
-)
-

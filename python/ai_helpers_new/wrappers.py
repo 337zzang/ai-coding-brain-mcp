@@ -4,10 +4,7 @@ AI Helpers 표준화 래퍼
 기존 함수를 수정하지 않고 표준 API 패턴 제공
 """
 from typing import Dict, Any, List, Optional
-# 순환 참조 방지를 위해 직접 import
-from .project import get_current_project as _get_current_project
 from .core.fs import scan_directory as core_scan_directory, ScanOptions
-from .project import scan_directory_dict as _scan_directory_dict
 
 # 표준 패턴: {ok: bool, data: Any, error?: str}
 
@@ -96,6 +93,8 @@ def scan_directory(path: str = '.',
                 return ensure_response(None, error=result.get("error", "Unknown error"), path=path)
 
         elif output == 'dict':
+            # 동적 import로 순환 참조 방지
+            from .project import scan_directory_dict as _scan_directory_dict
             # 기존 scan_directory_dict 활용
             data = _scan_directory_dict(path, max_depth or 5)
             return ensure_response(data, path=path)
@@ -125,6 +124,8 @@ def get_current_project() -> Dict[str, Any]:
         {'ok': bool, 'data': dict} - 프로젝트 정보 또는 에러
     """
     try:
+        # 동적 import로 순환 참조 방지
+        from .project import get_current_project as _get_current_project
         project = _get_current_project()
         if not project:
             return ensure_response(None, error='No project selected')

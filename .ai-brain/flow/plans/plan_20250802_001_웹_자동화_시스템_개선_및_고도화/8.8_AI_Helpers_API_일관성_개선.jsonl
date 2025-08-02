@@ -1,0 +1,3 @@
+{"timestamp": "2025-08-02T20:10:30.890385", "event_type": "TASK_INFO", "ts": "2025-08-02T20:10:30.890385", "type": "TASK_INFO", "title": "8. AI Helpers API 일관성 개선", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-02T20:10:30.891162", "event_type": "DESIGN", "ts": "2025-08-02T20:10:30.891162", "type": "DESIGN", "content": "Task가 생성되었습니다."}
+{"timestamp": "2025-08-02T20:10:47.719493", "event_type": "NOTE", "ts": "2025-08-02T20:10:47.719493", "type": "NOTE", "content": "Task 시작: 8. AI Helpers API 일관성 개선"}

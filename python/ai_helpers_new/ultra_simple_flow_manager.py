@@ -13,6 +13,7 @@ from .repository import UltraSimpleRepository, EnhancedUltraSimpleRepository
 from .domain.models import Plan, Task, TaskStatus
 from .decorators import auto_record
 from .service.lru_cache import LRUCache
+from .task_logger import EnhancedTaskLogger
 
 
 class UltraSimpleFlowManager:
@@ -134,6 +135,17 @@ class UltraSimpleFlowManager:
 
         self._repo.save_plan(plan)
         self._plan_cache.invalidate(plan_id)
+
+
+        # TaskLogger 자동 생성
+        try:
+            task_number = len(plan.tasks)
+            logger = EnhancedTaskLogger(plan_id, task_number, name)
+            logger.task_info(title=name, task_id=task_id)
+            logger.design("Task가 생성되었습니다.")
+            print(f"✅ TaskLogger 자동 생성: {task_number}.{name}")
+        except Exception as e:
+            print(f"⚠️ TaskLogger 자동 생성 실패: {e}")
 
         return task
 

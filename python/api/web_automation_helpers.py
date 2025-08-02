@@ -78,7 +78,7 @@ def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dic
 
     # 기존 인스턴스가 있으면 먼저 종료
     if _get_web_instance() and hasattr(_get_web_instance(), 'browser_started') and _get_web_instance().browser_started:
-        _web_instance.stop()
+        _web_instance.stop() if _web_instance else None
 
     # 새 인스턴스 생성
     _web_instance = REPLBrowserWithRecording(headless=headless, project_name=project_name)
@@ -520,6 +520,59 @@ def web_extract_form(form_selector: str) -> Dict[str, Any]:
 web_record_status = web_status
 
 
+def _web_evaluate_impl(script: str, arg: Any = None, strict: bool = False) -> Dict[str, Any]:
+    """web_evaluate 실제 구현"""
+    instance = _get_web_instance()
+    if not instance:
+        return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
+
+    # JavaScriptExecutor 인스턴스 가져오기
+    from .web_automation_manager import JavaScriptExecutor
+    js_executor = JavaScriptExecutor()
+
+    # strict 모드 설정
+    if strict:
+        is_safe, error_msg = js_executor.validate_script_extended(script, strict_mode=True)
+        if not is_safe:
+            return {"ok": False, "error": error_msg}
+
+    try:
+        # REPLBrowserWithRecording의 eval 메서드 사용
+        if arg is not None:
+            # 인자가 있는 경우 스크립트 수정
+            modified_script = f"((arg) => {{ {script} }})({repr(arg)})"
+            result = instance.eval(modified_script)
+        else:
+            result = instance.eval(script)
+
+        # 결과 처리
+        if isinstance(result, dict) and result.get('status') == 'success':
+            # 액션 기록
+            instance.recorder.record_action("evaluate", {
+                "script": script[:100] + "..." if len(script) > 100 else script,
+                "arg": str(arg) if arg else None
+            })
+
+            return {
+                "ok": True,
+                "data": result.get('result'),
+                "script_length": len(script)
+            }
+        else:
+            return {
+                "ok": False,
+                "error": result.get('error', 'Unknown error'),
+                "result": result
+            }
+
+    except Exception as e:
+        return {
+            "ok": False,
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
+
+
 def web_evaluate(script: str, arg: Any = None, strict: bool = False) -> Dict[str, Any]:
     """
     현재 페이지에서 JavaScript 코드를 실행하고 결과를 반환
@@ -532,47 +585,7 @@ def web_evaluate(script: str, arg: Any = None, strict: bool = False) -> Dict[str
     Returns:
         Response 딕셔너리
     """
-    def impl():
-        instance = _get_web_instance()
-        if not instance:
-            return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
-
-        # JavaScriptExecutor 인스턴스 가져오기
-        from .web_automation_manager import JavaScriptExecutor
-        js_executor = JavaScriptExecutor()
-
-        # strict 모드 설정
-        if strict:
-            is_safe, error_msg = js_executor.validate_script_extended(script, strict_mode=True)
-            if not is_safe:
-                return {"ok": False, "error": error_msg}
-
-        # 페이지 객체 가져오기
-        page = instance.browser.page
-        if not page:
-            return {"ok": False, "error": "페이지가 로드되지 않았습니다."}
-
-        # JavaScript 실행
-        result = js_executor.execute(page, script, arg)
-
-        # 액션 기록
-        if result.get("ok"):
-            instance.recorder.record_action("evaluate", {
-                "script": script[:100] + "..." if len(script) > 100 else script,
-                "arg": str(arg) if arg else None,
-                "result_type": type(result.get("data")).__name__
-            })
-
-        return result
-
-    # safe_execute의 올바른 호출
-    return safe_execute(
-        func_name="web_evaluate",
-        impl_func=impl,
-        check_instance=False  # 이미 impl 내부에서 체크함
-    )
-
-
+    return safe_execute('web_evaluate', _web_evaluate_impl, script, arg, strict)
 def web_execute_script(script: str, *args, sandboxed: bool = True) -> Dict[str, Any]:
     """
     JavaScript 코드를 샌드박스 환경에서 실행

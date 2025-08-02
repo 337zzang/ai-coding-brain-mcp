@@ -20,7 +20,13 @@ from .core import *
 from .file import *
 from .code import *
 from .search import *
-from .git import *
+from .git import (
+    git_status, git_add, git_commit, git_push,
+    git_pull, git_branch, git_current_branch, git_log,
+    git_diff, git_checkout, git_checkout_b, git_stash,
+    git_stash_pop, git_stash_list, git_reset_hard, git_merge,
+    git_branch_d, git_rebase
+)
 from .llm import *
 from .util import *
 from .project import *

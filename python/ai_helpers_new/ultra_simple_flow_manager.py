@@ -173,6 +173,23 @@ class UltraSimpleFlowManager:
         self._repo.save_plan(plan)
         self._plan_cache.invalidate(plan_id)
 
+
+        # TaskLogger에 상태 변경 기록
+        try:
+            task_num = list(plan.tasks.keys()).index(task_id) + 1
+            task_logger = EnhancedTaskLogger(plan_id, task_num, task.title)
+            
+            if status == TaskStatus.IN_PROGRESS.value:
+                task_logger.note(f"Task 시작: {task.title}")
+            elif status == TaskStatus.DONE.value:
+                task_logger.complete(f"Task 완료: {task.title}")
+            else:
+                task_logger.note(f"상태 변경: → {status}")
+                
+            print(f"✅ 상태 변경 기록: Task {task_num} → {status}")
+        except Exception as e:
+            print(f"⚠️ 상태 변경 로깅 실패: {e}")
+
         return True
 
     # --- 통계 ---

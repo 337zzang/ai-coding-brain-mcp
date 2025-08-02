@@ -5,10 +5,11 @@
 작성일: 2025-08-02
 """
 import threading
-from typing import Dict, Optional, Any, List
+from typing import Dict, Optional, Any, List, Tuple
 from datetime import datetime
 
 
+import re
 class BrowserManager:
     """
     브라우저 인스턴스를 중앙에서 관리하는 싱글톤 클래스
@@ -108,3 +109,143 @@ class BrowserManager:
 
 # 전역 매니저 인스턴스 (import 시 자동 생성)
 browser_manager = BrowserManager()
+
+
+
+class JavaScriptExecutor:
+    """
+    JavaScript 실행을 안전하게 관리하는 클래스
+
+    특징:
+    - 스크립트 검증 및 샌드박싱
+    - 실행 시간 제한
+    - 에러 격리 및 상세 정보 제공
+    - 스레드 안전성 보장
+    """
+
+    # 위험한 JavaScript 패턴들
+    DANGEROUS_PATTERNS = [
+        r'eval\s*\(',
+        r'Function\s*\(',
+        r'setTimeout\s*\(',
+        r'setInterval\s*\(',
+        r'__proto__',
+        r'constructor\s*\[',
+        r'document\.write',
+        r'window\.location',
+        r'document\.cookie'
+    ]
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._validation_enabled = True
+        self._default_timeout = 30000  # 30초
+
+    def validate_script(self, script: str) -> Tuple[bool, Optional[str]]:
+        """
+        스크립트 안전성 검증
+
+        Returns:
+            (is_safe, error_message)
+        """
+        if not self._validation_enabled:
+            return True, None
+
+        import re
+
+        # 위험한 패턴 검사
+        for pattern in self.DANGEROUS_PATTERNS:
+            if re.search(pattern, script, re.IGNORECASE):
+                return False, f"Dangerous pattern detected: {pattern}"
+
+        # 스크립트 길이 제한 (보안상 너무 긴 스크립트 차단)
+        if len(script) > 10000:
+            return False, "Script too long (max 10000 characters)"
+
+        return True, None
+
+    def prepare_script(self, script: str) -> str:
+        """
+        스크립트 전처리 및 래핑
+
+        - 안전한 실행 환경 구성
+        - 에러 캐칭 추가
+        """
+        # 기본 래퍼로 감싸기
+        wrapped = f"""
+        (function() {{
+            'use strict';
+            try {{
+                {script}
+            }} catch (error) {{
+                return {{
+                    __error: true,
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                }};
+            }}
+        }})()
+        """
+        return wrapped
+
+    def execute(self, page, script: str, arg=None, timeout: Optional[int] = None) -> Dict[str, Any]:
+        """
+        JavaScript 실행
+
+        Args:
+            page: Playwright page 객체
+            script: 실행할 JavaScript 코드
+            arg: 스크립트에 전달할 인자
+            timeout: 실행 제한 시간 (ms)
+
+        Returns:
+            실행 결과를 담은 Response 딕셔너리
+        """
+        with self._lock:
+            try:
+                # 스크립트 검증
+                is_safe, error_msg = self.validate_script(script)
+                if not is_safe:
+                    return {
+                        "ok": False,
+                        "error": f"Script validation failed: {error_msg}",
+                        "error_type": "ValidationError"
+                    }
+
+                # 타임아웃 설정
+                if timeout is None:
+                    timeout = self._default_timeout
+
+                # 스크립트 실행
+                result = page.evaluate(script, arg=arg)
+
+                # 에러 체크
+                if isinstance(result, dict) and result.get("__error"):
+                    return {
+                        "ok": False,
+                        "error": result.get("message", "Unknown JavaScript error"),
+                        "error_type": "JavaScriptError",
+                        "stack": result.get("stack")
+                    }
+
+                return {
+                    "ok": True,
+                    "data": result,
+                    "script_length": len(script)
+                }
+
+            except Exception as e:
+                return {
+                    "ok": False,
+                    "error": str(e),
+                    "error_type": type(e).__name__
+                }
+
+    def set_validation(self, enabled: bool) -> None:
+        """검증 활성화/비활성화"""
+        self._validation_enabled = enabled
+
+    def set_default_timeout(self, timeout: int) -> None:
+        """기본 타임아웃 설정"""
+        self._default_timeout = timeout

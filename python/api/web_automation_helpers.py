@@ -638,3 +638,128 @@ def web_execute_script(script: str, *args, sandboxed: bool = True) -> Dict[str, 
             }
 
     return _execute()
+
+
+def web_evaluate_element(selector: str, script: str) -> Dict[str, Any]:
+    """
+    특정 요소에 대해 JavaScript 코드 실행
+
+    Args:
+        selector: 대상 요소의 CSS 선택자
+        script: 실행할 JavaScript 코드 (element 변수로 요소 접근 가능)
+
+    Returns:
+        Response 딕셔너리
+
+    Examples:
+        >>> web_evaluate_element("button.submit", "element.disabled = true")
+        >>> web_evaluate_element("#price", "return element.textContent")
+    """
+    @safe_execute
+    def _evaluate_element():
+        instance = _get_web_instance()
+        if not instance:
+            return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
+
+        page = instance.browser.page
+        if not page:
+            return {"ok": False, "error": "페이지가 로드되지 않았습니다."}
+
+        try:
+            # 요소 찾기
+            element = page.query_selector(selector)
+            if not element:
+                return {"ok": False, "error": f"요소를 찾을 수 없습니다: {selector}"}
+
+            # 요소에 대해 스크립트 실행
+            wrapped_script = f"(element) => {{ {script} }}"
+            result = element.evaluate(wrapped_script)
+
+            # 액션 기록
+            instance.recorder.record_action("evaluate_element", {
+                "selector": selector,
+                "script": script[:50] + "..." if len(script) > 50 else script
+            })
+
+            return {"ok": True, "data": result}
+
+        except Exception as e:
+            return {
+                "ok": False,
+                "error": str(e),
+                "error_type": type(e).__name__
+            }
+
+    return _evaluate_element()
+
+
+def web_wait_for_function(script: str, timeout: int = 30000, polling: int = 100) -> Dict[str, Any]:
+    """
+    JavaScript 조건이 true가 될 때까지 대기
+
+    Args:
+        script: 평가할 JavaScript 표현식 (true를 반환해야 함)
+        timeout: 최대 대기 시간 (밀리초, 기본 30초)
+        polling: 체크 간격 (밀리초, 기본 100ms)
+
+    Returns:
+        Response 딕셔너리
+
+    Examples:
+        >>> web_wait_for_function("document.readyState === 'complete'")
+        >>> web_wait_for_function("document.querySelectorAll('.item').length > 10", timeout=10000)
+    """
+    @safe_execute
+    def _wait_for_function():
+        instance = _get_web_instance()
+        if not instance:
+            return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
+
+        page = instance.browser.page
+        if not page:
+            return {"ok": False, "error": "페이지가 로드되지 않았습니다."}
+
+        # JavaScriptExecutor로 스크립트 검증
+        from .web_automation_manager import JavaScriptExecutor
+        js_executor = JavaScriptExecutor()
+
+        is_safe, error_msg = js_executor.validate_script(script)
+        if not is_safe:
+            return {"ok": False, "error": f"스크립트 검증 실패: {error_msg}"}
+
+        try:
+            # 함수로 래핑
+            func_script = f"() => {{ return {script} }}"
+
+            # 대기 시작 시간 기록
+            import time
+            start_time = time.time()
+
+            # Playwright의 wait_for_function 사용
+            page.wait_for_function(func_script, timeout=timeout, polling=polling)
+
+            # 대기 시간 계산
+            wait_time = time.time() - start_time
+
+            # 액션 기록
+            instance.recorder.record_action("wait_for_function", {
+                "script": script[:50] + "..." if len(script) > 50 else script,
+                "timeout": timeout,
+                "actual_wait_time": f"{wait_time:.2f}s"
+            })
+
+            return {
+                "ok": True, 
+                "data": True,
+                "wait_time": wait_time
+            }
+
+        except Exception as e:
+            return {
+                "ok": False,
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "script": script
+            }
+
+    return _wait_for_function()

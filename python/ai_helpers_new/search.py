@@ -10,13 +10,14 @@ from typing import Dict, Any, List, Optional
 from .util import ok, err
 
 
-def search_files(pattern: str, path: str = ".", recursive: bool = True) -> Dict[str, Any]:
+def search_files(pattern: str, path: str = ".", recursive: bool = True, max_depth: Optional[int] = None) -> Dict[str, Any]:
     """파일명 패턴으로 파일 검색
 
     Args:
         pattern: 파일명 패턴 (예: "*.py", "test_*.txt", "test")
         path: 검색 시작 경로 (기본값: 현재 디렉토리)
         recursive: 하위 디렉토리도 검색할지 여부 (기본값: True)
+        max_depth: 최대 검색 깊이 (None=무제한, recursive=False시 1)
 
     Returns:
         성공: {'ok': True, 'data': ['path1', 'path2', ...], 'count': 개수}
@@ -25,34 +26,34 @@ def search_files(pattern: str, path: str = ".", recursive: bool = True) -> Dict[
     Examples:
         search_files("*.py")  # 모든 .py 파일
         search_files("test")  # 'test'가 포함된 모든 파일
-        search_files("test*", "src/")  # src/ 아래 test로 시작하는 파일
+        search_files("test*", "src/", max_depth=2)  # src/ 아래 2단계까지
     """
     try:
-        found_files = []
-        search_path = Path(path)
+        from .core.fs import scan_directory
 
-        if not search_path.exists():
-            return err(f"Path not found: {path}")
+        # recursive=False인 경우 max_depth를 1로 설정
+        if not recursive and max_depth is None:
+            max_depth = 1
+
+        # scan_directory로 파일 목록 가져오기
+        scan_result = scan_directory(path, max_depth=max_depth)
+        if not scan_result['ok']:
+            return scan_result
+
+        all_files = scan_result['data']
 
         # 패턴에 와일드카드가 없으면 양쪽에 추가
         if '*' not in pattern and '?' not in pattern:
             pattern = f"*{pattern}*"
 
-        if recursive:
-            # 재귀적으로 검색
-            for root, dirs, files in os.walk(search_path):
-                # 숨김 디렉토리 제외
-                dirs[:] = [d for d in dirs if not d.startswith('.')]
-
-                for file in files:
-                    if fnmatch.fnmatch(file, pattern):
-                        full_path = os.path.join(root, file)
-                        found_files.append(os.path.relpath(full_path, path))
-        else:
-            # 현재 디렉토리만
-            for file in search_path.iterdir():
-                if file.is_file() and fnmatch.fnmatch(file.name, pattern):
-                    found_files.append(file.name)
+        # 패턴 매칭
+        found_files = []
+        for file_path in all_files:
+            # 파일만 필터링 (디렉토리 제외)
+            if os.path.isfile(os.path.join(path, file_path)):
+                file_name = os.path.basename(file_path)
+                if fnmatch.fnmatch(file_name, pattern):
+                    found_files.append(file_path)
 
         return ok(sorted(found_files), count=len(found_files), pattern=pattern)
 

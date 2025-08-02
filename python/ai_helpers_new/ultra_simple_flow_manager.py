@@ -141,7 +141,7 @@ class UltraSimpleFlowManager:
         try:
             task_number = len(plan.tasks)
             logger = EnhancedTaskLogger(plan_id, task_number, name)
-            logger.task_info(title=name, task_id=task_id)
+            logger.task_info(title=name)
             logger.design("Task가 생성되었습니다.")
             print(f"✅ TaskLogger 자동 생성: {task_number}.{name}")
         except Exception as e:

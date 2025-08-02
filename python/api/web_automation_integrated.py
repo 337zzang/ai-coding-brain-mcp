@@ -8,7 +8,8 @@ REPLBrowser와 ActionRecorder를 통합하여 REPL 환경에서
 import threading
 from typing import Dict, Any, Optional, List
 from datetime import datetime
-from .web_automation_errors import with_error_handling
+from web_automation_errors import with_error_handling
+from web_automation_extraction import AdvancedExtractionManager
 
 # 로컬 임포트
 from python.api.web_automation_repl import REPLBrowser
@@ -40,6 +41,7 @@ class REPLBrowserWithRecording:
         self._lock = threading.Lock()  # 스레드 안전성
         self.browser_started = False
         self.extracted_data = {}  # 추출된 데이터 저장
+        self.extraction_manager = None  # 초기화는 브라우저 시작 후
 
     def __enter__(self):
         """컨텍스트 매니저 진입"""
@@ -254,28 +256,109 @@ class REPLBrowserWithRecording:
 
 
     def extract_batch(self, configs: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """배치 추출 - AdvancedExtractionManager 사용"""
+        """배치 추출 - eval 기반 구현"""
         with self._lock:
-            result = self.extraction_manager.extract_batch(configs)
+            try:
+                # JavaScript 코드 생성
+                js_code = """
+                (() => {
+                    const results = {};
+                    const configs = """ + str(configs) + """;
 
-            # 액션 기록
-            self.recorder.record_action('extract_batch', result.get('ok', False),
-                                      configs_count=len(configs),
-                                      results_count=len(result.get('data', {})))
+                    configs.forEach(config => {
+                        try {
+                            const element = document.querySelector(config.selector);
+                            if (element) {
+                                let value;
+                                switch(config.type) {
+                                    case 'text':
+                                        value = element.textContent;
+                                        break;
+                                    case 'value':
+                                        value = element.value;
+                                        break;
+                                    case 'attr':
+                                        value = element.getAttribute(config.attr);
+                                        break;
+                                    case 'href':
+                                        value = element.href;
+                                        break;
+                                    case 'src':
+                                        value = element.src;
+                                        break;
+                                    default:
+                                        value = element.textContent;
+                                }
+                                results[config.name] = value;
+                            } else if (config.default !== undefined) {
+                                results[config.name] = config.default;
+                            }
+                        } catch (e) {
+                            console.error('Extract error:', e);
+                        }
+                    });
 
-            return result
+                    return results;
+                })()
+                """
+
+                # 실행
+                eval_result = self.browser.eval(js_code)
+
+                if eval_result.get('status') == 'success':
+                    data = eval_result.get('result', {})
+                    result = {'ok': True, 'data': data}
+                else:
+                    result = {'ok': False, 'error': 'Eval failed', 'details': eval_result}
+
+                # 액션 기록
+                self.recorder.record_action('extract_batch', result.get('ok', False),
+                                          configs_count=len(configs),
+                                          results_count=len(result.get('data', {})))
+
+                return result
+
+            except Exception as e:
+                return {'ok': False, 'error': str(e)}
 
     def extract_attributes(self, selector: str, attributes: List[str]) -> Dict[str, Any]:
-        """속성 추출 - AdvancedExtractionManager 사용"""
+        """속성 추출 - eval 기반 구현"""
         with self._lock:
-            result = self.extraction_manager.extract_attributes(selector, attributes)
+            try:
+                js_code = f"""
+                (() => {{
+                    const elements = document.querySelectorAll('{selector}');
+                    const results = [];
+                    const attrs = {attributes};
 
-            # 액션 기록
-            self.recorder.record_action('extract_attributes', result.get('ok', False),
-                                      selector=selector,
-                                      attributes_count=len(attributes))
+                    elements.forEach(el => {{
+                        const item = {{}};
+                        attrs.forEach(attr => {{
+                            item[attr] = el.getAttribute(attr);
+                        }});
+                        results.push(item);
+                    }});
 
-            return result
+                    return results;
+                }})()
+                """
+
+                eval_result = self.browser.eval(js_code)
+
+                if eval_result.get('status') == 'success':
+                    data = eval_result.get('result', [])
+                    result = {'ok': True, 'data': data}
+                else:
+                    result = {'ok': False, 'error': 'Eval failed'}
+
+                self.recorder.record_action('extract_attributes', result.get('ok', False),
+                                          selector=selector,
+                                          attributes_count=len(attributes))
+
+                return result
+
+            except Exception as e:
+                return {'ok': False, 'error': str(e)}
 
     def extract_form(self, form_selector: str) -> Dict[str, Any]:
         """폼 추출 - AdvancedExtractionManager 사용"""

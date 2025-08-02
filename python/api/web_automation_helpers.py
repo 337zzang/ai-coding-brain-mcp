@@ -1,13 +1,13 @@
 """
 웹 자동화 레코딩 헬퍼 함수들
 REPLBrowserWithRecording을 사용하여 REPL 환경에서 쉽게 웹 자동화를 수행합니다.
-from .web_automation_smart_wait import SmartWaitManager
+from web_automation_smart_wait import SmartWaitManager
 
 작성일: 2025-01-27
 """
 from typing import Dict, Any, Optional, List
-from .web_automation_integrated import REPLBrowserWithRecording
-from .web_automation_errors import safe_execute
+from web_automation_integrated import REPLBrowserWithRecording
+from web_automation_errors import safe_execute
 
 
 # 전역 인스턴스 저장
@@ -324,7 +324,7 @@ def web_extract_table(table_selector: str, name: str = None) -> Dict[str, Any]:
 
 def web_wait(duration_or_timeout: float = 1, wait_for: Optional[str] = None, **kwargs) -> Dict[str, Any]:
     """대기 (에러 처리 강화)"""
-    return safe_execute('web_wait', _web_wait_impl, seconds)
+    return safe_execute('web_wait', _web_wait_impl, duration_or_timeout, wait_for, **kwargs)
 
 
 def web_screenshot(path: str = None) -> Dict[str, Any]:
@@ -348,7 +348,6 @@ def web_get_data() -> Dict[str, Any]:
     return safe_execute('web_get_data', _web_get_data_impl)
 
 
-@safe_execute(default_return={'ok': False, 'data': None})
 def web_extract_batch(configs: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     여러 요소를 단일 호출로 추출 (300-500% 성능 향상)
@@ -393,7 +392,6 @@ def web_extract_batch(configs: List[Dict[str, Any]]) -> Dict[str, Any]:
     return result
 
 
-@safe_execute(default_return={'ok': False, 'data': {}})
 def web_extract_attributes(selector: str, attributes: List[str]) -> Dict[str, Any]:
     """
     여러 속성을 한번에 추출
@@ -421,7 +419,6 @@ def web_extract_attributes(selector: str, attributes: List[str]) -> Dict[str, An
     return result
 
 
-@safe_execute(default_return={'ok': False, 'data': {}})
 def web_extract_form(form_selector: str) -> Dict[str, Any]:
     """
     폼의 모든 입력 필드 자동 수집

@@ -33,7 +33,6 @@ class AdvancedExtractionManager:
             'upper': lambda x: str(x).upper()
         }
 
-    @safe_execute(default_return={'ok': False, 'data': None})
     def extract_batch(self, configs: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         여러 요소를 단일 호출로 추출 (최고 성능)
@@ -138,7 +137,6 @@ class AdvancedExtractionManager:
 
         return {'ok': True, 'data': final_results}
 
-    @safe_execute(default_return={'ok': False, 'data': {}})
     def extract_attributes(self, selector: str, attributes: List[str]) -> Dict[str, Any]:
         """
         여러 속성을 한번에 추출 (Locator API 활용)
@@ -179,7 +177,6 @@ class AdvancedExtractionManager:
         except Exception as e:
             return {'ok': False, 'error': str(e)}
 
-    @safe_execute(default_return={'ok': False, 'data': {}})
     def extract_form(self, form_selector: str) -> Dict[str, Any]:
         """
         폼의 모든 입력 필드 자동 수집

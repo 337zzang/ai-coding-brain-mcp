@@ -241,24 +241,24 @@ class EnhancedTaskLogger:
         # 기존 로직: TaskLogger에 기록
         result = self._log("COMPLETE", **data)
 
-        # 추가: FlowManager 자동 업데이트
-        try:
-            # Task 번호로 Task ID 찾아서 완료 처리
-            from .ultra_simple_flow_manager import UltraSimpleFlowManager
-            manager = UltraSimpleFlowManager()
-            plan = manager.get_plan(self.plan_id)
+#         # 추가: FlowManager 자동 업데이트
+#         try:
+#             # Task 번호로 Task ID 찾아서 완료 처리
+#             from .ultra_simple_flow_manager import UltraSimpleFlowManager
+#             manager = UltraSimpleFlowManager()
+#             plan = manager.get_plan(self.plan_id)
 
-            if plan:
-                # Task 번호로 task_id 찾기
-                for task_id, task in plan.tasks.items():
-                    # Task 제목이 "번호. " 형식으로 시작하는지 확인
-                    if task.title.startswith(f"{self.task_number}."):
-                        # Task 상태를 DONE으로 업데이트
-                        manager.update_task_status(self.plan_id, task_id, "done")
-                        break
-        except Exception as e:
-            # 실패해도 TaskLogger는 정상 동작
-            print(f"[TaskLogger] Flow 업데이트 실패 (무시됨): {e}")
+#             if plan:
+#                 # Task 번호로 task_id 찾기
+#                 for task_id, task in plan.tasks.items():
+#                     # Task 제목이 "번호. " 형식으로 시작하는지 확인
+#                     if task.title.startswith(f"{self.task_number}."):
+#                         # Task 상태를 DONE으로 업데이트
+#                         manager.update_task_status(self.plan_id, task_id, "done")
+#                         break
+#         except Exception as e:
+#             # 실패해도 TaskLogger는 정상 동작
+#             print(f"[TaskLogger] Flow 업데이트 실패 (무시됨): {e}")
 
         return result
 

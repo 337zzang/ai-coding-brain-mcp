@@ -269,3 +269,45 @@ def list_directory(path: str = ".") -> Dict[str, Any]:
         return err(f"권한이 없습니다: {path}")
     except Exception as e:
         return err(f"디렉토리 조회 실패: {str(e)}")
+
+
+def get_file_info(path: str) -> Dict[str, Any]:
+    """info 함수의 별칭 (Desktop Commander 호환성)
+
+    Returns:
+        성공: {'ok': True, 'data': {'size': 크기, 'lines': 줄수, ...}}
+        실패: {'ok': False, 'error': 에러메시지}
+    """
+    return info(path)
+
+
+def create_directory(path: str, parents: bool = True, exist_ok: bool = True) -> Dict[str, Any]:
+    """디렉토리 생성
+
+    Args:
+        path: 생성할 디렉토리 경로
+        parents: True면 부모 디렉토리도 자동 생성
+        exist_ok: True면 이미 존재해도 에러 없음
+
+    Returns:
+        성공: {'ok': True, 'data': {'created': bool, 'path': str}}
+        실패: {'ok': False, 'error': 에러메시지}
+    """
+    try:
+        p = Path(path)
+        already_exists = p.exists()
+
+        if already_exists and p.is_file():
+            return err(f"Path exists as file: {path}", path=str(p.absolute()))
+
+        p.mkdir(parents=parents, exist_ok=exist_ok)
+
+        return ok({
+            'created': not already_exists,
+            'already_existed': already_exists,
+            'is_absolute': p.is_absolute(),
+            'parent': str(p.parent)
+        }, path=str(p.absolute()))
+
+    except Exception as e:
+        return err(f"Failed to create directory: {str(e)}", path=path)

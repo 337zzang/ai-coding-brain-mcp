@@ -23,8 +23,8 @@ def normalize_task_name(name: str) -> str:
     Returns:
         파일시스템에 안전한 이름
     """
-    # 한글, 특수문자를 언더스코어로
-    safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name)
+    # 한글, 영문, 숫자는 유지, 나머지는 언더스코어로
+    safe_name = re.sub(r'[^a-zA-Z0-9가-힣_-]', '_', name)
     # 연속된 언더스코어 제거
     safe_name = re.sub(r'_{2,}', '_', safe_name)
     # 앞뒤 언더스코어 제거

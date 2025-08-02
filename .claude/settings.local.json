@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo:*)",
+      "Bash(ls:*)",
+      "Bash(test:*)",
+      "Bash(env)",
+      "Bash(cmd.exe:*)",
+      "Bash(claude doctor)",
+      "Bash(python test:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(claude mcp:*)"
+    ],
+    "deny": []
+  }
+}

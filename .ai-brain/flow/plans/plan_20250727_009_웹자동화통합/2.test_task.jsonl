@@ -1,3 +1,0 @@
-{"timestamp": "2025-07-27T22:39:20.841429", "event_type": "TASK_INFO", "ts": "2025-07-27T22:39:20.841429", "type": "TASK_INFO", "title": "테스트 Task", "priority": "high", "estimate": "1h", "description": ""}
-{"timestamp": "2025-07-27T22:39:20.842424", "event_type": "TODO", "ts": "2025-07-27T22:39:20.842424", "type": "TODO", "items": ["TODO 1", "TODO 2", "TODO 3"]}
-{"timestamp": "2025-07-27T22:39:20.843425", "event_type": "NOTE", "ts": "2025-07-27T22:39:20.843425", "type": "NOTE", "content": "테스트 노트입니다"}

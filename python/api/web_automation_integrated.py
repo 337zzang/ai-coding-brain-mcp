@@ -12,9 +12,9 @@ from .web_automation_errors import with_error_handling
 from .web_automation_extraction import AdvancedExtractionManager
 
 # 로컬 임포트
-from python.api.web_automation_repl import REPLBrowser
-from python.api.web_automation_recorder import ActionRecorder
-from python.api.web_automation_extraction import AdvancedExtractionManager
+from .web_automation_repl import REPLBrowser
+from .web_automation_recorder import ActionRecorder
+# AdvancedExtractionManager는 이미 위에서 import됨
 
 
 class REPLBrowserWithRecording:
@@ -531,7 +531,7 @@ class REPLBrowserWithRecording:
             script_lines.extend([
                 '# === 메인 함수 ===',
                 'def main():',
-                '    from python.api.web_automation_repl import REPLBrowser',
+                '    from .web_automation_repl import REPLBrowser',
                 '    ',
                 '    browser = REPLBrowser()',
                 '    extracted_data = {}',

@@ -77,8 +77,13 @@ def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dic
     global _web_instance
 
     # 기존 인스턴스가 있으면 먼저 종료
-    if _get_web_instance() and hasattr(_get_web_instance(), 'browser_started') and _get_web_instance().browser_started:
-        _web_instance.stop() if _web_instance else None
+    existing_instance = _get_web_instance()
+    if existing_instance:
+        try:
+            if hasattr(existing_instance, 'browser_started') and existing_instance.browser_started:
+                existing_instance.stop()
+        except Exception as e:
+            print(f"[WARNING] 기존 브라우저 종료 중 오류: {e}")
 
     # 새 인스턴스 생성
     _web_instance = REPLBrowserWithRecording(headless=headless, project_name=project_name)
@@ -94,8 +99,6 @@ def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dic
         print(f"[ERROR] 시작 실패: {result.get('error')}")
 
     return result
-
-
 def _web_goto_impl(url: str, wait_until: str = 'load') -> Dict[str, Any]:
     """페이지 이동"""
     if not _get_web_instance():
@@ -394,6 +397,61 @@ def web_wait(duration_or_timeout: float = 1, wait_for: Optional[str] = None, **k
     """대기 (에러 처리 강화)"""
     return safe_execute('web_wait', _web_wait_impl, duration_or_timeout, wait_for, **kwargs)
 
+
+
+# === 누락된 _impl 함수들 추가 ===
+
+def _web_screenshot_impl(path: Optional[str] = None) -> Dict[str, Any]:
+    """스크린샷 구현 함수"""
+    instance = _get_web_instance()
+    if not instance:
+        return {'ok': False, 'error': 'Browser not initialized'}
+
+    result = instance.screenshot(path)
+    if result.get('ok'):
+        print(f"📸 스크린샷 저장: {result.get('path', path or 'screenshot.png')}")
+    return result
+
+def _web_generate_script_impl(output_file: Optional[str] = None) -> Dict[str, Any]:
+    """스크립트 생성 구현 함수"""
+    instance = _get_web_instance()
+    if not instance:
+        return {'ok': False, 'error': 'Browser not initialized'}
+
+    return instance.generate_script(output_file)
+
+def _web_stop_impl() -> Dict[str, Any]:
+    """브라우저 종료 구현 함수"""
+    instance = _get_web_instance()
+    if instance:
+        result = instance.stop()
+        _set_web_instance(None)
+        return result
+    return {'ok': True, 'message': 'No browser to stop'}
+
+def _web_status_impl() -> Dict[str, Any]:
+    """상태 확인 구현 함수"""
+    instance = _get_web_instance()
+    if not instance:
+        return {'ok': True, 'running': False, 'message': 'Browser not started'}
+
+    return {
+        'ok': True,
+        'running': True,
+        'actions_count': len(instance.actions) if hasattr(instance, 'actions') else 0,
+        'extracted_data_count': len(instance.extracted_data) if hasattr(instance, 'extracted_data') else 0,
+        'project_name': getattr(instance, 'project_name', 'unknown')
+    }
+
+def _web_get_data_impl() -> Dict[str, Any]:
+    """데이터 가져오기 구현 함수"""
+    instance = _get_web_instance()
+    if not instance:
+        return {'ok': False, 'error': 'Browser not initialized'}
+
+    if hasattr(instance, 'get_extracted_data'):
+        return instance.get_extracted_data()
+    return {'ok': True, 'data': {}, 'count': 0}
 
 def web_screenshot(path: str = None) -> Dict[str, Any]:
     """스크린샷 캡처 (에러 처리 강화)"""

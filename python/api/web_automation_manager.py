@@ -217,8 +217,20 @@ class JavaScriptExecutor:
                 if timeout is None:
                     timeout = self._default_timeout
 
+                # 스크립트를 함수로 래핑 (return 문 지원)
+                if "return" in script and not script.strip().startswith("function"):
+                    # return 문이 있으면 함수로 래핑
+                    wrapped_script = f"() => {{ {script} }}"
+                else:
+                    # return 문이 없으면 표현식으로 평가
+                    wrapped_script = script
+
                 # 스크립트 실행
-                result = page.evaluate(script, arg=arg)
+                if arg is not None:
+                    # 인자가 있는 경우
+                    result = page.evaluate(f"(arg) => {{ {script} }}", arg)
+                else:
+                    result = page.evaluate(wrapped_script)
 
                 # 에러 체크
                 if isinstance(result, dict) and result.get("__error"):
@@ -241,7 +253,6 @@ class JavaScriptExecutor:
                     "error": str(e),
                     "error_type": type(e).__name__
                 }
-
     def set_validation(self, enabled: bool) -> None:
         """검증 활성화/비활성화"""
         self._validation_enabled = enabled

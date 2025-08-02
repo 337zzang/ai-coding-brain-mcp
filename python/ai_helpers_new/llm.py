@@ -448,3 +448,182 @@ def prepare_o3_context(topic: str, files: Optional[List[str]] = None) -> Dict[st
         'total_files': len(included_files),
         'project': project_info
     }
+
+
+def ask_o3_practical(question: str, file_content: str = "", error_info: str = "", 
+                    max_lines: int = 10, reasoning_effort: str = "medium") -> Dict[str, Any]:
+    """
+    O3에게 실용적인 답변을 요청하는 헬퍼 함수
+
+    Args:
+        question: 질문 내용
+        file_content: 관련 파일 내용 (선택)
+        error_info: 에러 정보 (선택)
+        max_lines: 최대 코드 수정 라인 수 (기본 10)
+        reasoning_effort: 추론 강도 (low/medium/high)
+
+    Returns:
+        O3의 답변을 포함한 딕셔너리
+    """
+    # 실용적 가이드라인을 포함한 컨텍스트 구성
+    context_parts = []
+
+    if file_content:
+        context_parts.append(f"=== 파일 내용 ===\n{file_content}")
+
+    if error_info:
+        context_parts.append(f"=== 에러 정보 ===\n{error_info}")
+
+    # 실용적 가이드라인 추가
+    context_parts.append(f"""
+=== 답변 규칙 ===
+- {max_lines}줄 이내의 코드 수정만 제안
+- 기존 코드 구조와 패턴 유지
+- 외부 라이브러리 추가 금지
+- 즉시 복사-붙여넣기 가능한 코드
+- 과도한 리팩토링이나 디자인 패턴 금지
+- dataclass, async/await 등 불필요한 개선 금지
+""")
+
+    context = "\n\n".join(context_parts)
+
+    # O3 비동기 호출
+    result = ask_o3_async(question, context, reasoning_effort)
+    if not result['ok']:
+        return result
+
+    task_id = result['data']
+
+    # 결과 대기 (최대 60초)
+    import time
+    max_wait = 60
+    start_time = time.time()
+
+    while time.time() - start_time < max_wait:
+        status_result = check_o3_status(task_id)
+        if not status_result['ok']:
+            return status_result
+
+        if status_result['data']['status'] == 'completed':
+            return get_o3_result(task_id)
+        elif status_result['data']['status'] == 'failed':
+            return {'ok': False, 'error': 'O3 작업 실패'}
+
+        time.sleep(3)
+
+    return {'ok': False, 'error': 'O3 응답 시간 초과 (60초)'}
+
+
+def O3ContextBuilder():
+    """
+    O3 컨텍스트 빌더 클래스 (간단한 구현)
+    파일 내용, 에러 정보 등을 체계적으로 구성
+    """
+    class _O3ContextBuilder:
+        def __init__(self):
+            self.context_parts = []
+            self.files = []
+
+        def add_file(self, file_path: str, max_lines: int = 100):
+            """파일 내용 추가"""
+            try:
+                if os.path.exists(file_path):
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()[:max_lines]
+                        content = ''.join(lines)
+                        self.context_parts.append(f"=== 파일: {file_path} ===\n{content}")
+                        self.files.append(file_path)
+            except Exception as e:
+                self.context_parts.append(f"=== 파일 읽기 오류: {file_path} ===\n{str(e)}")
+            return self
+
+        def add_error(self, error_msg: str, file_path: str = "", line_num: int = 0):
+            """에러 정보 추가"""
+            error_info = f"=== 에러 정보 ===\n에러: {error_msg}"
+            if file_path:
+                error_info += f"\n파일: {file_path}"
+            if line_num:
+                error_info += f"\n라인: {line_num}"
+            self.context_parts.append(error_info)
+            return self
+
+        def add_context(self, title: str, content: str):
+            """커스텀 컨텍스트 추가"""
+            self.context_parts.append(f"=== {title} ===\n{content}")
+            return self
+
+        def build(self) -> str:
+            """최종 컨텍스트 문자열 생성"""
+            return "\n\n".join(self.context_parts)
+
+        def ask(self, question: str, practical: bool = True, reasoning_effort: str = "medium") -> Dict[str, Any]:
+            """컨텍스트를 포함하여 O3에게 질문"""
+            context = self.build()
+
+            if practical:
+                context += """\n\n=== 실용적 가이드라인 ===
+- 5-10줄 이내의 간단한 수정만 제안
+- 기존 패턴과 구조 유지
+- 즉시 적용 가능한 실용적 해결책
+- 과도한 리팩토링 금지"""
+
+            result = ask_o3_async(question, context, reasoning_effort)
+            if not result['ok']:
+                return result
+
+            # 동기적으로 결과 대기
+            task_id = result['data']
+            import time
+            max_wait = 60
+            start_time = time.time()
+
+            while time.time() - start_time < max_wait:
+                status_result = check_o3_status(task_id)
+                if not status_result['ok']:
+                    return status_result
+
+                if status_result['data']['status'] == 'completed':
+                    return get_o3_result(task_id)
+                elif status_result['data']['status'] == 'failed':
+                    return {'ok': False, 'error': 'O3 작업 실패'}
+
+                time.sleep(3)
+
+            return {'ok': False, 'error': 'O3 응답 시간 초과'}
+
+    return _O3ContextBuilder()
+
+
+def quick_o3_context(error_msg: str, file_path: str = "", line_num: int = 0) -> 'O3ContextBuilder':
+    """
+    에러 해결을 위한 빠른 컨텍스트 생성
+
+    Args:
+        error_msg: 에러 메시지
+        file_path: 에러가 발생한 파일 경로
+        line_num: 에러가 발생한 라인 번호
+
+    Returns:
+        설정된 O3ContextBuilder 인스턴스
+    """
+    builder = O3ContextBuilder()
+    builder.add_error(error_msg, file_path, line_num)
+
+    if file_path and os.path.exists(file_path):
+        # 에러 주변 코드 추출
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+                start_line = max(0, line_num - 10)
+                end_line = min(len(lines), line_num + 10)
+
+                context_lines = []
+                for i in range(start_line, end_line):
+                    prefix = ">>> " if i == line_num - 1 else "    "
+                    context_lines.append(f"{i+1:4d} {prefix}{lines[i].rstrip()}")
+
+                builder.add_context("에러 주변 코드", "\n".join(context_lines))
+        except Exception:
+            pass
+
+    return builder

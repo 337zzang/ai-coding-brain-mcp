@@ -50,6 +50,9 @@ __all__ = [
     "display_plan_tasks"
     "Response",
     "ScanOptions",
+    'ask_o3_practical',
+    'O3ContextBuilder',
+    'quick_o3_context',
 ]
 
 

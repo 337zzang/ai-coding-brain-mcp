@@ -249,3 +249,153 @@ def git_diff(file: str = None, staged: bool = False, cwd: str = ".") -> Dict[str
         args.append(file)
 
     return run_git_command(args, cwd)
+
+
+def git_checkout(branch_or_file: str) -> Dict[str, Any]:
+    """브랜치 전환 또는 파일 복원
+
+    Args:
+        branch_or_file: 브랜치명 또는 파일 경로
+
+    Returns:
+        성공: {'ok': True, 'data': 출력 메시지}
+        실패: {'ok': False, 'error': 에러 메시지}
+    """
+    result = run_git_command(['checkout', branch_or_file])
+    if result['ok']:
+        return ok(result['data'])
+    return err(result['error'])
+
+
+def git_checkout_b(branch_name: str) -> Dict[str, Any]:
+    """새 브랜치 생성 및 전환
+
+    Args:
+        branch_name: 생성할 브랜치명
+
+    Returns:
+        성공: {'ok': True, 'data': 출력 메시지}
+        실패: {'ok': False, 'error': 에러 메시지}
+    """
+    result = run_git_command(['checkout', '-b', branch_name])
+    if result['ok']:
+        return ok(result['data'])
+    return err(result['error'])
+
+
+def git_stash(message: str = None) -> Dict[str, Any]:
+    """작업 내용 임시 저장
+
+    Args:
+        message: stash 메시지 (선택사항)
+
+    Returns:
+        성공: {'ok': True, 'data': 출력 메시지}
+        실패: {'ok': False, 'error': 에러 메시지}
+    """
+    cmd = ['stash', 'push']
+    if message:
+        cmd.extend(['-m', message])
+    result = run_git_command(cmd)
+    if result['ok']:
+        return ok(result['data'])
+    return err(result['error'])
+
+
+def git_stash_pop() -> Dict[str, Any]:
+    """임시 저장된 작업 복원
+
+    Returns:
+        성공: {'ok': True, 'data': 출력 메시지}
+        실패: {'ok': False, 'error': 에러 메시지}
+    """
+    result = run_git_command(['stash', 'pop'])
+    if result['ok']:
+        return ok(result['data'])
+    return err(result['error'])
+
+
+def git_stash_list() -> Dict[str, Any]:
+    """stash 목록 조회
+
+    Returns:
+        성공: {'ok': True, 'data': stash 목록}
+        실패: {'ok': False, 'error': 에러 메시지}
+    """
+    result = run_git_command(['stash', 'list'])
+    if result['ok']:
+        stashes = result['data'].strip().split('\n') if result['data'].strip() else []
+        return ok(stashes)
+    return err(result['error'])
+
+
+def git_reset_hard(commit: str = "HEAD") -> Dict[str, Any]:
+    """특정 커밋으로 강제 리셋
+
+    Args:
+        commit: 리셋할 커밋 (기본값: HEAD)
+
+    Returns:
+        성공: {'ok': True, 'data': 출력 메시지}
+        실패: {'ok': False, 'error': 에러 메시지}
+    """
+    result = run_git_command(['reset', '--hard', commit])
+    if result['ok']:
+        return ok(result['data'])
+    return err(result['error'])
+
+
+def git_merge(branch: str, no_ff: bool = False) -> Dict[str, Any]:
+    """브랜치 병합
+
+    Args:
+        branch: 병합할 브랜치명
+        no_ff: fast-forward 비활성화 여부
+
+    Returns:
+        성공: {'ok': True, 'data': 출력 메시지}
+        실패: {'ok': False, 'error': 에러 메시지}
+    """
+    cmd = ['merge']
+    if no_ff:
+        cmd.append('--no-ff')
+    cmd.append(branch)
+
+    result = run_git_command(cmd)
+    if result['ok']:
+        return ok(result['data'])
+    return err(result['error'])
+
+
+def git_branch_d(branch: str, force: bool = False) -> Dict[str, Any]:
+    """브랜치 삭제
+
+    Args:
+        branch: 삭제할 브랜치명
+        force: 강제 삭제 여부
+
+    Returns:
+        성공: {'ok': True, 'data': 출력 메시지}
+        실패: {'ok': False, 'error': 에러 메시지}
+    """
+    flag = '-D' if force else '-d'
+    result = run_git_command(['branch', flag, branch])
+    if result['ok']:
+        return ok(result['data'])
+    return err(result['error'])
+
+
+def git_rebase(branch: str) -> Dict[str, Any]:
+    """리베이스 수행
+
+    Args:
+        branch: 리베이스할 대상 브랜치
+
+    Returns:
+        성공: {'ok': True, 'data': 출력 메시지}
+        실패: {'ok': False, 'error': 에러 메시지}
+    """
+    result = run_git_command(['rebase', branch])
+    if result['ok']:
+        return ok(result['data'])
+    return err(result['error'])

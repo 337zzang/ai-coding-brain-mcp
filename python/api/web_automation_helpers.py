@@ -518,3 +518,123 @@ def web_extract_form(form_selector: str) -> Dict[str, Any]:
 
 # web_status 함수가 정의된 후에 별칭 설정
 web_record_status = web_status
+
+
+def web_evaluate(script: str, arg: Any = None, strict: bool = False) -> Dict[str, Any]:
+    """
+    현재 페이지에서 JavaScript 코드를 실행하고 결과를 반환
+
+    Args:
+        script: 실행할 JavaScript 코드
+        arg: 스크립트에 전달할 인자 (선택사항)
+        strict: True일 경우 엄격한 검증 모드 사용
+
+    Returns:
+        Response 딕셔너리
+    """
+    @safe_execute
+    def _evaluate():
+        instance = _get_web_instance()
+        if not instance:
+            return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
+
+        # JavaScriptExecutor 인스턴스 가져오기
+        from .web_automation_manager import JavaScriptExecutor
+        js_executor = JavaScriptExecutor()
+
+        # strict 모드 설정
+        if strict:
+            is_safe, error_msg = js_executor.validate_script_extended(script, strict_mode=True)
+            if not is_safe:
+                return {"ok": False, "error": error_msg}
+
+        # 페이지 객체 가져오기
+        page = instance.browser.page
+        if not page:
+            return {"ok": False, "error": "페이지가 로드되지 않았습니다."}
+
+        # JavaScript 실행
+        result = js_executor.execute(page, script, arg)
+
+        # 액션 기록
+        if result.get("ok"):
+            instance.recorder.record_action("evaluate", {
+                "script": script[:100] + "..." if len(script) > 100 else script,
+                "arg": str(arg) if arg else None,
+                "result_type": type(result.get("data")).__name__
+            })
+
+        return result
+
+    return _evaluate()
+
+
+def web_execute_script(script: str, *args, sandboxed: bool = True) -> Dict[str, Any]:
+    """
+    JavaScript 코드를 샌드박스 환경에서 실행
+
+    Args:
+        script: 실행할 JavaScript 코드
+        *args: 스크립트에 전달할 인자들
+        sandboxed: True일 경우 샌드박스 래퍼 사용
+
+    Returns:
+        Response 딕셔너리
+    """
+    @safe_execute
+    def _execute():
+        instance = _get_web_instance()
+        if not instance:
+            return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
+
+        # JavaScriptExecutor 인스턴스 가져오기
+        from .web_automation_manager import JavaScriptExecutor
+        js_executor = JavaScriptExecutor()
+
+        # 샌드박스 래핑
+        if sandboxed:
+            wrapped_script = js_executor.create_sandbox_wrapper(script)
+        else:
+            wrapped_script = script
+
+        # 페이지 객체 가져오기
+        page = instance.browser.page
+        if not page:
+            return {"ok": False, "error": "페이지가 로드되지 않았습니다."}
+
+        try:
+            # Playwright의 evaluate 함수 사용
+            if args:
+                # 인자가 있는 경우
+                args_str = str(list(args))
+                func_script = f"(function() {{ const arguments = {args_str}; {wrapped_script} }})()"
+                result = page.evaluate(func_script)
+            else:
+                result = page.evaluate(wrapped_script)
+
+            # 에러 체크
+            if isinstance(result, dict) and result.get("__error"):
+                return {
+                    "ok": False,
+                    "error": result.get("message", "Unknown JavaScript error"),
+                    "error_type": "JavaScriptError",
+                    "stack": result.get("stack")
+                }
+
+            # 액션 기록
+            instance.recorder.record_action("execute_script", {
+                "script_preview": script[:50] + "..." if len(script) > 50 else script,
+                "args_count": len(args),
+                "sandboxed": sandboxed
+            })
+
+            return {"ok": True, "data": result}
+
+        except Exception as e:
+            return {
+                "ok": False,
+                "error": str(e),
+                "error_type": type(e).__name__
+            }
+
+    return _execute()

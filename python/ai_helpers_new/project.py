@@ -3,6 +3,7 @@
 리팩토링: 2025-08-02
 """
 import os
+import platform
 import json
 from typing import Dict, Any, List, Optional
 from datetime import datetime
@@ -68,6 +69,54 @@ def get_current_project() -> dict:
 
     except Exception as e:
         return err(str(e))
+def _get_project_search_paths() -> List[Path]:
+    """프로젝트 검색 경로 목록 반환 (환경변수 우선)"""
+    paths = []
+
+    # 1. 환경변수 확인
+    env_path = os.environ.get("PROJECT_BASE_PATH")
+    if env_path:
+        paths.append(Path(env_path))
+
+    # 2. 플랫폼별 기본 경로
+    home = Path.home()
+
+    # Windows
+    if platform.system() == "Windows":
+        paths.extend([
+            home / "Desktop",
+            home / "바탕화면",
+            home / "Documents",
+            home / "문서"
+        ])
+    # macOS
+    elif platform.system() == "Darwin":
+        paths.extend([
+            home / "Desktop",
+            home / "Documents",
+            home / "Developer"
+        ])
+    # Linux
+    else:
+        paths.extend([
+            home / "Desktop",
+            home / "Documents",
+            home / "workspace",
+            home / "projects"
+        ])
+
+    # 3. 현재 디렉토리
+    paths.append(Path.cwd())
+
+    # 중복 제거하고 존재하는 경로만 반환
+    valid_paths = []
+    seen = set()
+    for path in paths:
+        if path not in seen and path.exists():
+            valid_paths.append(path)
+            seen.add(path)
+
+    return valid_paths
 
 @safe_execution
 def flow_project_with_workflow(
@@ -91,7 +140,6 @@ def flow_project_with_workflow(
     """
     # 1) 프로젝트 기본 경로 결정
     # 우선순위: 환경변수 > 플랫폼별 기본값
-    import platform
     base_paths = []
     
     # 환경변수 확인

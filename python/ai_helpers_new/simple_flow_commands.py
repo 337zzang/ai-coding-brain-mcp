@@ -409,6 +409,17 @@ def switch_project(project_name: Optional[str]) -> None:
             print("")  # 빈 줄
             manager = get_manager()
             show_plans(manager)
+            
+            # ========== 💡 신규 기능 통합 부분 💡 ==========
+            try:
+                # Plan 진행 상황 자동 표시
+                progress_summary = show_plan_progress()
+                if progress_summary:
+                    print(progress_summary)
+            except Exception:
+                # 이 기능에서 오류가 발생해도 프로젝트 전환은 정상 처리됨
+                pass
+            # ============================================
             # ========== 개선 끝 ==========
         else:
             print(f"❌ 프로젝트 전환 실패: {project_name}")

@@ -4,6 +4,7 @@ import os
 import platform
 from typing import Dict, Any, List, Optional
 from .util import ok, err
+from .wrappers import safe_execution
 
 def find_git_executable() -> Optional[str]:
     """Git 실행 파일 찾기"""
@@ -74,6 +75,7 @@ def run_git_command(args: List[str], cwd: Optional[str] = None) -> Dict[str, Any
     except Exception as e:
         return err(f"Git command error: {str(e)}")
 
+@safe_execution
 def git_status(include_log: bool = False) -> Dict[str, Any]:
     """Git 상태 확인 (개선됨 - 브랜치 정보 포함)
 
@@ -124,6 +126,7 @@ def git_status(include_log: bool = False) -> Dict[str, Any]:
             }
 
     return ok(data)
+@safe_execution
 def git_add(files: List[str]) -> Dict[str, Any]:
     """파일을 스테이징 영역에 추가"""
     if not files:
@@ -132,6 +135,7 @@ def git_add(files: List[str]) -> Dict[str, Any]:
     result = run_git_command(['add'] + files)
     return result
 
+@safe_execution
 def git_commit(message: str) -> Dict[str, Any]:
     """커밋 생성"""
     if not message:
@@ -140,6 +144,7 @@ def git_commit(message: str) -> Dict[str, Any]:
     result = run_git_command(['commit', '-m', message])
     return result
 
+@safe_execution
 def git_push(remote: str = 'origin', branch: Optional[str] = None) -> Dict[str, Any]:
     """원격 저장소에 푸시"""
     args = ['push', remote]
@@ -149,6 +154,7 @@ def git_push(remote: str = 'origin', branch: Optional[str] = None) -> Dict[str, 
     result = run_git_command(args)
     return result
 
+@safe_execution
 def git_pull(remote: str = 'origin', branch: Optional[str] = None) -> Dict[str, Any]:
     """원격 저장소에서 풀"""
     args = ['pull', remote]
@@ -182,6 +188,7 @@ def git_current_branch() -> Dict[str, Any]:
 
 # DEPRECATED: git_status() 함수가 이제 모든 기능을 포함합니다.
 # 이 함수는 하위 호환성을 위해 유지되지만 git_status()를 사용하세요.
+@safe_execution
 def git_log(limit: int = 10, format: str = "oneline", cwd: str = ".") -> Dict[str, Any]:
     """Git 커밋 히스토리 조회
 

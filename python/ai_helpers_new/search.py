@@ -29,31 +29,39 @@ def search_files(pattern: str, path: str = ".", recursive: bool = True, max_dept
         search_files("test*", "src/", max_depth=2)  # src/ 아래 2단계까지
     """
     try:
-        from .core.fs import scan_directory
+        found_files = []
+        search_path = Path(path)
 
-        # recursive=False인 경우 max_depth를 1로 설정
-        if not recursive and max_depth is None:
-            max_depth = 1
-
-        # scan_directory로 파일 목록 가져오기
-        scan_result = scan_directory(path, max_depth=max_depth)
-        if not scan_result['ok']:
-            return scan_result
-
-        all_files = scan_result['data']
+        if not search_path.exists():
+            return err(f"Path not found: {path}")
 
         # 패턴에 와일드카드가 없으면 양쪽에 추가
         if '*' not in pattern and '?' not in pattern:
             pattern = f"*{pattern}*"
 
-        # 패턴 매칭
-        found_files = []
-        for file_path in all_files:
-            # 파일만 필터링 (디렉토리 제외)
-            if os.path.isfile(os.path.join(path, file_path)):
-                file_name = os.path.basename(file_path)
-                if fnmatch.fnmatch(file_name, pattern):
-                    found_files.append(file_path)
+        # recursive=False인 경우 max_depth를 1로 설정
+        if not recursive and max_depth is None:
+            max_depth = 1
+
+        # 현재 깊이 추적을 위한 헬퍼 함수
+        def search_with_depth(current_path, current_depth=0):
+            # max_depth 체크
+            if max_depth is not None and current_depth >= max_depth:
+                return
+
+            try:
+                for item in current_path.iterdir():
+                    if item.is_file() and fnmatch.fnmatch(item.name, pattern):
+                        rel_path = os.path.relpath(item, path)
+                        found_files.append(rel_path)
+                    elif item.is_dir() and not item.name.startswith('.'):
+                        if recursive and (max_depth is None or current_depth < max_depth - 1):
+                            search_with_depth(item, current_depth + 1)
+            except PermissionError:
+                pass  # 권한 없는 디렉토리 무시
+
+        # 검색 시작
+        search_with_depth(search_path)
 
         return ok(sorted(found_files), count=len(found_files), pattern=pattern)
 

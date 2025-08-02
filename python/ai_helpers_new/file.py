@@ -201,7 +201,7 @@ def info(path: str) -> Dict[str, Any]:
     """파일 정보 조회
 
     Returns:
-        성공: {'ok': True, 'data': {'size': 크기, 'lines': 줄수, ...}}
+        성공: {'ok': True, 'data': {'size': 크기, 'lines': 줄수, 'lineCount': 줄수, ...}}
         실패: {'ok': False, 'error': 에러메시지}
     """
     try:
@@ -213,22 +213,41 @@ def info(path: str) -> Dict[str, Any]:
 
         # 텍스트 파일인 경우 줄 수 계산
         lines = None
-        if p.suffix in ['.py', '.txt', '.md', '.json', '.js', '.ts']:
+        line_count = None
+        last_line = None
+        append_position = None
+
+        # 텍스트 파일 확장자 확대
+        text_extensions = {'.py', '.txt', '.md', '.json', '.js', '.ts', '.jsx', '.tsx',
+                          '.yml', '.yaml', '.xml', '.html', '.css', '.scss', '.java',
+                          '.c', '.cpp', '.h', '.hpp', '.sh', '.bash', '.ini', '.cfg',
+                          '.log', '.csv', '.sql', '.r', '.m'}
+
+        if p.is_file() and (p.suffix.lower() in text_extensions or p.suffix == ''):
             try:
-                content = p.read_text()
-                lines = content.count('\n') + 1
+                with open(p, 'r', encoding='utf-8') as f:
+                    lines_list = f.readlines()
+                    lines = len(lines_list)
+                    line_count = lines  # 같은 값을 lineCount로도 제공
+                    last_line = lines - 1 if lines > 0 else 0
+                    append_position = lines
             except:
+                # 바이너리 파일이거나 읽기 실패
                 pass
 
         return ok({
             'size': stat.st_size,
             'lines': lines,
+            'lineCount': line_count,  # Desktop Commander 호환성
+            'lastLine': last_line,
+            'appendPosition': append_position,
             'modified': stat.st_mtime,
             'created': stat.st_ctime,
             'is_file': p.is_file(),
             'is_dir': p.is_dir(),
             'suffix': p.suffix,
-            'name': p.name
+            'name': p.name,
+            'type': 'file' if p.is_file() else 'directory'
         }, path=str(p.absolute()))
 
     except Exception as e:

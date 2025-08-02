@@ -702,3 +702,102 @@ def help_flow() -> None:
 
 # __all__ export
 __all__ = ['flow', 'help_flow', 'get_manager']
+
+
+def show_plan_progress() -> str:
+    """
+    가장 최근 Plan의 진행 상황을 요약하여 표시합니다.
+    
+    Returns:
+        진행 상황 요약 문자열. Plan이 없으면 빈 문자열을 반환합니다.
+    """
+    from pathlib import Path
+    import json
+    from datetime import datetime
+    
+    try:
+        # 1. 가장 최근에 수정된 Plan 디렉토리 찾기
+        plans_dir = Path(".ai-brain/flow/plans")
+        if not plans_dir.exists():
+            return ""
+            
+        all_plans = [d for d in plans_dir.iterdir() if d.is_dir()]
+        if not all_plans:
+            return ""
+            
+        latest_plan_dir = max(all_plans, key=lambda p: p.stat().st_mtime)
+        plan_id = latest_plan_dir.name
+        
+        # 2. tasks.json에서 전체 Task 수와 완료된 Task 수 집계
+        tasks_file = latest_plan_dir / "tasks.json"
+        total_tasks = 0
+        completed_tasks = 0
+        if tasks_file.exists():
+            with open(tasks_file, 'r', encoding='utf-8') as f:
+                tasks_data = json.load(f)
+                total_tasks = len(tasks_data)
+                completed_tasks = sum(1 for t in tasks_data.values() if t.get('status') == 'done')
+        
+        # 3. 모든 .jsonl 파일에서 이벤트 수집 및 파싱
+        all_events = []
+        for jsonl_file in latest_plan_dir.glob("*.jsonl"):
+            with open(jsonl_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    try:
+                        event = json.loads(line)
+                        # 유연한 파싱: event_type/type 필드 처리
+                        if 'event_type' not in event and 'type' in event:
+                            event['event_type'] = event['type']
+                        all_events.append(event)
+                    except json.JSONDecodeError:
+                        continue  # 손상된 라인은 무시
+        
+        # 4. 정보 추출
+        # 완료 이벤트 (최신순 정렬)
+        complete_events = sorted(
+            [e for e in all_events if e.get('event_type') == 'COMPLETE'],
+            key=lambda x: x.get('timestamp', ''),
+            reverse=True
+        )
+        
+        # 코드 수정 이벤트
+        code_events = [e for e in all_events if e.get('event_type') == 'CODE']
+        modified_files = sorted(list(set(
+            f"{e['file']} ({e['action']})" for e in code_events if 'file' in e and 'action' in e
+        )))
+        
+        # 5. 출력 포맷 생성
+        output_lines = [
+            "\n" + "📊 Plan 진행 상황" + "\n" + "=" * 60,
+            f"   Plan: {plan_id}",
+            f"   진행률: {completed_tasks} / {total_tasks} Tasks 완료"
+        ]
+        
+        if complete_events:
+            output_lines.append("\n✅ 최근 완료된 작업 (최대 3개):")
+            for event in complete_events[:3]:
+                # summary 필드 정규화
+                summary = event.get('summary', '')
+                if isinstance(summary, dict):
+                    summary = summary.get('summary', str(summary))
+                summary_text = summary.replace('\n', ' ').strip()
+                if summary_text:
+                    # 첫 줄만 표시
+                    first_line = summary_text.split('\n')[0]
+                    output_lines.append(f"  • {first_line[:80]}")
+        
+        if modified_files:
+            output_lines.append("\n📄 최근 작업한 파일:")
+            for file_info in modified_files[:5]:
+                output_lines.append(f"  • {file_info}")
+        
+        remaining_tasks = total_tasks - completed_tasks
+        if remaining_tasks > 0:
+            output_lines.append("\n💡 다음 작업:")
+            output_lines.append(f"   {remaining_tasks}개의 Task가 남아있습니다. flow('/task') 명령으로 확인하세요.")
+        
+        return "\n".join(output_lines)
+        
+    except Exception:
+        # 이 함수에서 오류가 발생해도 전체 프로세스를 중단시키지 않음
+        return ""

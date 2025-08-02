@@ -6,6 +6,8 @@ REPLBrowserWithRecording을 사용하여 REPL 환경에서 쉽게 웹 자동화�
 """
 from typing import Dict, Any, Optional
 from python.api.web_automation_integrated import REPLBrowserWithRecording
+from .web_automation_errors import safe_execute
+
 
 # 전역 인스턴스 저장
 _web_instance: Optional[REPLBrowserWithRecording] = None
@@ -60,7 +62,7 @@ def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dic
     return result
 
 
-def web_goto(url: str, wait_until: str = 'load') -> Dict[str, Any]:
+def _web_goto_impl(url: str, wait_until: str = 'load') -> Dict[str, Any]:
     """페이지 이동"""
     if not _get_web_instance():
         return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
@@ -70,8 +72,11 @@ def web_goto(url: str, wait_until: str = 'load') -> Dict[str, Any]:
         print(f"📍 이동: {url}")
     return result
 
+def web_goto(url: str, wait_until: str = 'load') -> Dict[str, Any]:
+    """페이지 이동 (에러 처리 강화)"""
+    return safe_execute('web_goto', _web_goto_impl, url, wait_until)
 
-def web_click(selector: str) -> Dict[str, Any]:
+def _web_click_impl(selector: str) -> Dict[str, Any]:
     """요소 클릭"""
     if not _get_web_instance():
         return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
@@ -81,6 +86,9 @@ def web_click(selector: str) -> Dict[str, Any]:
         print(f"🖱️ 클릭: {selector}")
     return result
 
+def web_click(selector: str) -> Dict[str, Any]:
+    """요소 클릭 (에러 처리 강화)"""
+    return safe_execute('web_click', _web_click_impl, selector)
 
 def web_type(selector: str, text: str) -> Dict[str, Any]:
     """텍스트 입력"""

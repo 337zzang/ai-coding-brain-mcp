@@ -5,6 +5,10 @@
 작성일: 2025-01-27
 수정일: 2025-08-02 (Phase 1 - 순환 참조 제거)
 """
+
+from typing import Dict, Any, Optional, List, Callable
+import inspect
+import functools
 import os
 import sys
 import logging
@@ -14,7 +18,6 @@ from datetime import datetime
 from functools import wraps
 
 # 새로운 ErrorContext import
-from .web_automation_error_context import ErrorContext, ErrorClassifier, enhanced_safe_execute
 
 # 디버그 모드 설정
 DEBUG_MODE = os.getenv('WEB_AUTOMATION_DEBUG', 'false').lower() == 'true'
@@ -146,7 +149,6 @@ error_stats = ErrorStats() if DEBUG_MODE else None
 
 
 # 기존 코드와의 호환성을 위한 별칭
-from .web_automation_error_context import enhanced_safe_execute as safe_execution
 
 
 # 디버그 유틸리티
@@ -159,3 +161,107 @@ def print_debug_info(info: Dict[str, Any]):
         for key, value in info.items():
             print(f"{key}: {value}")
         print("="*60 + "\n")
+
+# ========== web_automation_error_context.py에서 이동된 클래스들 ==========
+
+class ErrorContext:
+    """에러 발생 시 컨텍스트 정보를 수집하고 관리하는 클래스"""
+
+    def __init__(self, function_name: str, *args, **kwargs):
+        self.function_name = function_name
+        self.args = args
+        self.kwargs = kwargs
+        self.start_time = datetime.now()
+        self.metadata: Dict[str, Any] = {}
+
+    def add_metadata(self, key: str, value: Any) -> None:
+        """추가 메타데이터 저장"""
+        self.metadata[key] = value
+
+    def get_execution_time(self) -> float:
+        """실행 시간 계산 (초)"""
+        return (datetime.now() - self.start_time).total_seconds()
+
+    def build_error_info(self, error: Exception) -> Dict[str, Any]:
+        """에러 정보를 포함한 전체 컨텍스트 빌드"""
+        # 스택 트레이스 정보
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        stack_frames = traceback.extract_tb(exc_traceback)
+
+        # 호출 스택 정보 추출
+        call_stack = []
+        for frame in stack_frames:
+            call_stack.append({
+                "file": frame.filename,
+                "line": frame.lineno,
+                "function": frame.name,
+                "code": frame.line
+            })
+
+        return {
+            "error_type": type(error).__name__,
+            "error_message": str(error),
+            "function": self.function_name,
+            "execution_time": self.get_execution_time(),
+            "timestamp": datetime.now().isoformat(),
+            "context": {
+                "args": self._serialize_args(self.args),
+                "kwargs": self._serialize_kwargs(self.kwargs),
+                "metadata": self.metadata
+            },
+            "stack_trace": {
+                "formatted": traceback.format_exc(),
+                "frames": call_stack
+            }
+        }
+
+    def _serialize_args(self, args) -> List[str]:
+        """인자를 안전하게 문자열로 변환"""
+        serialized = []
+        for arg in args:
+            try:
+                serialized.append(repr(arg))
+            except:
+                serialized.append(f"<{type(arg).__name__} object>")
+        return serialized
+
+    def _serialize_kwargs(self, kwargs) -> Dict[str, str]:
+        """키워드 인자를 안전하게 문자열로 변환"""
+        serialized = {}
+        for key, value in kwargs.items():
+            try:
+                serialized[key] = repr(value)
+            except:
+                serialized[key] = f"<{type(value).__name__} object>"
+        return serialized
+
+
+class ErrorClassifier:
+    """에러를 분류하고 심각도를 판단하는 클래스"""
+
+    # 에러 분류 체계
+    ERROR_CATEGORIES = {
+        # 치명적 오류
+        "CRITICAL": [
+            "SystemError", "MemoryError", "RecursionError"
+        ],
+        # 설정 오류
+        "CONFIGURATION": [
+            "ImportError", "ModuleNotFoundError", "AttributeError"
+        ],
+        # 입력 오류
+        "INPUT": [
+            "ValueError", "TypeError", "KeyError", "IndexError"
+        ],
+        # 네트워크/IO 오류
+        "IO": [
+            "IOError", "FileNotFoundError", "PermissionError",
+            "ConnectionError", "TimeoutError"
+        ],
+        # 런타임 오류
+        "RUNTIME": [
+            "RuntimeError", "NotImplementedError", "AssertionError"
+        ]
+    }
+
+    @

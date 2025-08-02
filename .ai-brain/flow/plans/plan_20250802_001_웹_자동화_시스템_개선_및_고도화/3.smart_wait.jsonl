@@ -1,0 +1,7 @@
+{"timestamp": "2025-08-02T16:37:03.437953", "event_type": "TASK_INFO", "ts": "2025-08-02T16:37:03.437953", "type": "TASK_INFO", "title": "스마트 대기 기능 구현", "priority": "critical", "estimate": "1일", "description": ""}
+{"timestamp": "2025-08-02T16:37:03.439977", "event_type": "NOTE", "ts": "2025-08-02T16:37:03.439977", "type": "NOTE", "content": "📌 의존성: Task 2 (에러 처리) 완료 필요"}
+{"timestamp": "2025-08-02T16:39:49.456806", "event_type": "TASK_INFO", "ts": "2025-08-02T16:39:49.456806", "type": "TASK_INFO", "title": "스마트 대기 기능 구현", "priority": "critical", "estimate": "1일", "description": ""}
+{"timestamp": "2025-08-02T16:39:49.466801", "event_type": "NOTE", "ts": "2025-08-02T16:39:49.466801", "type": "NOTE", "content": "📌 dependencies: ['Task 2 완료']"}
+{"timestamp": "2025-08-02T16:39:49.466801", "event_type": "NOTE", "ts": "2025-08-02T16:39:49.466801", "type": "NOTE", "content": "📌 custom_field: test"}
+{"timestamp": "2025-08-02T16:45:33.644697", "event_type": "NOTE", "ts": "2025-08-02T16:45:33.644697", "type": "NOTE", "content": "📄 API 개선안 문서 작성: docs/reports/api_improvement_plan.md"}
+{"timestamp": "2025-08-02T16:45:33.644697", "event_type": "NOTE", "ts": "2025-08-02T16:45:33.644697", "type": "NOTE", "content": "🤖 O3-Claude 병렬 분석 완료"}

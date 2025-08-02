@@ -1,4 +1,6 @@
 import os
+import glob
+import json
 """
 극단순화된 Workflow 명령어 시스템
 Flow 개념 없이 Plan과 Task만으로 작업 관리
@@ -189,6 +191,164 @@ def create_plan(manager: UltraSimpleFlowManager, name: Optional[str]) -> None:
     _current_plan_id = plan.id
     print(f"✅ 자동으로 선택됨")
 
+def display_task_history(plan_id: str, show_all: bool = False):
+    """완료된 Task들의 JSONL 전체 내역을 모두 표시"""
+    plan_dir = os.path.join(
+        get_manager().project_path,
+        ".ai-brain", "flow", "plans", plan_id
+    )
+
+    if not os.path.exists(plan_dir):
+        return
+
+    print("\n📋 기존 Task 작업 내역 (전체):")
+    print("="*80)
+
+    jsonl_files = sorted(glob.glob(os.path.join(plan_dir, "*.jsonl")))
+    
+    for jsonl_file in jsonl_files:
+        task_name = os.path.basename(jsonl_file).replace('.jsonl', '')
+        events = []
+
+        # JSONL 파일 읽기
+        try:
+            with open(jsonl_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    if line.strip():
+                        try:
+                            events.append(json.loads(line.strip()))
+                        except json.JSONDecodeError:
+                            continue
+        except Exception as e:
+            print(f"\n❌ 파일 읽기 오류 ({task_name}): {e}")
+            continue
+
+        # 완료된 Task만 표시 (또는 전체 표시)
+        is_completed = any(
+            e.get('event_type') == 'COMPLETE' or e.get('type') == 'COMPLETE' 
+            for e in events
+        )
+
+        if is_completed or show_all:
+            print(f"\n\n{'='*80}")
+            print(f"📁 Task: {task_name}")
+            print(f"📊 총 이벤트: {len(events)}개")
+            print("="*80)
+            
+            # 모든 이벤트를 순서대로 표시
+            for i, event in enumerate(events, 1):
+                event_type = event.get('event_type') or event.get('type', 'UNKNOWN')
+                timestamp = event.get('timestamp', event.get('ts', 'N/A'))
+                
+                print(f"\n[이벤트 #{i}] {event_type} - {timestamp}")
+                print("-"*60)
+                
+                # 이벤트 타입별 전체 내용 표시
+                if event_type == 'TASK_INFO':
+                    print(f"  📌 제목: {event.get('title', 'N/A')}")
+                    print(f"  ⏰ 예상시간: {event.get('estimate', 'N/A')}")
+                    print(f"  🎯 우선순위: {event.get('priority', 'N/A')}")
+                    desc = event.get('description', '')
+                    if desc:
+                        print(f"  📝 설명: {desc}")
+                        
+                elif event_type == 'DESIGN':
+                    design_content = event.get('design', '')
+                    if design_content:
+                        print("  🏗️ 설계 내용:")
+                        for line in design_content.split('\n'):
+                            print(f"    {line}")
+                            
+                elif event_type == 'TODO':
+                    todos = event.get('todos', [])
+                    print(f"  📋 TODO 목록 ({len(todos)}개):")
+                    for j, todo in enumerate(todos, 1):
+                        print(f"    {j}. {todo}")
+                        
+                elif event_type == 'TODO_UPDATE':
+                    completed = event.get('completed', [])
+                    remaining = event.get('remaining', [])
+                    new_todos = event.get('new', [])
+                    blocked = event.get('blocked', [])
+                    
+                    if completed:
+                        print(f"  ✅ 완료된 항목 ({len(completed)}개):")
+                        for item in completed:
+                            print(f"    - {item}")
+                    if remaining:
+                        print(f"  ⏳ 남은 항목 ({len(remaining)}개):")
+                        for item in remaining:
+                            print(f"    - {item}")
+                    if new_todos:
+                        print(f"  🆕 새로 추가된 항목 ({len(new_todos)}개):")
+                        for item in new_todos:
+                            print(f"    - {item}")
+                    if blocked:
+                        print(f"  🚫 블로킹된 항목 ({len(blocked)}개):")
+                        for item in blocked:
+                            print(f"    - {item}")
+                            
+                elif event_type == 'ANALYZE':
+                    target = event.get('target', 'N/A')
+                    result = event.get('result', '')
+                    print(f"  🔍 분석 대상: {target}")
+                    if result:
+                        print(f"  📊 분석 결과:")
+                        for line in result.split('\n'):
+                            print(f"    {line}")
+                            
+                elif event_type == 'CODE':
+                    action = event.get('action', 'N/A')
+                    file_path = event.get('file', 'N/A')
+                    summary = event.get('summary', '')
+                    print(f"  🔧 액션: {action}")
+                    print(f"  📄 파일: {file_path}")
+                    if summary:
+                        print(f"  📝 요약:")
+                        for line in summary.split('\n'):
+                            print(f"    {line}")
+                            
+                elif event_type == 'DECISION':
+                    decision = event.get('decision', '')
+                    rationale = event.get('rationale', '')
+                    print(f"  🤔 결정: {decision}")
+                    if rationale:
+                        print(f"  💭 이유: {rationale}")
+                        
+                elif event_type == 'BLOCKER':
+                    issue = event.get('issue', '')
+                    severity = event.get('severity', 'N/A')
+                    solution = event.get('solution', '')
+                    print(f"  🚨 이슈: {issue}")
+                    print(f"  ⚠️ 심각도: {severity}")
+                    if solution:
+                        print(f"  💡 해결방안: {solution}")
+                        
+                elif event_type == 'NOTE':
+                    content = event.get('content', event.get('note', ''))
+                    print(f"  📝 메모: {content}")
+                    
+                elif event_type == 'CONTEXT':
+                    ctx_type = event.get('context_type', 'N/A')
+                    ctx_data = event.get('data', '')
+                    print(f"  🔗 컨텍스트 타입: {ctx_type}")
+                    print(f"  📋 데이터: {ctx_data}")
+                    
+                elif event_type == 'COMPLETE':
+                    summary = event.get('summary', '')
+                    print(f"  ✅ 완료 요약:")
+                    if summary:
+                        for line in summary.split('\n'):
+                            print(f"    {line}")
+                else:
+                    # 알 수 없는 이벤트 타입의 경우 전체 내용 표시
+                    print(f"  📦 전체 데이터:")
+                    print(json.dumps(event, indent=4, ensure_ascii=False))
+            
+            print(f"\n{'='*80}")
+            print(f"📊 Task '{task_name}' 종료 - 총 {len(events)}개 이벤트")
+            print("="*80)
+
 def select_plan(plan_id: Optional[str]) -> None:
     """Plan 선택 - 순번, 부분 매칭, 인덱스 모두 지원"""
     global _current_plan_id
@@ -204,6 +364,7 @@ def select_plan(plan_id: Optional[str]) -> None:
     if plan:
         _current_plan_id = plan_id
         print(f"✅ Plan 선택됨: {plan.name}")
+        display_task_history(plan_id)
         return
 
     # 2. 순번 매칭 (o3 권장 방식)
@@ -220,6 +381,7 @@ def select_plan(plan_id: Optional[str]) -> None:
             _current_plan_id = matches[0].id
             print(f"✅ Plan 선택됨: {matches[0].name}")
             print(f"   (순번 매칭: {plan_id} → {matches[0].id})")
+            display_task_history(matches[0].id)
             return
         elif len(matches) > 1:
             # 가장 최근 것 선택 (날짜 역순)
@@ -227,6 +389,7 @@ def select_plan(plan_id: Optional[str]) -> None:
             _current_plan_id = matches[0].id
             print(f"✅ Plan 선택됨: {matches[0].name}")
             print(f"   (순번 {plan_id} 중복 → 가장 최근 선택)")
+            display_task_history(matches[0].id)
             if len(matches) > 1:
                 print(f"   💡 동일 순번 {len(matches)}개 존재")
             return
@@ -258,6 +421,7 @@ def select_plan(plan_id: Optional[str]) -> None:
         _current_plan_id = matches[0].id
         print(f"✅ Plan 선택됨: {matches[0].name}")
         print(f"   (부분 매칭: {plan_id} → {matches[0].id})")
+        display_task_history(matches[0].id)
     else:
         print(f"🔍 여러 Plan이 '{plan_id}'와 일치합니다:")
         for i, p in enumerate(matches[:5], 1):

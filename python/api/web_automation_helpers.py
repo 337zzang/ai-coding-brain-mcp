@@ -252,7 +252,7 @@ def web_demo():
 # 기존 함수명과의 호환성을 위한 별칭
 web_record_start = web_start
 web_record_stop = web_generate_script
-web_record_status = web_status
+# web_record_status = web_status  # web_status는 아래에 정의되어 있으므로 나중에 설정
 
 # Wrapper 함수들 (에러 처리 강화)
 
@@ -295,3 +295,7 @@ def web_status() -> Dict[str, Any]:
 def web_get_data() -> Dict[str, Any]:
     """추출된 데이터 가져오기 (에러 처리 강화)"""
     return safe_execute('web_get_data', _web_get_data_impl)
+
+
+# web_status 함수가 정의된 후에 별칭 설정
+web_record_status = web_status

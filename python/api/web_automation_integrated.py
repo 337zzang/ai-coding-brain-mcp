@@ -523,9 +523,9 @@ class REPLBrowserWithRecording:
 
             # 선택자 추가
             for k, v in selectors.items():
-                script_lines.append(f'    "{k}": "{v}",')
-            script_lines.append('}')
-            script_lines.append('')
+                script_lines.h.append(f'    "{k}": "{v}",')
+            script_lines.h.append('}')
+            script_lines.h.append('')
 
             # 메인 함수
             script_lines.extend([
@@ -600,7 +600,7 @@ class REPLBrowserWithRecording:
             # 파일 저장
             try:
                 with open(output_file, 'w', encoding='utf-8') as f:
-                    f.write(script)
+                    f.h.write(script)
                 return {
                     'ok': True,
                     'path': output_file,

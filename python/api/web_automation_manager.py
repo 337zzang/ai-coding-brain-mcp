@@ -79,7 +79,7 @@ class BrowserManager:
             instances = []
             for project, metadata in self._instance_metadata.items():
                 if metadata.get("active", False):
-                    instances.append({
+                    instances.h.append({
                         "project": project,
                         "type": metadata.get("type"),
                         "created_at": metadata.get("created_at"),

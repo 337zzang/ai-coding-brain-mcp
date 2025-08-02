@@ -79,6 +79,33 @@ class LazyHelperProxy(types.ModuleType):
         return dir(self._module)
 
 # 레거시 경고 추적용 전역 변수
+_legacy_warnings = set()
+
+def create_legacy_stub(h, func_name):
+    """레거시 호환성을 위한 스텁 생성
+
+    기존 코드가 read(), write() 등을 직접 호출할 때
+    경고를 표시하고 h.read(), h.write()로 위임
+    """
+    def legacy_stub(*args, **kwargs):
+        # 함수별로 첫 호출 시에만 경고
+        if func_name not in _legacy_warnings:
+            _legacy_warnings.add(func_name)
+            # 백슬래시 문제 해결을 위해 별도 변수 사용
+            deprecation_msg = (
+                f"DeprecationWarning: Direct use of '{func_name}()' is deprecated. "
+                f"Please use 'h.{func_name}()' instead. "
+                f"This will be removed in a future version."
+            )
+            warnings.warn(deprecation_msg, DeprecationWarning, stacklevel=2)
+        # 실제 함수 호출
+        return getattr(h, func_name)(*args, **kwargs)
+
+    # 원본 함수의 메타데이터 보존
+    legacy_stub.__name__ = func_name
+    legacy_stub.__doc__ = f"Deprecated: Use h.{func_name}() instead"
+
+    return legacy_stub
 
 def _init_project_paths():
     """프로젝트 루트를 찾아 sys.path 설정"""
@@ -127,7 +154,7 @@ helpers = None
 HELPERS_AVAILABLE = False
 
 def load_helpers():
-    """AI Helpers v2.0과 워크플로우 시스템 로드 (레거시 제거 버전)"""
+    """AI Helpers v2.0과 워크플로우 시스템 로드 (네임스페이스 격리 버전)"""
     global helpers, HELPERS_AVAILABLE
     if HELPERS_AVAILABLE:
         return True
@@ -140,11 +167,34 @@ def load_helpers():
         globals()['h'] = h
         globals()['helpers'] = h
 
-        # 레거시 코드 완전 제거 - 더 이상 직접 함수 호출 불가
-        # 모든 함수는 h.함수명() 형태로만 호출 가능
+        # 레거시 호환성을 위한 함수들
+        # 가장 자주 사용되는 함수들만 우선 지원
+        legacy_functions = [
+            # 파일 작업
+            'read', 'write', 'append', 'read_json', 'write_json', 'exists',
+            # 코드 분석
+            'parse', 'view', 'replace',
+            # 검색
+            'search_files', 'search_code', 'find_function', 'grep',
+            # LLM
+            'ask_o3_async', 'check_o3_status', 'get_o3_result',
+            # Git (조건부)
+            'git_status', 'git_add', 'git_commit', 'git_push', 'git_pull',
+            'git_branch', 'git_log', 'git_diff',
+            # Flow
+            'flow', 'create_task_logger',
+            # 프로젝트
+            'get_current_project', 'flow_project_with_workflow'
+        ]
+
+        # 스텁 함수 생성 및 등록
+        for func_name in legacy_functions:
+            # 실제로 존재하는 함수만 스텁 생성
+            if hasattr(h, func_name):
+                globals()[func_name] = create_legacy_stub(h, func_name)
 
         HELPERS_AVAILABLE = True
-        print("✅ AI Helpers v2.0 로드 완료 (순수 h.* 모드)")
+        print("✅ AI Helpers v2.0 로드 완료 (네임스페이스 격리 모드)")
         return True
 
     except Exception as e:

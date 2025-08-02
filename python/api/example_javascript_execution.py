@@ -18,8 +18,8 @@ def example_basic_evaluation():
     print("=== 기본 JavaScript 실행 예제 ===\n")
 
     # 브라우저 시작
-    web_start(headless=False)
-    web_goto("https://example.com")
+    h.web_start(headless=False)
+    h.web_goto("https://example.com")
 
     # 1. 간단한 표현식
     title = web_evaluate("document.title")["data"]
@@ -40,8 +40,8 @@ def example_data_extraction():
     """데이터 추출 예제"""
     print("\n=== 데이터 추출 예제 ===\n")
 
-    web_start(headless=False)
-    web_goto("https://quotes.toscrape.com")
+    h.web_start(headless=False)
+    h.web_goto("https://quotes.toscrape.com")
 
     # 모든 인용구 추출
     script = """
@@ -73,8 +73,8 @@ def example_dynamic_interaction():
     """동적 상호작용 예제"""
     print("\n=== 동적 상호작용 예제 ===\n")
 
-    web_start(headless=False)
-    web_goto("https://www.w3schools.com/html/html_forms.asp")
+    h.web_start(headless=False)
+    h.web_goto("https://www.w3schools.com/html/html_forms.asp")
 
     # 폼 필드 찾고 값 설정
     print("폼 필드에 값 입력...")
@@ -104,8 +104,8 @@ def example_wait_conditions():
     """대기 조건 예제"""
     print("\n=== 대기 조건 예제 ===\n")
 
-    web_start(headless=False)
-    web_goto("https://httpbin.org/delay/2")
+    h.web_start(headless=False)
+    h.web_goto("https://httpbin.org/delay/2")
 
     print("페이지 로딩 대기 중...")
 

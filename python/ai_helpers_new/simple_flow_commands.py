@@ -47,15 +47,15 @@ def flow(command: str = "") -> Dict[str, Any]:
     극단순 Flow 명령어 처리
 
     사용법:
-        flow()                    # 현재 상태 표시
-        flow("/list")            # Plan 목록
-        flow("/create 계획이름")  # 새 Plan 생성
-        flow("/select plan_id")  # Plan 선택
-        flow("/task add 작업명")  # Task 추가
-        flow("/task done task_id") # Task 완료
-        flow("/delete plan_id")  # Plan 삭제
-        flow("/project 프로젝트명") # 프로젝트 전환
-        flow("/help")            # 도움말
+        h.flow()                    # 현재 상태 표시
+        h.flow("/list")            # Plan 목록
+        h.flow("/create 계획이름")  # 새 Plan 생성
+        h.flow("/select plan_id")  # Plan 선택
+        h.flow("/task add 작업명")  # Task 추가
+        h.flow("/task done task_id") # Task 완료
+        h.flow("/delete plan_id")  # Plan 삭제
+        h.flow("/project 프로젝트명") # 프로젝트 전환
+        h.flow("/help")            # 도움말
     """
     manager = get_manager()
     parts = command.strip().split(maxsplit=2)
@@ -541,7 +541,7 @@ def switch_project(project_name: Optional[str]) -> None:
 
     if not project_name:
         # 현재 프로젝트 표시
-        current = get_current_project()
+        current = h.get_current_project()
         if current and current.get('ok'):
             project_data = current.get('data', {})
             print(f"\n현재 프로젝트: {project_data.get('name', 'Unknown')}")
@@ -553,7 +553,7 @@ def switch_project(project_name: Optional[str]) -> None:
     # 안전한 프로젝트 전환
     try:
         # flow_project_with_workflow 사용 - dict 반환
-        result = flow_project_with_workflow(project_name)
+        result = h.flow_project_with_workflow(project_name)
 
         # 전환 성공 확인
         if isinstance(result, dict) and result.get('ok'):
@@ -800,7 +800,7 @@ def _show_direct_structure():
                 pass
 
         # 프로젝트 이름 표시
-        current = get_current_project()
+        current = h.get_current_project()
         project_name = 'unknown'
         if current and current.get('ok'):
             project_name = current.get('data', {}).get('name', 'unknown')
@@ -834,25 +834,25 @@ def show_help() -> None:
 ==========================
 
 기본 명령어:
-  flow()                    # 현재 상태 표시
-  flow("/list")            # Plan 목록 보기
-  flow("/create 계획이름")  # 새 Plan 생성
-  flow("/select plan_id")  # Plan 선택
-  flow("/delete plan_id")  # Plan 삭제
+  h.flow()                    # 현재 상태 표시
+  h.flow("/list")            # Plan 목록 보기
+  h.flow("/create 계획이름")  # 새 Plan 생성
+  h.flow("/select plan_id")  # Plan 선택
+  h.flow("/delete plan_id")  # Plan 삭제
 
 Task 명령어:
-  flow("/task")            # 현재 Plan의 Task 목록
-  flow("/task add 작업명")  # Task 추가
-  flow("/task done task_id") # Task 완료 처리
-  flow("/task progress task_id") # Task 진행중 처리
+  h.flow("/task")            # 현재 Plan의 Task 목록
+  h.flow("/task add 작업명")  # Task 추가
+  h.flow("/task done task_id") # Task 완료 처리
+  h.flow("/task progress task_id") # Task 진행중 처리
 
 프로젝트:
-  flow("/project")         # 현재 프로젝트 확인
-  flow("/project 이름")    # 프로젝트 전환
+  h.flow("/project")         # 현재 프로젝트 확인
+  h.flow("/project 이름")    # 프로젝트 전환
 
 기타:
-  flow("/help")            # 이 도움말 표시
-  flow("/status")          # 상태 표시
+  h.flow("/help")            # 이 도움말 표시
+  h.flow("/status")          # 상태 표시
 
 팁:
 - Plan을 먼저 선택해야 Task를 추가할 수 있습니다.
@@ -958,7 +958,7 @@ def show_plan_progress() -> str:
         remaining_tasks = total_tasks - completed_tasks
         if remaining_tasks > 0:
             output_lines.append("\n💡 다음 작업:")
-            output_lines.append(f"   {remaining_tasks}개의 Task가 남아있습니다. flow('/task') 명령으로 확인하세요.")
+            output_lines.append(f"   {remaining_tasks}개의 Task가 남아있습니다. h.flow('/task') 명령으로 확인하세요.")
         
         return "\n".join(output_lines)
         

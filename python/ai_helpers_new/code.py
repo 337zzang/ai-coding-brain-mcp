@@ -135,7 +135,7 @@ def parse(path: str) -> Dict[str, Any]:
 
     # AST 파싱
     try:
-        tree = ast.parse(content, filename=path)
+        tree = ast.h.parse(content, filename=path)
     except SyntaxError as e:
         return err(f'Syntax error at line {e.lineno}: {e.msg}')
     except Exception as e:
@@ -165,7 +165,7 @@ def view(path: str, name: str) -> Dict[str, Any]:
         lines = Path(path).read_text(encoding='utf-8').splitlines()
 
         # AST로 위치 찾기
-        tree = ast.parse('\n'.join(lines))
+        tree = ast.h.parse('\n'.join(lines))
 
         for node in tree.body:
             node_name = None
@@ -433,7 +433,7 @@ def insert(path: str, marker: str, code: str, after: bool = True) -> Dict[str, A
 
         # 삽입
         for i, code_line in enumerate(code_lines):
-            lines.insert(insert_line + i, code_line)
+            lines.h.insert(insert_line + i, code_line)
 
         # 파일 쓰기
         Path(path).write_text('\n'.join(lines), encoding='utf-8')
@@ -451,7 +451,7 @@ def functions(path: str) -> Dict[str, Any]:
         성공: {'ok': True, 'data': ['func1', 'func2', ...]}
         실패: {'ok': False, 'error': 에러메시지}
     """
-    result = parse(path)
+    result = h.parse(path)
     if not result['ok']:
         return result
 
@@ -466,7 +466,7 @@ def classes(path: str) -> Dict[str, Any]:
         성공: {'ok': True, 'data': ['Class1', 'Class2', ...]}
         실패: {'ok': False, 'error': 에러메시지}
     """
-    result = parse(path)
+    result = h.parse(path)
     if not result['ok']:
         return result
 

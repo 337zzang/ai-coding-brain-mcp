@@ -89,18 +89,58 @@ def flow_project_with_workflow(
     readme_lines / file_dir_lines : int
         각각 출력할 최대 줄 수
     """
-    # 1) 바탕화면에서 프로젝트 찾기
-    desktop_path = Path.home() / "Desktop"
-    if not desktop_path.exists():
-        desktop_path = Path.home() / "바탕화면"
-
-    if not desktop_path.exists():
-        return err("❌ 바탕화면 경로를 찾을 수 없습니다")
-
-    project_path = desktop_path / project
-    if not project_path.exists() or not project_path.is_dir():
+    # 1) 프로젝트 기본 경로 결정
+    # 우선순위: 환경변수 > 플랫폼별 기본값
+    import platform
+    base_paths = []
+    
+    # 환경변수 확인
+    if os.environ.get('PROJECT_BASE_PATH'):
+        base_paths.append(Path(os.environ['PROJECT_BASE_PATH']))
+    
+    # 플랫폼별 기본 경로 추가
+    home = Path.home()
+    system = platform.system()
+    
+    if system == 'Windows':
+        base_paths.extend([
+            home / "Desktop",
+            home / "바탕화면",
+            home / "Documents",
+            home / "문서"
+        ])
+    elif system == 'Darwin':  # macOS
+        base_paths.extend([
+            home / "Desktop",
+            home / "Documents",
+            home / "Developer"
+        ])
+    else:  # Linux 및 기타
+        base_paths.extend([
+            home / "Desktop",
+            home / "Documents",
+            home / "projects",
+            home
+        ])
+    
+    # 2) 프로젝트 찾기
+    project_path = None
+    searched_paths = []
+    
+    for base_path in base_paths:
+        if base_path.exists():
+            candidate = base_path / project
+            searched_paths.append(str(base_path))
+            if candidate.exists() and candidate.is_dir():
+                project_path = candidate
+                break
+    
+    if not project_path:
         print(f"❌ 프로젝트를 찾을 수 없습니다: {project}")
-        print(f"   검색 경로: {desktop_path}")
+        print(f"   검색한 경로들:")
+        for path in searched_paths:
+            print(f"   - {path}")
+        print("\n💡 팁: PROJECT_BASE_PATH 환경변수를 설정하여 기본 경로를 지정할 수 있습니다.")
         return err(f"프로젝트를 찾을 수 없습니다: {project}")
 
     # 2) 디렉토리 이동
@@ -115,7 +155,7 @@ def flow_project_with_workflow(
     _current_project_cache = None
 
     # 3) 프로젝트 정보 수집
-    proj_info = get_current_project()
+    proj_info = h.get_current_project()
     if not proj_info['ok']:
         return proj_info
 
@@ -157,7 +197,7 @@ def flow_project_with_workflow(
     git_info = None
     try:
         from .git import git_status
-        git_result = git_status()
+        git_result = h.git_status()
         if git_result['ok']:
             git_info = git_result['data']
             print("\n🔀 Git 상태:")

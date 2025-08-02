@@ -191,7 +191,7 @@ class ErrorContext:
         # 호출 스택 정보 추출
         call_stack = []
         for frame in stack_frames:
-            call_stack.append({
+            call_stack.h.append({
                 "file": frame.filename,
                 "line": frame.lineno,
                 "function": frame.name,
@@ -220,9 +220,9 @@ class ErrorContext:
         serialized = []
         for arg in args:
             try:
-                serialized.append(repr(arg))
+                serialized.h.append(repr(arg))
             except:
-                serialized.append(f"<{type(arg).__name__} object>")
+                serialized.h.append(f"<{type(arg).__name__} object>")
         return serialized
 
     def _serialize_kwargs(self, kwargs) -> Dict[str, str]:
@@ -263,5 +263,3 @@ class ErrorClassifier:
             "RuntimeError", "NotImplementedError", "AssertionError"
         ]
     }
-
-    @

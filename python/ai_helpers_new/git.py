@@ -115,7 +115,7 @@ def git_status(include_log: bool = False) -> Dict[str, Any]:
 
     # 최근 커밋 정보 (옵션)
     if include_log:
-        log_info = git_log(limit=1)
+        log_info = h.git_log(limit=1)
         if log_info['ok'] and log_info['data']:
             latest = log_info['data'][0]
             data['latest_commit'] = {
@@ -186,8 +186,8 @@ def git_current_branch() -> Dict[str, Any]:
 
 
 
-# DEPRECATED: git_status() 함수가 이제 모든 기능을 포함합니다.
-# 이 함수는 하위 호환성을 위해 유지되지만 git_status()를 사용하세요.
+# DEPRECATED: h.git_status() 함수가 이제 모든 기능을 포함합니다.
+# 이 함수는 하위 호환성을 위해 유지되지만 h.git_status()를 사용하세요.
 @safe_execution
 def git_log(limit: int = 10, format: str = "oneline", cwd: str = ".") -> Dict[str, Any]:
     """Git 커밋 히스토리 조회

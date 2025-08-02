@@ -69,9 +69,9 @@ def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dic
         시작 결과
 
     Example:
-        >>> web_start()
-        >>> web_goto("https://example.com")
-        >>> web_click("button")
+        >>> h.web_start()
+        >>> h.web_goto("https://example.com")
+        >>> h.web_click("button")
         >>> web_generate_script("my_scraper.py")
     """
     global _web_instance
@@ -102,7 +102,7 @@ def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dic
 def _web_goto_impl(url: str, wait_until: str = 'load') -> Dict[str, Any]:
     """페이지 이동"""
     if not _get_web_instance():
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     result = _web_instance.goto(url, wait_until)
     if result.get('ok'):
@@ -116,7 +116,7 @@ def web_goto(url: str, wait_until: str = 'load') -> Dict[str, Any]:
 def _web_click_impl(selector: str) -> Dict[str, Any]:
     """요소 클릭"""
     if not _get_web_instance():
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     result = _web_instance.click(selector)
     if result.get('ok'):
@@ -130,7 +130,7 @@ def web_click(selector: str) -> Dict[str, Any]:
 def _web_type_impl(selector: str, text: str) -> Dict[str, Any]:
     """텍스트 입력"""
     if not _get_web_instance():
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     result = _web_instance.type(selector, text)
     if result.get('ok'):
@@ -144,7 +144,7 @@ def _web_extract_impl(selector: str, name: Optional[str] = None,
     """web_extract의 실제 구현"""
     instance = _get_web_instance()
     if not instance:
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     # all 파라미터 처리
     if all:
@@ -165,7 +165,7 @@ def _web_extract_impl(selector: str, name: Optional[str] = None,
                     value = elem.inner_html()
                 else:
                     value = elem.get_attribute(extract_type)
-                results.append(value)
+                results.h.append(value)
             return {'ok': True, 'data': results, 'name': name or selector}
         except Exception as e:
             return {'ok': False, 'error': str(e)}
@@ -187,7 +187,7 @@ def web_extract(selector: str, name: Optional[str] = None,
         추출 결과 {'ok': bool, 'data': 추출값, 'name': 이름}
     """
     if not _get_web_instance():
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     return safe_execute('web_extract', _web_extract_impl, selector, name, extract_type, all)
     if result.get('ok'):
@@ -199,7 +199,7 @@ def web_extract(selector: str, name: Optional[str] = None,
 def web_extract_table(table_selector: str, name: Optional[str] = None) -> Dict[str, Any]:
     """테이블 데이터 추출"""
     if not _get_web_instance():
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     result = _web_instance.extract_table(table_selector, name)
     if result.get('ok'):
@@ -212,7 +212,7 @@ def web_extract_table(table_selector: str, name: Optional[str] = None) -> Dict[s
 def _web_wait_impl(seconds: float) -> Dict[str, Any]:
     """대기"""
     if not _get_web_instance():
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     print(f"⏳ {seconds}초 대기...")
     return _get_web_instance().wait(seconds)
@@ -221,7 +221,7 @@ def _web_wait_smart_impl(timeout: float, wait_for: str, **kwargs) -> Dict[str, A
     """스마트 대기 구현"""
     instance = _get_web_instance()
     if not instance:
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     # WebAutomationBrowser 인스턴스에서 page 객체 가져오기
     if not hasattr(instance, 'browser') or not hasattr(instance.browser, 'page'):
@@ -271,7 +271,7 @@ def _web_wait_smart_impl(timeout: float, wait_for: str, **kwargs) -> Dict[str, A
 def web_screenshot(path: Optional[str] = None) -> Dict[str, Any]:
     """스크린샷 캡처"""
     if not _get_web_instance():
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     result = _web_instance.screenshot(path)
     if result.get('ok'):
@@ -290,7 +290,7 @@ def web_generate_script(output_file: Optional[str] = None) -> Dict[str, Any]:
         생성 결과
     """
     if not _get_web_instance():
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     result = _web_instance.generate_script(output_file)
     if result.get('ok'):
@@ -335,7 +335,7 @@ def _web_status_impl() -> Dict[str, Any]:
 def _web_get_data_impl() -> Dict[str, Any]:
     """추출된 모든 데이터 조회"""
     if not _web_instance:
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     data = _web_instance.get_extracted_data()
     return {'ok': True, 'data': data, 'count': len(data)}
@@ -348,14 +348,14 @@ def web_demo():
     print("-" * 40)
 
     # 1. 시작
-    web_start()
+    h.web_start()
 
     # 2. 구글 방문
-    web_goto("https://www.google.com")
+    h.web_goto("https://www.google.com")
     web_wait(1)
 
     # 3. 검색
-    web_type('textarea[name="q"]', "Python web scraping")
+    h.web_type('textarea[name="q"]', "Python web scraping")
     web_wait(0.5)
 
     # 4. 스크린샷
@@ -502,7 +502,7 @@ def web_extract_batch(configs: List[Dict[str, Any]]) -> Dict[str, Any]:
         >>> print(result['data'])  # {'title': '...', 'price': 29.99, 'image': 'http://...'}
     """
     if not _get_web_instance():
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     result = _web_instance.extract_batch(configs)
 
@@ -534,7 +534,7 @@ def web_extract_attributes(selector: str, attributes: List[str]) -> Dict[str, An
         >>> print(result['data'])  # {'id': 'prod-123', 'data-price': '29.99', 'data-sku': 'ABC'}
     """
     if not _get_web_instance():
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     result = _web_instance.extract_attributes(selector, attributes)
 
@@ -560,7 +560,7 @@ def web_extract_form(form_selector: str) -> Dict[str, Any]:
         >>> print(result['data'])  # {'username': '', 'password': '', 'remember': False}
     """
     if not _get_web_instance():
-        return {'ok': False, 'error': 'web_start()를 먼저 실행하세요'}
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
     result = _web_instance.extract_form(form_selector)
 
@@ -582,7 +582,7 @@ def _web_evaluate_impl(script: str, arg: Any = None, strict: bool = False) -> Di
     """web_evaluate 실제 구현"""
     instance = _get_web_instance()
     if not instance:
-        return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
+        return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. h.web_start()를 먼저 호출하세요."}
 
     # JavaScriptExecutor 인스턴스 가져오기
     from .web_automation_manager import JavaScriptExecutor
@@ -659,7 +659,7 @@ def web_execute_script(script: str, *args, sandboxed: bool = True) -> Dict[str, 
     def impl():
         instance = _get_web_instance()
         if not instance:
-            return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
+            return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. h.web_start()를 먼저 호출하세요."}
 
         # JavaScriptExecutor 인스턴스 가져오기
         from .web_automation_manager import JavaScriptExecutor
@@ -736,7 +736,7 @@ def web_evaluate_element(selector: str, script: str) -> Dict[str, Any]:
     def impl():
         instance = _get_web_instance()
         if not instance:
-            return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
+            return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. h.web_start()를 먼저 호출하세요."}
 
         page = instance.browser.page
         if not page:
@@ -793,7 +793,7 @@ def web_wait_for_function(script: str, timeout: int = 30000, polling: int = 100)
     def impl():
         instance = _get_web_instance()
         if not instance:
-            return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. web_start()를 먼저 호출하세요."}
+            return {"ok": False, "error": "웹 브라우저가 시작되지 않았습니다. h.web_start()를 먼저 호출하세요."}
 
         page = instance.browser.page
         if not page:

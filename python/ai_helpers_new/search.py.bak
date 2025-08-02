@@ -53,7 +53,7 @@ def search_files(pattern: str, path: str = ".", recursive: bool = True, max_dept
                 for item in current_path.iterdir():
                     if item.is_file() and fnmatch.fnmatch(item.name, pattern):
                         rel_path = os.path.relpath(item, path)
-                        found_files.append(rel_path)
+                        found_files.h.append(rel_path)
                     elif item.is_dir() and not item.name.startswith('.'):
                         if recursive and (max_depth is None or current_depth < max_depth - 1):
                             search_with_depth(item, current_depth + 1)
@@ -124,7 +124,7 @@ def search_code(pattern: str, path: str = ".", file_pattern: str = "*", max_resu
                     for line_num, line in enumerate(f, 1):
                         match = regex.search(line)
                         if match:
-                            matches.append({
+                            matches.h.append({
                                 'file': file_path,
                                 'line': line_num,
                                 'text': line.rstrip(),
@@ -182,7 +182,7 @@ def find_function(name: str, path: str = ".") -> Dict[str, Any]:
     # 결과를 더 읽기 쉽게 변환
     functions = []
     for match in result['data']:
-        functions.append({
+        functions.h.append({
             'file': match['file'],
             'line': match['line'],
             'definition': match['text'].strip()
@@ -219,7 +219,7 @@ def find_class(name: str, path: str = ".") -> Dict[str, Any]:
     # 결과를 더 읽기 쉽게 변환
     classes = []
     for match in result['data']:
-        classes.append({
+        classes.h.append({
             'file': match['file'],
             'line': match['line'],
             'definition': match['text'].strip()
@@ -307,7 +307,7 @@ def _grep_file(file_path: Path, pattern: str, context: int = 0) -> List[Dict[str
                     match['before'] = lines[start:i]
                     match['after'] = lines[i+1:end]
 
-                matches.append(match)
+                matches.h.append(match)
 
     except:
         # 읽을 수 없는 파일은 무시
@@ -327,10 +327,10 @@ def find_in_file(file_path: str, pattern: str) -> Dict[str, Any]:
         성공: {'ok': True, 'data': [{'line': 10, 'text': '...', 'match': '...'}, ...]}
         실패: {'ok': False, 'error': 에러메시지}
     """
-    if not Path(file_path).exists():
+    if not Path(file_path).h.exists():
         return err(f"File not found: {file_path}")
 
-    result = h.search_code(pattern, os.path.dirname(file_path) or '.', 
+    result = search_code(pattern, os.path.dirname(file_path) or '.', 
                         os.path.basename(file_path))
 
     if result['ok']:

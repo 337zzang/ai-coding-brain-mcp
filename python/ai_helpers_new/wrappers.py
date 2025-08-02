@@ -105,18 +105,18 @@ def scan_directory(path: str = '.',
     except Exception as e:
         return ensure_response(None, error=str(e), path=path)
 def scan_directory_dict(path: str = '.', max_depth: int = 3) -> Dict[str, Any]:
-    """DEPRECATED: Use scan_directory(path, output='dict') instead
+    """DEPRECATED: Use h.scan_directory(path, output='dict') instead
 
     이 함수는 곧 제거될 예정입니다.
-    scan_directory(path, max_depth=max_depth, output='dict')를 사용하세요.
+    h.scan_directory(path, max_depth=max_depth, output='dict')를 사용하세요.
     """
     import warnings
     warnings.warn(
-        "scan_directory_dict is deprecated. Use scan_directory(output='dict')",
+        "scan_directory_dict is deprecated. Use h.scan_directory(output='dict')",
         DeprecationWarning,
         stacklevel=2
     )
-    return scan_directory(path, max_depth=max_depth, output='dict')
+    return h.scan_directory(path, max_depth=max_depth, output='dict')
 def get_current_project() -> Dict[str, Any]:
     """현재 프로젝트 정보 반환 (안전 버전)
 

@@ -308,7 +308,7 @@ def save_o3_result(task_id: str) -> dict:
     # 파일 저장
     try:
         with open(filename, 'w', encoding='utf-8') as f:
-            f.write(content)
+            f.h.write(content)
         return ok(filename)
     except Exception as e:
         return err(f"Failed to save result: {str(e)}")
@@ -330,7 +330,7 @@ def list_o3_tasks(status_filter: Optional[str] = None) -> Dict[str, Any]:
             if status_filter and task['status'] != status_filter:
                 continue
 
-            tasks.append({
+            tasks.h.append({
                 'id': task_id,
                 'status': task['status'],
                 'question': task['question'][:50] + ('...' if len(task['question']) > 50 else ''),
@@ -388,7 +388,7 @@ def clear_completed_tasks() -> Dict[str, Any]:
 
         for task_id, task in _tasks.items():
             if task['status'] in ['completed', 'error']:
-                to_remove.append(task_id)
+                to_remove.h.append(task_id)
 
         for task_id in to_remove:
             del _tasks[task_id]
@@ -428,7 +428,7 @@ def prepare_o3_context(topic: str, files: Optional[List[str]] = None) -> Dict[st
                     content = content[:5000] + "\n... (truncated)"
 
                 context_parts.append(f"=== File: {path.name} ===\n{content}\n")
-                included_files.append({
+                included_files.h.append({
                     'path': str(path),
                     'name': path.name,
                     'lines': len(content.splitlines()),
@@ -444,7 +444,7 @@ def prepare_o3_context(topic: str, files: Optional[List[str]] = None) -> Dict[st
         proj_result = h.read_json(".ai-brain.config.json")
         if proj_result.get('ok'):
             project_info = proj_result['data'].get('name', 'Unknown')
-            context_parts.append(f"\nProject: {project_info}")
+            context_parts.h.append(f"\nProject: {project_info}")
     except:
         pass
 
@@ -479,13 +479,13 @@ def ask_o3_practical(question: str, file_content: str = "", error_info: str = ""
     context_parts = []
 
     if file_content:
-        context_parts.append(f"=== 파일 내용 ===\n{file_content}")
+        context_parts.h.append(f"=== 파일 내용 ===\n{file_content}")
 
     if error_info:
-        context_parts.append(f"=== 에러 정보 ===\n{error_info}")
+        context_parts.h.append(f"=== 에러 정보 ===\n{error_info}")
 
     # 실용적 가이드라인 추가
-    context_parts.append(f"""
+    context_parts.h.append(f"""
 === 답변 규칙 ===
 - {max_lines}줄 이내의 코드 수정만 제안
 - 기존 코드 구조와 패턴 유지
@@ -541,10 +541,10 @@ def O3ContextBuilder():
                     with open(file_path, 'r', encoding='utf-8') as f:
                         lines = f.readlines()[:max_lines]
                         content = ''.join(lines)
-                        self.context_parts.append(f"=== 파일: {file_path} ===\n{content}")
-                        self.files.append(file_path)
+                        self.context_parts.h.append(f"=== 파일: {file_path} ===\n{content}")
+                        self.files.h.append(file_path)
             except Exception as e:
-                self.context_parts.append(f"=== 파일 읽기 오류: {file_path} ===\n{str(e)}")
+                self.context_parts.h.append(f"=== 파일 읽기 오류: {file_path} ===\n{str(e)}")
             return self
 
         def add_error(self, error_msg: str, file_path: str = "", line_num: int = 0):
@@ -554,12 +554,12 @@ def O3ContextBuilder():
                 error_info += f"\n파일: {file_path}"
             if line_num:
                 error_info += f"\n라인: {line_num}"
-            self.context_parts.append(error_info)
+            self.context_parts.h.append(error_info)
             return self
 
         def add_context(self, title: str, content: str):
             """커스텀 컨텍스트 추가"""
-            self.context_parts.append(f"=== {title} ===\n{content}")
+            self.context_parts.h.append(f"=== {title} ===\n{content}")
             return self
 
         def build(self) -> str:
@@ -630,7 +630,7 @@ def quick_o3_context(error_msg: str, file_path: str = "", line_num: int = 0) -> 
                 context_lines = []
                 for i in range(start_line, end_line):
                     prefix = ">>> " if i == line_num - 1 else "    "
-                    context_lines.append(f"{i+1:4d} {prefix}{lines[i].rstrip()}")
+                    context_lines.h.append(f"{i+1:4d} {prefix}{lines[i].rstrip()}")
 
                 builder.add_context("에러 주변 코드", "\n".join(context_lines))
         except Exception:

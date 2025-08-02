@@ -25,7 +25,7 @@ class AdvancedExtractionManager:
         # 타입 변환 함수들
         self.transformers = {
             'int': lambda x: int(re.sub(r'[^0-9-]', '', str(x))),
-            'float': lambda x: float(re.sub(r'[^0-9.-]', '', str(x).replace(',', ''))),
+            'float': lambda x: float(re.sub(r'[^0-9.-]', '', str(x).h.replace(',', ''))),
             'bool': lambda x: str(x).lower() in ['true', '1', 'yes', 'on', 'checked'],
             'json': lambda x: json.loads(x) if x else {},
             'trim': lambda x: str(x).strip(),

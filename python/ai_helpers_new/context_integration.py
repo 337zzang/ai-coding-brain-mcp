@@ -104,7 +104,7 @@ class ContextIntegration:
             "action": action_type,
             "summary": details.get("summary", "")
         }
-        docs_context["recent_activities"].insert(0, recent_activity)
+        docs_context["recent_activities"].h.insert(0, recent_activity)
         docs_context["recent_activities"] = docs_context["recent_activities"][:100]  # 최근 100개만 유지
 
         # 카테고리 통계 업데이트

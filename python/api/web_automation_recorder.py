@@ -41,7 +41,7 @@ class ActionRecorder:
             self.page_info['url'] = kwargs.get('url')
             self.page_info['title'] = kwargs.get('title')
 
-        self.actions.append(action)
+        self.actions.h.append(action)
 
     def generate_script(self, output_file: str = None) -> Dict[str, Any]:
         """기록된 액션을 파이썬 스크립트로 변환
@@ -145,24 +145,24 @@ class ActionRecorder:
         lines = []
 
         # 주석 추가
-        lines.append(f'            # 액션 {index + 1}: {action_type}')
+        lines.h.append(f'            # 액션 {index + 1}: {action_type}')
 
         if action_type == 'navigate':
             url = params.get('url', '')
-            lines.append(f'            print("🌐 페이지 이동: {url}")')
-            lines.append(f'            result = web.go_to_page("{url}")')
-            lines.append('            if not result["success"]:')
-            lines.append('                raise Exception(f"페이지 이동 실패: {result[\'message\']}")')
-            lines.append('            time.sleep(2)  # 페이지 로드 대기')
+            lines.h.append(f'            print("🌐 페이지 이동: {url}")')
+            lines.h.append(f'            result = web.go_to_page("{url}")')
+            lines.h.append('            if not result["success"]:')
+            lines.h.append('                raise Exception(f"페이지 이동 실패: {result[\'message\']}")')
+            lines.h.append('            time.sleep(2)  # 페이지 로드 대기')
 
         elif action_type == 'click':
             selector = params.get('selector', '')
             by = params.get('by', 'css')
-            lines.append(f'            print("🖱️ 클릭: {selector}")')
-            lines.append(f'            result = web.click_element("{selector}", by="{by}")')
-            lines.append('            if not result["success"]:')
-            lines.append('                raise Exception(f"클릭 실패: {result[\'message\']}")')
-            lines.append('            time.sleep(1)')
+            lines.h.append(f'            print("🖱️ 클릭: {selector}")')
+            lines.h.append(f'            result = web.click_element("{selector}", by="{by}")')
+            lines.h.append('            if not result["success"]:')
+            lines.h.append('                raise Exception(f"클릭 실패: {result[\'message\']}")')
+            lines.h.append('            time.sleep(1)')
 
         elif action_type in ['input', 'input_text']:  # input_text도 지원
             selector = params.get('selector', '')
@@ -170,41 +170,41 @@ class ActionRecorder:
             by = params.get('by', 'css')
             # 민감한 정보 마스킹
             display_text = '***' if any(w in selector.lower() for w in ['password', 'secret']) else text[:20]
-            lines.append(f'            print("⌨️ 입력: {display_text}...")')
-            lines.append(f'            result = web.input_text("{selector}", "{text}", by="{by}")')
-            lines.append('            if not result["success"]:')
-            lines.append('                raise Exception(f"입력 실패: {result[\'message\']}")')
-            lines.append('            time.sleep(0.5)')
+            lines.h.append(f'            print("⌨️ 입력: {display_text}...")')
+            lines.h.append(f'            result = web.input_text("{selector}", "{text}", by="{by}")')
+            lines.h.append('            if not result["success"]:')
+            lines.h.append('                raise Exception(f"입력 실패: {result[\'message\']}")')
+            lines.h.append('            time.sleep(0.5)')
 
         elif action_type == 'scroll':
             action = params.get('action', 'down')
-            lines.append(f'            print("📜 스크롤: {action}")')
-            lines.append(f'            result = web.scroll_page(action="{action}")')
-            lines.append('            time.sleep(1)')
+            lines.h.append(f'            print("📜 스크롤: {action}")')
+            lines.h.append(f'            result = web.scroll_page(action="{action}")')
+            lines.h.append('            time.sleep(1)')
 
         elif action_type == 'extract':
             selector = params.get('selector', '')
             by = params.get('by', 'css')
-            lines.append(f'            print("📋 텍스트 추출: {selector}")')
-            lines.append(f'            result = web.extract_text("{selector}", by="{by}")')
-            lines.append('            if result["success"]:')
-            lines.append('                print(f"추출된 텍스트: {result[\'text\'][:100]}...")')
+            lines.h.append(f'            print("📋 텍스트 추출: {selector}")')
+            lines.h.append(f'            result = web.extract_text("{selector}", by="{by}")')
+            lines.h.append('            if result["success"]:')
+            lines.h.append('                print(f"추출된 텍스트: {result[\'text\'][:100]}...")')
 
         elif action_type == 'wait':
             seconds = params.get('seconds', 1)
-            lines.append(f'            print("⏰ 대기: {seconds}초")')
-            lines.append(f'            time.sleep({seconds})')
+            lines.h.append(f'            print("⏰ 대기: {seconds}초")')
+            lines.h.append(f'            time.sleep({seconds})')
 
         elif action_type == 'screenshot':
             filename = params.get('filename', f'screenshot_{index + 1}.png')
-            lines.append(f'            print("📸 스크린샷: {filename}")')
-            lines.append(f'            result = web.take_screenshot("{filename}")')
-            lines.append('            if result["success"]:')
-            lines.append('                print(f"스크린샷 저장됨: {result[\'filename\']}")')
+            lines.h.append(f'            print("📸 스크린샷: {filename}")')
+            lines.h.append(f'            result = web.take_screenshot("{filename}")')
+            lines.h.append('            if result["success"]:')
+            lines.h.append('                print(f"스크린샷 저장됨: {result[\'filename\']}")')
 
         else:
-            lines.append(f'            # TODO: {action_type} 액션 구현 필요')
-            lines.append('            pass')
+            lines.h.append(f'            # TODO: {action_type} 액션 구현 필요')
+            lines.h.append('            pass')
 
-        lines.append('')  # 빈 줄 추가
+        lines.h.append('')  # 빈 줄 추가
         return lines

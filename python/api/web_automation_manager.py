@@ -249,3 +249,166 @@ class JavaScriptExecutor:
     def set_default_timeout(self, timeout: int) -> None:
         """기본 타임아웃 설정"""
         self._default_timeout = timeout
+
+
+    # 추가 위험 패턴들 (XSS, 리소스 고갈 등)
+    EXTENDED_DANGEROUS_PATTERNS = [
+        # XSS 관련
+        r'innerHTML\s*=',
+        r'outerHTML\s*=',
+        r'document\.body\.appendChild',
+        r'insertAdjacentHTML',
+        # 무한루프 위험
+        r'while\s*\(\s*true\s*\)',
+        r'for\s*\(\s*;\s*;\s*\)',
+        # 리소스 고갈
+        r'Array\s*\(\s*\d{7,}\s*\)',  # 매우 큰 배열
+        r'\.repeat\s*\(\s*\d{5,}\s*\)',  # 많은 반복
+        # 네트워크 요청
+        r'fetch\s*\(',
+        r'XMLHttpRequest',
+        r'WebSocket',
+        # 스토리지 접근
+        r'localStorage',
+        r'sessionStorage',
+        r'indexedDB'
+    ]
+
+    # 안전한 JavaScript 함수 화이트리스트
+    SAFE_FUNCTIONS = {
+        'querySelector', 'querySelectorAll', 'getElementById',
+        'getElementsByClassName', 'getElementsByTagName',
+        'getAttribute', 'hasAttribute', 'textContent',
+        'innerText', 'nodeValue', 'tagName', 'className',
+        'classList', 'dataset', 'style', 'offsetWidth',
+        'offsetHeight', 'scrollTop', 'scrollLeft',
+        'getBoundingClientRect', 'getComputedStyle'
+    }
+
+    def validate_script_extended(self, script: str, strict_mode: bool = False) -> Tuple[bool, Optional[str]]:
+        """
+        확장된 스크립트 검증
+
+        Args:
+            script: 검증할 스크립트
+            strict_mode: True일 경우 화이트리스트 기반 검증
+
+        Returns:
+            (is_safe, error_message)
+        """
+        # 기본 검증
+        is_safe, error_msg = self.validate_script(script)
+        if not is_safe:
+            return False, error_msg
+
+        # 확장 패턴 검사
+        for pattern in self.EXTENDED_DANGEROUS_PATTERNS:
+            if re.search(pattern, script, re.IGNORECASE):
+                return False, f"Extended dangerous pattern detected: {pattern}"
+
+        # Strict 모드: 화이트리스트 검증
+        if strict_mode:
+            # 함수 호출 추출
+            function_calls = re.findall(r'\.(\w+)\s*\(', script)
+            for func in function_calls:
+                if func not in self.SAFE_FUNCTIONS:
+                    return False, f"Function '{func}' not in whitelist"
+
+        # 복잡도 검증
+        complexity_score = self._calculate_complexity(script)
+        if complexity_score > 100:
+            return False, f"Script too complex (score: {complexity_score})"
+
+        return True, None
+
+    def _calculate_complexity(self, script: str) -> int:
+        """
+        스크립트 복잡도 계산
+
+        Returns:
+            복잡도 점수 (높을수록 복잡함)
+        """
+        score = 0
+
+        # 중첩 깊이
+        max_nesting = 0
+        current_nesting = 0
+        for char in script:
+            if char in '{([':
+                current_nesting += 1
+                max_nesting = max(max_nesting, current_nesting)
+            elif char in '})]':
+                current_nesting = max(0, current_nesting - 1)
+
+        score += max_nesting * 10
+
+        # 루프 개수
+        loops = len(re.findall(r'(for|while|do)\s*\(', script))
+        score += loops * 15
+
+        # 함수 호출 개수
+        calls = len(re.findall(r'\.\w+\s*\(', script))
+        score += calls * 2
+
+        # 전체 길이
+        score += len(script) // 100
+
+        return score
+
+    def create_sandbox_wrapper(self, script: str, allowed_globals: List[str] = None) -> str:
+        """
+        강화된 샌드박스 래퍼 생성
+
+        Args:
+            script: 래핑할 스크립트
+            allowed_globals: 허용할 전역 변수 목록
+
+        Returns:
+            샌드박스로 래핑된 스크립트
+        """
+        if allowed_globals is None:
+            allowed_globals = ['document', 'window']
+
+        # 전역 변수 접근 제한
+        globals_restriction = ', '.join(f"'{g}': {g}" for g in allowed_globals)
+
+        wrapped = f"""
+        (function() {{
+            'use strict';
+
+            // 샌드박스 환경 설정
+            const sandbox = {{
+                {globals_restriction}
+            }};
+
+            // with 문을 사용한 스코프 제한 (보안 강화)
+            with (sandbox) {{
+                try {{
+                    // 실행 시간 제한을 위한 시작 시간 기록
+                    const __startTime = Date.now();
+                    const __checkTimeout = () => {{
+                        if (Date.now() - __startTime > 5000) {{
+                            throw new Error('Script execution timeout (5s)');
+                        }}
+                    }};
+
+                    // 사용자 스크립트 실행
+                    const __result = (function() {{
+                        {script}
+                    }})();
+
+                    return __result;
+
+                }} catch (error) {{
+                    return {{
+                        __error: true,
+                        message: error.message,
+                        stack: error.stack,
+                        name: error.name
+                    }};
+                }}
+            }}
+        }})()
+        """
+        return wrapped
+

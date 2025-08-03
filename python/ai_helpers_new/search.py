@@ -154,7 +154,7 @@ def search_code(pattern: str, path: str = ".", file_pattern: str = "*", max_resu
         return err(f"Search failed: {str(e)}")
 
 
-def find_function(name: str, path: str = ".") -> Dict[str, Any]:
+def find_function(name: str, path: str = ".", strict: bool = False) -> Dict[str, Any]:
     """Python 파일에서 함수 정의 찾기
 
     Args:
@@ -172,6 +172,18 @@ def find_function(name: str, path: str = ".") -> Dict[str, Any]:
         }
         실패: {'ok': False, 'error': 에러메시지}
     """
+    if strict:
+        try:
+            # AST 기반 정확한 검색
+            result = _find_function_ast(name, path)
+            result['mode'] = 'ast'
+            return result
+        except Exception as e:
+            # 자동 폴백
+            import logging
+            logging.warning(f"AST search failed: {e}, falling back to regex")
+
+    # 기존 정규식 로직
     # 함수 정의 패턴
     pattern = rf'^\s*def\s+{re.escape(name)}\s*\('
 
@@ -191,7 +203,70 @@ def find_function(name: str, path: str = ".") -> Dict[str, Any]:
     return ok(functions, count=len(functions), function_name=name)
 
 
-def find_class(name: str, path: str = ".") -> Dict[str, Any]:
+
+
+def _find_function_ast(name: str, path: str) -> Dict[str, Any]:
+    """AST 기반 정확한 함수 검색 (주석/문자열 제외)"""
+    import ast
+    results = []
+
+    # Python 파일 찾기
+    py_files_result = search_files("*.py", path)
+    if not py_files_result['ok']:
+        return py_files_result
+
+    py_files = py_files_result['data'][:100]  # 성능을 위해 제한
+
+    for file_path in py_files:
+        try:
+            # 파일 읽기
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            # AST 파싱
+            tree = ast.parse(content, filename=file_path)
+
+            # 함수 찾기
+            for node in ast.walk(tree):
+                if isinstance(node, ast.FunctionDef) and node.name == name:
+                    # 함수 정의 추출
+                    lines = content.split('\n')
+                    start_line = node.lineno - 1
+
+                    # 간단한 함수 끝 찾기
+                    end_line = start_line
+                    if start_line < len(lines):
+                        indent_level = len(lines[start_line]) - len(lines[start_line].lstrip())
+                        for i in range(start_line + 1, min(len(lines), start_line + 50)):
+                            line = lines[i]
+                            if line.strip() and len(line) - len(line.lstrip()) <= indent_level:
+                                break
+                            end_line = i
+
+                    definition = '\n'.join(lines[start_line:end_line + 1])
+
+                    results.append({
+                        'file': file_path,
+                        'line': node.lineno,
+                        'definition': definition
+                    })
+
+        except (SyntaxError, UnicodeDecodeError):
+            # 파싱 불가능한 파일은 건너뛰기
+            continue
+        except Exception:
+            # 기타 오류도 건너뛰기
+            continue
+
+    return {
+        'ok': True,
+        'data': results,
+        'count': len(results),
+        'function_name': name,
+        'mode': 'regex'
+    }
+
+def find_class(name: str, path: str = ".", strict: bool = False) -> Dict[str, Any]:
     """Python 파일에서 클래스 정의 찾기
 
     Args:
@@ -209,6 +284,18 @@ def find_class(name: str, path: str = ".") -> Dict[str, Any]:
         }
         실패: {'ok': False, 'error': 에러메시지}
     """
+    if strict:
+        try:
+            # AST 기반 정확한 검색
+            result = _find_class_ast(name, path)
+            result['mode'] = 'ast'
+            return result
+        except Exception as e:
+            # 자동 폴백
+            import logging
+            logging.warning(f"AST search failed: {e}, falling back to regex")
+
+    # 기존 정규식 로직
     # 클래스 정의 패턴
     pattern = rf'^\s*class\s+{re.escape(name)}\s*[\(:]'
 
@@ -227,6 +314,67 @@ def find_class(name: str, path: str = ".") -> Dict[str, Any]:
 
     return ok(classes, count=len(classes), class_name=name)
 
+
+
+
+def _find_class_ast(name: str, path: str) -> Dict[str, Any]:
+    """AST 기반 정확한 클래스 검색 (주석/문자열 제외)"""
+    import ast
+    results = []
+
+    # Python 파일 찾기
+    py_files_result = search_files("*.py", path)
+    if not py_files_result['ok']:
+        return py_files_result
+
+    py_files = py_files_result['data'][:100]  # 성능을 위해 제한
+
+    for file_path in py_files:
+        try:
+            # 파일 읽기
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            # AST 파싱
+            tree = ast.parse(content, filename=file_path)
+
+            # 클래스 찾기
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ClassDef) and node.name == name:
+                    # 클래스 정의 추출
+                    lines = content.split('\n')
+                    start_line = node.lineno - 1
+
+                    # 간단한 클래스 끝 찾기
+                    end_line = start_line
+                    if start_line < len(lines):
+                        indent_level = len(lines[start_line]) - len(lines[start_line].lstrip())
+                        for i in range(start_line + 1, min(len(lines), start_line + 100)):
+                            line = lines[i]
+                            if line.strip() and len(line) - len(line.lstrip()) <= indent_level:
+                                break
+                            end_line = i
+
+                    definition = '\n'.join(lines[start_line:end_line + 1])
+
+                    results.append({
+                        'file': file_path,
+                        'line': node.lineno,
+                        'definition': definition
+                    })
+
+        except (SyntaxError, UnicodeDecodeError):
+            continue
+        except Exception:
+            continue
+
+    return {
+        'ok': True,
+        'data': results,
+        'count': len(results),
+        'class_name': name,
+        'mode': 'regex'
+    }
 
 def grep(pattern: str, path: str = ".", context: int = 0) -> Dict[str, Any]:
     """간단한 텍스트 검색 (grep과 유사)

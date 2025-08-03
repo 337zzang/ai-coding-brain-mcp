@@ -13,6 +13,8 @@ from .project import flow_project_with_workflow
 # New session-based imports
 from .session import get_current_session
 from .contextual_flow_manager import ContextualFlowManager
+from .manager_adapter import ManagerAdapter
+from .flow_api import get_flow_api
 
 # 전역 매니저 인스턴스
 # DEPRECATED: These global variables are maintained for backward compatibility
@@ -25,7 +27,8 @@ def get_manager() -> UltraSimpleFlowManager:
     """현재 프로젝트의 매니저 가져오기 (Session 기반)
 
     이 함수는 기존 코드와의 호환성을 위해 유지됩니다.
-    내부적으로는 새로운 Session 시스템을 사용합니다.
+    내부적으로는 새로운 Session 시스템을 사용하며,
+    ManagerAdapter를 통해 기존 인터페이스를 제공합니다.
     """
     # Get current session
     session = get_current_session()
@@ -44,21 +47,29 @@ def get_manager() -> UltraSimpleFlowManager:
         else:
             print(f"📁 Flow 저장소 사용: {project_name}/.ai-brain/flow/")
 
-    # For backward compatibility, return the old manager type
-    # In future phases, we'll migrate to using session.flow_manager directly
-    global _manager
-    if _manager is None:
-        _manager = UltraSimpleFlowManager(
-            project_path=str(session.get_project_path()), 
-            use_enhanced=True
-        )
+    # Return adapter for backward compatibility
+    # The adapter makes ContextualFlowManager look like UltraSimpleFlowManager
+    return ManagerAdapter(session.flow_manager)
 
-    return _manager
-
+def _show_deprecation_warning():
+    """Show deprecation warning for old-style usage."""
+    import warnings
+    warnings.warn(
+        "Direct flow() command usage is deprecated. "
+        "Consider using get_flow_api() for a more Pythonic interface:\n"
+        "  api = get_flow_api()\n"
+        "  plan = api.create_plan('My Plan')\n"
+        "  task = api.add_task('My Task')",
+        DeprecationWarning,
+        stacklevel=3
+    )
 
 def flow(command: str = "") -> Dict[str, Any]:
     """
     극단순 Flow 명령어 처리
+
+    이 함수는 명령어 기반 인터페이스를 제공합니다.
+    프로그래밍 방식의 접근을 원한다면 get_flow_api()를 사용하세요.
 
     사용법:
         h.flow()                    # 현재 상태 표시

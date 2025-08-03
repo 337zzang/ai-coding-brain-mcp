@@ -11,6 +11,7 @@ from .ultra_simple_flow_manager import UltraSimpleFlowManager
 
 # Flow 명령어 시스템
 from .simple_flow_commands import flow, help_flow
+from .flow_api import get_flow_api, FlowAPI
 from .task_logger import EnhancedTaskLogger, create_task_logger, display_plan_tasks
 
 # Core 모듈

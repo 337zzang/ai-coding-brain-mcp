@@ -101,10 +101,11 @@ def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dic
     return result
 def _web_goto_impl(url: str, wait_until: str = 'load') -> Dict[str, Any]:
     """페이지 이동"""
-    if not _get_web_instance():
+    web = _get_web_instance()
+    if not web:
         return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
-    result = _web_instance.goto(url, wait_until)
+    result = web.goto(url, wait_until)
     if result.get('ok'):
         print(f"📍 이동: {url}")
     return result
@@ -115,10 +116,11 @@ def web_goto(url: str, wait_until: str = 'load') -> Dict[str, Any]:
 
 def _web_click_impl(selector: str) -> Dict[str, Any]:
     """요소 클릭"""
-    if not _get_web_instance():
+    web = _get_web_instance()
+    if not web:
         return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
-    result = _web_instance.click(selector)
+    result = web.click(selector)
     if result.get('ok'):
         print(f"🖱️ 클릭: {selector}")
     return result
@@ -129,10 +131,11 @@ def web_click(selector: str) -> Dict[str, Any]:
 
 def _web_type_impl(selector: str, text: str) -> Dict[str, Any]:
     """텍스트 입력"""
-    if not _get_web_instance():
+    web = _get_web_instance()
+    if not web:
         return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
-    result = _web_instance.type(selector, text)
+    result = web.type(selector, text)
     if result.get('ok'):
         print(f"⌨️ 입력: {selector} <- {text[:20]}...")
     return result
@@ -165,7 +168,7 @@ def _web_extract_impl(selector: str, name: Optional[str] = None,
                     value = elem.inner_html()
                 else:
                     value = elem.get_attribute(extract_type)
-                results.h.append(value)
+                results.append(value)
             return {'ok': True, 'data': results, 'name': name or selector}
         except Exception as e:
             return {'ok': False, 'error': str(e)}

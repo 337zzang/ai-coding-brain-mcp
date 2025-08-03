@@ -73,6 +73,35 @@ class BrowserManager:
                 return True
             return False
 
+
+    def close_instance(self, project_name: str = "default") -> bool:
+        """브라우저 인스턴스를 안전하게 종료하고 제거
+
+        Args:
+            project_name: 프로젝트 이름
+
+        Returns:
+            bool: 성공 여부
+        """
+        with self._lock:
+            instance = self.get_instance(project_name)
+            if instance:
+                try:
+                    # 브라우저 인스턴스 종료 시도
+                    if hasattr(instance, 'stop'):
+                        instance.stop()
+                    elif hasattr(instance, 'quit'):
+                        instance.quit()
+                    elif hasattr(instance, 'close'):
+                        instance.close()
+                except Exception as e:
+                    import warnings
+                    warnings.warn(f"Failed to stop browser instance: {e}", RuntimeWarning)
+
+                # 인스턴스 제거
+                return self.remove_instance(project_name)
+            return False
+
     def list_instances(self) -> List[Dict[str, Any]]:
         """활성 인스턴스 목록 조회"""
         with self._lock:

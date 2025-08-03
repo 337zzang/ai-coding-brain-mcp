@@ -55,7 +55,7 @@ class EnhancedTaskLogger:
         self.task_name = task_name
 
         # 경로 설정 - 프로젝트 루트 기준
-        project_info = h.get_current_project()
+        project_info = get_current_project()
         if isinstance(project_info, dict) and 'path' in project_info:
             project_root = Path(project_info['path'])
         else:

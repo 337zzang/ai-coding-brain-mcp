@@ -39,6 +39,70 @@ def _read_if_exists(path: str, max_lines: int = 80) -> Optional[str]:
 
 @safe_execution
 def get_current_project() -> dict:
+    """현재 프로젝트 정보 가져오기 (Session 기반)"""
+    from .session import get_current_session
+
+    global _current_project_cache
+
+    # Session에서 프로젝트 정보 가져오기
+    session = get_current_session()
+
+    # Session이 초기화되지 않았으면 현재 디렉토리 기반으로 초기화
+    if not session.is_initialized:
+        cwd = os.getcwd()
+        project_name = os.path.basename(cwd)
+        try:
+            session.set_project(project_name, cwd)
+        except Exception as e:
+            return err(f"프로젝트 초기화 실패: {e}")
+
+    # 프로젝트 정보 가져오기
+    project_ctx = session.project_context
+    if not project_ctx:
+        return err("프로젝트가 설정되지 않았습니다")
+
+    # 캐시 확인
+    project_path = str(project_ctx.base_path)
+    if _current_project_cache and _current_project_cache.get('path') == project_path:
+        return ok(_current_project_cache)
+
+    try:
+        # 프로젝트 정보 수집
+        project_info = project_ctx.get_project_info()
+
+        # 추가 정보 수집
+        # Git 정보
+        has_git = (project_ctx.base_path / ".git").exists()
+
+        # Python 프로젝트 정보
+        has_requirements = (project_ctx.base_path / "requirements.txt").exists()
+        has_setup_py = (project_ctx.base_path / "setup.py").exists()
+        has_pyproject = (project_ctx.base_path / "pyproject.toml").exists()
+
+        # Node.js 프로젝트 정보
+        has_package_json = (project_ctx.base_path / "package.json").exists()
+
+        # 프로젝트 정보 구성
+        result = {
+            'name': project_info['name'],
+            'path': project_info['path'],
+            'type': project_info['type'],
+            'has_git': has_git,
+            'has_requirements': has_requirements,
+            'has_setup_py': has_setup_py,
+            'has_pyproject': has_pyproject,
+            'has_package_json': has_package_json,
+            'has_flow': project_info['has_flow']
+        }
+
+        # 캐시 업데이트
+        _current_project_cache = result
+
+        return ok(result)
+
+    except Exception as e:
+        return err(f"프로젝트 정보 수집 실패: {str(e)}")
+def get_current_project() -> dict:
     """현재 프로젝트 정보 가져오기"""
     global _current_project_cache
 
@@ -129,6 +193,8 @@ def flow_project_with_workflow(
     """
     프로젝트 전환 & 워크플로우 초기화 + README / file_directory 자동 출력
 
+    이제 os.chdir를 사용하지 않고 Session을 통해 프로젝트를 관리합니다.
+
     Parameters
     ----------
     project : str
@@ -138,81 +204,42 @@ def flow_project_with_workflow(
     readme_lines / file_dir_lines : int
         각각 출력할 최대 줄 수
     """
-    # 1) 프로젝트 기본 경로 결정
-    # 우선순위: 환경변수 > 플랫폼별 기본값
-    base_paths = []
-    
-    # 환경변수 확인
-    if os.environ.get('PROJECT_BASE_PATH'):
-        base_paths.append(Path(os.environ['PROJECT_BASE_PATH']))
-    
-    # 플랫폼별 기본 경로 추가
-    home = Path.home()
-    system = platform.system()
-    
-    if system == 'Windows':
-        base_paths.extend([
-            home / "Desktop",
-            home / "바탕화면",
-            home / "Documents",
-            home / "문서"
-        ])
-    elif system == 'Darwin':  # macOS
-        base_paths.extend([
-            home / "Desktop",
-            home / "Documents",
-            home / "Developer"
-        ])
-    else:  # Linux 및 기타
-        base_paths.extend([
-            home / "Desktop",
-            home / "Documents",
-            home / "projects",
-            home
-        ])
-    
-    # 2) 프로젝트 찾기
-    project_path = None
-    searched_paths = []
-    
-    for base_path in base_paths:
-        if base_path.exists():
-            candidate = base_path / project
-            searched_paths.append(str(base_path))
-            if candidate.exists() and candidate.is_dir():
-                project_path = candidate
-                break
-    
+    # Import here to avoid circular imports
+    from .session import get_current_session
+    from .flow_context import ProjectContext, find_project_path
+
+    # 1) 프로젝트 찾기
+    project_path = find_project_path(project)
+
     if not project_path:
         print(f"❌ 프로젝트를 찾을 수 없습니다: {project}")
-        print(f"   검색한 경로들:")
-        for path in searched_paths:
-            print(f"   - {path}")
-        print("\n💡 팁: PROJECT_BASE_PATH 환경변수를 설정하여 기본 경로를 지정할 수 있습니다.")
+        print(f"\n💡 팁: PROJECT_BASE_PATH 환경변수를 설정하여 기본 경로를 지정할 수 있습니다.")
         return err(f"프로젝트를 찾을 수 없습니다: {project}")
 
-    # 2) 디렉토리 이동
+    # 2) Session을 통해 프로젝트 설정 (os.chdir 없이)
+    session = get_current_session()
+    previous_project = session.get_project_name()
+
     try:
-        previous_dir = os.getcwd()
-        os.chdir(str(project_path))
-    except OSError as e:
-        return err(f"디렉토리 이동 실패: {e}")
+        # 프로젝트 설정
+        project_ctx = session.set_project(project, str(project_path))
+    except Exception as e:
+        return err(f"프로젝트 설정 실패: {e}")
 
     # 캐시 리셋
     global _current_project_cache
     _current_project_cache = None
 
     # 3) 프로젝트 정보 수집
-    proj_info = h.get_current_project()
-    if not proj_info['ok']:
-        return proj_info
+    proj_info = project_ctx.get_project_info()
 
     # 캐시 파일 업데이트
     try:
         cache_dir = Path.home() / ".ai-coding-brain" / "cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
-        cache_data = proj_info['data'].copy()
+        cache_data = proj_info.copy()
         cache_data['switched_at'] = datetime.now().isoformat()
+        cache_data['previous_project'] = previous_project
 
         with open(cache_dir / "current_project.json", 'w', encoding='utf-8') as f:
             json.dump(cache_data, f, ensure_ascii=False, indent=2)
@@ -223,36 +250,67 @@ def flow_project_with_workflow(
     print(f"✅ 프로젝트 전환: {project}")
     print(f"📍 경로: {project_path}")
     print(f"📁 Flow 저장소: {project}/.ai-brain/flow/")
+    if previous_project and previous_project != project:
+        print(f"   (이전: {previous_project})")
 
     # 5) 문서 자동 읽기
     docs: Dict[str, str] = {}
     if auto_read_docs:
-        readme_txt = _read_if_exists(str(project_path / "readme.md"), readme_lines)
+        # ProjectContext의 read_file 메서드 사용
+        readme_txt = project_ctx.read_file("readme.md")
         if readme_txt:
+            # 줄 수 제한
+            lines = readme_txt.split('\n')[:readme_lines]
+            readme_txt = '\n'.join(lines)
             docs["readme.md"] = readme_txt
             print("\n📖 README.md 내용:")
             print("=" * 70)
             print(readme_txt)
 
-        fd_txt = _read_if_exists(str(project_path / "file_directory.md"), file_dir_lines)
+        fd_txt = project_ctx.read_file("file_directory.md")
         if fd_txt:
+            # 줄 수 제한
+            lines = fd_txt.split('\n')[:file_dir_lines]
+            fd_txt = '\n'.join(lines)
             docs["file_directory.md"] = fd_txt
             print("\n📁 프로젝트 구조 (file_directory.md):")
             print("=" * 70)
             print(fd_txt)
 
-    # 6) Git 상태
+    # 6) Git 상태 (프로젝트 경로 기준)
     git_info = None
     try:
-        from .git import git_status
-        git_result = h.git_status()
-        if git_result['ok']:
-            git_info = git_result['data']
-            print("\n🔀 Git 상태:")
-            print("=" * 70)
-            print(f"브랜치: {git_info['branch']}")
-            print(f"변경 파일: {git_info['count']}개")
-            print(f"상태: {'Clean' if git_info['clean'] else 'Modified'}")
+        # Git 명령어는 아직 cwd 기반이므로 임시로 디렉토리 변경
+    # Git 상태 확인 (os.chdir 없이)
+    try:
+        # subprocess의 cwd 파라미터를 사용하여 프로젝트 디렉토리에서 실행
+        import subprocess
+        result = subprocess.run(
+            ['git', 'status', '--porcelain'], 
+            cwd=str(project_path),
+            capture_output=True, 
+            text=True
+        )
+        
+        if result.returncode == 0:
+            # Git 저장소인 경우
+            files = result.stdout.strip().split('\n') if result.stdout.strip() else []
+            clean = len(files) == 0
+            
+            # 브랜치 정보 가져오기
+            branch_result = subprocess.run(
+                ['git', 'branch', '--show-current'],
+                cwd=str(project_path),
+                capture_output=True,
+                text=True
+            )
+            branch = branch_result.stdout.strip() if branch_result.returncode == 0 else "unknown"
+            
+            print(f"\n🔀 Git 상태:")
+            print("============================================================")
+            print(f"브랜치: {branch}")
+            print(f"변경 파일: {len(files)}개")
+            print(f"상태: {'Clean' if clean else 'Modified'}")
     except:
         pass
 
@@ -268,17 +326,17 @@ def flow_project_with_workflow(
         pass
 
     # 8) 결과 반환
-    return ok(
-        {
-            "project": proj_info['data'],
-            "previous": previous_dir,
-            "docs": docs,
-            "git": git_info,
-            "flow": flow_info
-        },
-        msg=f"🚀 프로젝트 전환 완료: {project}"
-    )
+    result_data = {
+        'project': project,
+        'path': str(project_path),
+        'info': proj_info,
+        'docs': docs,
+        'git': git_info,
+        'flow': flow_info,
+        'switched_from': previous_project
+    }
 
+    return ok(result_data)
 # 나머지 함수들은 그대로 유지
 @safe_execution
 def scan_directory(path: str = ".", output: str = "list", max_depth: int = None, exclude_patterns: List[str] = None) -> Any:

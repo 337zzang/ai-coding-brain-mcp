@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-04T05:48:34.072046", "event_type": "TASK_INFO", "ts": "2025-08-04T05:48:34.072046", "type": "TASK_INFO", "title": "Task 2: Manager 호환성 해결 - select_plan 구현", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-04T05:48:34.074535", "event_type": "DESIGN", "ts": "2025-08-04T05:48:34.074535", "type": "DESIGN", "content": "Task가 생성되었습니다."}

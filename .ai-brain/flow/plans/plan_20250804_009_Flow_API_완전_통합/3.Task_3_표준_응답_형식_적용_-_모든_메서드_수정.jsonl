@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-04T05:48:34.095080", "event_type": "TASK_INFO", "ts": "2025-08-04T05:48:34.095080", "type": "TASK_INFO", "title": "Task 3: 표준 응답 형식 적용 - 모든 메서드 수정", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-04T05:48:34.096086", "event_type": "DESIGN", "ts": "2025-08-04T05:48:34.096086", "type": "DESIGN", "content": "Task가 생성되었습니다."}

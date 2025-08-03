@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Any, Union
 
 from .domain.models import Plan, Task, TaskStatus
 from .ultra_simple_flow_manager import UltraSimpleFlowManager
-from .repository.flow_repository import FlowRepository
+from .repository.ultra_simple_repository import UltraSimpleRepository
 from .service.task_logger import EnhancedTaskLogger
 # Response helpers
 def ok_response(data=None, message=None):
@@ -113,8 +113,20 @@ class FlowAPI:
         self._manager = manager or get_manager()
         self._current_plan_id: Optional[str] = None
         self._context: Dict[str, Any] = {}
+        self.last_resp: Optional[Dict[str, Any]] = None
 
     # Plan 관리 메서드
+
+    def _res(self, ok: bool = True, data: Any = None, error: str = '') -> Dict[str, Any]:
+        """표준 응답 형식 생성 헬퍼"""
+        self.last_resp = {'ok': ok, 'data': data, 'error': error}
+        return self.last_resp
+
+    def _sync(self, plan_id: str) -> None:
+        """Repository와 Manager 상태 동기화"""
+        if hasattr(self._manager, 'refresh'):
+            self._manager.refresh(plan_id)
+
     def create_plan(self, name: str, description: str = "") -> Dict[str, Any]:
         """새 Plan 생성"""
         plan = self._manager.create_plan(name)
@@ -132,6 +144,17 @@ class FlowAPI:
         else:
             self._res(False, None, f"Plan {plan_id} not found")
         return self
+
+
+    def get_current_plan(self) -> Dict[str, Any]:
+        """현재 선택된 Plan 정보 반환"""
+        if self._current_plan_id:
+            plan = self._manager.get_plan(self._current_plan_id)
+            if plan:
+                return self._res(True, _plan_to_dict(plan))
+            else:
+                return self._res(False, None, f"Plan {self._current_plan_id} not found")
+        return self._res(False, None, "No plan selected")
 
     def list_plans(self, status: Optional[str] = None, limit: int = 10) -> Dict[str, Any]:
         """Plan 목록 조회 (필터링 가능)"""

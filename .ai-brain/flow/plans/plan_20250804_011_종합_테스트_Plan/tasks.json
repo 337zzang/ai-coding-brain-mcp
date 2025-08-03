@@ -1,0 +1,15 @@
+{
+  "task_20250804_055818_a0ad67": {
+    "id": "task_20250804_055818_a0ad67",
+    "title": "테스트 Task 1",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-04T05:58:18.023458",
+    "updated_at": "2025-08-04T05:58:18.023458",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  }
+}

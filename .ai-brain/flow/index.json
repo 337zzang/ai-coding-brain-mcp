@@ -212,5 +212,11 @@
     "created_at": "2025-08-03T12:15:17.850978",
     "updated_at": "2025-08-03T12:15:17.920837",
     "task_count": 5
+  },
+  "plan_20250803_010_AI_Coding_Brain_MCP_완벽한_리팩토링": {
+    "name": "AI Coding Brain MCP 완벽한 리팩토링",
+    "created_at": "2025-08-03T14:42:00.205303",
+    "updated_at": "2025-08-03T14:42:00.245620",
+    "task_count": 4
   }
 }

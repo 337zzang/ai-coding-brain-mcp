@@ -330,12 +330,53 @@ def safe_replace(path: str, old: str, new: str, preview: bool = False, validate:
                 'preview': diff_text
             })
         
+    # validate 모드: 수정 후 AST 검증
+    if validate and not preview:
+        # 수정된 내용으로 AST 검증
+        try:
+            import ast
+            modified_content = original_content
+            for old_text, new_text in replacements:
+                modified_content = modified_content.replace(old_text, new_text)
+
+            # AST 파싱으로 구문 검증
+            ast.parse(modified_content)
+            # 추가로 compile 테스트
+            compile(modified_content, path, 'exec')
+        except SyntaxError as e:
+            return Response(
+                ok=False,
+                error=f"구문 오류로 수정 취소: Line {e.lineno} - {e.msg}",
+                line=e.lineno,
+                validate_failed=True
+            )
+        except Exception as e:
+            return Response(
+                ok=False,
+                error=f"검증 실패로 수정 취소: {str(e)}",
+                validate_failed=True
+            )
+
+
         # 실제 수정
         # 백업 생성
         backup_path = f"{path}.backup"
         shutil.copy2(path, backup_path)
         
         # 파일 쓰기
+        # validate 모드: AST 검증 후 저장
+        if validate and path.endswith('.py'):
+            try:
+                import ast
+                ast.parse(new_content)
+                # 추가로 compile 검증
+                compile(new_content, path, 'exec')
+            except SyntaxError as e:
+                # 구문 오류 시 수정 취소
+                return err(f"Syntax error after replacement: Line {e.lineno} - {e.msg}")
+            except Exception as e:
+                return err(f"Validation failed: {str(e)}")
+
         p.write_text(new_content, encoding='utf-8')
         
         return ok({

@@ -338,6 +338,39 @@ class FlowAPI:
         self.manager._save_flow_state()
 
 
+
+    def create_task(self, plan_id: str, title: str) -> Dict[str, Any]:
+        """새 Task 생성
+
+        Args:
+            plan_id: Plan ID
+            title: Task 제목
+
+        Returns:
+            생성된 Task 정보
+        """
+        task = self.manager.create_task(plan_id, title)
+        if task:
+            return self._task_to_dict(task)
+        return {"error": f"Failed to create task in plan '{plan_id}'"}
+
+    def delete_task(self, plan_id: str, task_id: str) -> Dict[str, Any]:
+        """Task 삭제
+
+        Args:
+            plan_id: Plan ID
+            task_id: Task ID
+
+        Returns:
+            삭제 결과
+        """
+        # Manager에 delete_task가 없으면 tasks에서 직접 제거
+        plan = self.manager.get_plan(plan_id)
+        if plan and hasattr(plan, 'tasks') and task_id in plan.tasks:
+            del plan.tasks[task_id]
+            return {"ok": True, "message": "Task deleted"}
+        return {"ok": False, "error": "Task not found"}
+
 def get_flow_api(session: Optional[Session] = None) -> FlowAPI:
     """
     Get a FlowAPI instance.

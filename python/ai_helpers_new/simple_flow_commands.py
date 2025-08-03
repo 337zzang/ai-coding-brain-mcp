@@ -6,7 +6,7 @@ import json
 Flow 개념 없이 Plan과 Task만으로 작업 관리
 """
 from typing import Optional, List, Dict, Any
-from .ultra_simple_flow_manager import UltraSimpleFlowManager
+from .ultra_simple_flow_manager import UltraSimpleFlowManager, Plan, Task
 from .project import get_current_project
 from .project import flow_project_with_workflow
 
@@ -20,7 +20,24 @@ from .flow_api import get_flow_api
 # DEPRECATED: These global variables are maintained for backward compatibility
 # New code should use get_current_session() instead
 _manager: Optional[UltraSimpleFlowManager] = None  # @deprecated - use get_current_session().flow_manager
-_current_plan_id: Optional[str] = None  # @deprecated - use get_current_session().flow_context.current_plan_id
+_flow_api_instance = None  # type: Optional["FlowAPI"]
+
+def get_flow_api_instance() -> "FlowAPI":
+    """싱글톤 FlowAPI 인스턴스 반환"""
+    global _flow_api_instance
+    if _flow_api_instance is None:
+        _flow_api_instance = FlowAPI()
+    return _flow_api_instance
+
+def get_current_plan_id() -> Optional[str]:
+    """현재 선택된 Plan ID 반환 (호환성 유지)"""
+    api = get_flow_api_instance()
+    return api._current_plan_id
+
+def set_current_plan_id(plan_id: Optional[str]) -> None:
+    """현재 Plan ID 설정 (호환성 유지)"""
+    api = get_flow_api_instance()
+    api._current_plan_id = plan_id
 _current_project_path: Optional[str] = None  # @deprecated - use get_current_session().project_context
 
 def get_manager() -> UltraSimpleFlowManager:
@@ -93,7 +110,7 @@ def flow(command: str = "") -> Dict[str, Any]:
             "ok": True,
             "data": {
                 "plan_count": len(plans),
-                "current_plan": _current_plan_id,
+                "current_plan": get_current_plan_id(),
                 "recent_plans": [plan.to_dict() for plan in plans[-3:]]
             }
         }
@@ -130,7 +147,7 @@ def flow(command: str = "") -> Dict[str, Any]:
                 "ok": True,
                 "data": {
                     "plan_count": len(plans),
-                    "current_plan": _current_plan_id,
+                    "current_plan": get_current_plan_id(),
                     "recent_plans": [plan.to_dict() for plan in plans[-3:]]
                 }
             }
@@ -146,7 +163,6 @@ def flow(command: str = "") -> Dict[str, Any]:
 
 def show_status(manager: UltraSimpleFlowManager) -> None:
     """현재 상태 표시"""
-    global _current_plan_id
 
     print("\n📊 Flow 시스템 상태")
     print("=" * 50)
@@ -166,8 +182,8 @@ def show_status(manager: UltraSimpleFlowManager) -> None:
             else:
                 print(f"  • {plan.id}: {plan.name} (Task {task_count}개)")
 
-    if _current_plan_id:
-        plan = manager.get_plan(_current_plan_id)
+    if get_current_plan_id():
+        plan = manager.get_plan(get_current_plan_id())
         if plan:
             print(f"\n현재 선택된 Plan: {plan.name}")
             print(f"Task 개수: {len(plan.tasks)}개")
@@ -212,8 +228,7 @@ def create_plan(manager: UltraSimpleFlowManager, name: Optional[str]) -> None:
     print(f"✅ Plan 생성 완료: {plan.name} ({plan.id})")
 
     # 자동으로 선택
-    global _current_plan_id
-    _current_plan_id = plan.id
+    set_current_plan_id(plan.id)
     print(f"✅ 자동으로 선택됨")
 
 def display_task_history(plan_id: str, show_all: bool = False):
@@ -376,7 +391,6 @@ def display_task_history(plan_id: str, show_all: bool = False):
 
 def select_plan(plan_id: Optional[str]) -> None:
     """Plan 선택 - 순번, 부분 매칭, 인덱스 모두 지원"""
-    global _current_plan_id
 
     if not plan_id:
         print("❌ Plan ID를 입력하세요: /select [plan_id]")
@@ -387,7 +401,7 @@ def select_plan(plan_id: Optional[str]) -> None:
     # 1. 정확한 매칭 시도 (기존 로직)
     plan = manager.get_plan(plan_id)
     if plan:
-        _current_plan_id = plan_id
+        set_current_plan_id(plan_id)
         print(f"✅ Plan 선택됨: {plan.name}")
         display_task_history(plan_id)
         return
@@ -403,7 +417,7 @@ def select_plan(plan_id: Optional[str]) -> None:
                 matches.append(plan)
 
         if len(matches) == 1:
-            _current_plan_id = matches[0].id
+            set_current_plan_id(matches[0].id)
             print(f"✅ Plan 선택됨: {matches[0].name}")
             print(f"   (순번 매칭: {plan_id} → {matches[0].id})")
             display_task_history(matches[0].id)
@@ -411,7 +425,7 @@ def select_plan(plan_id: Optional[str]) -> None:
         elif len(matches) > 1:
             # 가장 최근 것 선택 (날짜 역순)
             matches.sort(key=lambda p: p.created_at, reverse=True)
-            _current_plan_id = matches[0].id
+            set_current_plan_id(matches[0].id)
             print(f"✅ Plan 선택됨: {matches[0].name}")
             print(f"   (순번 {plan_id} 중복 → 가장 최근 선택)")
             display_task_history(matches[0].id)
@@ -443,7 +457,7 @@ def select_plan(plan_id: Optional[str]) -> None:
                     print(f"  - {seq:03d}: {p.name}")
 
     elif len(matches) == 1:
-        _current_plan_id = matches[0].id
+        set_current_plan_id(matches[0].id)
         print(f"✅ Plan 선택됨: {matches[0].name}")
         print(f"   (부분 매칭: {plan_id} → {matches[0].id})")
         display_task_history(matches[0].id)
@@ -458,15 +472,14 @@ def select_plan(plan_id: Optional[str]) -> None:
 
 def handle_task_command(manager: UltraSimpleFlowManager, args: List[str]) -> None:
     """Task 관련 명령어 처리"""
-    global _current_plan_id
 
-    if not _current_plan_id:
+    if not get_current_plan_id():
         print("❌ 먼저 Plan을 선택하세요: /select [plan_id]")
         return
 
     if not args:
         # 현재 Plan의 Task 목록 표시
-        show_tasks(manager, _current_plan_id)
+        show_tasks(manager, get_current_plan_id())
         return
 
     subcmd = args[0].lower()
@@ -474,18 +487,18 @@ def handle_task_command(manager: UltraSimpleFlowManager, args: List[str]) -> Non
     if subcmd == "add" and len(args) > 1:
         # Task 추가
         title = " ".join(args[1:])
-        task = manager.create_task(_current_plan_id, title)
+        task = manager.create_task(get_current_plan_id(), title)
         if task:
             print(f"✅ Task 추가됨: {task.title} ({task.id})")
         else:
-            print(f"❌ Task 추가 실패: Plan '{_current_plan_id}'을 찾을 수 없습니다.")
+            print(f"❌ Task 추가 실패: Plan '{get_current_plan_id()}'을 찾을 수 없습니다.")
             print("   💡 Plan 목록 확인: /list")
             print("   💡 Plan 선택: /select [plan_id]")
 
     elif subcmd == "done" and len(args) > 1:
         # Task 완료
         task_id = args[1]
-        result = manager.update_task_status(_current_plan_id, task_id, "done")
+        result = manager.update_task_status(get_current_plan_id(), task_id, "done")
         if result:
             print(f"✅ Task 완료 처리됨: {task_id}")
         else:
@@ -494,7 +507,7 @@ def handle_task_command(manager: UltraSimpleFlowManager, args: List[str]) -> Non
     elif subcmd == "progress" and len(args) > 1:
         # Task 진행중
         task_id = args[1]
-        result = manager.update_task_status(_current_plan_id, task_id, "in_progress")
+        result = manager.update_task_status(get_current_plan_id(), task_id, "in_progress")
         if result:
             print(f"✅ Task 진행중 처리됨: {task_id}")
         else:
@@ -535,7 +548,6 @@ def show_tasks(manager: UltraSimpleFlowManager, plan_id: str) -> None:
 
 def delete_plan(manager: UltraSimpleFlowManager, plan_id: Optional[str]) -> None:
     """Plan 삭제"""
-    global _current_plan_id
 
     if not plan_id:
         print("❌ Plan ID를 입력하세요: /delete [plan_id]")
@@ -555,14 +567,14 @@ def delete_plan(manager: UltraSimpleFlowManager, plan_id: Optional[str]) -> None
         result = manager.delete_plan(plan_id)
         if result:
             print(f"✅ Plan 삭제 완료: {plan.name}")
-            if _current_plan_id == plan_id:
-                _current_plan_id = None
+            if get_current_plan_id() == plan_id:
+                set_current_plan_id(None)
         else:
             print(f"❌ Plan 삭제 실패")
 
 def switch_project(project_name: Optional[str]) -> None:
     """프로젝트 전환 - flow_project_with_workflow 사용"""
-    global _manager, _current_plan_id
+    global _manager
 
     if not project_name:
         # 현재 프로젝트 표시
@@ -584,7 +596,7 @@ def switch_project(project_name: Optional[str]) -> None:
         if isinstance(result, dict) and result.get('ok'):
             # Flow 매니저 재초기화
             _manager = None
-            _current_plan_id = None
+            set_current_plan_id(None)
 
             project_info = result.get('data', {}).get('project', {})
             print(f"✅ 프로젝트 전환 완료: {project_name}")
@@ -990,3 +1002,261 @@ def show_plan_progress() -> str:
     except Exception:
         # 이 함수에서 오류가 발생해도 전체 프로세스를 중단시키지 않음
         return ""
+
+
+
+# FlowAPI 클래스 - Manager보다 풍부한 기능 제공
+class FlowAPI:
+    """Flow 시스템을 위한 고급 API
+
+    Manager의 모든 기능 + 추가 기능들:
+    - Context 기반 상태 관리 (전역 변수 없음)
+    - 체이닝 가능한 메서드
+    - 더 상세한 필터링과 검색
+    """
+
+    def __init__(self, manager: Optional[UltraSimpleFlowManager] = None):
+        """FlowAPI 초기화
+
+        Args:
+            manager: 기존 매니저 인스턴스 (없으면 새로 생성)
+        """
+        self.manager = manager or get_manager()
+        self._current_plan_id: Optional[str] = None
+        self._context: Dict[str, Any] = {}
+
+    # Plan 관리 메서드
+    def create_plan(self, name: str, description: str = "") -> Dict[str, Any]:
+        """새 Plan 생성"""
+        plan = self.manager.create_plan(name)
+        if description:
+            plan.metadata["description"] = description
+        self._current_plan_id = plan.id
+        return _plan_to_dict(plan)
+
+    def select_plan(self, plan_id: str) -> "FlowAPI":
+        """Plan 선택 (체이닝 가능)"""
+        plan = self.manager.get_plan(plan_id)
+        if plan:
+            self._current_plan_id = plan_id
+        else:
+            raise ValueError(f"Plan {plan_id} not found")
+        return self
+
+    def get_current_plan(self) -> Optional[Dict[str, Any]]:
+        """현재 선택된 Plan 정보"""
+        if self.get_current_plan_id():
+            plan = self.manager.get_plan(self.get_current_plan_id())
+            return _plan_to_dict(plan) if plan else None
+        return None
+
+    def list_plans(self, status: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
+        """Plan 목록 조회 (필터링 가능)"""
+        plans = self.manager.list_plans()
+        if status:
+            plans = [p for p in plans if p.status == status]
+        return [_plan_to_dict(p) for p in plans[:limit]]
+
+    def update_plan(self, plan_id: str, **kwargs) -> Dict[str, Any]:
+        """Plan 정보 업데이트"""
+        plan = self.manager.get_plan(plan_id)
+        if not plan:
+            raise ValueError(f"Plan {plan_id} not found")
+
+        # 업데이트 가능한 필드들
+        if "name" in kwargs:
+            plan.name = kwargs["name"]
+        if "description" in kwargs:
+            plan.metadata["description"] = kwargs["description"]
+        if "status" in kwargs:
+            plan.status = kwargs["status"]
+
+        plan.updated_at = datetime.now().isoformat()
+        self.manager.save_index()
+        return _plan_to_dict(plan)
+
+    def delete_plan(self, plan_id: str) -> bool:
+        """Plan 삭제"""
+        return self.manager.delete_plan(plan_id)
+
+    # Task 관리 메서드
+    def add_task(self, plan_id: str, title: str, **kwargs) -> Dict[str, Any]:
+        """Task 추가 (plan_id 명시적 지정)"""
+        task = self.manager.create_task(plan_id, title)
+
+        # 추가 속성 설정
+        if "description" in kwargs:
+            task.description = kwargs["description"]
+        if "priority" in kwargs:
+            task.priority = kwargs["priority"]
+        if "tags" in kwargs:
+            task.tags = kwargs["tags"]
+
+        return _task_to_dict(task)
+
+    def get_task(self, plan_id: str, task_id: str) -> Optional[Dict[str, Any]]:
+        """특정 Task 조회"""
+        plan = self.manager.get_plan(plan_id)
+        if plan and task_id in plan.tasks:
+            return _task_to_dict(plan.tasks[task_id])
+        return None
+
+    def list_tasks(self, plan_id: str, status: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Task 목록 조회"""
+        plan = self.manager.get_plan(plan_id)
+        if not plan:
+            return []
+
+        tasks = list(plan.tasks.values())
+        if status:
+            tasks = [t for t in tasks if t.status == status]
+
+        return [_task_to_dict(t) for t in tasks]
+
+    def update_task(self, plan_id: str, task_id: str, **kwargs) -> Dict[str, Any]:
+        """Task 정보 업데이트"""
+        plan = self.manager.get_plan(plan_id)
+        if not plan or task_id not in plan.tasks:
+            raise ValueError(f"Task {task_id} not found in plan {plan_id}")
+
+        task = plan.tasks[task_id]
+
+        # 업데이트 가능한 필드들
+        if "title" in kwargs:
+            task.title = kwargs["title"]
+        if "status" in kwargs:
+            self.manager.update_task_status(plan_id, task_id, kwargs["status"])
+        if "description" in kwargs:
+            task.description = kwargs["description"]
+        if "priority" in kwargs:
+            task.priority = kwargs["priority"]
+
+        task.updated_at = datetime.now().isoformat()
+        self.manager.save_index()
+        return _task_to_dict(task)
+
+    def start_task(self, task_id: str) -> Dict[str, Any]:
+        """Task 시작 (현재 Plan 컨텍스트 사용)"""
+        if not self.get_current_plan_id():
+            raise ValueError("No plan selected. Use select_plan() first.")
+        return self.update_task(self.get_current_plan_id(), task_id, status="in_progress")
+
+    def complete_task(self, task_id: str) -> Dict[str, Any]:
+        """Task 완료 (현재 Plan 컨텍스트 사용)"""
+        if not self.get_current_plan_id():
+            raise ValueError("No plan selected. Use select_plan() first.")
+        return self.update_task(self.get_current_plan_id(), task_id, status="done")
+
+    # 고급 기능
+    def get_stats(self) -> Dict[str, Any]:
+        """전체 통계 정보"""
+        plans = self.manager.list_plans()
+        total_tasks = sum(len(p.tasks) for p in plans)
+
+        task_stats = {"todo": 0, "in_progress": 0, "done": 0}
+        for plan in plans:
+            for task in plan.tasks.values():
+                task_stats[task.status] = task_stats.get(task.status, 0) + 1
+
+        return {
+            "total_plans": len(plans),
+            "active_plans": len([p for p in plans if p.status == "active"]),
+            "total_tasks": total_tasks,
+            "tasks_by_status": task_stats,
+            "current_plan_id": self.get_current_plan_id()
+        }
+
+    def search(self, query: str) -> Dict[str, List[Dict[str, Any]]]:
+        """Plan과 Task 통합 검색"""
+        query_lower = query.lower()
+
+        # Plan 검색
+        plans = []
+        for plan in self.manager.list_plans():
+            if query_lower in plan.name.lower():
+                plans.append(_plan_to_dict(plan))
+
+        # Task 검색
+        tasks = []
+        for plan in self.manager.list_plans():
+            for task in plan.tasks.values():
+                if query_lower in task.title.lower():
+                    task_dict = _task_to_dict(task)
+                    task_dict["plan_id"] = plan.id
+                    task_dict["plan_name"] = plan.name
+                    tasks.append(task_dict)
+
+        return {"plans": plans, "tasks": tasks}
+
+    # Context 관리
+    def set_context(self, key: str, value: Any) -> "FlowAPI":
+        """컨텍스트 설정 (체이닝 가능)"""
+        self._context[key] = value
+        return self
+
+    def get_context(self, key: str) -> Any:
+        """컨텍스트 조회"""
+        return self._context.get(key)
+
+    def clear_context(self) -> "FlowAPI":
+        """컨텍스트 초기화"""
+        self._context.clear()
+        self._current_plan_id = None
+        return self
+
+
+
+# FlowAPI 싱글톤 인스턴스
+_flow_api_instance: Optional[FlowAPI] = None
+
+def get_flow_api() -> FlowAPI:
+    """FlowAPI 싱글톤 인스턴스 반환
+
+    Returns:
+        FlowAPI: Flow 시스템 고급 API 인스턴스
+    """
+    global _flow_api_instance
+    if _flow_api_instance is None:
+        _flow_api_instance = FlowAPI()
+    return _flow_api_instance
+
+def get_flow_api() -> FlowAPI:
+    """FlowAPI 인스턴스 반환
+
+    Returns:
+        FlowAPI: Flow 시스템 고급 API
+
+# 전역 변수 제거 - FlowAPI 기반으로 전환
+
+    """
+    return FlowAPI()
+
+
+# Helper 함수들
+def _plan_to_dict(plan: Plan) -> Dict[str, Any]:
+    """Plan 객체를 딕셔너리로 변환"""
+    return {
+        "id": plan.id,
+        "name": plan.name,
+        "status": plan.status,
+        "created_at": plan.created_at,
+        "updated_at": plan.updated_at,
+        "task_count": len(plan.tasks),
+        "metadata": plan.metadata
+    }
+
+
+def _task_to_dict(task: Task) -> Dict[str, Any]:
+    """Task 객체를 딕셔너리로 변환"""
+    return {
+        "id": task.id,
+        "title": task.title,
+        "description": task.description,
+        "status": task.status,
+        "priority": task.priority,
+        "created_at": task.created_at,
+        "updated_at": task.updated_at,
+        "completed_at": task.completed_at,
+        "tags": task.tags,
+        "metadata": task.metadata
+    }

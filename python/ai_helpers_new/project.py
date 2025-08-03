@@ -6,6 +6,7 @@ import os
 import platform
 import json
 from typing import Dict, Any, List, Optional
+from .project_context import get_project_context, resolve_project_path
 from datetime import datetime
 from pathlib import Path
 from .util import ok, err
@@ -193,7 +194,7 @@ def flow_project_with_workflow(
     """
     프로젝트 전환 & 워크플로우 초기화 + README / file_directory 자동 출력
 
-    이제 os.chdir를 사용하지 않고 Session을 통해 프로젝트를 관리합니다.
+    # 이제 os.chdir를 사용하지 않고 Session을 통해 프로젝트를 관리합니다.
 
     Parameters
     ----------
@@ -216,7 +217,7 @@ def flow_project_with_workflow(
         print(f"\n💡 팁: PROJECT_BASE_PATH 환경변수를 설정하여 기본 경로를 지정할 수 있습니다.")
         return err(f"프로젝트를 찾을 수 없습니다: {project}")
 
-    # 2) Session을 통해 프로젝트 설정 (os.chdir 없이)
+    # # 2) Session을 통해 프로젝트 설정 (os.chdir 없이)
     session = get_current_session()
     previous_project = session.get_project_name()
 

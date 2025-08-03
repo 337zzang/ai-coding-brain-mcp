@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-03T14:42:00.232403", "event_type": "TASK_INFO", "ts": "2025-08-03T14:42:00.232403", "type": "TASK_INFO", "title": "2. FlowAPI 클래스 완전 구현", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-03T14:42:00.233460", "event_type": "DESIGN", "ts": "2025-08-03T14:42:00.233460", "type": "DESIGN", "content": "Task가 생성되었습니다."}

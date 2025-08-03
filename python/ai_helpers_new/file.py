@@ -6,7 +6,7 @@ from pathlib import Path
 import json
 import shutil
 from .util import ok, err
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 
 

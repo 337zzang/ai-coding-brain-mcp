@@ -280,9 +280,6 @@ def flow_project_with_workflow(
     # 6) Git 상태 (프로젝트 경로 기준)
     git_info = None
     try:
-        # Git 명령어는 아직 cwd 기반이므로 임시로 디렉토리 변경
-    # Git 상태 확인 (os.chdir 없이)
-    try:
         # subprocess의 cwd 파라미터를 사용하여 프로젝트 디렉토리에서 실행
         import subprocess
         result = subprocess.run(

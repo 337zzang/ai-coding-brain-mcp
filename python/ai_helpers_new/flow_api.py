@@ -1,410 +1,260 @@
 """
-Pythonic Flow API for AI Coding Brain MCP
-
-Provides a clean, object-oriented interface to the flow system
-as an alternative to the command-based interface.
+Flow API - 핵심 비즈니스 로직
+분리일: 2025-08-03
+원본: simple_flow_commands.py
 """
 
-from typing import Optional, List, Dict, Any, Union
+import os
+import json
 from datetime import datetime
+from typing import Dict, List, Optional, Any, Union
 
-from .session import Session, get_current_session
-from .util import ok, err
-from .contextual_flow_manager import ContextualFlowManager
-from .flow_context import FlowContext
+from .domain.models import Plan, Task, TaskStatus
+from .ultra_simple_flow_manager import UltraSimpleFlowManager
+from .repository.flow_repository import FlowRepository
+from .service.task_logger import EnhancedTaskLogger
+# Response helpers
+def ok_response(data=None, message=None):
+    response = {'ok': True}
+    if data is not None: response['data'] = data
+    if message: response['message'] = message
+    return response
+
+def error_response(error, data=None):
+    response = {'ok': False, 'error': error}
+    if data is not None: response['data'] = data
+    return response
+from .flow_manager_utils import _generate_plan_id, _generate_task_id
+
+# 필요한 추가 import들
+
+
+# Helper functions
+def get_manager() -> UltraSimpleFlowManager:
+    """현재 프로젝트의 매니저 가져오기 (Session 기반)
+
+    이 함수는 기존 코드와의 호환성을 위해 유지됩니다.
+    내부적으로는 새로운 Session 시스템을 사용하며,
+    ManagerAdapter를 통해 기존 인터페이스를 제공합니다.
+    """
+    # Get current session
+    session = get_current_session()
+
+    # Check if session is initialized with a project
+    if not session.is_initialized:
+        # Initialize with current directory
+        project_path = os.getcwd()
+        project_name = os.path.basename(project_path)
+        session.set_project(project_name, project_path)
+
+        # Notification about .ai-brain directory
+        ai_brain_path = os.path.join(project_path, '.ai-brain', 'flow')
+        if not os.path.exists(ai_brain_path):
+            print(f"📁 새로운 Flow 저장소 생성: {project_name}/.ai-brain/flow/")
+        else:
+            print(f"📁 Flow 저장소 사용: {project_name}/.ai-brain/flow/")
+
+    # Return adapter for backward compatibility
+    # The adapter makes ContextualFlowManager look like UltraSimpleFlowManager
+    return ManagerAdapter(session.flow_manager)
 
 
 class FlowAPI:
-    """
-    Pythonic API for flow management.
+    """Flow 시스템을 위한 고급 API
 
-    This class provides methods that correspond to the flow commands
-    but in a more Pythonic, object-oriented style.
-
-    Example usage:
-        api = get_flow_api()
-        plan = api.create_plan("My Project")
-        task = api.add_task("Implement feature")
-        api.update_task_status(task['id'], 'in_progress')
+    Manager의 모든 기능 + 추가 기능들:
+    - Context 기반 상태 관리 (전역 변수 없음)
+    - 체이닝 가능한 메서드
+    - 더 상세한 필터링과 검색
     """
 
-    def __init__(self, manager: Optional[ContextualFlowManager] = None, 
-                 session: Optional[Session] = None):
-        """
-        Initialize the Flow API.
+    def __init__(self, manager: Optional[UltraSimpleFlowManager] = None):
+        """FlowAPI 초기화
 
         Args:
-            manager: Optional flow manager (will be created from session if not provided)
-            session: Optional session (uses current session if not provided)
+            manager: 기존 매니저 인스턴스 (없으면 새로 생성)
         """
-        self.session = session or get_current_session()
+        self.manager = manager or get_manager()
+        self._current_plan_id: Optional[str] = None
+        self._context: Dict[str, Any] = {}
 
-        if manager:
-            self.manager = manager
-        else:
-            if not self.session.is_initialized:
-                raise ValueError("Session not initialized. Call session.set_project() first.")
-            self.manager = self.session.flow_manager
-
-
-
-    def _wrap_result(self, result):
-        """표준 ok/err 형식으로 결과 래핑"""
-        if isinstance(result, dict) and ('ok' in result or 'error' in result):
-            return result  # 이미 표준 형식
-        if isinstance(result, Exception):
-            return err(str(result))
-        return ok(result)
-    def _wrap_result(self, result):
-        """표준 ok/err 형식으로 결과 래핑"""
-        if isinstance(result, dict) and ('ok' in result or 'error' in result):
-            return result  # 이미 표준 형식
-        if isinstance(result, Exception):
-            return err(str(result))
-        return ok(result)
-    @property
-    def context(self) -> FlowContext:
-        """Get the current flow context."""
-        return self.manager.get_context()
-
-    # ========== Plan Management ==========
-
+    # Plan 관리 메서드
     def create_plan(self, name: str, description: str = "") -> Dict[str, Any]:
-        """
-        Create a new plan.
+        """새 Plan 생성"""
+        plan = self.manager.create_plan(name)
+        if description:
+            plan.metadata["description"] = description
+        self._current_plan_id = plan.id
+        return _plan_to_dict(plan)
 
-        Args:
-            name: Plan name
-            description: Optional description
-
-        Returns:
-            Created plan data
-
-        Example:
-            plan = api.create_plan("Backend Development", "API implementation")
-        """
-        return self._wrap_result(self.manager.create_plan(name, description))
-
-    def list_plans(self) -> List[Dict[str, Any]]:
-        """
-        List all plans.
-
-        Returns:
-            List of plan dictionaries
-
-        Example:
-            plans = api.list_plans()
-            for plan in plans:
-                print(f"{plan['id']}: {plan['name']}")
-        """
-        return self._wrap_result(self.manager.list_plans())
-
-    def get_plan(self, plan_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Get a specific plan by ID.
-
-        Args:
-            plan_id: Plan ID
-
-        Returns:
-            Plan data or None if not found
-        """
-        return self._wrap_result(self.manager.get_plan(plan_id))
-
-    def select_plan(self, plan_id: str) -> bool:
-        """
-        Select a plan as current.
-
-        Args:
-            plan_id: Plan ID to select
-
-        Returns:
-            True if successful
-
-        Example:
-            if api.select_plan("plan_20240101_project"):
-                print("Plan selected")
-        """
-        return self._wrap_result(self.manager.select_plan(plan_id))
-
-    def delete_plan(self, plan_id: str) -> bool:
-        """
-        Delete a plan.
-
-        Args:
-            plan_id: Plan ID to delete
-
-        Returns:
-            True if successful
-        """
-        # For now, delegate to the manager
-        # In future, implement proper deletion
-        plan_path = self.manager.flow_path / 'plans' / plan_id
-        if plan_path.exists():
-            import shutil
-            shutil.rmtree(plan_path)
-
-            # Clear from context if it was selected
-            if self.context.current_plan_id == plan_id:
-                self.context.clear_plan()
-                self.manager._save_flow_state()
-
-            return ok(True)
-        return err("Plan not found")
+    def select_plan(self, plan_id: str) -> "FlowAPI":
+        """Plan 선택 (체이닝 가능)"""
+        plan = self.manager.get_plan(plan_id)
+        if plan:
+            self._current_plan_id = plan_id
+        else:
+            raise ValueError(f"Plan {plan_id} not found")
+        return self
 
     def get_current_plan(self) -> Optional[Dict[str, Any]]:
-        """
-        Get the currently selected plan.
+        """현재 선택된 Plan 정보"""
+        if self.get_current_plan_id():
+            plan = self.manager.get_plan(self.get_current_plan_id())
+            return _plan_to_dict(plan) if plan else None
+        return None
 
-        Returns:
-            Current plan data or None
-        """
-        return self._wrap_result(self.manager.get_current_plan())
+    def list_plans(self, status: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
+        """Plan 목록 조회 (필터링 가능)"""
+        plans = self.manager.list_plans()
+        if status:
+            plans = [p for p in plans if p.status == status]
+        return [_plan_to_dict(p) for p in plans[:limit]]
 
-    # ========== Task Management ==========
+    def update_plan(self, plan_id: str, **kwargs) -> Dict[str, Any]:
+        """Plan 정보 업데이트"""
+        plan = self.manager.get_plan(plan_id)
+        if not plan:
+            raise ValueError(f"Plan {plan_id} not found")
 
-    def add_task(self, title: str, description: str = "") -> Optional[Dict[str, Any]]:
-        """
-        Add a task to the current plan.
+        # 업데이트 가능한 필드들
+        if "name" in kwargs:
+            plan.name = kwargs["name"]
+        if "description" in kwargs:
+            plan.metadata["description"] = kwargs["description"]
+        if "status" in kwargs:
+            plan.status = kwargs["status"]
 
-        Args:
-            title: Task title
-            description: Optional description
+        plan.updated_at = datetime.now().isoformat()
+        self.manager.save_index()
+        return _plan_to_dict(plan)
 
-        Returns:
-            Created task data or None if no plan selected
+    def delete_plan(self, plan_id: str) -> bool:
+        """Plan 삭제"""
+        return self.manager.delete_plan(plan_id)
 
-        Example:
-            task = api.add_task("Write tests", "Unit tests for auth module")
-        """
-        return self._wrap_result(self.manager.add_task(title, description))
+    # Task 관리 메서드
+    def add_task(self, plan_id: str, title: str, **kwargs) -> Dict[str, Any]:
+        """Task 추가 (plan_id 명시적 지정)"""
+        task = self.manager.create_task(plan_id, title)
 
-    def list_tasks(self) -> List[Dict[str, Any]]:
-        """
-        List all tasks in the current plan.
+        # 추가 속성 설정
+        if "description" in kwargs:
+            task.description = kwargs["description"]
+        if "priority" in kwargs:
+            task.priority = kwargs["priority"]
+        if "tags" in kwargs:
+            task.tags = kwargs["tags"]
 
-        Returns:
-            List of task dictionaries
-        """
-        plan = self.get_current_plan()
+        return _task_to_dict(task)
+
+    def get_task(self, plan_id: str, task_id: str) -> Optional[Dict[str, Any]]:
+        """특정 Task 조회"""
+        plan = self.manager.get_plan(plan_id)
+        if plan and task_id in plan.tasks:
+            return _task_to_dict(plan.tasks[task_id])
+        return None
+
+    def list_tasks(self, plan_id: str, status: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Task 목록 조회"""
+        plan = self.manager.get_plan(plan_id)
         if not plan:
             return []
 
-        return list(plan.get('tasks', {}).values())
+        tasks = list(plan.tasks.values())
+        if status:
+            tasks = [t for t in tasks if t.status == status]
 
-    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Get a specific task by ID.
+        return [_task_to_dict(t) for t in tasks]
 
-        Args:
-            task_id: Task ID
+    def update_task(self, plan_id: str, task_id: str, **kwargs) -> Dict[str, Any]:
+        """Task 정보 업데이트"""
+        plan = self.manager.get_plan(plan_id)
+        if not plan or task_id not in plan.tasks:
+            raise ValueError(f"Task {task_id} not found in plan {plan_id}")
 
-        Returns:
-            Task data or None if not found
-        """
-        plan = self.get_current_plan()
-        if not plan:
-            return None
+        task = plan.tasks[task_id]
 
-        return plan.get('tasks', {}).get(task_id)
+        # 업데이트 가능한 필드들
+        if "title" in kwargs:
+            task.title = kwargs["title"]
+        if "status" in kwargs:
+            self.manager.update_task_status(plan_id, task_id, kwargs["status"])
+        if "description" in kwargs:
+            task.description = kwargs["description"]
+        if "priority" in kwargs:
+            task.priority = kwargs["priority"]
 
-    def update_task_status(self, task_id: str, status: str) -> bool:
-        """
-        Update task status.
+        task.updated_at = datetime.now().isoformat()
+        self.manager.save_index()
+        return _task_to_dict(task)
 
-        Args:
-            task_id: Task ID
-            status: New status ('todo', 'in_progress', 'done')
+    def start_task(self, task_id: str) -> Dict[str, Any]:
+        """Task 시작 (현재 Plan 컨텍스트 사용)"""
+        if not self.get_current_plan_id():
+            raise ValueError("No plan selected. Use select_plan() first.")
+        return self.update_task(self.get_current_plan_id(), task_id, status="in_progress")
 
-        Returns:
-            True if successful
+    def complete_task(self, task_id: str) -> Dict[str, Any]:
+        """Task 완료 (현재 Plan 컨텍스트 사용)"""
+        if not self.get_current_plan_id():
+            raise ValueError("No plan selected. Use select_plan() first.")
+        return self.update_task(self.get_current_plan_id(), task_id, status="done")
 
-        Example:
-            api.update_task_status("task_001", "in_progress")
-        """
-        return self._wrap_result(self.manager.update_task_status(task_id, status))
+    # 고급 기능
+    def get_stats(self) -> Dict[str, Any]:
+        """전체 통계 정보"""
+        plans = self.manager.list_plans()
+        total_tasks = sum(len(p.tasks) for p in plans)
 
-    def start_task(self, task_id: str) -> bool:
-        """
-        Start working on a task (sets status to in_progress).
+        task_stats = {"todo": 0, "in_progress": 0, "done": 0}
+        for plan in plans:
+            for task in plan.tasks.values():
+                task_stats[task.status] = task_stats.get(task.status, 0) + 1
 
-        Args:
-            task_id: Task ID
-
-        Returns:
-            True if successful
-        """
-        return self.update_task_status(task_id, 'in_progress')
-
-    def complete_task(self, task_id: str) -> bool:
-        """
-        Mark a task as done.
-
-        Args:
-            task_id: Task ID
-
-        Returns:
-            True if successful
-        """
-        return self.update_task_status(task_id, 'done')
-
-    def get_current_task(self) -> Optional[Dict[str, Any]]:
-        """
-        Get the currently selected task.
-
-        Returns:
-            Current task data or None
-        """
-        return self._wrap_result(self.manager.get_current_task())
-
-    # ========== Status and Info ==========
-
-    def get_status(self) -> Dict[str, Any]:
-        """
-        Get comprehensive status information.
-
-        Returns:
-            Status dictionary containing:
-            - project_name: Current project name
-            - plan_count: Total number of plans
-            - current_plan: Current plan info
-            - task_summary: Task statistics
-
-        Example:
-            status = api.get_status()
-            print(f"Project: {status['project_name']}")
-            print(f"Plans: {status['plan_count']}")
-        """
-        plans = self.list_plans()
-        current_plan = self.get_current_plan()
-
-        status = {
-            'project_name': self.session.get_project_name(),
-            'project_path': str(self.session.get_project_path()),
-            'plan_count': len(plans),
-            'current_plan': None,
-            'task_summary': {
-                'total': 0,
-                'todo': 0,
-                'in_progress': 0,
-                'done': 0
-            }
+        return {
+            "total_plans": len(plans),
+            "active_plans": len([p for p in plans if p.status == "active"]),
+            "total_tasks": total_tasks,
+            "tasks_by_status": task_stats,
+            "current_plan_id": self.get_current_plan_id()
         }
 
-        if current_plan:
-            tasks = current_plan.get('tasks', {})
-            todo_count = sum(1 for t in tasks.values() if t['status'] == 'todo')
-            in_progress = sum(1 for t in tasks.values() if t['status'] == 'in_progress')
-            done_count = sum(1 for t in tasks.values() if t['status'] == 'done')
+    def search(self, query: str) -> Dict[str, List[Dict[str, Any]]]:
+        """Plan과 Task 통합 검색"""
+        query_lower = query.lower()
 
-            status['current_plan'] = {
-                'id': current_plan['id'],
-                'name': current_plan['name'],
-                'task_count': len(tasks)
-            }
-            status['task_summary'] = {
-                'total': len(tasks),
-                'todo': todo_count,
-                'in_progress': in_progress,
-                'done': done_count
-            }
+        # Plan 검색
+        plans = []
+        for plan in self.manager.list_plans():
+            if query_lower in plan.name.lower():
+                plans.append(_plan_to_dict(plan))
 
-        return status
+        # Task 검색
+        tasks = []
+        for plan in self.manager.list_plans():
+            for task in plan.tasks.values():
+                if query_lower in task.title.lower():
+                    task_dict = _task_to_dict(task)
+                    task_dict["plan_id"] = plan.id
+                    task_dict["plan_name"] = plan.name
+                    tasks.append(task_dict)
 
-    def get_recent_plans(self, limit: int = 3) -> List[Dict[str, Any]]:
-        """
-        Get the most recent plans.
+        return {"plans": plans, "tasks": tasks}
 
-        Args:
-            limit: Maximum number of plans to return
+    # Context 관리
+    def set_context(self, key: str, value: Any) -> "FlowAPI":
+        """컨텍스트 설정 (체이닝 가능)"""
+        self._context[key] = value
+        return self
 
-        Returns:
-            List of recent plans
-        """
-        plans = self.list_plans()
-        return plans[:limit]  # Already sorted by creation date
+    def get_context(self, key: str) -> Any:
+        """컨텍스트 조회"""
+        return self._context.get(key)
 
-    # ========== Utility Methods ==========
-
-    def switch_project(self, project_name: str, project_path: Optional[str] = None) -> bool:
-        """
-        Switch to a different project.
-
-        Args:
-            project_name: Project name
-            project_path: Optional project path
-
-        Returns:
-            True if successful
-        """
-        try:
-            self.session.set_project(project_name, project_path)
-            self.manager = self.session.flow_manager
-            return True
-        except Exception:
-            return False
-
-    def clear_current_task(self):
-        """Clear the current task selection."""
-        self.context.clear_task()
-        self.manager._save_flow_state()
-
-    def clear_current_plan(self):
-        """Clear the current plan selection."""
-        self.context.clear_plan()
-        self.manager._save_flow_state()
+    def clear_context(self) -> "FlowAPI":
+        """컨텍스트 초기화"""
+        self._context.clear()
+        self._current_plan_id = None
+        return self
 
 
-
-    def create_task(self, plan_id: str, title: str) -> Dict[str, Any]:
-        """새 Task 생성
-
-        Args:
-            plan_id: Plan ID
-            title: Task 제목
-
-        Returns:
-            생성된 Task 정보
-        """
-        task = self.manager.create_task(plan_id, title)
-        if task:
-            return self._task_to_dict(task)
-        return {"error": f"Failed to create task in plan '{plan_id}'"}
-
-    def delete_task(self, plan_id: str, task_id: str) -> Dict[str, Any]:
-        """Task 삭제
-
-        Args:
-            plan_id: Plan ID
-            task_id: Task ID
-
-        Returns:
-            삭제 결과
-        """
-        # Manager에 delete_task가 없으면 tasks에서 직접 제거
-        plan = self.manager.get_plan(plan_id)
-        if plan and hasattr(plan, 'tasks') and task_id in plan.tasks:
-            del plan.tasks[task_id]
-            return {"ok": True, "message": "Task deleted"}
-        return {"ok": False, "error": "Task not found"}
-
-def get_flow_api(session: Optional[Session] = None) -> FlowAPI:
-    """
-    Get a FlowAPI instance.
-
-    Args:
-        session: Optional session (uses current session if not provided)
-
-    Returns:
-        FlowAPI instance
-
-    Example:
-        # Using current session
-        api = get_flow_api()
-
-        # Using specific session (for testing)
-        test_session = Session()
-        test_session.set_project("test")
-        api = get_flow_api(test_session)
-    """
-    return FlowAPI(session=session)

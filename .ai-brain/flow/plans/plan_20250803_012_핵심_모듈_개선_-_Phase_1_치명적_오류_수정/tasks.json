@@ -1,0 +1,54 @@
+{
+  "task_20250803_163648_582cef": {
+    "id": "task_20250803_163648_582cef",
+    "title": "1. .h.append 문법 오류 전체 수정",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T16:36:48.678741",
+    "updated_at": "2025-08-03T16:36:48.678741",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250803_163648_b0503d": {
+    "id": "task_20250803_163648_b0503d",
+    "title": "2. flow() 함수 반환값 표준화",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T16:36:48.687735",
+    "updated_at": "2025-08-03T16:36:48.687735",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250803_163648_18407b": {
+    "id": "task_20250803_163648_18407b",
+    "title": "3. 플랫폼 독립적 경로 처리 개선",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T16:36:48.696308",
+    "updated_at": "2025-08-03T16:36:48.696308",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250803_163648_0b1d76": {
+    "id": "task_20250803_163648_0b1d76",
+    "title": "4. 수정사항 테스트 및 검증",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T16:36:48.706305",
+    "updated_at": "2025-08-03T16:36:48.706305",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  }
+}

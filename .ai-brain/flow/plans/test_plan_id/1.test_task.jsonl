@@ -1,0 +1,9 @@
+{"timestamp": "2025-08-03T15:35:06.409578", "event_type": "TASK_INFO", "ts": "2025-08-03T15:35:06.409578", "type": "TASK_INFO", "title": "테스트 Task", "priority": "high", "estimate": "1h", "description": ""}
+{"timestamp": "2025-08-03T15:35:06.409578", "event_type": "TODO", "ts": "2025-08-03T15:35:06.409578", "type": "TODO", "items": ["TODO #1: 첫 번째 작업", "TODO #2: 두 번째 작업"]}
+{"timestamp": "2025-08-03T15:35:06.409578", "event_type": "ANALYZE", "ts": "2025-08-03T15:35:06.409578", "type": "ANALYZE", "target": "test.py", "findings": "테스트 분석 결과"}
+{"timestamp": "2025-08-03T15:35:06.409578", "event_type": "CODE", "ts": "2025-08-03T15:35:06.409578", "type": "CODE", "action": "create", "file": "test.py", "summary": "파일 생성"}
+{"timestamp": "2025-08-03T15:35:06.409578", "event_type": "NOTE", "ts": "2025-08-03T15:35:06.409578", "type": "NOTE", "content": "📄 테스트 노트"}
+{"timestamp": "2025-08-03T15:35:06.409578", "event_type": "TODO_UPDATE", "ts": "2025-08-03T15:35:06.409578", "type": "TODO_UPDATE", "completed": ["TODO #1"], "remaining": ["TODO #2"]}
+{"timestamp": "2025-08-03T15:35:06.409578", "event_type": "NOTE", "ts": "2025-08-03T15:35:06.409578", "type": "NOTE", "content": "📄 설계 문서 작성: docs/design/test.md"}
+{"timestamp": "2025-08-03T15:35:06.409578", "event_type": "CONTEXT", "ts": "2025-08-03T15:35:06.409578", "type": "CONTEXT", "key": "문서", "value": "docs/design/test.md - 테스트 설계 완료"}
+{"timestamp": "2025-08-03T15:35:06.409578", "event_type": "CODE", "ts": "2025-08-03T15:35:06.409578", "type": "CODE", "action": "create", "file": "docs/guides/test.md", "summary": "가이드 작성"}

@@ -1,0 +1,67 @@
+{
+  "task_20250803_165501_975cf5": {
+    "id": "task_20250803_165501_975cf5",
+    "title": "1. 긴급 버그 수정 및 준비",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T16:55:01.036590",
+    "updated_at": "2025-08-03T16:55:01.036590",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250803_165501_3a42c0": {
+    "id": "task_20250803_165501_3a42c0",
+    "title": "2. 전역 변수 단계적 제거",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T16:55:01.049547",
+    "updated_at": "2025-08-03T16:55:01.049547",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250803_165501_ad1256": {
+    "id": "task_20250803_165501_ad1256",
+    "title": "3. AI Helpers 통합 완성",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T16:55:01.064464",
+    "updated_at": "2025-08-03T16:55:01.064464",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250803_165501_159e2f": {
+    "id": "task_20250803_165501_159e2f",
+    "title": "4. 프로젝트 경로 통합",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T16:55:01.077597",
+    "updated_at": "2025-08-03T16:55:01.077597",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250803_183829_79bbd3": {
+    "id": "task_20250803_183829_79bbd3",
+    "title": "5. API 일관성 문제 해결 및 문서 업데이트",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T18:38:29.746031",
+    "updated_at": "2025-08-03T18:38:29.746031",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  }
+}

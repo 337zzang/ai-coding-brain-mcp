@@ -74,14 +74,14 @@ class FlowAPI:
         Args:
             manager: 기존 매니저 인스턴스 (없으면 새로 생성)
         """
-        self.manager = manager or get_manager()
+        self._manager = manager or get_manager()
         self._current_plan_id: Optional[str] = None
         self._context: Dict[str, Any] = {}
 
     # Plan 관리 메서드
     def create_plan(self, name: str, description: str = "") -> Dict[str, Any]:
         """새 Plan 생성"""
-        plan = self.manager.create_plan(name)
+        plan = self._manager.create_plan(name)
         if description:
             plan.metadata["description"] = description
         self._current_plan_id = plan.id
@@ -89,7 +89,7 @@ class FlowAPI:
 
     def select_plan(self, plan_id: str) -> "FlowAPI":
         """Plan 선택 (체이닝 가능)"""
-        plan = self.manager.get_plan(plan_id)
+        plan = self._manager.get_plan(plan_id)
         if plan:
             self._current_plan_id = plan_id
         else:
@@ -99,20 +99,20 @@ class FlowAPI:
     def get_current_plan(self) -> Optional[Dict[str, Any]]:
         """현재 선택된 Plan 정보"""
         if self.get_current_plan_id():
-            plan = self.manager.get_plan(self.get_current_plan_id())
+            plan = self._manager.get_plan(self.get_current_plan_id())
             return _plan_to_dict(plan) if plan else None
         return None
 
     def list_plans(self, status: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
         """Plan 목록 조회 (필터링 가능)"""
-        plans = self.manager.list_plans()
+        plans = self._manager.list_plans()
         if status:
             plans = [p for p in plans if p.status == status]
         return [_plan_to_dict(p) for p in plans[:limit]]
 
     def update_plan(self, plan_id: str, **kwargs) -> Dict[str, Any]:
         """Plan 정보 업데이트"""
-        plan = self.manager.get_plan(plan_id)
+        plan = self._manager.get_plan(plan_id)
         if not plan:
             raise ValueError(f"Plan {plan_id} not found")
 
@@ -125,17 +125,17 @@ class FlowAPI:
             plan.status = kwargs["status"]
 
         plan.updated_at = datetime.now().isoformat()
-        self.manager.save_index()
+        self._manager.save_index()
         return _plan_to_dict(plan)
 
     def delete_plan(self, plan_id: str) -> bool:
         """Plan 삭제"""
-        return self.manager.delete_plan(plan_id)
+        return self._manager.delete_plan(plan_id)
 
     # Task 관리 메서드
     def add_task(self, plan_id: str, title: str, **kwargs) -> Dict[str, Any]:
         """Task 추가 (plan_id 명시적 지정)"""
-        task = self.manager.create_task(plan_id, title)
+        task = self._manager.create_task(plan_id, title)
 
         # 추가 속성 설정
         if "description" in kwargs:
@@ -149,14 +149,14 @@ class FlowAPI:
 
     def get_task(self, plan_id: str, task_id: str) -> Optional[Dict[str, Any]]:
         """특정 Task 조회"""
-        plan = self.manager.get_plan(plan_id)
+        plan = self._manager.get_plan(plan_id)
         if plan and task_id in plan.tasks:
             return _task_to_dict(plan.tasks[task_id])
         return None
 
     def list_tasks(self, plan_id: str, status: Optional[str] = None) -> List[Dict[str, Any]]:
         """Task 목록 조회"""
-        plan = self.manager.get_plan(plan_id)
+        plan = self._manager.get_plan(plan_id)
         if not plan:
             return []
 
@@ -168,7 +168,7 @@ class FlowAPI:
 
     def update_task(self, plan_id: str, task_id: str, **kwargs) -> Dict[str, Any]:
         """Task 정보 업데이트"""
-        plan = self.manager.get_plan(plan_id)
+        plan = self._manager.get_plan(plan_id)
         if not plan or task_id not in plan.tasks:
             raise ValueError(f"Task {task_id} not found in plan {plan_id}")
 
@@ -178,14 +178,14 @@ class FlowAPI:
         if "title" in kwargs:
             task.title = kwargs["title"]
         if "status" in kwargs:
-            self.manager.update_task_status(plan_id, task_id, kwargs["status"])
+            self._manager.update_task_status(plan_id, task_id, kwargs["status"])
         if "description" in kwargs:
             task.description = kwargs["description"]
         if "priority" in kwargs:
             task.priority = kwargs["priority"]
 
         task.updated_at = datetime.now().isoformat()
-        self.manager.save_index()
+        self._manager.save_index()
         return _task_to_dict(task)
 
     def start_task(self, task_id: str) -> Dict[str, Any]:
@@ -203,7 +203,7 @@ class FlowAPI:
     # 고급 기능
     def get_stats(self) -> Dict[str, Any]:
         """전체 통계 정보"""
-        plans = self.manager.list_plans()
+        plans = self._manager.list_plans()
         total_tasks = sum(len(p.tasks) for p in plans)
 
         task_stats = {"todo": 0, "in_progress": 0, "done": 0}
@@ -225,13 +225,13 @@ class FlowAPI:
 
         # Plan 검색
         plans = []
-        for plan in self.manager.list_plans():
+        for plan in self._manager.list_plans():
             if query_lower in plan.name.lower():
                 plans.append(_plan_to_dict(plan))
 
         # Task 검색
         tasks = []
-        for plan in self.manager.list_plans():
+        for plan in self._manager.list_plans():
             for task in plan.tasks.values():
                 if query_lower in task.title.lower():
                     task_dict = _task_to_dict(task)

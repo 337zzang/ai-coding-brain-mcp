@@ -59,6 +59,42 @@ def get_manager() -> UltraSimpleFlowManager:
     return ManagerAdapter(session.flow_manager)
 
 
+
+# Helper functions for converting domain objects to dicts
+def _plan_to_dict(plan) -> Dict[str, Any]:
+    """Convert Plan object to dict"""
+    if isinstance(plan, dict):
+        return plan
+
+    return {
+        'id': plan.id,
+        'name': plan.name,
+        'created_at': getattr(plan, 'created_at', ''),
+        'updated_at': getattr(plan, 'updated_at', ''),
+        'status': getattr(plan, 'status', 'active'),
+        'metadata': getattr(plan, 'metadata', {}),
+        'tasks': {
+            task_id: _task_to_dict(task)
+            for task_id, task in plan.tasks.items()
+        } if hasattr(plan, 'tasks') else {}
+    }
+
+def _task_to_dict(task) -> Dict[str, Any]:
+    """Convert Task object to dict"""
+    if isinstance(task, dict):
+        return task
+
+    return {
+        'id': task.id,
+        'title': getattr(task, 'title', getattr(task, 'name', '')),
+        'description': getattr(task, 'description', ''),
+        'status': str(getattr(task, 'status', 'todo')),
+        'created_at': getattr(task, 'created_at', ''),
+        'updated_at': getattr(task, 'updated_at', ''),
+        'priority': getattr(task, 'priority', 'normal'),
+        'completed_at': getattr(task, 'completed_at', None)
+    }
+
 class FlowAPI:
     """Flow 시스템을 위한 고급 API
 
@@ -95,4 +131,188 @@ class FlowAPI:
             self._res(True, {'plan_id': plan_id, 'name': plan.name})
         else:
             self._res(False, None, f"Plan {plan_id} not found")
+        return self
+
+    def list_plans(self, status: Optional[str] = None, limit: int = 10) -> Dict[str, Any]:
+        """Plan 목록 조회 (필터링 가능)"""
+        try:
+            plans = self._manager.list_plans()
+            if status:
+                plans = [p for p in plans if p.status == status]
+            plan_dicts = [_plan_to_dict(p) for p in plans[:limit]]
+            return self._res(True, plan_dicts)
+        except Exception as e:
+            return self._res(False, None, str(e))
+
+    def get_plan(self, plan_id: str) -> Dict[str, Any]:
+        """특정 Plan 정보 가져오기"""
+        plan = self._manager.get_plan(plan_id)
+        if plan:
+            return self._res(True, _plan_to_dict(plan))
+        return self._res(False, None, f"Plan {plan_id} not found")
+
+    def update_plan(self, plan_id: str, **kwargs) -> Dict[str, Any]:
+        """Plan 정보 업데이트"""
+        plan = self._manager.get_plan(plan_id)
+        if not plan:
+            return self._res(False, None, f"Plan {plan_id} not found")
+
+        # 업데이트 가능한 필드들
+        if "name" in kwargs:
+            plan.name = kwargs["name"]
+        if "description" in kwargs and hasattr(plan, 'metadata'):
+            plan.metadata["description"] = kwargs["description"]
+        if "status" in kwargs:
+            plan.status = kwargs["status"]
+
+        plan.updated_at = datetime.now().isoformat()
+        if hasattr(self._manager, 'save_index'):
+            self._manager.save_index()
+        self._sync(plan_id)
+
+        return self._res(True, _plan_to_dict(plan))
+
+    def delete_plan(self, plan_id: str) -> Dict[str, Any]:
+        """Plan 삭제"""
+        success = self._manager.delete_plan(plan_id)
+        if success and self._current_plan_id == plan_id:
+            self._current_plan_id = None
+        return self._res(success, {'deleted': plan_id} if success else None,
+                        '' if success else f"Failed to delete plan {plan_id}")
+
+    def create_task(self, plan_id: str, name: str, description: str = "") -> Dict[str, Any]:
+        """Task 생성"""
+        task = self._manager.create_task(plan_id, name)
+        if task:
+            if description and hasattr(task, 'description'):
+                task.description = description
+            self._sync(plan_id)
+            return self._res(True, _task_to_dict(task))
+        return self._res(False, None, f"Failed to create task in plan {plan_id}")
+
+    def add_task(self, plan_id: str, title: str, **kwargs) -> Dict[str, Any]:
+        """Task 추가 (create_task의 별칭)"""
+        description = kwargs.get('description', '')
+        return self.create_task(plan_id, title, description)
+
+    def get_task(self, plan_id: str, task_id: str) -> Dict[str, Any]:
+        """특정 Task 조회"""
+        plan = self._manager.get_plan(plan_id)
+        if not plan:
+            return self._res(False, None, f"Plan {plan_id} not found")
+
+        if hasattr(plan, 'tasks') and task_id in plan.tasks:
+            task = plan.tasks[task_id]
+            return self._res(True, _task_to_dict(task))
+        return self._res(False, None, f"Task {task_id} not found")
+
+    def list_tasks(self, plan_id: str, status: Optional[str] = None) -> Dict[str, Any]:
+        """Task 목록 조회"""
+        plan = self._manager.get_plan(plan_id)
+        if not plan:
+            return self._res(False, None, f"Plan {plan_id} not found")
+
+        tasks = []
+        if hasattr(plan, 'tasks'):
+            for task in plan.tasks.values():
+                task_dict = _task_to_dict(task)
+                if not status or task_dict.get('status') == status:
+                    tasks.append(task_dict)
+
+        return self._res(True, tasks)
+
+    def update_task(self, plan_id: str, task_id: str, **kwargs) -> Dict[str, Any]:
+        """Task 정보 업데이트"""
+        plan = self._manager.get_plan(plan_id)
+        if not plan:
+            return self._res(False, None, f"Plan {plan_id} not found")
+
+        if not hasattr(plan, 'tasks') or task_id not in plan.tasks:
+            return self._res(False, None, f"Task {task_id} not found")
+
+        task = plan.tasks[task_id]
+
+        # 업데이트 가능한 필드들
+        for field in ['title', 'description', 'status', 'priority']:
+            if field in kwargs:
+                setattr(task, field, kwargs[field])
+
+        if hasattr(task, 'updated_at'):
+            task.updated_at = datetime.now().isoformat()
+
+        if hasattr(self._manager, 'save_index'):
+            self._manager.save_index()
+        self._sync(plan_id)
+
+        return self._res(True, _task_to_dict(task))
+
+    def update_task_status(self, plan_id: str, task_id: str, status: str) -> Dict[str, Any]:
+        """Task 상태 업데이트 (편의 메서드)"""
+        return self.update_task(plan_id, task_id, status=status)
+
+    def search(self, query: str) -> Dict[str, Any]:
+        """Plan과 Task 통합 검색"""
+        query_lower = query.lower()
+
+        # Plan 검색
+        plans = []
+        all_plans = self._manager.list_plans()
+        for plan in all_plans:
+            if query_lower in plan.name.lower():
+                plans.append(_plan_to_dict(plan))
+
+        # Task 검색
+        tasks = []
+        for plan in all_plans:
+            if hasattr(plan, 'tasks'):
+                for task_id, task in plan.tasks.items():
+                    task_dict = _task_to_dict(task)
+                    if query_lower in task_dict.get('title', '').lower() or                        query_lower in task_dict.get('description', '').lower():
+                        task_dict['plan_id'] = plan.id
+                        tasks.append(task_dict)
+
+        return self._res(True, {'plans': plans, 'tasks': tasks})
+
+    def get_stats(self) -> Dict[str, Any]:
+        """전체 통계 정보"""
+        plans = self._manager.list_plans()
+        total_tasks = 0
+        task_stats = {"todo": 0, "in_progress": 0, "done": 0}
+
+        for plan in plans:
+            if hasattr(plan, 'tasks'):
+                total_tasks += len(plan.tasks)
+                for task in plan.tasks.values():
+                    status = str(getattr(task, 'status', 'todo')).lower()
+                    if 'done' in status or 'completed' in status:
+                        task_stats['done'] += 1
+                    elif 'progress' in status:
+                        task_stats['in_progress'] += 1
+                    else:
+                        task_stats['todo'] += 1
+
+        stats = {
+            "total_plans": len(plans),
+            "total_tasks": total_tasks,
+            "tasks_by_status": task_stats,
+            "current_plan": self._current_plan_id
+        }
+
+        return self._res(True, stats)
+
+    def set_context(self, key: str, value: Any) -> "FlowAPI":
+        """컨텍스트 설정 (체이닝 가능)"""
+        self._context[key] = value
+        self._res(True, {key: value})
+        return self
+
+    def get_context(self, key: str) -> Any:
+        """컨텍스트 조회"""
+        return self._context.get(key)
+
+    def clear_context(self) -> "FlowAPI":
+        """컨텍스트 초기화 (체이닝 가능)"""
+        self._context.clear()
+        self._current_plan_id = None
+        self._res(True, {})
         return self

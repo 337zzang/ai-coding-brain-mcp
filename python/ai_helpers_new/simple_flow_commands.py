@@ -10,34 +10,48 @@ from .ultra_simple_flow_manager import UltraSimpleFlowManager
 from .project import get_current_project
 from .project import flow_project_with_workflow
 
+# New session-based imports
+from .session import get_current_session
+from .contextual_flow_manager import ContextualFlowManager
+
 # 전역 매니저 인스턴스
-_manager: Optional[UltraSimpleFlowManager] = None
-_current_plan_id: Optional[str] = None
-_current_project_path: Optional[str] = None
+# DEPRECATED: These global variables are maintained for backward compatibility
+# New code should use get_current_session() instead
+_manager: Optional[UltraSimpleFlowManager] = None  # @deprecated - use get_current_session().flow_manager
+_current_plan_id: Optional[str] = None  # @deprecated - use get_current_session().flow_context.current_plan_id
+_current_project_path: Optional[str] = None  # @deprecated - use get_current_session().project_context
 
 def get_manager() -> UltraSimpleFlowManager:
-    """현재 프로젝트의 매니저 가져오기 (작업 디렉토리 기반)"""
-    global _manager
+    """현재 프로젝트의 매니저 가져오기 (Session 기반)
 
-    # 현재 작업 디렉토리를 프로젝트 경로로 사용
-    project_path = os.getcwd()
+    이 함수는 기존 코드와의 호환성을 위해 유지됩니다.
+    내부적으로는 새로운 Session 시스템을 사용합니다.
+    """
+    # Get current session
+    session = get_current_session()
 
-    # 프로젝트가 변경되었는지 확인
-    if not hasattr(get_manager, '_current_project_path'):
-        get_manager._current_project_path = None
-
-    # 매니저가 없거나 프로젝트가 변경된 경우 재생성
-    if _manager is None or get_manager._current_project_path != project_path:
-        _manager = UltraSimpleFlowManager(project_path=project_path, use_enhanced=True)
-        get_manager._current_project_path = project_path
-
-        # 프로젝트별 .ai-brain 디렉토리 생성 알림
+    # Check if session is initialized with a project
+    if not session.is_initialized:
+        # Initialize with current directory
+        project_path = os.getcwd()
         project_name = os.path.basename(project_path)
+        session.set_project(project_name, project_path)
+
+        # Notification about .ai-brain directory
         ai_brain_path = os.path.join(project_path, '.ai-brain', 'flow')
         if not os.path.exists(ai_brain_path):
             print(f"📁 새로운 Flow 저장소 생성: {project_name}/.ai-brain/flow/")
         else:
             print(f"📁 Flow 저장소 사용: {project_name}/.ai-brain/flow/")
+
+    # For backward compatibility, return the old manager type
+    # In future phases, we'll migrate to using session.flow_manager directly
+    global _manager
+    if _manager is None:
+        _manager = UltraSimpleFlowManager(
+            project_path=str(session.get_project_path()), 
+            use_enhanced=True
+        )
 
     return _manager
 

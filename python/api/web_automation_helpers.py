@@ -13,35 +13,15 @@ from .web_automation_manager import browser_manager
 
 
 # 전역 인스턴스 저장 - 다중 전략
-_web_instance: Optional[REPLBrowserWithRecording] = None
+# _web_instance 전역 변수 제거됨 - BrowserManager 사용
 _WEB_INSTANCES = {}  # 딕셔너리 방식 추가
 
 def _get_web_instance():
     """전역 _web_instance를 안전하게 가져오기 - BrowserManager 사용"""
     # BrowserManager를 통한 중앙 관리
-    instance = browser_manager.get_instance("default")
+    return browser_manager.get_instance("default")
 
-    # 하위 호환성을 위한 폴백 (임시)
-    if instance is None:
-        # 기존 방식 시도 (deprecated)
-        import sys
-        import warnings
 
-        warnings.warn(
-            "Direct globals() access is deprecated. Use BrowserManager instead.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-
-        # 기존 코드 유지 (점진적 마이그레이션)
-        if '_web_instance' in globals() and globals()['_web_instance'] is not None:
-            return globals()['_web_instance']
-
-        main_module = sys.modules.get('__main__')
-        if main_module and hasattr(main_module, '_web_instance'):
-            return getattr(main_module, '_web_instance')
-
-    return instance
 def _set_web_instance(instance):
     """전역 _web_instance를 안전하게 설정 - BrowserManager 사용"""
     # BrowserManager를 통한 중앙 관리
@@ -50,13 +30,6 @@ def _set_web_instance(instance):
     else:
         browser_manager.remove_instance("default")
 
-    # 하위 호환성을 위한 기존 방식도 유지 (임시)
-    import sys
-    globals()['_web_instance'] = instance
-
-    main_module = sys.modules.get('__main__')
-    if main_module:
-        setattr(main_module, '_web_instance', instance)
 def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dict[str, Any]:
     """
     웹 자동화 레코딩 시작
@@ -74,7 +47,7 @@ def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dic
         >>> h.web_click("button")
         >>> web_generate_script("my_scraper.py")
     """
-    global _web_instance
+    # global _web_instance  # 제거됨
 
     # 기존 인스턴스가 있으면 먼저 종료
     existing_instance = _get_web_instance()
@@ -86,15 +59,15 @@ def web_start(headless: bool = False, project_name: str = "web_scraping") -> Dic
             print(f"[WARNING] 기존 브라우저 종료 중 오류: {e}")
 
     # 새 인스턴스 생성
-    _web_instance = REPLBrowserWithRecording(headless=headless, project_name=project_name)
+    instance = REPLBrowserWithRecording(headless=headless, project_name=project_name)
 
     # 브라우저 시작
-    result = _web_instance.start()
+    result = instance.start()
 
     if result.get('ok'):
         print(f"[OK] 웹 자동화 시작됨 (프로젝트: {project_name})")
         # 전역 변수에 강제로 설정 (JSON REPL 환경 대응)
-        _set_web_instance(_web_instance)
+        _set_web_instance(instance)
     else:
         print(f"[ERROR] 시작 실패: {result.get('error')}")
 
@@ -204,7 +177,7 @@ def web_extract_table(table_selector: str, name: Optional[str] = None) -> Dict[s
     if not _get_web_instance():
         return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
-    result = _web_instance.extract_table(table_selector, name)
+    result = _get_web_instance().extract_table(table_selector, name)
     if result.get('ok'):
         data = result.get('data', {})
         rows_count = len(data.get('rows', [])) if data else 0
@@ -276,7 +249,7 @@ def web_screenshot(path: Optional[str] = None) -> Dict[str, Any]:
     if not _get_web_instance():
         return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
-    result = _web_instance.screenshot(path)
+    result = _get_web_instance().screenshot(path)
     if result.get('ok'):
         print(f"[SCREENSHOT] 스크린샷 저장: {path or 'screenshot_*.png'}")
     return result
@@ -295,7 +268,7 @@ def web_generate_script(output_file: Optional[str] = None) -> Dict[str, Any]:
     if not _get_web_instance():
         return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
-    result = _web_instance.generate_script(output_file)
+    result = _get_web_instance().generate_script(output_file)
     if result.get('ok'):
         print(f"[OK] 스크립트 생성: {result.get('file')}")
         print(f"   액션 수: {result.get('actions_count')}")
@@ -304,16 +277,16 @@ def web_generate_script(output_file: Optional[str] = None) -> Dict[str, Any]:
 
 def _web_stop_impl() -> Dict[str, Any]:
     """웹 자동화 종료"""
-    global _web_instance
+    # global _web_instance  # 제거됨
 
     if not _get_web_instance():
         return {'ok': False, 'error': '실행 중인 인스턴스가 없습니다'}
 
-    result = _web_instance.stop()
+    result = _get_web_instance().stop()
     if result.get('ok'):
         print("🛑 웹 자동화 종료")
 
-    _web_instance = None
+    _set_web_instance(None)
     return result
 
 
@@ -328,19 +301,19 @@ def _web_status_impl() -> Dict[str, Any]:
 
     return {
         'ok': True,
-        'running': _web_instance.browser_started,
-        'actions_count': len(_web_instance.recorder.actions),
-        'extracted_data_count': len(_web_instance.extracted_data),
-        'project_name': _web_instance.recorder.project_name
+        'running': _get_web_instance().browser_started,
+        'actions_count': len(_get_web_instance().recorder.actions),
+        'extracted_data_count': len(_get_web_instance().extracted_data),
+        'project_name': _get_web_instance().recorder.project_name
     }
 
 
 def _web_get_data_impl() -> Dict[str, Any]:
     """추출된 모든 데이터 조회"""
-    if not _web_instance:
+    if not _get_web_instance():
         return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
-    data = _web_instance.get_extracted_data()
+    data = _get_web_instance().get_extracted_data()
     return {'ok': True, 'data': data, 'count': len(data)}
 
 
@@ -507,7 +480,7 @@ def web_extract_batch(configs: List[Dict[str, Any]]) -> Dict[str, Any]:
     if not _get_web_instance():
         return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
-    result = _web_instance.extract_batch(configs)
+    result = _get_web_instance().extract_batch(configs)
 
     if result.get('ok'):
         data = result.get('data', {})
@@ -539,7 +512,7 @@ def web_extract_attributes(selector: str, attributes: List[str]) -> Dict[str, An
     if not _get_web_instance():
         return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
-    result = _web_instance.extract_attributes(selector, attributes)
+    result = _get_web_instance().extract_attributes(selector, attributes)
 
     if result.get('ok'):
         data = result.get('data', {})
@@ -565,7 +538,7 @@ def web_extract_form(form_selector: str) -> Dict[str, Any]:
     if not _get_web_instance():
         return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
 
-    result = _web_instance.extract_form(form_selector)
+    result = _get_web_instance().extract_form(form_selector)
 
     if result.get('ok'):
         data = result.get('data', {})

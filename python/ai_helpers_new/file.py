@@ -170,7 +170,7 @@ def append(path: str, content: str, encoding: str = 'utf-8') -> Dict[str, Any]:
 
         # 파일이 없으면 새로 생성
         if not p.exists():
-            return h.write(path, content, encoding)
+            return write(path, content, encoding)
 
         # 기존 내용에 추가
         with open(p, 'a', encoding=encoding) as f:
@@ -192,7 +192,7 @@ def read_json(path: str) -> Dict[str, Any]:
         성공: {'ok': True, 'data': 파싱된 객체}
         실패: {'ok': False, 'error': 에러메시지}
     """
-    result = h.read(path)
+    result = read(path)
     if not result['ok']:
         return result
 
@@ -212,7 +212,7 @@ def write_json(path: str, data: Any, indent: int = 2) -> Dict[str, Any]:
     """
     try:
         content = json.dumps(data, indent=indent, ensure_ascii=False)
-        return h.write(path, content)
+        return write(path, content)
     except Exception as e:
         return err(f"JSON encoding error: {e}", path=path)
 

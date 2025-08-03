@@ -473,7 +473,7 @@ def insert(path: str, marker: str, code: str, after: bool = True) -> Dict[str, A
 
         # 삽입
         for i, code_line in enumerate(code_lines):
-            lines.h.insert(insert_line + i, code_line)
+            lines.insert(insert_line + i, code_line)
 
         # 파일 쓰기
         Path(path).write_text('\n'.join(lines), encoding='utf-8')

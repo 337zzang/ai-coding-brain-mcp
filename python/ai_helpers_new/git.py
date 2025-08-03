@@ -115,7 +115,7 @@ def git_status(include_log: bool = False) -> Dict[str, Any]:
 
     # 최근 커밋 정보 (옵션)
     if include_log:
-        log_info = h.git_log(limit=1)
+        log_info = git_log(limit=1)
         if log_info['ok'] and log_info['data']:
             latest = log_info['data'][0]
             data['latest_commit'] = {

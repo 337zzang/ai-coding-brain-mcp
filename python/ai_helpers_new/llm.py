@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional, Union, List
 from .util import ok, err
 from .wrappers import safe_execution
+from .file import read, read_json, write, exists
 
 
 # 전역 o3 작업 저장소
@@ -52,7 +53,7 @@ def _call_o3_api(question: str, context: Optional[str] = None,
         # 메시지 구성
         messages = [{"role": "user", "content": question}]
         if context:
-            messages.h.insert(0, {"role": "system", "content": context})
+            messages.insert(0, {"role": "system", "content": context})
 
         print(f"🤔 o3 모델 호출 중... (reasoning_effort: {reasoning_effort})")
 
@@ -420,7 +421,7 @@ def prepare_o3_context(topic: str, files: Optional[List[str]] = None) -> Dict[st
             # pathlib 사용 (o3 권장)
             path = Path(file_path)
 
-            result = h.read(str(path))
+            result = read(str(path))
             if result.get('ok'):
                 content = result['data']
                 # 큰 파일은 일부만
@@ -441,7 +442,7 @@ def prepare_o3_context(topic: str, files: Optional[List[str]] = None) -> Dict[st
     project_info = None
     try:
         from .file import read_json
-        proj_result = h.read_json(".ai-brain.config.json")
+        proj_result = read_json(".ai-brain.config.json")
         if proj_result.get('ok'):
             project_info = proj_result['data'].get('name', 'Unknown')
             context_parts.append(f"\nProject: {project_info}")
@@ -498,7 +499,7 @@ def ask_o3_practical(question: str, file_content: str = "", error_info: str = ""
     context = "\n\n".join(context_parts)
 
     # O3 비동기 호출
-    result = h.ask_o3_async(question, context, reasoning_effort)
+    result = ask_o3_async(question, context, reasoning_effort)
     if not result['ok']:
         return result
 
@@ -510,12 +511,12 @@ def ask_o3_practical(question: str, file_content: str = "", error_info: str = ""
     start_time = time.time()
 
     while time.time() - start_time < max_wait:
-        status_result = h.check_o3_status(task_id)
+        status_result = check_o3_status(task_id)
         if not status_result['ok']:
             return status_result
 
         if status_result['data']['status'] == 'completed':
-            return h.get_o3_result(task_id)
+            return get_o3_result(task_id)
         elif status_result['data']['status'] == 'failed':
             return {'ok': False, 'error': 'O3 작업 실패'}
 
@@ -577,7 +578,7 @@ def O3ContextBuilder():
 - 즉시 적용 가능한 실용적 해결책
 - 과도한 리팩토링 금지"""
 
-            result = h.ask_o3_async(question, context, reasoning_effort)
+            result = ask_o3_async(question, context, reasoning_effort)
             if not result['ok']:
                 return result
 
@@ -588,12 +589,12 @@ def O3ContextBuilder():
             start_time = time.time()
 
             while time.time() - start_time < max_wait:
-                status_result = h.check_o3_status(task_id)
+                status_result = check_o3_status(task_id)
                 if not status_result['ok']:
                     return status_result
 
                 if status_result['data']['status'] == 'completed':
-                    return h.get_o3_result(task_id)
+                    return get_o3_result(task_id)
                 elif status_result['data']['status'] == 'failed':
                     return {'ok': False, 'error': 'O3 작업 실패'}
 
@@ -616,7 +617,7 @@ def quick_o3_context(error_msg: str, file_path: str = "", line_num: int = 0) -> 
     Returns:
         설정된 O3ContextBuilder 인스턴스
     """
-    builder = h.O3ContextBuilder()
+    builder = O3ContextBuilder()
     builder.add_error(error_msg, file_path, line_num)
 
     if file_path and os.path.exists(file_path):

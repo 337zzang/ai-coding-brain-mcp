@@ -566,7 +566,7 @@ def switch_project(project_name: Optional[str]) -> None:
 
     if not project_name:
         # 현재 프로젝트 표시
-        current = h.get_current_project()
+        current = get_current_project()
         if current and current.get('ok'):
             project_data = current.get('data', {})
             print(f"\n현재 프로젝트: {project_data.get('name', 'Unknown')}")
@@ -578,7 +578,7 @@ def switch_project(project_name: Optional[str]) -> None:
     # 안전한 프로젝트 전환
     try:
         # flow_project_with_workflow 사용 - dict 반환
-        result = h.flow_project_with_workflow(project_name)
+        result = flow_project_with_workflow(project_name)
 
         # 전환 성공 확인
         if isinstance(result, dict) and result.get('ok'):
@@ -825,7 +825,7 @@ def _show_direct_structure():
                 pass
 
         # 프로젝트 이름 표시
-        current = h.get_current_project()
+        current = get_current_project()
         project_name = 'unknown'
         if current and current.get('ok'):
             project_name = current.get('data', {}).get('name', 'unknown')

@@ -102,7 +102,7 @@ class SafeHelpers:
 
         try:
             # Logger 생성
-            logger = h.create_task_logger(plan_id, task_num, task_name)
+            logger = None  # TODO: TaskLogger 의존성 해결 후 활성화
 
             # 지원되는 파라미터로 task_info 호출
             title = kwargs.get('title', task_name)

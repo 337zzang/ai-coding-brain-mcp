@@ -9,6 +9,42 @@ from .util import ok, err
 from typing import Any, Dict
 
 
+
+def resolve_project_path(path: Union[str, Path]) -> Path:
+    """
+    Resolve path using ProjectContext if available.
+
+    If a project is active in the session, relative paths are resolved
+    relative to the project base. Otherwise, they're resolved relative
+    to the current working directory.
+
+    Args:
+        path: Path to resolve (can be relative or absolute)
+
+    Returns:
+        Resolved absolute path
+    """
+    from .session import get_current_session
+
+    path_obj = Path(path)
+
+    # If already absolute, return as is
+    if path_obj.is_absolute():
+        return path_obj
+
+    # Try to get project context from session
+    try:
+        session = get_current_session()
+        if session.is_initialized and session.project_context:
+            # Resolve relative to project base
+            return session.project_context.resolve_path(path)
+    except:
+        pass
+
+    # Fallback to current working directory
+    return Path.cwd() / path
+
+
 def read(path: str, encoding: str = 'utf-8', offset: int = 0, length: int = None) -> Dict[str, Any]:
     """파일을 읽어서 내용 반환 (부분 읽기 지원)
 
@@ -23,7 +59,7 @@ def read(path: str, encoding: str = 'utf-8', offset: int = 0, length: int = None
         실패: {'ok': False, 'error': 에러메시지}
     """
     try:
-        p = Path(path)
+        p = resolve_project_path(path)
         if not p.exists():
             return err(f"File not found: {path}", path=path)
 
@@ -100,7 +136,7 @@ def write(path: str, content: str, encoding: str = 'utf-8', backup: bool = False
         실패: {'ok': False, 'error': 에러메시지}
     """
     try:
-        p = Path(path)
+        p = resolve_project_path(path)
 
         # 백업 옵션
         if backup and p.exists():
@@ -130,7 +166,7 @@ def append(path: str, content: str, encoding: str = 'utf-8') -> Dict[str, Any]:
         실패: {'ok': False, 'error': 에러메시지}
     """
     try:
-        p = Path(path)
+        p = resolve_project_path(path)
 
         # 파일이 없으면 새로 생성
         if not p.exists():
@@ -205,7 +241,7 @@ def info(path: str) -> Dict[str, Any]:
         실패: {'ok': False, 'error': 에러메시지}
     """
     try:
-        p = Path(path)
+        p = resolve_project_path(path)
         if not p.exists():
             return err(f"File not found: {path}", path=path)
 
@@ -267,7 +303,7 @@ def list_directory(path: str = ".") -> Dict[str, Any]:
     from pathlib import Path
 
     try:
-        p = Path(path).resolve()
+        p = resolve_project_path(path).resolve()
         if not p.exists():
             return err(f"경로가 존재하지 않습니다: {path}")
 
@@ -313,7 +349,7 @@ def create_directory(path: str, parents: bool = True, exist_ok: bool = True) -> 
         실패: {'ok': False, 'error': 에러메시지}
     """
     try:
-        p = Path(path)
+        p = resolve_project_path(path)
         already_exists = p.exists()
 
         if already_exists and p.is_file():

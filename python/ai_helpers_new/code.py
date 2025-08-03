@@ -135,7 +135,7 @@ def parse(path: str) -> Dict[str, Any]:
 
     # AST 파싱
     try:
-        tree = ast.h.parse(content, filename=path)
+        tree = ast.parse(content, filename=path)
     except SyntaxError as e:
         return err(f'Syntax error at line {e.lineno}: {e.msg}')
     except Exception as e:
@@ -165,7 +165,7 @@ def view(path: str, name: str) -> Dict[str, Any]:
         lines = Path(path).read_text(encoding='utf-8').splitlines()
 
         # AST로 위치 찾기
-        tree = ast.h.parse('\n'.join(lines))
+        tree = ast.parse('\n'.join(lines))
 
         for node in tree.body:
             node_name = None
@@ -451,7 +451,7 @@ def functions(path: str) -> Dict[str, Any]:
         성공: {'ok': True, 'data': ['func1', 'func2', ...]}
         실패: {'ok': False, 'error': 에러메시지}
     """
-    result = h.parse(path)
+    result = parse(path)
     if not result['ok']:
         return result
 
@@ -466,7 +466,7 @@ def classes(path: str) -> Dict[str, Any]:
         성공: {'ok': True, 'data': ['Class1', 'Class2', ...]}
         실패: {'ok': False, 'error': 에러메시지}
     """
-    result = h.parse(path)
+    result = parse(path)
     if not result['ok']:
         return result
 

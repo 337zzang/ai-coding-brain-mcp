@@ -1,6 +1,6 @@
 {
-  "current_plan_id": "plan_20250803_091512_호환성_테스트_Plan",
-  "current_task_id": null,
+  "current_plan_id": "plan_20250803_094619_Phase_2_구조_개선_작업",
+  "current_task_id": "task_20250803_094636_24713e",
   "metadata": {
     "plan_plan_20250803_091429_Test_Plan": {
       "id": "plan_20250803_091429_Test_Plan",
@@ -21,7 +21,54 @@
       "updated_at": "2025-08-03T09:15:12.219698",
       "tasks": {},
       "metadata": {}
+    },
+    "plan_plan_20250803_003_Phase_2_구조_개선_Context_기반_리팩토": {
+      "id": "plan_20250803_003_Phase_2_구조_개선_Context_기반_리팩토",
+      "name": "Phase 2: 구조 개선 (Context 기반 리팩토링)",
+      "created_at": "2025-08-03T08:45:09.691676",
+      "updated_at": "2025-08-03T09:09:12.656990",
+      "metadata": {
+        "description": ""
+      }
+    },
+    "plan_plan_20250803_094619_Phase_2_구조_개선_작업": {
+      "id": "plan_20250803_094619_Phase_2_구조_개선_작업",
+      "name": "Phase 2 구조 개선 작업",
+      "description": "",
+      "status": "active",
+      "created_at": "2025-08-03T09:46:19.267004",
+      "updated_at": "2025-08-03T09:46:36.804863",
+      "tasks": {
+        "task_20250803_094636_24713e": {
+          "id": "task_20250803_094636_24713e",
+          "title": "plan_20250803_094619_Phase_2_구조_개선_작업",
+          "description": "Phase 2-3: Project 관리 개선 - os.chdir 제거",
+          "status": "todo",
+          "created_at": "2025-08-03T09:46:36.800246",
+          "updated_at": "2025-08-03T09:46:36.800246",
+          "metadata": {}
+        },
+        "task_20250803_094636_ef2998": {
+          "id": "task_20250803_094636_ef2998",
+          "title": "plan_20250803_094619_Phase_2_구조_개선_작업",
+          "description": "Phase 2-4: 의존성 정리 및 최종 통합",
+          "status": "todo",
+          "created_at": "2025-08-03T09:46:36.804116",
+          "updated_at": "2025-08-03T09:46:36.804116",
+          "metadata": {}
+        }
+      },
+      "metadata": {}
+    },
+    "task_task_20250803_094636_24713e": {
+      "id": "task_20250803_094636_24713e",
+      "title": "plan_20250803_094619_Phase_2_구조_개선_작업",
+      "description": "Phase 2-3: Project 관리 개선 - os.chdir 제거",
+      "status": "in_progress",
+      "created_at": "2025-08-03T09:46:36.800246",
+      "updated_at": "2025-08-03T09:46:55.757664",
+      "metadata": {}
     }
   },
-  "updated_at": "2025-08-03T09:15:12.221700"
+  "updated_at": "2025-08-03T09:46:55.757664"
 }

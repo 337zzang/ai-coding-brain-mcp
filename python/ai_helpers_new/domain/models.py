@@ -4,6 +4,7 @@ Flow 개념이 제거되고 Plan과 Task만 남은 모델
 """
 from dataclasses import dataclass, field
 from datetime import datetime
+from collections import OrderedDict
 from typing import Optional, List, Dict, Any
 from enum import Enum
 import uuid
@@ -79,7 +80,7 @@ class Plan:
     start_date: Optional[str] = None
     due_date: Optional[str] = None
     tags: List[str] = field(default_factory=list)
-    tasks: Dict[str, Task] = field(default_factory=dict)
+    tasks: OrderedDict[str, Task] = field(default_factory=OrderedDict)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     # AI가 사용할 수 있는 추가 필드들
@@ -89,6 +90,26 @@ class Plan:
         """Task 추가"""
         self.tasks[task.id] = task
         self.updated_at = datetime.now().isoformat()
+
+    def get_task_list(self) -> List[Task]:
+        """Task를 리스트로 반환 (순서 유지)"""
+        return list(self.tasks.values())
+
+    def get_task_by_number(self, number: int) -> Optional[Task]:
+        """번호로 Task 접근 (1부터 시작)"""
+        tasks = self.get_task_list()
+        if 0 <= number-1 < len(tasks):
+            return tasks[number-1]
+        return None
+
+    def get_task_by_id(self, task_id: str) -> Optional[Task]:
+        """ID로 Task 접근"""
+        return self.tasks.get(task_id)
+
+    def iter_tasks(self):
+        """직관적인 Task 순회를 위한 이터레이터"""
+        return self.tasks.values()
+
 
     def get_task(self, task_id: str) -> Optional[Task]:
         """Task 조회"""

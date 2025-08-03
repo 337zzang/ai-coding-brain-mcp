@@ -45,6 +45,10 @@ def get_current_project() -> dict:
 
     global _current_project_cache
 
+    # cache 변수가 최초 호출 때 정의돼 있지 않으면 초기화
+    if '_current_project_cache' not in globals():
+        _current_project_cache = None
+
     # Session에서 프로젝트 정보 가져오기
     session = get_current_session()
 

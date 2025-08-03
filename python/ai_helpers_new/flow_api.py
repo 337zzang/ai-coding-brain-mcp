@@ -9,6 +9,7 @@ from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 
 from .session import Session, get_current_session
+from .util import ok, err
 from .contextual_flow_manager import ContextualFlowManager
 from .flow_context import FlowContext
 
@@ -45,6 +46,22 @@ class FlowAPI:
                 raise ValueError("Session not initialized. Call session.set_project() first.")
             self.manager = self.session.flow_manager
 
+
+
+    def _wrap_result(self, result):
+        """표준 ok/err 형식으로 결과 래핑"""
+        if isinstance(result, dict) and ('ok' in result or 'error' in result):
+            return result  # 이미 표준 형식
+        if isinstance(result, Exception):
+            return err(str(result))
+        return ok(result)
+    def _wrap_result(self, result):
+        """표준 ok/err 형식으로 결과 래핑"""
+        if isinstance(result, dict) and ('ok' in result or 'error' in result):
+            return result  # 이미 표준 형식
+        if isinstance(result, Exception):
+            return err(str(result))
+        return ok(result)
     @property
     def context(self) -> FlowContext:
         """Get the current flow context."""
@@ -66,7 +83,7 @@ class FlowAPI:
         Example:
             plan = api.create_plan("Backend Development", "API implementation")
         """
-        return self.manager.create_plan(name, description)
+        return self._wrap_result(self.manager.create_plan(name, description))
 
     def list_plans(self) -> List[Dict[str, Any]]:
         """
@@ -80,7 +97,7 @@ class FlowAPI:
             for plan in plans:
                 print(f"{plan['id']}: {plan['name']}")
         """
-        return self.manager.list_plans()
+        return self._wrap_result(self.manager.list_plans())
 
     def get_plan(self, plan_id: str) -> Optional[Dict[str, Any]]:
         """
@@ -92,7 +109,7 @@ class FlowAPI:
         Returns:
             Plan data or None if not found
         """
-        return self.manager.get_plan(plan_id)
+        return self._wrap_result(self.manager.get_plan(plan_id))
 
     def select_plan(self, plan_id: str) -> bool:
         """
@@ -108,7 +125,7 @@ class FlowAPI:
             if api.select_plan("plan_20240101_project"):
                 print("Plan selected")
         """
-        return self.manager.select_plan(plan_id)
+        return self._wrap_result(self.manager.select_plan(plan_id))
 
     def delete_plan(self, plan_id: str) -> bool:
         """
@@ -132,8 +149,8 @@ class FlowAPI:
                 self.context.clear_plan()
                 self.manager._save_flow_state()
 
-            return True
-        return False
+            return ok(True)
+        return err("Plan not found")
 
     def get_current_plan(self) -> Optional[Dict[str, Any]]:
         """
@@ -142,7 +159,7 @@ class FlowAPI:
         Returns:
             Current plan data or None
         """
-        return self.manager.get_current_plan()
+        return self._wrap_result(self.manager.get_current_plan())
 
     # ========== Task Management ==========
 
@@ -160,7 +177,7 @@ class FlowAPI:
         Example:
             task = api.add_task("Write tests", "Unit tests for auth module")
         """
-        return self.manager.add_task(title, description)
+        return self._wrap_result(self.manager.add_task(title, description))
 
     def list_tasks(self) -> List[Dict[str, Any]]:
         """
@@ -205,7 +222,7 @@ class FlowAPI:
         Example:
             api.update_task_status("task_001", "in_progress")
         """
-        return self.manager.update_task_status(task_id, status)
+        return self._wrap_result(self.manager.update_task_status(task_id, status))
 
     def start_task(self, task_id: str) -> bool:
         """
@@ -238,7 +255,7 @@ class FlowAPI:
         Returns:
             Current task data or None
         """
-        return self.manager.get_current_task()
+        return self._wrap_result(self.manager.get_current_task())
 
     # ========== Status and Info ==========
 

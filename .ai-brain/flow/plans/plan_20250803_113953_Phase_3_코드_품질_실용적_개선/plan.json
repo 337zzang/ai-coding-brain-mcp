@@ -1,0 +1,65 @@
+{
+  "id": "plan_20250803_113953_Phase_3_코드_품질_실용적_개선",
+  "name": "Phase 3 코드 품질 실용적 개선",
+  "description": "",
+  "status": "active",
+  "created_at": "2025-08-03T11:39:53.776706",
+  "updated_at": "2025-08-03T11:40:04.992728",
+  "tasks": {
+    "task_20250803_114004_65e3f6": {
+      "id": "task_20250803_114004_65e3f6",
+      "title": "plan_20250803_113953_Phase_3_코드_품질_실용적_개선",
+      "description": "1. find_function에 strict 모드 추가",
+      "status": "todo",
+      "created_at": "2025-08-03T11:40:04.992728",
+      "updated_at": "2025-08-03T11:40:04.992728",
+      "metadata": {}
+    },
+    "task_20250803_114004_9fc604": {
+      "id": "task_20250803_114004_9fc604",
+      "title": "plan_20250803_113953_Phase_3_코드_품질_실용적_개선",
+      "description": "2. replace 함수에 validate 기능 통합",
+      "status": "todo",
+      "created_at": "2025-08-03T11:40:04.992728",
+      "updated_at": "2025-08-03T11:40:04.992728",
+      "metadata": {}
+    },
+    "task_20250803_114004_04dbe7": {
+      "id": "task_20250803_114004_04dbe7",
+      "title": "plan_20250803_113953_Phase_3_코드_품질_실용적_개선",
+      "description": "3. safe_replace deprecation 래퍼 변경",
+      "status": "todo",
+      "created_at": "2025-08-03T11:40:04.992728",
+      "updated_at": "2025-08-03T11:40:04.992728",
+      "metadata": {}
+    },
+    "task_20250803_114004_72db5e": {
+      "id": "task_20250803_114004_72db5e",
+      "title": "plan_20250803_113953_Phase_3_코드_품질_실용적_개선",
+      "description": "4. 경량 캐싱 시스템 구현",
+      "status": "todo",
+      "created_at": "2025-08-03T11:40:04.992728",
+      "updated_at": "2025-08-03T11:40:04.992728",
+      "metadata": {}
+    },
+    "task_20250803_114004_5e3b45": {
+      "id": "task_20250803_114004_5e3b45",
+      "title": "plan_20250803_113953_Phase_3_코드_품질_실용적_개선",
+      "description": "5. 테스트 작성 및 검증",
+      "status": "todo",
+      "created_at": "2025-08-03T11:40:04.992728",
+      "updated_at": "2025-08-03T11:40:04.992728",
+      "metadata": {}
+    },
+    "task_20250803_114004_8205e1": {
+      "id": "task_20250803_114004_8205e1",
+      "title": "plan_20250803_113953_Phase_3_코드_품질_실용적_개선",
+      "description": "6. 마이그레이션 도구 작성",
+      "status": "todo",
+      "created_at": "2025-08-03T11:40:04.992728",
+      "updated_at": "2025-08-03T11:40:04.992728",
+      "metadata": {}
+    }
+  },
+  "metadata": {}
+}

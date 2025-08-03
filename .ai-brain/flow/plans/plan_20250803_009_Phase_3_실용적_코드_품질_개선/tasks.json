@@ -1,0 +1,67 @@
+{
+  "task_20250803_121517_d6ddb5": {
+    "id": "task_20250803_121517_d6ddb5",
+    "title": "1. strict 모드 구현 - find_function/find_class에 AST 옵션 추가",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T12:15:17.876422",
+    "updated_at": "2025-08-03T12:15:17.876422",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250803_121517_7925eb": {
+    "id": "task_20250803_121517_7925eb",
+    "title": "2. validate 모드 구현 - safe_replace에 구문 검증 추가",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T12:15:17.887254",
+    "updated_at": "2025-08-03T12:15:17.887254",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250803_121517_371703": {
+    "id": "task_20250803_121517_371703",
+    "title": "3. 테스트 작성 - 새 기능들의 단위/통합 테스트",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T12:15:17.896989",
+    "updated_at": "2025-08-03T12:15:17.896989",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250803_121517_ea965f": {
+    "id": "task_20250803_121517_ea965f",
+    "title": "4. 문서 업데이트 및 사용 가이드 작성",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T12:15:17.907996",
+    "updated_at": "2025-08-03T12:15:17.907996",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250803_121517_d526f4": {
+    "id": "task_20250803_121517_d526f4",
+    "title": "5. safe_replace → replace 마이그레이션 준비",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-03T12:15:17.920837",
+    "updated_at": "2025-08-03T12:15:17.920837",
+    "completed_at": null,
+    "assignee": null,
+    "tags": [],
+    "metadata": {}
+  }
+}

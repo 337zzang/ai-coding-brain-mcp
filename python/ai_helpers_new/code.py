@@ -201,7 +201,7 @@ def view(path: str, name: str) -> Dict[str, Any]:
         return err(f"View error: {e}", path=path)
 
 
-def safe_replace(path: str, old: str, new: str, preview: bool = False) -> Dict[str, Any]:
+def safe_replace(path: str, old: str, new: str, preview: bool = False, validate: bool = False) -> Dict[str, Any]:
     """지능형 코드 교체 - 자동으로 최적의 방법 선택
     
     Args:

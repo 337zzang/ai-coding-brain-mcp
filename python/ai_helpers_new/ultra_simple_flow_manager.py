@@ -194,6 +194,33 @@ class UltraSimpleFlowManager:
 
     # --- 통계 ---
 
+
+    def get_task_by_number(self, plan_id: str, task_number: int) -> Optional[Task]:
+        """Task를 번호로 조회 (1부터 시작)
+
+        Args:
+            plan_id: Plan ID
+            task_number: Task 번호 (1-indexed)
+
+        Returns:
+            Task 객체 또는 None
+        """
+        plan = self.get_plan(plan_id)
+        if not plan or not plan.tasks:
+            return None
+
+        # 생성 시간 순으로 정렬
+        sorted_tasks = sorted(
+            plan.tasks.values(), 
+            key=lambda t: t.created_at
+        )
+
+        # 번호는 1부터 시작
+        if 1 <= task_number <= len(sorted_tasks):
+            return sorted_tasks[task_number - 1]
+
+        return None
+
     def get_stats(self) -> Dict[str, Any]:
         """프로젝트 통계"""
         repo_stats = self._repo.get_stats()

@@ -211,7 +211,7 @@ def write_json(path: str, data: Any, indent: int = 2) -> Dict[str, Any]:
         실패: {'ok': False, 'error': 에러메시지}
     """
     try:
-        content = json.dumps(data, indent=indent, ensure_ascii=False)
+        content = json.dumps(data, indent=indent, ensure_ascii=False, default=lambda o: o.isoformat() if hasattr(o, 'isoformat') else str(o))
         return write(path, content)
     except Exception as e:
         return err(f"JSON encoding error: {e}", path=path)

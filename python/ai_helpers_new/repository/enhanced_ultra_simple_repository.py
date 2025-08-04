@@ -160,7 +160,7 @@ class EnhancedUltraSimpleRepository:
         temp_file = path.with_suffix('.tmp')
         try:
             with open(temp_file, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2, ensure_ascii=False)
+                json.dump(data, f, indent=2, ensure_ascii=False, default=lambda o: o.isoformat() if hasattr(o, 'isoformat') else str(o))
             temp_file.replace(path)
         except Exception:
             if temp_file.exists():
@@ -229,3 +229,13 @@ class EnhancedUltraSimpleRepository:
 def create_repository(base_path: str = ".ai-brain/flow") -> EnhancedUltraSimpleRepository:
     """Repository 생성 (향상된 버전)"""
     return EnhancedUltraSimpleRepository(base_path)
+
+    @staticmethod
+    def _datetime_serializer(obj):
+        """JSON 직렬화를 위한 datetime 변환"""
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif hasattr(obj, '__dict__'):
+            return obj.__dict__
+        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+

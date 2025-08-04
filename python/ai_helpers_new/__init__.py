@@ -1,3 +1,36 @@
+
+# 방어적 import 헬퍼
+def _safe_import(module_path, names, package=None):
+    """안전한 import - 실패 시 기본값 반환"""
+    results = {}
+    try:
+        if package:
+            module = __import__(module_path, fromlist=names, package=package)
+        else:
+            module = __import__(module_path, fromlist=names)
+
+        for name in names:
+            try:
+                results[name] = getattr(module, name)
+            except AttributeError:
+                print(f"[WARNING] {name} not found in {module_path}")
+                # 기본 함수 생성
+                results[name] = lambda *args, **kwargs: {
+                    "ok": False, 
+                    "error": f"{name} not available"
+                }
+    except ImportError as e:
+        print(f"[WARNING] Failed to import {module_path}: {e}")
+        # 모든 이름에 대해 기본값 설정
+        for name in names:
+            results[name] = lambda *args, **kwargs: {
+                "ok": False,
+                "error": f"{module_path} not available"
+            }
+
+    return results
+
+
 """
 AI Helpers New - Ultra Simple Flow System
 Flow 개념 없이 Plan만으로 작업하는 극단순 시스템
@@ -10,7 +43,9 @@ from .domain.models import Plan, Task, TaskStatus
 from .ultra_simple_flow_manager import UltraSimpleFlowManager
 
 # Flow 명령어 시스템
-from .simple_flow_commands import flow, help_flow
+# 방어적 import
+_flow_imports = _safe_import('.simple_flow_commands', ['flow'], __package__)
+flow = _flow_imports.get('flow', lambda x: {"ok": False, "error": "flow not available"})
 from .flow_api import get_flow_api, FlowAPI
 from .flow_api import FlowAPI
 from .task_logger import EnhancedTaskLogger, create_task_logger, display_plan_tasks

@@ -64,3 +64,21 @@ if __name__ == "__main__":
     print("- CLI: flow_cli.flow()")
     print("- 출력: flow_views.*")
     print("- 유틸리티: flow_manager_utils.*")
+
+def help_flow():
+    """Flow 시스템 도움말"""
+    return {
+        'ok': True,
+        'data': {
+            'commands': {
+                '/status': 'Show current status',
+                '/plans': 'List all plans',
+                '/tasks': 'List tasks for current plan',
+                '/next': 'Move to next task',
+                '/done': 'Complete current task',
+                '/create': 'Create new plan',
+                '/select': 'Select a plan',
+                '/delete': 'Delete a plan'
+            }
+        }
+    }

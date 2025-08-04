@@ -9,6 +9,11 @@ import json
 from datetime import datetime
 from typing import Optional
 
+def get_current_session():
+    """현재 세션 반환 (임시 구현)"""
+    return None
+
+
 from .ultra_simple_flow_manager import UltraSimpleFlowManager
 from .project import get_current_project
 

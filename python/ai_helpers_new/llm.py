@@ -21,7 +21,7 @@ try:
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
-    print("⚠️ OpenAI 패키지가 설치되지 않았습니다. pip install openai")
+    print("[WARNING] OpenAI 패키지가 설치되지 않았습니다. pip install openai")
 
 # 전역 작업 관리
 _tasks = {}
@@ -82,7 +82,7 @@ def _call_o3_api(question: str, context: Optional[str] = None,
 
     except Exception as e:
         error_msg = f"{type(e).__name__}: {str(e)}"
-        print(f"❌ o3 API 에러: {error_msg}")
+        print(f"[ERROR] o3 API 에러: {error_msg}")
         return {"error": error_msg}
 
 
@@ -167,7 +167,7 @@ def ask_o3_async(question: str, context: Optional[str] = None,
     thread.daemon = True
     thread.start()
 
-    print(f"🚀 작업 {task_id} 시작됨")
+    print(f"[START] 작업 {task_id} 시작됨")
     return ok(task_id)
 @safe_execution
 def check_o3_status(task_id: str) -> Dict[str, Any]:
@@ -353,14 +353,14 @@ def show_o3_progress() -> Dict[str, Any]:
         print("📭 현재 진행 중인 o3 작업이 없습니다.")
         return ok("No tasks")
 
-    print("\n🤖 o3 작업 현황:")
+    print("\n[AI] o3 작업 현황:")
     print("="*60)
 
     status_icons = {
-        'pending': '⏳',
-        'running': '🔄',
-        'completed': '✅',
-        'error': '❌'
+        'pending': '[PENDING]',
+        'running': '[IN_PROGRESS]',
+        'completed': '[OK]',
+        'error': '[ERROR]'
     }
 
     for task in tasks:
@@ -373,7 +373,7 @@ def show_o3_progress() -> Dict[str, Any]:
         status = task['status']
         by_status[status] = by_status.get(status, 0) + 1
 
-    print("\n📊 요약:", end="")
+    print("\n[STATS] 요약:", end="")
     for status, count in by_status.items():
         print(f" {status}={count}", end="")
     print()

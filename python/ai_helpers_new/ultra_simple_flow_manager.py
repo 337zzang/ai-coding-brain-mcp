@@ -143,9 +143,9 @@ class UltraSimpleFlowManager:
             logger = EnhancedTaskLogger(plan_id, task_number, name)
             logger.task_info(title=name)
             logger.design("Task가 생성되었습니다.")
-            print(f"✅ TaskLogger 자동 생성: {task_number}.{name}")
+            print(f"[OK] TaskLogger 자동 생성: {task_number}.{name}")
         except Exception as e:
-            print(f"⚠️ TaskLogger 자동 생성 실패: {e}")
+            print(f"[WARNING] TaskLogger 자동 생성 실패: {e}")
 
         return task
 
@@ -186,9 +186,9 @@ class UltraSimpleFlowManager:
             else:
                 task_logger.note(f"상태 변경: → {status}")
                 
-            print(f"✅ 상태 변경 기록: Task {task_num} → {task.status.value}")
+            print(f"[OK] 상태 변경 기록: Task {task_num} → {task.status.value}")
         except Exception as e:
-            print(f"⚠️ 상태 변경 로깅 실패: {e}")
+            print(f"[WARNING] 상태 변경 로깅 실패: {e}")
 
         return True
 

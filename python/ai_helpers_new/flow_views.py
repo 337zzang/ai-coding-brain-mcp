@@ -32,7 +32,7 @@ def format_timestamp(timestamp: str) -> str:
 def show_status(manager: UltraSimpleFlowManager) -> None:
     """현재 상태 표시"""
 
-    print("\n📊 Flow 시스템 상태")
+    print("\n[STATS] Flow 시스템 상태")
     print("=" * 50)
     print(f"프로젝트: {manager.project_name}")
 
@@ -42,7 +42,7 @@ def show_status(manager: UltraSimpleFlowManager) -> None:
     # 최근 Plan 3개 표시
     if plans:
         recent_plans = sorted(plans, key=lambda p: p.created_at, reverse=True)[:3]
-        print("\n📌 최근 Plan (최대 3개):")
+        print("\n[INFO] 최근 Plan (최대 3개):")
         for i, plan in enumerate(recent_plans):
             task_count = len(plan.tasks) if hasattr(plan, 'tasks') else 0
             if i == 0:
@@ -72,10 +72,10 @@ def show_plans(manager: UltraSimpleFlowManager) -> None:
     plans = manager.list_plans()
 
     if not plans:
-        print("\n📋 Plan이 없습니다. /create [이름]으로 생성하세요.")
+        print("\n[LIST] Plan이 없습니다. /create [이름]으로 생성하세요.")
         return
 
-    print(f"\n📋 Plan 목록 ({len(plans)}개)")
+    print(f"\n[LIST] Plan 목록 ({len(plans)}개)")
     print("=" * 60)
 
     for plan in plans:
@@ -96,7 +96,7 @@ def display_task_history(plan_id: str, show_all: bool = False):
     if not os.path.exists(plan_dir):
         return
 
-    print("\n📋 기존 Task 작업 내역 (전체):")
+    print("\n[LIST] 기존 Task 작업 내역 (전체):")
     print("="*80)
 
     jsonl_files = sorted(glob.glob(os.path.join(plan_dir, "*.jsonl")))
@@ -115,7 +115,7 @@ def display_task_history(plan_id: str, show_all: bool = False):
                         except json.JSONDecodeError:
                             continue
         except Exception as e:
-            print(f"\n❌ 파일 읽기 오류 ({task_name}): {e}")
+            print(f"\n[ERROR] 파일 읽기 오류 ({task_name}): {e}")
             continue
 
         # 완료된 Task만 표시 (또는 전체 표시)
@@ -126,8 +126,8 @@ def display_task_history(plan_id: str, show_all: bool = False):
 
         if is_completed or show_all:
             print(f"\n\n{'='*80}")
-            print(f"📁 Task: {task_name}")
-            print(f"📊 총 이벤트: {len(events)}개")
+            print(f"[FOLDER] Task: {task_name}")
+            print(f"[STATS] 총 이벤트: {len(events)}개")
             print("="*80)
             
             # 모든 이벤트를 순서대로 표시
@@ -140,12 +140,12 @@ def display_task_history(plan_id: str, show_all: bool = False):
                 
                 # 이벤트 타입별 전체 내용 표시
                 if event_type == 'TASK_INFO':
-                    print(f"  📌 제목: {event.get('title', 'N/A')}")
+                    print(f"  [INFO] 제목: {event.get('title', 'N/A')}")
                     print(f"  ⏰ 예상시간: {event.get('estimate', 'N/A')}")
-                    print(f"  🎯 우선순위: {event.get('priority', 'N/A')}")
+                    print(f"  [TARGET] 우선순위: {event.get('priority', 'N/A')}")
                     desc = event.get('description', '')
                     if desc:
-                        print(f"  📝 설명: {desc}")
+                        print(f"  [TASK] 설명: {desc}")
                         
                 elif event_type == 'DESIGN':
                     design_content = event.get('design', '')
@@ -156,7 +156,7 @@ def display_task_history(plan_id: str, show_all: bool = False):
                             
                 elif event_type == 'TODO':
                     todos = event.get('todos', [])
-                    print(f"  📋 TODO 목록 ({len(todos)}개):")
+                    print(f"  [LIST] TODO 목록 ({len(todos)}개):")
                     for j, todo in enumerate(todos, 1):
                         print(f"    {j}. {todo}")
                         
@@ -167,11 +167,11 @@ def display_task_history(plan_id: str, show_all: bool = False):
                     blocked = event.get('blocked', [])
                     
                     if completed:
-                        print(f"  ✅ 완료된 항목 ({len(completed)}개):")
+                        print(f"  [OK] 완료된 항목 ({len(completed)}개):")
                         for item in completed:
                             print(f"    - {item}")
                     if remaining:
-                        print(f"  ⏳ 남은 항목 ({len(remaining)}개):")
+                        print(f"  [PENDING] 남은 항목 ({len(remaining)}개):")
                         for item in remaining:
                             print(f"    - {item}")
                     if new_todos:
@@ -188,7 +188,7 @@ def display_task_history(plan_id: str, show_all: bool = False):
                     result = event.get('result', '')
                     print(f"  🔍 분석 대상: {target}")
                     if result:
-                        print(f"  📊 분석 결과:")
+                        print(f"  [STATS] 분석 결과:")
                         for line in result.split('\n'):
                             print(f"    {line}")
                             
@@ -199,7 +199,7 @@ def display_task_history(plan_id: str, show_all: bool = False):
                     print(f"  🔧 액션: {action}")
                     print(f"  📄 파일: {file_path}")
                     if summary:
-                        print(f"  📝 요약:")
+                        print(f"  [TASK] 요약:")
                         for line in summary.split('\n'):
                             print(f"    {line}")
                             
@@ -215,23 +215,23 @@ def display_task_history(plan_id: str, show_all: bool = False):
                     severity = event.get('severity', 'N/A')
                     solution = event.get('solution', '')
                     print(f"  🚨 이슈: {issue}")
-                    print(f"  ⚠️ 심각도: {severity}")
+                    print(f"  [WARNING] 심각도: {severity}")
                     if solution:
-                        print(f"  💡 해결방안: {solution}")
+                        print(f"  [HINT] 해결방안: {solution}")
                         
                 elif event_type == 'NOTE':
                     content = event.get('content', event.get('note', ''))
-                    print(f"  📝 메모: {content}")
+                    print(f"  [TASK] 메모: {content}")
                     
                 elif event_type == 'CONTEXT':
                     ctx_type = event.get('context_type', 'N/A')
                     ctx_data = event.get('data', '')
                     print(f"  🔗 컨텍스트 타입: {ctx_type}")
-                    print(f"  📋 데이터: {ctx_data}")
+                    print(f"  [LIST] 데이터: {ctx_data}")
                     
                 elif event_type == 'COMPLETE':
                     summary = event.get('summary', '')
-                    print(f"  ✅ 완료 요약:")
+                    print(f"  [OK] 완료 요약:")
                     if summary:
                         for line in summary.split('\n'):
                             print(f"    {line}")
@@ -241,7 +241,7 @@ def display_task_history(plan_id: str, show_all: bool = False):
                     print(json.dumps(event, indent=4, ensure_ascii=False))
             
             print(f"\n{'='*80}")
-            print(f"📊 Task '{task_name}' 종료 - 총 {len(events)}개 이벤트")
+            print(f"[STATS] Task '{task_name}' 종료 - 총 {len(events)}개 이벤트")
             print("="*80)
 
 def show_tasks(manager: UltraSimpleFlowManager, plan_id: str) -> None:
@@ -251,18 +251,18 @@ def show_tasks(manager: UltraSimpleFlowManager, plan_id: str) -> None:
         return
 
     if not plan.tasks:
-        print(f"\n📝 {plan.name}에 Task가 없습니다.")
+        print(f"\n[TASK] {plan.name}에 Task가 없습니다.")
         print("  /task add [제목]으로 추가하세요.")
         return
 
-    print(f"\n📝 {plan.name}의 Task 목록")
+    print(f"\n[TASK] {plan.name}의 Task 목록")
     print("=" * 60)
 
     for task in plan.tasks.values():
         status_emoji = {
             "TODO": "⬜",
             "IN_PROGRESS": "🟨", 
-            "DONE": "✅"
+            "DONE": "[OK]"
         }
         status_str = str(task.status).split(".")[-1]
         emoji = status_emoji.get(status_str, "❓")
@@ -313,7 +313,7 @@ def _show_project_summary():
                 lines = file_dir['data'].split('\n')
 
                 # 통계 정보
-                print("\n📁 파일 구조 통계")
+                print("\n[FOLDER] 파일 구조 통계")
                 print("=" * 60)
 
                 for line in lines[:20]:
@@ -353,7 +353,7 @@ def _show_project_summary():
                     print(line)
 
                 # 주요 파일 찾기
-                print("\n📌 주요 파일")
+                print("\n[INFO] 주요 파일")
                 print("-" * 60)
 
                 # 진입점 파일 찾기
@@ -370,7 +370,7 @@ def _show_project_summary():
                     # 진입점 파일
                     for entry in entry_points:
                         if entry in line and ('│' in line or '├' in line or '└' in line):
-                            file_entry = f"  🎯 진입점: {entry}"
+                            file_entry = f"  [TARGET] 진입점: {entry}"
                             if file_entry not in found_files:
                                 found_files.append(file_entry)
 
@@ -384,7 +384,7 @@ def _show_project_summary():
                     # 중요 파일
                     for imp_file in important_files:
                         if imp_file in line and ('│' in line or '├' in line or '└' in line):
-                            file_entry = f"  📋 문서: {imp_file}"
+                            file_entry = f"  [LIST] 문서: {imp_file}"
                             if file_entry not in found_files:
                                 found_files.append(file_entry)
 
@@ -404,12 +404,12 @@ def _show_project_summary():
         if readme_exists or file_dir_exists:
             print("\n📚 프로젝트 문서:")
             if readme_exists:
-                print("  - readme.md ✅")
+                print("  - readme.md [OK]")
             if file_dir_exists:
-                print("  - file_directory.md ✅")
-            print("  💡 팁: /a 명령어로 문서를 업데이트할 수 있습니다.")
+                print("  - file_directory.md [OK]")
+            print("  [HINT] 팁: /a 명령어로 문서를 업데이트할 수 있습니다.")
         else:
-            print("\n💡 팁: /a 명령어로 프로젝트 문서를 생성할 수 있습니다.")
+            print("\n[HINT] 팁: /a 명령어로 프로젝트 문서를 생성할 수 있습니다.")
 
     except Exception as e:
         # 조용히 실패
@@ -465,9 +465,9 @@ def _show_direct_structure():
                         elif item.endswith(('.js', '.ts', '.jsx', '.tsx')):
                             icon = "📜"
                         elif item.endswith('.json'):
-                            icon = "📋"
+                            icon = "[LIST]"
                         elif item.endswith('.md'):
-                            icon = "📝"
+                            icon = "[TASK]"
                         else:
                             icon = "📄"
                         print(f"{icon} {item}")
@@ -486,7 +486,7 @@ def _show_direct_structure():
         show_tree(".", "", True, 0, 3)
 
         # 주요 파일 찾기
-        print("\n📌 주요 파일")
+        print("\n[INFO] 주요 파일")
         print("-" * 60)
 
         # 루트 디렉토리의 주요 파일들
@@ -495,7 +495,7 @@ def _show_direct_structure():
 
         for file in entry_points:
             if os.path.exists(file):
-                print(f"  🎯 진입점: {file}")
+                print(f"  [TARGET] 진입점: {file}")
 
         for file in config_files:
             if os.path.exists(file):
@@ -506,7 +506,7 @@ def _show_direct_structure():
 def show_help() -> None:
     """도움말 표시"""
     print("""
-🚀 극단순 Flow 명령어 시스템
+[START] 극단순 Flow 명령어 시스템
 ==========================
 
 기본 명령어:

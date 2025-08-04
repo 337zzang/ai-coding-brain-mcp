@@ -22,12 +22,20 @@ class UltraSimpleRepository:
         self.base = Path(base_path)
         self.base.mkdir(parents=True, exist_ok=True)
 
+    @staticmethod
+    def _datetime_serializer(obj):
+        """JSON 직렬화를 위한 datetime 변환"""
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+
     def _atomic_write(self, path: Path, data: dict) -> None:
         """원자적 쓰기"""
         tmp_path = path.with_suffix('.tmp')
         try:
             with tmp_path.open('w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+                json.dump(data, f, ensure_ascii=False, indent=2, default=self._datetime_serializer)
             tmp_path.replace(path)
         except Exception:
             if tmp_path.exists():

@@ -4,7 +4,7 @@ Flow CLI - 명령어 인터페이스
 원본: simple_flow_commands.py
 """
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, List
 
 from .flow_api import FlowAPI
 from .flow_manager_utils import get_manager
@@ -23,7 +23,8 @@ def error_response(error, data=None):
     response = {'ok': False, 'error': error}
     if data is not None: response['data'] = data
     return response
-from .project import switch_project as _switch_project
+from .project import flow_project_with_workflow as _switch_project
+from .ultra_simple_flow_manager import UltraSimpleFlowManager
 
 # 전역 변수 (레거시 호환성)
 _flow_api_instance = None

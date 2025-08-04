@@ -133,7 +133,7 @@ class FlowAPI:
         if description:
             plan.metadata["description"] = description
         self._current_plan_id = plan.id
-        return _plan_to_dict(plan)
+        return self._res(True, _plan_to_dict(plan))
 
     def select_plan(self, plan_id: str) -> "FlowAPI":
         """Plan 선택 (체이닝 가능)"""

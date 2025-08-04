@@ -229,6 +229,18 @@ class FlowAPI:
             return self._res(True, _task_to_dict(task))
         return self._res(False, None, f"Task {task_id} not found")
 
+def get_task_by_number(self, plan_id: str, number: int) -> Dict[str, Any]:
+        """번호로 Task 조회"""
+        plan = self._manager.get_plan(plan_id)
+        if not plan:
+            return self._res(False, None, f"Plan {plan_id} not found")
+
+        # Task 목록을 번호 순으로 정렬
+        tasks = list(plan.tasks.values())
+        if 0 < number <= len(tasks):
+            task = tasks[number - 1]  # 1-based index
+            return self._res(True, _task_to_dict(task))
+        return self._res(False, None, f"Task number {number} not found (1-{len(tasks)})")
     def list_tasks(self, plan_id: str, status: Optional[str] = None) -> Dict[str, Any]:
         """Task 목록 조회"""
         plan = self._manager.get_plan(plan_id)

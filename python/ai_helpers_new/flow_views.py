@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime
 
 from .domain.models import Plan, Task, TaskStatus
+from .ultra_simple_flow_manager import UltraSimpleFlowManager
 from .project import get_current_project
 from .flow_manager_utils import get_manager
 # Response helper

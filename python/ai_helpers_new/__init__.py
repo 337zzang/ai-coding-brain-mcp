@@ -12,6 +12,7 @@ from .ultra_simple_flow_manager import UltraSimpleFlowManager
 # Flow 명령어 시스템
 from .simple_flow_commands import flow, help_flow
 from .flow_api import get_flow_api, FlowAPI
+from .flow_api import FlowAPI
 from .task_logger import EnhancedTaskLogger, create_task_logger, display_plan_tasks
 
 # Core 모듈
@@ -140,3 +141,16 @@ try:
     ])
 except ImportError as e:
     print(f"Warning: Web automation helpers not available: {e}")
+
+# Flow API 인스턴스 getter
+def get_flow_api():
+    """Flow API 인스턴스 반환
+
+    Returns:
+        FlowAPI: Flow API 인스턴스
+    """
+    from .flow_api import FlowAPI
+    from .ultra_simple_flow_manager import UltraSimpleFlowManager
+
+    manager = UltraSimpleFlowManager()
+    return FlowAPI(manager)

@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Any, Union
 from .domain.models import Plan, Task, TaskStatus
 from .ultra_simple_flow_manager import UltraSimpleFlowManager
 from .repository.ultra_simple_repository import UltraSimpleRepository
-from .service.task_logger import EnhancedTaskLogger
+from .task_logger import EnhancedTaskLogger
 # Response helpers
 def ok_response(data=None, message=None):
     response = {'ok': True}
@@ -24,7 +24,7 @@ def error_response(error, data=None):
     response = {'ok': False, 'error': error}
     if data is not None: response['data'] = data
     return response
-from .flow_manager_utils import _generate_plan_id, _generate_task_id
+# from .flow_manager_utils import _generate_plan_id, _generate_task_id  # Not needed
 
 # 필요한 추가 import들
 
@@ -110,7 +110,7 @@ class FlowAPI:
         Args:
             manager: 기존 매니저 인스턴스 (없으면 새로 생성)
         """
-        self._manager = manager or get_manager()
+        self._manager = manager or UltraSimpleFlowManager()
         self._current_plan_id: Optional[str] = None
         self._context: Dict[str, Any] = {}
         self.last_resp: Optional[Dict[str, Any]] = None
@@ -229,7 +229,7 @@ class FlowAPI:
             return self._res(True, _task_to_dict(task))
         return self._res(False, None, f"Task {task_id} not found")
 
-def get_task_by_number(self, plan_id: str, number: int) -> Dict[str, Any]:
+    def get_task_by_number(self, plan_id: str, number: int) -> Dict[str, Any]:
         """번호로 Task 조회"""
         plan = self._manager.get_plan(plan_id)
         if not plan:
@@ -241,6 +241,7 @@ def get_task_by_number(self, plan_id: str, number: int) -> Dict[str, Any]:
             task = tasks[number - 1]  # 1-based index
             return self._res(True, _task_to_dict(task))
         return self._res(False, None, f"Task number {number} not found (1-{len(tasks)})")
+    
     def list_tasks(self, plan_id: str, status: Optional[str] = None) -> Dict[str, Any]:
         """Task 목록 조회"""
         plan = self._manager.get_plan(plan_id)
@@ -351,3 +352,15 @@ def get_task_by_number(self, plan_id: str, number: int) -> Dict[str, Any]:
         self._current_plan_id = None
         self._res(True, {})
         return self
+
+
+# 싱글톤 인스턴스 관리
+_flow_api_instance = None
+
+
+def get_flow_api() -> FlowAPI:
+    """FlowAPI 싱글톤 인스턴스 반환"""
+    global _flow_api_instance
+    if _flow_api_instance is None:
+        _flow_api_instance = FlowAPI()
+    return _flow_api_instance

@@ -88,11 +88,12 @@ def _task_to_dict(task) -> Dict[str, Any]:
         'id': task.id,
         'title': getattr(task, 'title', getattr(task, 'name', '')),
         'description': getattr(task, 'description', ''),
-        'status': str(getattr(task, 'status', 'todo')),
+        'status': getattr(task, 'status', TaskStatus.TODO).value if hasattr(getattr(task, 'status', TaskStatus.TODO), 'value') else str(getattr(task, 'status', 'todo')),
         'created_at': getattr(task, 'created_at', ''),
         'updated_at': getattr(task, 'updated_at', ''),
         'priority': getattr(task, 'priority', 'normal'),
-        'completed_at': getattr(task, 'completed_at', None)
+        'completed_at': getattr(task, 'completed_at', None),
+        'number': getattr(task, 'number', None)
     }
 
 class FlowAPI:
@@ -285,6 +286,27 @@ class FlowAPI:
     def update_task_status(self, plan_id: str, task_id: str, status: str) -> Dict[str, Any]:
         """Task 상태 업데이트 (편의 메서드)"""
         return self.update_task(plan_id, task_id, status=status)
+
+
+    def update_task_status_by_number(self, plan_id: str, number: int, status: str) -> Dict[str, Any]:
+        """번호로 Task 상태 업데이트
+
+        Args:
+            plan_id: Plan ID
+            number: Task 번호 (1-based)
+            status: 새로운 상태 (todo, in_progress, done, cancelled)
+
+        Returns:
+            표준 응답 형식
+        """
+        # 먼저 번호로 Task를 찾음
+        task_result = self.get_task_by_number(plan_id, number)
+        if not task_result['ok']:
+            return task_result
+
+        # Task ID를 사용해서 상태 업데이트
+        task_id = task_result['data']['id']
+        return self.update_task_status(plan_id, task_id, status)
 
     def search(self, query: str) -> Dict[str, Any]:
         """Plan과 Task 통합 검색"""

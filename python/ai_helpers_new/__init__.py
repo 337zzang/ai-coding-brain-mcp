@@ -186,7 +186,10 @@ try:
         'web_demo',
         # 세션 유지 함수
         'web_connect', 'web_disconnect', 'web_check_session',
-        'web_list_sessions', 'web_goto_session'
+        'web_list_sessions', 'web_goto_session',
+        # Popup handling helpers
+        'handle_popup', 'handle_alert', 'wait_and_click',
+        'handle_modal_by_class', 'close_popup', 'confirm_popup', 'cancel_popup'
     ])
 except ImportError as e:
     print(f"Warning: Web automation helpers not available: {e}")
@@ -211,3 +214,9 @@ from .task_logger_helpers import (
     log_analysis,
     log_progress
 )
+# Popup handling helpers (2025-08-06)
+from .web_helpers import (
+    handle_popup, handle_alert, wait_and_click,
+    handle_modal_by_class, close_popup, confirm_popup, cancel_popup
+)
+

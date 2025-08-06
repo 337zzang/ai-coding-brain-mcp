@@ -49,9 +49,7 @@ def safe_execute(func_name: str,
                 instance_checker: Optional[Callable[[], bool]] = None,
                 **kwargs) -> Dict[str, Any]:
     """
-    웹 자동화 함수의 안전한 실행을 위한 래퍼 (리팩토링됨)
-
-    순환 참조를 피하기 위해 instance_checker를 주입받음
+    웹 자동화 함수의 안전한 실행을 위한 래퍼
 
     Args:
         func_name: 함수 이름 (로깅/디버깅용)
@@ -64,24 +62,40 @@ def safe_execute(func_name: str,
     Returns:
         표준 응답 형식 {'ok': bool, 'error/data': ...}
     """
-    # 새로운 enhanced_safe_execute 사용
-    if check_instance and instance_checker:
-        return enhanced_safe_execute(
-            func_name, 
-            impl_func, 
-            *args,
-            instance_checker=instance_checker,
-            **kwargs
-        )
-    else:
-        return enhanced_safe_execute(
-            func_name,
-            impl_func,
-            *args,
-            **kwargs
-        )
+    try:
+        # 인스턴스 체크가 필요하고 체커가 제공된 경우
+        if check_instance and instance_checker:
+            if not instance_checker():
+                return {
+                    'ok': False,
+                    'error': f'{func_name}: Browser instance not initialized. Call web_start() first.'
+                }
 
+        # 실제 함수 실행
+        result = impl_func(*args, **kwargs)
 
+        # 결과가 이미 표준 형식인 경우
+        if isinstance(result, dict) and 'ok' in result:
+            return result
+
+        # 표준 형식으로 변환
+        return {
+            'ok': True,
+            'data': result
+        }
+
+    except Exception as e:
+        error_msg = str(e)
+        # Playwright 관련 에러 메시지 개선
+        if "Target page, context or browser has been closed" in error_msg:
+            error_msg = "Browser has been closed. Please restart with web_start()"
+        elif "Timeout" in error_msg:
+            error_msg = f"Operation timed out: {error_msg[:100]}"
+
+        return {
+            'ok': False,
+            'error': f'{func_name}: {error_msg}'
+        }
 def with_error_handling(func_name: str = None, check_instance: bool = True):
     """
     데코레이터 방식의 에러 처리 (개선됨)

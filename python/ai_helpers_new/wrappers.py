@@ -285,3 +285,150 @@ def git_status_normalized() -> Dict[str, Any]:
         return {"ok": True, "data": data, "error": None}
     except Exception as e:
         return {"ok": False, "data": None, "error": str(e)}
+
+
+# Excel 세션 상태 확인
+def check_excel_session():
+    """
+    Excel 세션이 활성 상태인지 확인합니다.
+
+    Returns:
+        dict: 표준 응답 형식
+            - ok: bool - 성공 여부
+            - data: dict - 세션 정보 (active, workbook_name)
+            - error: str or None
+    """
+    try:
+        from . import excel
+        manager = excel.get_excel_manager()
+
+        if manager.excel and manager.workbook:
+            return {
+                "ok": True,
+                "data": {
+                    "active": True,
+                    "workbook_name": manager.workbook.FullName,
+                    "sheet_count": manager.workbook.Sheets.Count,
+                    "active_sheet": manager.workbook.ActiveSheet.Name
+                },
+                "error": None
+            }
+        else:
+            return {
+                "ok": True,
+                "data": {
+                    "active": False,
+                    "workbook_name": None,
+                    "sheet_count": 0,
+                    "active_sheet": None
+                },
+                "error": None
+            }
+    except ImportError:
+        return {
+            "ok": False,
+            "data": {"active": False},
+            "error": "Excel module not available (Windows only)"
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "data": {"active": False},
+            "error": str(e)
+        }
+
+# 웹 자동화 세션 상태 확인
+def check_web_session():
+    """
+    웹 자동화 브라우저 세션이 활성 상태인지 확인합니다.
+
+    Returns:
+        dict: 표준 응답 형식
+            - ok: bool - 성공 여부
+            - data: dict - 세션 정보 (active, url, title)
+            - error: str or None
+    """
+    try:
+        from . import web_automation_helpers as web
+
+        # web_check_session이 있는지 확인
+        if hasattr(web, 'web_check_session'):
+            result = web.web_check_session()
+            return result
+        else:
+            # 대체 방법: 브라우저 상태 직접 확인
+            if hasattr(web, 'browser') and web.browser is not None:
+                try:
+                    current_url = web.browser.current_url
+                    current_title = web.browser.title
+                    return {
+                        "ok": True,
+                        "data": {
+                            "active": True,
+                            "url": current_url,
+                            "title": current_title
+                        },
+                        "error": None
+                    }
+                except:
+                    return {
+                        "ok": True,
+                        "data": {
+                            "active": False,
+                            "url": None,
+                            "title": None
+                        },
+                        "error": None
+                    }
+            else:
+                return {
+                    "ok": True,
+                    "data": {
+                        "active": False,
+                        "url": None,
+                        "title": None
+                    },
+                    "error": None
+                }
+    except ImportError:
+        return {
+            "ok": False,
+            "data": {"active": False},
+            "error": "Web automation module not available"
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "data": {"active": False},
+            "error": str(e)
+        }
+
+# 모든 세션 상태 한번에 확인
+def check_all_sessions():
+    """
+    Excel과 웹 자동화 세션 상태를 모두 확인합니다.
+
+    Returns:
+        dict: 표준 응답 형식
+            - ok: bool - 성공 여부
+            - data: dict - 각 세션 정보
+            - error: str or None
+    """
+    try:
+        excel_status = check_excel_session()
+        web_status = check_web_session()
+
+        return {
+            "ok": True,
+            "data": {
+                "excel": excel_status['data'],
+                "web": web_status['data']
+            },
+            "error": None
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "data": None,
+            "error": str(e)
+        }

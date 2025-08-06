@@ -169,7 +169,10 @@ try:
         web_extract_batch, web_extract_attributes, web_extract_form,
         # 레코딩 함수
         web_record_start, web_record_stop, web_record_status,
-        web_demo
+        web_demo,
+        # 세션 유지 함수 (2025-08-06)
+        web_connect, web_disconnect, web_check_session,
+        web_list_sessions, web_goto_session
     )
     
     # __all__에 web 함수들 추가
@@ -180,7 +183,10 @@ try:
         'web_screenshot', 'web_generate_script', 'web_get_data',
         'web_extract_batch', 'web_extract_attributes', 'web_extract_form',
         'web_record_start', 'web_record_stop', 'web_record_status',
-        'web_demo'
+        'web_demo',
+        # 세션 유지 함수
+        'web_connect', 'web_disconnect', 'web_check_session',
+        'web_list_sessions', 'web_goto_session'
     ])
 except ImportError as e:
     print(f"Warning: Web automation helpers not available: {e}")

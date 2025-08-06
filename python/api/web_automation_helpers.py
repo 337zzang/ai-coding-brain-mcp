@@ -823,3 +823,232 @@ def web_wait_for_function(script: str, timeout: int = 30000, polling: int = 100)
         impl_func=impl,
         check_instance=False
     )
+
+
+
+# ============== 세션 유지 기능 추가 (2025-08-06) ==============
+
+def web_connect(url: Optional[str] = None, headless: bool = False, project_name: str = "default") -> Dict[str, Any]:
+    """
+    웹 브라우저 세션 연결 (세션 유지 지원)
+
+    Args:
+        url: 초기 접속할 URL (선택)
+        headless: 헤드리스 모드 여부
+        project_name: 프로젝트 이름 (세션 구분용)
+
+    Returns:
+        {'ok': bool, 'data': str, 'session_active': bool}
+
+    Example:
+        >>> result = h.web_connect("https://example.com")
+        >>> if result['ok']:
+        ...     web_session_active = True
+        >>> # 여러 execute_code 블록에서 계속 사용
+        >>> if web_session_active:
+        ...     h.web_click("button")
+    """
+    try:
+        # 기존 세션 확인
+        existing = browser_manager.get_instance(project_name)
+
+        if existing and hasattr(existing, 'browser_started') and existing.browser_started:
+            # 기존 세션 재사용
+            if url:
+                existing.goto(url)
+            return {
+                'ok': True, 
+                'data': f"기존 세션 재사용: {project_name}",
+                'session_active': True,
+                'reused': True
+            }
+
+        # 새 세션 생성
+        instance = REPLBrowserWithRecording(headless=headless)
+        instance.start()
+        browser_manager.set_instance(instance, project_name)
+
+        if url:
+            instance.goto(url)
+
+        return {
+            'ok': True,
+            'data': f"새 세션 시작: {project_name}",
+            'session_active': True,
+            'reused': False
+        }
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': str(e),
+            'session_active': False
+        }
+
+
+def web_disconnect(save_recording: bool = False, project_name: str = "default") -> Dict[str, Any]:
+    """
+    웹 브라우저 세션 종료
+
+    Args:
+        save_recording: 레코딩 저장 여부
+        project_name: 프로젝트 이름
+
+    Returns:
+        {'ok': bool, 'data': str}
+
+    Example:
+        >>> h.web_disconnect(save_recording=True)
+    """
+    try:
+        instance = browser_manager.get_instance(project_name)
+
+        if not instance:
+            return {
+                'ok': True,
+                'data': "세션이 이미 종료되었습니다"
+            }
+
+        # 레코딩 저장
+        if save_recording and hasattr(instance, 'get_recording'):
+            recording = instance.get_recording()
+            if recording:
+                filename = f"web_recording_{project_name}.json"
+                import json
+                with open(filename, 'w', encoding='utf-8') as f:
+                    json.dump(recording, f, indent=2, ensure_ascii=False)
+
+        # 브라우저 종료
+        if hasattr(instance, 'stop'):
+            instance.stop()
+
+        # 인스턴스 제거
+        browser_manager.remove_instance(project_name)
+
+        return {
+            'ok': True,
+            'data': f"세션 종료 완료: {project_name}"
+        }
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': str(e)
+        }
+
+
+def web_check_session(project_name: str = "default") -> Dict[str, Any]:
+    """
+    웹 브라우저 세션 상태 확인
+
+    Args:
+        project_name: 프로젝트 이름
+
+    Returns:
+        {'ok': bool, 'data': {'active': bool, 'url': str, 'title': str}}
+
+    Example:
+        >>> result = h.web_check_session()
+        >>> if result['ok'] and result['data']['active']:
+        ...     print(f"현재 페이지: {result['data']['title']}")
+    """
+    try:
+        instance = browser_manager.get_instance(project_name)
+
+        if not instance:
+            return {
+                'ok': True,
+                'data': {
+                    'active': False,
+                    'url': None,
+                    'title': None
+                }
+            }
+
+        # 세션 활성 상태 확인
+        is_active = hasattr(instance, 'browser_started') and instance.browser_started
+
+        if is_active and hasattr(instance, 'page'):
+            try:
+                url = instance.page.url
+                title = instance.page.title()
+            except:
+                url = None
+                title = None
+        else:
+            url = None
+            title = None
+
+        return {
+            'ok': True,
+            'data': {
+                'active': is_active,
+                'url': url,
+                'title': title,
+                'project': project_name
+            }
+        }
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': str(e),
+            'data': {'active': False}
+        }
+
+
+def web_list_sessions() -> Dict[str, Any]:
+    """
+    모든 활성 웹 세션 목록 조회
+
+    Returns:
+        {'ok': bool, 'data': List[str]}
+
+    Example:
+        >>> result = h.web_list_sessions()
+        >>> if result['ok']:
+        ...     for session in result['data']:
+        ...         print(f"활성 세션: {session}")
+    """
+    try:
+        sessions = browser_manager.list_instances()
+        return {
+            'ok': True,
+            'data': sessions
+        }
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': str(e),
+            'data': []
+        }
+
+
+# 기존 함수 개선 - 세션 재사용 지원
+def web_goto_session(url: str, project_name: str = "default") -> Dict[str, Any]:
+    """
+    현재 세션에서 URL로 이동 (세션 유지 버전)
+
+    Args:
+        url: 이동할 URL
+        project_name: 프로젝트 이름
+
+    Returns:
+        {'ok': bool, 'data': str}
+    """
+    try:
+        instance = browser_manager.get_instance(project_name)
+
+        if not instance:
+            # 세션이 없으면 자동으로 생성
+            connect_result = web_connect(url=url, project_name=project_name)
+            return connect_result
+
+        # 기존 세션에서 이동
+        instance.goto(url)
+        return {
+            'ok': True,
+            'data': f"페이지 이동: {url}"
+        }
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': str(e)
+        }

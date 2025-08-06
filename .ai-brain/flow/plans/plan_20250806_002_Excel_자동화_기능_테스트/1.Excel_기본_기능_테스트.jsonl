@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-06T11:28:00.592506", "event_type": "TASK_INFO", "ts": "2025-08-06T11:28:00.592506", "type": "TASK_INFO", "title": "Excel 기본 기능 테스트", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-06T11:28:00.593506", "event_type": "DESIGN", "ts": "2025-08-06T11:28:00.593506", "type": "DESIGN", "content": "Task가 생성되었습니다."}

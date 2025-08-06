@@ -5,6 +5,7 @@ from .web_automation_smart_wait import SmartWaitManager
 
 작성일: 2025-01-27
 """
+from datetime import datetime
 from typing import Dict, Any, Optional, List
 from .web_automation_integrated import REPLBrowserWithRecording
 from .web_automation_errors import safe_execute
@@ -1384,4 +1385,419 @@ def handle_modal_by_class(modal_class: str, button_text: str, force: bool = True
         return {
             'ok': False,
             'error': f"모달 처리 실패: {str(e)}"
+        }
+
+
+# ============================================================================
+# 기존 브라우저 연결 함수들 (2025-08-06)
+# ============================================================================
+
+
+def connect_to_existing_browser(ws_endpoint: str = None, cdp_url: str = None) -> Dict[str, Any]:
+    """
+    기존에 실행 중인 브라우저에 연결
+
+    두 가지 방법을 지원합니다:
+    1. WebSocket endpoint를 통한 연결
+    2. CDP URL을 통한 연결
+
+    Args:
+        ws_endpoint: WebSocket endpoint URL (예: ws://127.0.0.1:9222/devtools/browser/...)
+        cdp_url: CDP URL (예: http://127.0.0.1:9222)
+
+    Returns:
+        표준 응답 형식
+
+    Examples:
+        # 방법 1: CDP URL로 연결 (Chrome을 --remote-debugging-port=9222로 실행한 경우)
+        >>> h.connect_to_existing_browser(cdp_url="http://127.0.0.1:9222")
+
+        # 방법 2: WebSocket endpoint로 직접 연결
+        >>> h.connect_to_existing_browser(ws_endpoint="ws://127.0.0.1:9222/devtools/browser/...")
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+
+        # Playwright 시작
+        playwright = sync_playwright().start()
+
+        if cdp_url:
+            # CDP URL로 연결
+            browser = playwright.chromium.connect_over_cdp(cdp_url)
+            print(f"✅ CDP URL로 브라우저 연결: {cdp_url}")
+
+        elif ws_endpoint:
+            # WebSocket endpoint로 연결
+            browser = playwright.chromium.connect(ws_endpoint)
+            print(f"✅ WebSocket endpoint로 브라우저 연결: {ws_endpoint[:50]}...")
+
+        else:
+            # 기본 CDP 포트 시도
+            try:
+                browser = playwright.chromium.connect_over_cdp("http://127.0.0.1:9222")
+                print("✅ 기본 CDP 포트(9222)로 브라우저 연결")
+            except:
+                return {
+                    'ok': False,
+                    'error': "연결 정보가 필요합니다. Chrome을 --remote-debugging-port=9222 옵션으로 실행하세요."
+                }
+
+        # 페이지 목록 가져오기
+        contexts = browser.contexts
+        if contexts:
+            context = contexts[0]
+            pages = context.pages
+            if pages:
+                page = pages[0]
+                print(f"📍 현재 페이지: {page.url}")
+            else:
+                page = context.new_page()
+                print("📄 새 페이지 생성됨")
+        else:
+            context = browser.new_context()
+            page = context.new_page()
+            print("📄 새 컨텍스트와 페이지 생성됨")
+
+        # BrowserManager에 등록
+        from .web_automation_integrated import REPLBrowserWithRecording
+
+        # 래퍼 객체 생성
+        wrapper = REPLBrowserWithRecording()
+        wrapper.browser = browser
+        wrapper.context = context
+        wrapper.page = page
+        wrapper.browser_started = True
+        wrapper.playwright = playwright
+
+        # BrowserManager에 등록
+        from .web_automation_manager import browser_manager
+        browser_manager.set_instance(wrapper, "existing_browser")
+
+        # 전역 인스턴스로도 설정
+        _set_web_instance(wrapper)
+
+        return {
+            'ok': True,
+            'data': {
+                'connected': True,
+                'url': page.url if page else None,
+                'pages_count': len(pages) if 'pages' in locals() else 0,
+                'contexts_count': len(contexts)
+            }
+        }
+
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': f"브라우저 연결 실패: {str(e)}"
+        }
+
+
+def launch_browser_with_debugging(port: int = 9222, headless: bool = False) -> Dict[str, Any]:
+    """
+    디버깅 포트를 열고 브라우저 실행
+
+    이 브라우저는 다른 세션에서 connect_to_existing_browser()로 연결할 수 있습니다.
+
+    Args:
+        port: 디버깅 포트 (기본값: 9222)
+        headless: 헤드리스 모드 여부
+
+    Returns:
+        표준 응답 형식
+
+    Example:
+        # 세션 1에서 실행
+        >>> h.launch_browser_with_debugging(port=9222)
+
+        # 세션 2에서 연결
+        >>> h.connect_to_existing_browser(cdp_url="http://127.0.0.1:9222")
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+
+        # Playwright 시작
+        playwright = sync_playwright().start()
+
+        # 디버깅 포트를 열고 브라우저 실행
+        browser = playwright.chromium.launch(
+            headless=headless,
+            args=[
+                f'--remote-debugging-port={port}',
+                '--start-maximized'
+            ]
+        )
+
+        # 컨텍스트와 페이지 생성
+        context = browser.new_context(no_viewport=True)
+        page = context.new_page()
+
+        # BrowserManager에 등록
+        from .web_automation_integrated import REPLBrowserWithRecording
+
+        wrapper = REPLBrowserWithRecording()
+        wrapper.browser = browser
+        wrapper.context = context
+        wrapper.page = page
+        wrapper.browser_started = True
+        wrapper.playwright = playwright
+
+        from .web_automation_manager import browser_manager
+        browser_manager.set_instance(wrapper, "debug_browser")
+
+        # 전역 인스턴스로도 설정
+        _set_web_instance(wrapper)
+
+        print(f"✅ 디버깅 포트 {port}로 브라우저 실행됨")
+        print(f"📌 다른 세션에서 연결하려면:")
+        print(f"   h.connect_to_existing_browser(cdp_url='http://127.0.0.1:{port}')")
+
+        return {
+            'ok': True,
+            'data': {
+                'launched': True,
+                'port': port,
+                'cdp_url': f'http://127.0.0.1:{port}'
+            }
+        }
+
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': f"브라우저 실행 실패: {str(e)}"
+        }
+
+
+def get_browser_ws_endpoint() -> Dict[str, Any]:
+    """
+    현재 브라우저의 WebSocket endpoint 가져오기
+
+    Returns:
+        표준 응답 형식
+
+    Example:
+        >>> result = h.get_browser_ws_endpoint()
+        >>> if result['ok']:
+        ...     print(f"WebSocket endpoint: {result['data']['ws_endpoint']}")
+    """
+    web = _get_web_instance()
+    if not web:
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
+
+    try:
+        if hasattr(web, 'browser') and web.browser:
+            # WebSocket endpoint 가져오기 시도
+            if hasattr(web.browser, '_impl_obj'):
+                ws_endpoint = web.browser._impl_obj._connection._transport._ws_endpoint
+            else:
+                # 대체 방법
+                ws_endpoint = str(web.browser)
+
+            return {
+                'ok': True,
+                'data': {
+                    'ws_endpoint': ws_endpoint,
+                    'browser_type': type(web.browser).__name__
+                }
+            }
+        else:
+            return {
+                'ok': False,
+                'error': '브라우저가 시작되지 않았습니다'
+            }
+
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': f"WebSocket endpoint 가져오기 실패: {str(e)}"
+        }
+
+
+# ============================================================================
+# 브라우저 세션 공유 함수들 (2025-08-06)
+# ============================================================================
+
+
+import json
+import os
+from pathlib import Path
+
+def save_browser_session(session_name: str = "shared_session") -> Dict[str, Any]:
+    """
+    현재 브라우저 세션 정보를 파일로 저장
+
+    다른 대화 세션에서 load_browser_session()으로 불러올 수 있습니다.
+
+    Args:
+        session_name: 세션 이름
+
+    Returns:
+        표준 응답 형식
+
+    Example:
+        # 세션 1에서 저장
+        >>> h.web_start()
+        >>> h.web_goto("https://example.com")
+        >>> h.save_browser_session("my_session")
+
+        # 세션 2에서 로드
+        >>> h.load_browser_session("my_session")
+    """
+    web = _get_web_instance()
+    if not web:
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
+
+    try:
+        # 세션 정보 수집
+        session_info = {
+            'url': web.page.url if hasattr(web, 'page') and web.page else None,
+            'title': web.page.title() if hasattr(web, 'page') and web.page else None,
+            'browser_type': type(web.browser).__name__ if hasattr(web, 'browser') else None,
+            'project_name': getattr(web, 'project_name', 'web_scraping'),
+            'timestamp': datetime.now().isoformat()
+        }
+
+        # WebSocket endpoint 시도
+        try:
+            if hasattr(web.browser, '_impl_obj'):
+                session_info['ws_endpoint'] = web.browser._impl_obj._connection._transport._ws_endpoint
+        except:
+            pass
+
+        # CDP URL 시도
+        try:
+            if hasattr(web.browser, '_browser_cdp_session'):
+                session_info['cdp_url'] = "http://127.0.0.1:9222"  # 기본값
+        except:
+            pass
+
+        # 세션 파일 저장 경로
+        session_dir = Path(".ai-brain/browser_sessions")
+        session_dir.mkdir(parents=True, exist_ok=True)
+        session_file = session_dir / f"{session_name}.json"
+
+        # 파일로 저장
+        with open(session_file, 'w', encoding='utf-8') as f:
+            json.dump(session_info, f, indent=2, ensure_ascii=False)
+
+        print(f"✅ 브라우저 세션 저장됨: {session_file}")
+        print(f"📍 현재 URL: {session_info.get('url')}")
+        print(f"💡 다른 세션에서 로드: h.load_browser_session('{session_name}')")
+
+        return {
+            'ok': True,
+            'data': {
+                'saved': True,
+                'session_name': session_name,
+                'file': str(session_file),
+                'info': session_info
+            }
+        }
+
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': f"세션 저장 실패: {str(e)}"
+        }
+
+
+def load_browser_session(session_name: str = "shared_session") -> Dict[str, Any]:
+    """
+    저장된 브라우저 세션 정보 로드
+
+    Args:
+        session_name: 세션 이름
+
+    Returns:
+        표준 응답 형식
+    """
+    try:
+        # 세션 파일 경로
+        session_file = Path(".ai-brain/browser_sessions") / f"{session_name}.json"
+
+        if not session_file.exists():
+            return {
+                'ok': False,
+                'error': f"세션 파일을 찾을 수 없습니다: {session_file}"
+            }
+
+        # 세션 정보 로드
+        with open(session_file, 'r', encoding='utf-8') as f:
+            session_info = json.load(f)
+
+        print(f"📋 저장된 세션 정보:")
+        print(f"  URL: {session_info.get('url')}")
+        print(f"  제목: {session_info.get('title')}")
+        print(f"  저장 시간: {session_info.get('timestamp')}")
+
+        # WebSocket endpoint나 CDP URL이 있으면 연결 시도
+        if session_info.get('ws_endpoint'):
+            print(f"🔗 WebSocket endpoint로 연결 시도...")
+            return connect_to_existing_browser(ws_endpoint=session_info['ws_endpoint'])
+
+        elif session_info.get('cdp_url'):
+            print(f"🔗 CDP URL로 연결 시도...")
+            return connect_to_existing_browser(cdp_url=session_info['cdp_url'])
+
+        else:
+            return {
+                'ok': True,
+                'data': {
+                    'info': session_info,
+                    'message': "세션 정보만 로드됨 (연결 정보 없음)"
+                }
+            }
+
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': f"세션 로드 실패: {str(e)}"
+        }
+
+
+def list_browser_sessions() -> Dict[str, Any]:
+    """
+    저장된 모든 브라우저 세션 목록 조회
+
+    Returns:
+        표준 응답 형식
+    """
+    try:
+        session_dir = Path(".ai-brain/browser_sessions")
+
+        if not session_dir.exists():
+            return {
+                'ok': True,
+                'data': {
+                    'sessions': [],
+                    'message': "저장된 세션이 없습니다"
+                }
+            }
+
+        sessions = []
+        for session_file in session_dir.glob("*.json"):
+            try:
+                with open(session_file, 'r', encoding='utf-8') as f:
+                    info = json.load(f)
+                    sessions.append({
+                        'name': session_file.stem,
+                        'url': info.get('url'),
+                        'title': info.get('title'),
+                        'timestamp': info.get('timestamp')
+                    })
+            except:
+                continue
+
+        return {
+            'ok': True,
+            'data': {
+                'sessions': sessions,
+                'count': len(sessions)
+            }
+        }
+
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': f"세션 목록 조회 실패: {str(e)}"
         }

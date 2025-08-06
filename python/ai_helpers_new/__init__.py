@@ -175,7 +175,9 @@ try:
         web_list_sessions, web_goto_session,
         # 팝업 처리 함수 (2025-08-06)
         handle_popup, handle_alert, wait_and_click,
-        handle_modal_by_class, close_popup, confirm_popup, cancel_popup
+        handle_modal_by_class, close_popup, confirm_popup, cancel_popup,
+        # 기존 브라우저 연결 함수 (2025-08-06)
+        connect_to_existing_browser, launch_browser_with_debugging, get_browser_ws_endpoint
     )
     
     # __all__에 web 함수들 추가
@@ -192,7 +194,9 @@ try:
         'web_list_sessions', 'web_goto_session',
         # 팝업 처리 함수
         'handle_popup', 'handle_alert', 'wait_and_click',
-        'handle_modal_by_class', 'close_popup', 'confirm_popup', 'cancel_popup'
+        'handle_modal_by_class', 'close_popup', 'confirm_popup', 'cancel_popup',
+        # 기존 브라우저 연결 함수
+        'connect_to_existing_browser', 'launch_browser_with_debugging', 'get_browser_ws_endpoint'
     ])
 except ImportError as e:
     print(f"Warning: Web automation helpers not available: {e}")

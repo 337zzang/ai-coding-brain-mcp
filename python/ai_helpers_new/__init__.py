@@ -197,3 +197,11 @@ def get_flow_api():
 
     manager = UltraSimpleFlowManager()
     return FlowAPI(manager)
+# Task Logger Helpers (v76.1)
+from .task_logger_helpers import (
+    get_task_logger,
+    log_test_result,
+    log_code_change,
+    log_analysis,
+    log_progress
+)

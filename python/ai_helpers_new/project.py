@@ -13,12 +13,6 @@ from .util import ok, err
 from .wrappers import safe_execution
 from .core.fs import scan_directory as core_scan_directory, ScanOptions
 
-# Workflow manager import (optional)
-try:
-    from python.workflow_wrapper import get_workflow_manager
-except ImportError:
-    def get_workflow_manager():
-        return None
 
 # 전역 캐시
 _current_project_cache = None
@@ -282,39 +276,89 @@ def flow_project_with_workflow(
             print("=" * 70)
             print(fd_txt)
 
-    # 6) Git 상태 (프로젝트 경로 기준)
+        # 5.5) 최신 플랜 표시 (v75.0)
+    try:
+        from .flow_api import FlowAPI
+        flow_api = FlowAPI()
+
+        # 최신 플랜 3개 가져오기
+        plans_result = flow_api.list_plans(limit=3)
+        if plans_result['ok'] and plans_result['data']:
+            plans = plans_result['data']
+            print(f"\n📋 최신 플랜 {len(plans)}개:")
+            print("=" * 60)
+
+            for i, plan in enumerate(plans, 1):
+                # 플랜은 dict 형태로 반환됨
+                print(f"\n{i}. {plan['name']}")
+                print(f"   ID: {plan['id']}")
+                print(f"   생성일: {plan['created_at']}")
+                print(f"   상태: {plan.get('status', 'active')}")
+
+                # Task 상태 분석
+                tasks = plan.get('tasks', {})
+                if tasks:
+                    task_statuses = {}
+                    for task_id, task in tasks.items():
+                        # Task도 dict 형태
+                        status = task.get('status', 'todo')
+                        # TaskStatus enum 값 처리
+                        if hasattr(status, 'value'):
+                            status = str(status)
+                        task_statuses[status] = task_statuses.get(status, 0) + 1
+
+                    print(f"   Tasks: {len(tasks)}개", end="")
+                    if task_statuses:
+                        status_str = ", ".join([f"{status}: {count}" for status, count in task_statuses.items()])
+                        print(f" ({status_str})")
+                    else:
+                        print()
+                else:
+                    print("   Tasks: 0개")
+        elif plans_result['ok']:
+            print("\n📋 생성된 플랜이 없습니다.")
+    except Exception as e:
+        # 플랜 표시 실패는 전체 함수 실패로 이어지지 않도록
+        print(f"\n⚠️ 플랜 표시 중 오류 발생: {type(e).__name__}: {e}")
+        pass
+
+    print("\n✅ 플랜 섹션 완료, Git 섹션으로 이동...")
+
+                # 6) Git 상태 (프로젝트 경로 기준)
+    print("\n🔍 Git 섹션 시작...")
     git_info = None
     try:
-        # subprocess의 cwd 파라미터를 사용하여 프로젝트 디렉토리에서 실행
-        import subprocess
-        result = subprocess.run(
-            ['git', 'status', '--porcelain'], 
-            cwd=str(project_path),
-            capture_output=True, 
-            text=True
-        )
-        
-        if result.returncode == 0:
-            # Git 저장소인 경우
-            files = result.stdout.strip().split('\n') if result.stdout.strip() else []
-            clean = len(files) == 0
-            
-            # 브랜치 정보 가져오기
-            branch_result = subprocess.run(
-                ['git', 'branch', '--show-current'],
-                cwd=str(project_path),
-                capture_output=True,
-                text=True
-            )
-            branch = branch_result.stdout.strip() if branch_result.returncode == 0 else "unknown"
-            
+        # git_status는 이미 ai_helpers_new에서 사용 가능
+        import ai_helpers_new as helpers
+        print("Helpers import 성공")
+        git_result = helpers.git_status()
+        print(f"Git status 결과: {git_result['ok']}")
+
+        if git_result['ok']:
+            git_data = git_result['data']
+            files = git_data.get('files', [])
+            branch = git_data.get('branch', 'unknown')
+            clean = git_data.get('clean', False)
+
+            git_info = {
+                'branch': branch,
+                'files': files,
+                'count': len(files),
+                'clean': clean
+            }
+
             print(f"\n🔀 Git 상태:")
             print("============================================================")
             print(f"브랜치: {branch}")
             print(f"변경 파일: {len(files)}개")
             print(f"상태: {'Clean' if clean else 'Modified'}")
-    except:
+    except Exception as e:
+        # Git 상태 실패는 전체 함수 실패로 이어지지 않도록
+        print(f"\n⚠️ Git 상태 오류: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
         pass
+
 
     # 7) Flow 상태
     flow_info = None
@@ -429,3 +473,94 @@ def scan_directory_dict(path: str = ".", max_depth: int = 5,
         }
     }
 
+
+
+def select_plan_and_show(plan_selector):
+    """플랜을 선택하고 상세 정보를 표시 (간소화 버전)
+
+    Args:
+        plan_selector: 플랜 번호(1,2,3...) 또는 플랜 ID
+
+    Returns:
+        dict: 표준 응답 형식
+    """
+    try:
+        from .flow_api import get_flow_api
+        import os
+        import json
+
+        api = get_flow_api()
+
+        # 플랜 목록 가져오기
+        plans_result = api.list_plans(limit=10)
+        if not plans_result['ok']:
+            return {'ok': False, 'error': 'Failed to get plans'}
+
+        plans = plans_result['data']
+
+        # 선택자가 숫자인 경우
+        if isinstance(plan_selector, (int, str)) and str(plan_selector).isdigit():
+            idx = int(plan_selector) - 1
+            if 0 <= idx < len(plans):
+                selected_plan = plans[idx]
+            else:
+                return {'ok': False, 'error': f'Invalid plan number: {plan_selector}'}
+        else:
+            # ID로 찾기
+            selected_plan = None
+            for plan in plans:
+                if plan['id'] == plan_selector:
+                    selected_plan = plan
+                    break
+
+            if not selected_plan:
+                return {'ok': False, 'error': f'Plan not found: {plan_selector}'}
+
+        # 플랜 상세 정보 출력
+        print(f"\n📋 플랜: {selected_plan['name']}")
+        print(f"ID: {selected_plan['id']}")
+        print(f"생성: {selected_plan['created_at']}")
+        print(f"상태: {selected_plan['status']}")
+
+        # Tasks 정보
+        if 'tasks' in selected_plan and selected_plan['tasks']:
+            print(f"\n📝 Tasks ({len(selected_plan['tasks'])}개):")
+            for task_id, task in selected_plan['tasks'].items():
+                number = task.get('number', '?')
+                title = task.get('title', 'No title')
+                status = task.get('status', 'N/A')
+                print(f"  #{number}: {title} [{status}]")
+
+        # JSONL 로그 표시
+        print("\n📊 Task 로그:")
+        plan_dir = f".ai-brain/flow/plans/{selected_plan['id']}"
+
+        if os.path.exists(plan_dir):
+            jsonl_files = [f for f in os.listdir(plan_dir) if f.endswith('.jsonl')]
+
+            for jsonl_file in sorted(jsonl_files):
+                print(f"\n📄 {jsonl_file}:")
+                file_path = os.path.join(plan_dir, jsonl_file)
+
+                # 파일 크기와 라인 수 확인
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()
+                        print(f"  총 {len(lines)}개 이벤트")
+
+                        # 처음과 마지막 이벤트 표시
+                        if lines:
+                            first_event = json.loads(lines[0])
+                            print(f"  시작: {first_event.get('timestamp', 'N/A')}")
+                            print(f"  첫 이벤트: {first_event.get('event_type', first_event.get('type', 'N/A'))}")
+
+                            if len(lines) > 1:
+                                last_event = json.loads(lines[-1])
+                                print(f"  마지막 이벤트: {last_event.get('event_type', last_event.get('type', 'N/A'))}")
+                except Exception as e:
+                    print(f"  읽기 오류: {e}")
+
+        return {'ok': True, 'data': selected_plan}
+
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}

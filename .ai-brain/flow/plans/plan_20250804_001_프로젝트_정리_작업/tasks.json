@@ -1,0 +1,58 @@
+{
+  "task_20250804_225309_3e7492": {
+    "id": "task_20250804_225309_3e7492",
+    "title": "프로젝트 전체 구조 분석",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-04T22:53:09.638985",
+    "updated_at": "2025-08-04T22:53:09.638985",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250804_225309_483f0b": {
+    "id": "task_20250804_225309_483f0b",
+    "title": "임시 파일 및 캐시 정리",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-04T22:53:09.661307",
+    "updated_at": "2025-08-04T22:53:09.662303",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250804_225309_4deb1e": {
+    "id": "task_20250804_225309_4deb1e",
+    "title": "로그 및 테스트 파일 정리",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-04T22:53:09.671710",
+    "updated_at": "2025-08-04T22:53:09.671710",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250804_225309_2f0133": {
+    "id": "task_20250804_225309_2f0133",
+    "title": "문서 및 최종 정리",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-04T22:53:09.681709",
+    "updated_at": "2025-08-04T22:53:09.681709",
+    "completed_at": null,
+    "assignee": null,
+    "number": 1,
+    "tags": [],
+    "metadata": {}
+  }
+}

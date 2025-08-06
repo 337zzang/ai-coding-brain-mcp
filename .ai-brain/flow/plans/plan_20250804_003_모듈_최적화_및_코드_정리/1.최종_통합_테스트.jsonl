@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-04T23:24:52.881816", "event_type": "TASK_INFO", "ts": "2025-08-04T23:24:52.881816", "type": "TASK_INFO", "title": "최종 통합 테스트", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-04T23:24:52.882815", "event_type": "DESIGN", "ts": "2025-08-04T23:24:52.882815", "type": "DESIGN", "content": "Task가 생성되었습니다."}

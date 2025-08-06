@@ -1,0 +1,72 @@
+{
+  "task_20250805_000750_d247b1": {
+    "id": "task_20250805_000750_d247b1",
+    "title": "Task 1: 환경 준비 및 import 추가",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-05T00:07:50.686744",
+    "updated_at": "2025-08-05T00:07:50.686744",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250805_000750_e25097": {
+    "id": "task_20250805_000750_e25097",
+    "title": "Task 2: TaskLogger 통합",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-05T00:07:50.709088",
+    "updated_at": "2025-08-05T00:07:50.709088",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250805_000750_86f7cb": {
+    "id": "task_20250805_000750_86f7cb",
+    "title": "Task 3: Subprocess Worker 통합",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-05T00:07:50.718231",
+    "updated_at": "2025-08-05T00:07:50.718231",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250805_000750_4c7267": {
+    "id": "task_20250805_000750_4c7267",
+    "title": "Task 4: 실행 히스토리 및 diff 추적",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-05T00:07:50.727219",
+    "updated_at": "2025-08-05T00:07:50.727219",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250805_000750_57c495": {
+    "id": "task_20250805_000750_57c495",
+    "title": "Task 5: 테스트 및 검증",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-05T00:07:50.736005",
+    "updated_at": "2025-08-05T00:07:50.736005",
+    "completed_at": null,
+    "assignee": null,
+    "number": 1,
+    "tags": [],
+    "metadata": {}
+  }
+}

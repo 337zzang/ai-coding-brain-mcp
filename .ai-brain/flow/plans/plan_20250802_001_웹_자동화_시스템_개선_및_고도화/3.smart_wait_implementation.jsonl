@@ -1,4 +1,0 @@
-{"timestamp": "2025-08-02T16:33:25.408054", "event_type": "TASK_INFO", "ts": "2025-08-02T16:33:25.408054", "type": "TASK_INFO", "title": "스마트 대기 기능 구현", "priority": "critical", "estimate": "1일", "description": ""}
-{"timestamp": "2025-08-02T16:41:13.546122", "event_type": "TASK_INFO", "ts": "2025-08-02T16:41:13.546122", "type": "TASK_INFO", "title": "스마트 대기 기능 구현", "priority": "critical", "estimate": "1일", "description": ""}
-{"timestamp": "2025-08-02T16:41:13.546122", "event_type": "NOTE", "ts": "2025-08-02T16:41:13.546122", "type": "NOTE", "content": "📌 의존성: Task 2 (에러 처리) 완료"}
-{"timestamp": "2025-08-02T16:41:13.555214", "event_type": "NOTE", "ts": "2025-08-02T16:41:13.555214", "type": "NOTE", "content": "📌 목표: 동적 대기, 조건부 대기, 네트워크 유휴 감지"}

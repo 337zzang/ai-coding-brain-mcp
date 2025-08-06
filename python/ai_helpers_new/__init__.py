@@ -4,8 +4,12 @@ def _safe_import(module_path, names, package=None):
     """안전한 import - 실패 시 기본값 반환"""
     results = {}
     try:
-        if package:
-            module = __import__(module_path, fromlist=names, package=package)
+        # __import__는 package 키워드 인자를 지원하지 않음
+        # package는 상대 import 시 현재 패키지명으로 사용
+        if package and module_path.startswith('.'):
+            # 상대 import를 절대 import로 변환
+            full_module_path = package + module_path
+            module = __import__(full_module_path, fromlist=names)
         else:
             module = __import__(module_path, fromlist=names)
 
@@ -144,7 +148,11 @@ __all__ = [
     'search_files',
     'view',
     'write',
-    'write_json'
+    'write_json',
+    'fix_task_numbers',
+    'validate_flow_response', 
+    'get_task_safe',
+    'git_status_normalized'
 ]
 
 

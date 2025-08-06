@@ -1,2 +1,0 @@
-{"timestamp": "2025-08-03T22:53:04.437038", "event_type": "TASK_INFO", "ts": "2025-08-03T22:53:04.437038", "type": "TASK_INFO", "title": "[낮음] 레거시 코드 제거 - 전역 변수 및 호환성 레이어 정리", "priority": "medium", "estimate": null, "description": ""}
-{"timestamp": "2025-08-03T22:53:04.438855", "event_type": "DESIGN", "ts": "2025-08-03T22:53:04.438855", "type": "DESIGN", "content": "Task가 생성되었습니다."}

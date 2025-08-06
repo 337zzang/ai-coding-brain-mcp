@@ -375,10 +375,54 @@ class FlowAPI:
         self._res(True, {})
         return self
 
+    def help(self) -> Dict[str, Any]:
+        """FlowAPI 사용법 도움말
+        
+        Returns:
+            표준 응답 형식, data에 도움말 정보
+        """
+        help_text = """
+FlowAPI 사용법 가이드
+
+🔹 표준 응답 메서드 (result['ok'] 확인 필요):
+  - create_plan(name, description="")
+  - list_plans(status=None, limit=10)
+  - get_plan(plan_id)
+  - update_plan(plan_id, **kwargs)
+  - delete_plan(plan_id)
+  - create_task(plan_id, name, description="")
+  - add_task(plan_id, title, **kwargs)
+  - get_task(plan_id, task_id)
+  - get_task_by_number(plan_id, number)
+  - list_tasks(plan_id, status=None)
+  - update_task(plan_id, task_id, **kwargs)
+  - update_task_status(plan_id, task_id, status)
+  - search(query)
+  - get_stats()
+  - get_current_plan()
+  - get_context(key)
+
+🔹 체이닝 메서드 (FlowAPI 객체 반환):
+  - select_plan(plan_id)  # 반환값 확인 불필요
+  - set_context(key, value)
+  - clear_context()
+
+🔹 Task 필드:
+  - title (not 'name')
+  - status: todo/in_progress/done/cancelled
+  - number: 자동 할당 (기존 Task는 None 가능)
+
+🔹 Git Status 필드:
+  - files: 모든 변경 파일 목록
+  - count: 변경 파일 수
+  - branch: 현재 브랜치
+  - clean: 클린 상태 여부
+        """
+        return self._res(True, {"help": help_text, "methods": dir(self)})
+
 
 # 싱글톤 인스턴스 관리
 _flow_api_instance = None
-
 
 def get_flow_api() -> FlowAPI:
     """FlowAPI 싱글톤 인스턴스 반환"""

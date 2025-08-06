@@ -1,2 +1,0 @@
-{"timestamp": "2025-08-03T14:42:00.221749", "event_type": "TASK_INFO", "ts": "2025-08-03T14:42:00.221749", "type": "TASK_INFO", "title": "1. 레거시 코드 완전 제거 - 전역 상태 및 os.chdir", "priority": "medium", "estimate": null, "description": ""}
-{"timestamp": "2025-08-03T14:42:00.222749", "event_type": "DESIGN", "ts": "2025-08-03T14:42:00.222749", "type": "DESIGN", "content": "Task가 생성되었습니다."}

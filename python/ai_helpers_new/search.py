@@ -102,7 +102,7 @@ def search_code(pattern: str, path: str = ".", file_pattern: str = "*", max_resu
         files_searched = 0
 
         # 파일 목록 가져오기
-        files_result = h.search_files(file_pattern, path, recursive=True)
+        files_result = search_files(file_pattern, path, recursive=True)
         if not files_result['ok']:
             return files_result
 
@@ -187,7 +187,7 @@ def find_function(name: str, path: str = ".", strict: bool = False) -> Dict[str,
     # 함수 정의 패턴
     pattern = rf'^\s*def\s+{re.escape(name)}\s*\('
 
-    result = h.search_code(pattern, path, "*.py")
+    result = search_code(pattern, path, "*.py")
     if not result['ok']:
         return result
 
@@ -299,7 +299,7 @@ def find_class(name: str, path: str = ".", strict: bool = False) -> Dict[str, An
     # 클래스 정의 패턴
     pattern = rf'^\s*class\s+{re.escape(name)}\s*[\(:]'
 
-    result = h.search_code(pattern, path, "*.py")
+    result = search_code(pattern, path, "*.py")
     if not result['ok']:
         return result
 

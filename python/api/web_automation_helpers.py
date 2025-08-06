@@ -1052,3 +1052,336 @@ def web_goto_session(url: str, project_name: str = "default") -> Dict[str, Any]:
             'ok': False,
             'error': str(e)
         }
+
+
+# ============================================================================
+# 팝업 처리 헬퍼 함수들 (2025-08-06)
+# ============================================================================
+
+def _handle_popup_impl(selector_or_page, button_text: str = "예", force: bool = True) -> Dict[str, Any]:
+    """범용 팝업 처리 구현"""
+    # 페이지 객체 가져오기
+    if hasattr(selector_or_page, 'locator'):
+        # 직접 page 객체가 전달된 경우
+        page = selector_or_page
+    else:
+        # 기본 인스턴스 사용
+        web = _get_web_instance()
+        if not web:
+            return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
+        if not hasattr(web, 'page'):
+            return {'ok': False, 'error': '페이지가 로드되지 않았습니다'}
+        page = web.page
+
+    # 다양한 팝업 선택자 시도
+    selectors = [
+        f'[role="dialog"] button:has-text("{button_text}")',
+        f'[role="alertdialog"] button:has-text("{button_text}")',
+        f'.modal button:has-text("{button_text}")',
+        f'[class*="popup"] button:has-text("{button_text}")',
+        f'[class*="dialog"] button:has-text("{button_text}")',
+        f'[class*="overlay"] button:has-text("{button_text}")',
+        f'div[style*="z-index"] button:has-text("{button_text}")',
+        f'button:has-text("{button_text}"):visible'
+    ]
+
+    # 각 선택자로 클릭 시도
+    for i, selector in enumerate(selectors):
+        try:
+            # 요소가 존재하는지 확인 (타임아웃 짧게)
+            if page.locator(selector).count() > 0:
+                page.locator(selector).first.click(force=force, timeout=2000)
+                return {
+                    'ok': True,
+                    'data': {
+                        'clicked': True,
+                        'method': 'selector',
+                        'selector_index': i,
+                        'selector': selector,
+                        'button_text': button_text
+                    }
+                }
+        except Exception:
+            continue
+
+    # 모든 선택자 실패 시 JavaScript로 직접 클릭
+    try:
+        result = page.evaluate(f"""
+            (() => {{
+                const buttons = document.querySelectorAll('button, input[type="button"], input[type="submit"], a.btn, a.button');
+                for(let btn of buttons) {{
+                    const text = btn.textContent || btn.value || '';
+                    if(text.includes('{button_text}')) {{
+                        btn.click();
+                        return {{
+                            clicked: true,
+                            element: btn.tagName.toLowerCase(),
+                            text: text.trim()
+                        }};
+                    }}
+                }}
+                return {{clicked: false}};
+            }})()
+        """)
+
+        if result and result.get('clicked'):
+            return {
+                'ok': True,
+                'data': {
+                    'clicked': True,
+                    'method': 'javascript',
+                    'element': result.get('element'),
+                    'text': result.get('text'),
+                    'button_text': button_text
+                }
+            }
+        else:
+            return {
+                'ok': False,
+                'error': f"버튼 '{button_text}'을(를) 찾을 수 없습니다"
+            }
+
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': f"JavaScript 실행 실패: {str(e)}"
+        }
+
+
+def handle_popup(button_text: str = "예", force: bool = True, page=None) -> Dict[str, Any]:
+    """
+    범용 팝업 처리 함수
+
+    다양한 유형의 웹 팝업/모달/다이얼로그를 처리합니다.
+    여러 선택자를 시도하고, 실패 시 JavaScript로 직접 클릭합니다.
+
+    Args:
+        button_text: 클릭할 버튼의 텍스트 (기본값: "예")
+        force: 강제 클릭 여부 (기본값: True) - 요소가 가려져 있어도 클릭
+        page: Playwright page 객체 (선택적, 기본값은 현재 세션)
+
+    Returns:
+        표준 응답 형식 {'ok': bool, 'data': dict, 'error': str}
+
+    Examples:
+        >>> result = h.handle_popup("확인")
+        >>> if result['ok']:
+        ...     print(f"팝업 처리 완료: {result['data']['method']}")
+    """
+    return safe_execute('handle_popup', _handle_popup_impl, page or button_text, button_text if page else "예", force)
+
+
+def _wait_and_click_impl(selector: str, timeout: int = 5000, force: bool = False) -> Dict[str, Any]:
+    """요소가 나타날 때까지 기다린 후 클릭"""
+    web = _get_web_instance()
+    if not web:
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
+
+    try:
+        # 선택자가 텍스트인 경우 자동 변환
+        if not any(char in selector for char in ['#', '.', '[', ':', '>']):
+            selector = f'text="{selector}"'
+
+        # 요소 대기
+        web.page.wait_for_selector(selector, timeout=timeout, state="visible")
+
+        # 클릭
+        web.page.click(selector, force=force)
+
+        return {
+            'ok': True,
+            'data': {
+                'clicked': True,
+                'selector': selector,
+                'timeout': timeout
+            }
+        }
+
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': f"클릭 실패: {str(e)}",
+            'selector': selector
+        }
+
+
+def wait_and_click(selector: str, timeout: int = 5000, force: bool = False) -> Dict[str, Any]:
+    """
+    요소가 나타날 때까지 기다린 후 클릭
+
+    Args:
+        selector: CSS 선택자 또는 텍스트 선택자
+        timeout: 대기 시간 (밀리초)
+        force: 강제 클릭 여부
+
+    Returns:
+        표준 응답 형식
+
+    Examples:
+        >>> h.wait_and_click("button.confirm", timeout=10000)
+        >>> h.wait_and_click("확인", force=True)
+    """
+    return safe_execute('wait_and_click', _wait_and_click_impl, selector, timeout, force)
+
+
+def _handle_alert_impl(accept: bool = True, text: Optional[str] = None) -> Dict[str, Any]:
+    """브라우저 alert/confirm/prompt 처리"""
+    web = _get_web_instance()
+    if not web:
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
+
+    try:
+        # alert 이벤트 핸들러 등록
+        def handle_dialog(dialog):
+            if text is not None:
+                dialog.accept(text)
+            elif accept:
+                dialog.accept()
+            else:
+                dialog.dismiss()
+
+        web.page.on("dialog", handle_dialog)
+
+        return {
+            'ok': True,
+            'data': {
+                'handler_registered': True,
+                'accept': accept,
+                'text': text
+            }
+        }
+
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': f"Alert 핸들러 등록 실패: {str(e)}"
+        }
+
+
+def handle_alert(accept: bool = True, text: Optional[str] = None) -> Dict[str, Any]:
+    """
+    브라우저 alert/confirm/prompt 처리
+
+    Args:
+        accept: 수락 여부 (True: 확인, False: 취소)
+        text: prompt의 경우 입력할 텍스트
+
+    Returns:
+        표준 응답 형식
+    """
+    return safe_execute('handle_alert', _handle_alert_impl, accept, text)
+
+
+# 편의 함수들 - 자주 사용하는 패턴
+def close_popup() -> Dict[str, Any]:
+    """
+    팝업 닫기 (다양한 닫기 버튼 텍스트 시도)
+
+    Returns:
+        표준 응답 형식
+
+    Example:
+        >>> h.close_popup()
+    """
+    close_texts = ["닫기", "확인", "OK", "Close", "X", "×", "✕"]
+
+    for text in close_texts:
+        result = handle_popup(text)
+        if result['ok']:
+            return result
+
+    return {
+        'ok': False,
+        'error': "닫기 버튼을 찾을 수 없습니다"
+    }
+
+
+def confirm_popup() -> Dict[str, Any]:
+    """
+    확인 팝업 처리
+
+    Returns:
+        표준 응답 형식
+
+    Example:
+        >>> h.confirm_popup()
+    """
+    confirm_texts = ["확인", "예", "네", "OK", "Yes", "Confirm", "승인", "동의"]
+
+    for text in confirm_texts:
+        result = handle_popup(text)
+        if result['ok']:
+            return result
+
+    return {
+        'ok': False,
+        'error': "확인 버튼을 찾을 수 없습니다"
+    }
+
+
+def cancel_popup() -> Dict[str, Any]:
+    """
+    취소 팝업 처리
+
+    Returns:
+        표준 응답 형식
+
+    Example:
+        >>> h.cancel_popup()
+    """
+    cancel_texts = ["취소", "아니오", "아니요", "Cancel", "No", "거절", "거부"]
+
+    for text in cancel_texts:
+        result = handle_popup(text)
+        if result['ok']:
+            return result
+
+    return {
+        'ok': False,
+        'error': "취소 버튼을 찾을 수 없습니다"
+    }
+
+
+def handle_modal_by_class(modal_class: str, button_text: str, force: bool = True) -> Dict[str, Any]:
+    """
+    특정 클래스의 모달 내에서 버튼 클릭
+
+    Args:
+        modal_class: 모달의 클래스명
+        button_text: 클릭할 버튼 텍스트
+        force: 강제 클릭 여부
+
+    Returns:
+        표준 응답 형식
+
+    Example:
+        >>> h.handle_modal_by_class("warning-modal", "계속진행")
+    """
+    web = _get_web_instance()
+    if not web:
+        return {'ok': False, 'error': 'h.web_start()를 먼저 실행하세요'}
+
+    try:
+        selector = f'.{modal_class} button:has-text("{button_text}")'
+
+        if web.page.locator(selector).count() > 0:
+            web.page.locator(selector).first.click(force=force)
+            return {
+                'ok': True,
+                'data': {
+                    'clicked': True,
+                    'modal_class': modal_class,
+                    'button_text': button_text
+                }
+            }
+        else:
+            return {
+                'ok': False,
+                'error': f"모달 '{modal_class}'에서 버튼 '{button_text}'을(를) 찾을 수 없습니다"
+            }
+
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': f"모달 처리 실패: {str(e)}"
+        }

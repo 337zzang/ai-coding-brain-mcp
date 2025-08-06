@@ -172,7 +172,10 @@ try:
         web_demo,
         # 세션 유지 함수 (2025-08-06)
         web_connect, web_disconnect, web_check_session,
-        web_list_sessions, web_goto_session
+        web_list_sessions, web_goto_session,
+        # 팝업 처리 함수 (2025-08-06)
+        handle_popup, handle_alert, wait_and_click,
+        handle_modal_by_class, close_popup, confirm_popup, cancel_popup
     )
     
     # __all__에 web 함수들 추가
@@ -187,7 +190,7 @@ try:
         # 세션 유지 함수
         'web_connect', 'web_disconnect', 'web_check_session',
         'web_list_sessions', 'web_goto_session',
-        # Popup handling helpers
+        # 팝업 처리 함수
         'handle_popup', 'handle_alert', 'wait_and_click',
         'handle_modal_by_class', 'close_popup', 'confirm_popup', 'cancel_popup'
     ])
@@ -214,9 +217,3 @@ from .task_logger_helpers import (
     log_analysis,
     log_progress
 )
-# Popup handling helpers (2025-08-06)
-from .web_helpers import (
-    handle_popup, handle_alert, wait_and_click,
-    handle_modal_by_class, close_popup, confirm_popup, cancel_popup
-)
-

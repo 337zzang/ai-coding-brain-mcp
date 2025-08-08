@@ -1,0 +1,30 @@
+{
+  "task_20250808_085522_2fda32": {
+    "id": "task_20250808_085522_2fda32",
+    "title": "안전한 파일 삭제",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-08T08:55:22.787175",
+    "updated_at": "2025-08-08T08:55:22.787175",
+    "completed_at": null,
+    "assignee": null,
+    "number": 1,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250808_085522_bea29d": {
+    "id": "task_20250808_085522_bea29d",
+    "title": "코드 통합",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-08T08:55:22.803178",
+    "updated_at": "2025-08-08T08:55:22.803178",
+    "completed_at": null,
+    "assignee": null,
+    "number": 2,
+    "tags": [],
+    "metadata": {}
+  }
+}

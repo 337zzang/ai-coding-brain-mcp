@@ -13,6 +13,130 @@ from .wrappers import ensure_response, safe_execution
 # safe_execution을 wrap_output으로 별칭 설정
 wrap_output = safe_execution
 
+
+
+# ============================================
+# ReplaceBlock 클래스 (replace_block_final.py에서 통합)
+# ============================================
+
+class ReplaceBlock:
+    """최종 통합 Replace Block 클래스"""
+    
+    @staticmethod
+    def detect_pattern_type(pattern: str) -> str:
+        """패턴 타입 자동 감지"""
+        # f-string
+        if pattern.startswith(('f"', "f'")):
+            return 'fstring'
+        # raw string
+        elif pattern.startswith(('r"', "r'")):
+            return 'raw'
+        # 삼중 따옴표
+        elif pattern.startswith(('"""', "'''")):
+            return 'triple'
+        # 멀티라인
+        elif '\n' in pattern:
+            return 'multiline'
+        # 특수 문자 많음
+        elif any(c in pattern for c in ['{', '}', '\\', '^', '$', '*', '+', '?', '[', ']']):
+            return 'special'
+        else:
+            return 'normal'
+    
+    @staticmethod
+    def normalize_pattern(pattern: str, pattern_type: str) -> str:
+        """패턴 정규화"""
+        if pattern_type == 'fstring':
+            # f-string의 {} 표현식을 와일드카드로
+            normalized = re.escape(pattern)
+            normalized = re.sub(r'\\{[^}]+\\}', r'\\{[^}]+\\}', normalized)
+            return normalized
+        
+        elif pattern_type == 'raw':
+            # raw string은 그대로
+            return re.escape(pattern)
+        
+        else:
+            # 일반 문자열은 줄바꿈 정규화
+            return pattern.replace('\r\n', '\n')
+    
+    @staticmethod
+    def find_pattern_with_fuzzy(content: str, pattern: str, threshold: float = 0.7) -> Optional[Tuple[int, int, float, str]]:
+        """Fuzzy matching으로 패턴 찾기
+        
+        Returns:
+            (시작 라인, 끝 라인, 유사도, 실제 매칭된 텍스트)
+        """
+        lines = content.split('\n')
+        pattern_lines = pattern.split('\n')
+        pattern_len = len(pattern_lines)
+        
+        # 들여쓰기 제거한 패턴
+        pattern_stripped_lines = [line.strip() for line in pattern_lines]
+        
+        best_match = None
+        best_ratio = 0.0
+        best_text = ""
+        
+        # 슬라이딩 윈도우
+        for i in range(len(lines) - pattern_len + 1):
+            window = lines[i:i + pattern_len]
+            window_stripped = [line.strip() for line in window]
+            
+            # 내용만으로 비교
+            pattern_content = '\n'.join(pattern_stripped_lines)
+            window_content = '\n'.join(window_stripped)
+            
+            matcher = difflib.SequenceMatcher(None, pattern_content, window_content)
+            ratio = matcher.ratio()
+            
+            if ratio > best_ratio and ratio >= threshold:
+                best_ratio = ratio
+                best_match = (i, i + pattern_len)
+                best_text = '\n'.join(window)
+        
+        if best_match:
+            return (*best_match, best_ratio, best_text)
+        return None
+    
+    @staticmethod
+    def apply_indentation(new_text: str, original_indent: str) -> str:
+        """새 텍스트에 원본 들여쓰기 적용"""
+        lines = new_text.split('\n')
+        result = []
+        
+        for i, line in enumerate(lines):
+            if line.strip():  # 내용이 있는 줄
+                if i == 0:
+                    # 첫 줄은 원본 들여쓰기 사용
+                    result.append(original_indent + line.lstrip())
+                else:
+                    # 나머지는 상대적 들여쓰기 유지
+                    # 원본 첫 줄의 들여쓰기를 기준으로
+                    result.append(original_indent + line)
+            else:
+                result.append(line)
+        
+        return '\n'.join(result)
+    
+    @staticmethod
+    def validate_python_syntax(content: str, file_path: str) -> Tuple[bool, Optional[str]]:
+        """Python 구문 검증"""
+        try:
+            ast.parse(content)
+            compile(content, file_path, 'exec')
+            return True, None
+        except SyntaxError as e:
+            error_msg = f"Line {e.lineno}: {e.msg}"
+            if e.text:
+                error_msg += f"\n  {e.text.strip()}"
+            return False, error_msg
+        except Exception as e:
+            return False, str(e)
+
+
+
+
 # Utility functions for indentation handling
 def get_common_indent(text: str) -> int:
     """Calculate the common indentation level."""
@@ -733,3 +857,123 @@ __all__ = [
     'functions',
     'classes'
 ]
+
+
+# ============================================
+# Improved Insert/Delete 함수 (재추가)
+# ============================================
+
+
+def insert_v2(path: str, marker: Union[str, int], code: str,
+              after: bool = True, indent_auto: bool = True) -> Dict[str, Any]:
+    """개선된 insert - 들여쓰기 자동 처리
+
+    Args:
+        path: 파일 경로
+        marker: 삽입 위치 (문자열 패턴 또는 라인 번호)
+        code: 삽입할 코드
+        after: True면 마커 뒤에, False면 앞에 삽입
+        indent_auto: True면 들여쓰기 자동 감지/적용
+
+    Returns:
+        표준 응답 형식
+    """
+    try:
+        # 파일 읽기
+        with open(path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+
+        # 마커 위치 찾기
+        if isinstance(marker, int):
+            position = marker - 1  # 라인 번호는 1부터 시작
+        else:
+            position = None
+            for i, line in enumerate(lines):
+                if marker in line:
+                    position = i
+                    break
+
+            if position is None:
+                return {'ok': False, 'error': f'Marker "{marker}" not found'}
+
+        # 들여쓰기 감지
+        if indent_auto and position < len(lines):
+            target_line = lines[position]
+            indent = len(target_line) - len(target_line.lstrip())
+            # 코드에 들여쓰기 적용
+            indented_code = '\n'.join(' ' * indent + line if line.strip() else line 
+                                     for line in code.split('\n'))
+        else:
+            indented_code = code
+
+        # 삽입
+        if after:
+            lines.insert(position + 1, indented_code + '\n')
+        else:
+            lines.insert(position, indented_code + '\n')
+
+        # 파일 저장
+        with open(path, 'w', encoding='utf-8') as f:
+            f.writelines(lines)
+
+        return {'ok': True, 'data': 'Inserted successfully'}
+
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}
+
+
+
+def delete_lines(path: str, start: Union[str, int], end: Optional[Union[str, int]] = None) -> Dict[str, Any]:
+    """라인 삭제 함수
+
+    Args:
+        path: 파일 경로
+        start: 시작 위치 (라인 번호 또는 패턴)
+        end: 끝 위치 (없으면 한 줄만 삭제)
+
+    Returns:
+        표준 응답 형식
+    """
+    try:
+        # 파일 읽기
+        with open(path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+
+        # 시작 위치 찾기
+        if isinstance(start, int):
+            start_pos = start - 1
+        else:
+            start_pos = None
+            for i, line in enumerate(lines):
+                if start in line:
+                    start_pos = i
+                    break
+            if start_pos is None:
+                return {'ok': False, 'error': f'Start marker "{start}" not found'}
+
+        # 끝 위치 찾기
+        if end is None:
+            end_pos = start_pos
+        elif isinstance(end, int):
+            end_pos = end - 1
+        else:
+            end_pos = None
+            for i in range(start_pos, len(lines)):
+                if end in lines[i]:
+                    end_pos = i
+                    break
+            if end_pos is None:
+                return {'ok': False, 'error': f'End marker "{end}" not found'}
+
+        # 삭제
+        del lines[start_pos:end_pos + 1]
+
+        # 파일 저장
+        with open(path, 'w', encoding='utf-8') as f:
+            f.writelines(lines)
+
+        return {'ok': True, 'data': f'Deleted lines {start_pos+1} to {end_pos+1}'}
+
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}
+

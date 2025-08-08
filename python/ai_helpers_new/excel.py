@@ -671,9 +671,9 @@ def excel_select_sheet(name: str) -> Response:
 # 고급 기능 (피벗, 수식)
 @thread_safe_excel
 def excel_create_pivot(
-    source_range: str, 
-    target_sheet: str, 
+    target_sheet: str,
     target_cell: str,
+    source_range: str,
     rows: List[str] = None,
     columns: List[str] = None,
     values: List[str] = None,
@@ -683,9 +683,9 @@ def excel_create_pivot(
     피벗 테이블 생성
 
     Args:
-        source_range: 원본 데이터 범위 (예: "Sheet1!A1:D100")
         target_sheet: 피벗 테이블을 생성할 시트
         target_cell: 피벗 테이블 시작 위치 (예: "A1")
+        source_range: 원본 데이터 범위 (예: "Sheet1!A1:D100")
         rows: 행 필드로 사용할 열 이름들
         columns: 열 필드로 사용할 열 이름들
         values: 값 필드로 사용할 열 이름들
@@ -761,14 +761,14 @@ def excel_create_pivot(
         return error_response(f"피벗 테이블 생성 실패: {str(e)}")
 
 @thread_safe_excel
-def excel_apply_formula(range_addr: str, formula: str, sheet: Optional[str] = None) -> Response:
+def excel_apply_formula(sheet: str, range_addr: str, formula: str) -> Response:
     """
     수식 적용
 
     Args:
+        sheet: 시트 이름 (필수)
         range_addr: 수식을 적용할 범위 (예: "A1" 또는 "A1:A10")
         formula: 적용할 수식 (예: "=SUM(B1:B10)" 또는 "=A1+B1")
-        sheet: 시트 이름 (None이면 현재 활성 시트)
 
     Returns:
         Response with formula application status
@@ -782,15 +782,11 @@ def excel_apply_formula(range_addr: str, formula: str, sheet: Optional[str] = No
         if not manager.workbook:
             return error_response("열려있는 워크북이 없습니다")
 
-        # 시트 가져오기
-        if sheet:
-            try:
-                ws = manager.workbook.Worksheets(sheet)
-            except:
-                return error_response(f"시트 '{sheet}'를 찾을 수 없습니다")
-        else:
-            ws = manager.workbook.ActiveSheet
-            sheet = ws.Name
+        # 시트 가져오기 (필수 파라미터이므로 항상 존재)
+        try:
+            ws = manager.workbook.Worksheets(sheet)
+        except:
+            return error_response(f"시트 '{sheet}'를 찾을 수 없습니다")
 
         # 범위 가져오기
         range_obj = ws.Range(range_addr)

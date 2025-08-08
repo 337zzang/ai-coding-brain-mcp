@@ -1,6 +1,0 @@
-{"timestamp": "2025-08-02T21:43:52.826077", "event_type": "TASK_INFO", "ts": "2025-08-02T21:43:52.826077", "type": "TASK_INFO", "title": "4. 안전한 JavaScript 실행 메커니즘 구현", "priority": "medium", "estimate": null, "description": ""}
-{"timestamp": "2025-08-02T21:43:52.827077", "event_type": "DESIGN", "ts": "2025-08-02T21:43:52.827077", "type": "DESIGN", "content": "Task가 생성되었습니다."}
-{"timestamp": "2025-08-02T22:17:57.683857", "event_type": "NOTE", "ts": "2025-08-02T22:17:57.683857", "type": "NOTE", "content": "Task 시작: 4. 안전한 JavaScript 실행 메커니즘 구현"}
-{"timestamp": "2025-08-02T22:18:09.195405", "event_type": "NOTE", "ts": "2025-08-02T22:18:09.195405", "type": "NOTE", "content": "Task 시작: 4. 안전한 JavaScript 실행 메커니즘 구현"}
-{"timestamp": "2025-08-02T22:18:19.168541", "event_type": "NOTE", "ts": "2025-08-02T22:18:19.168541", "type": "NOTE", "content": "Task 시작: 4. 안전한 JavaScript 실행 메커니즘 구현"}
-{"timestamp": "2025-08-02T22:31:58.247678", "event_type": "COMPLETE", "ts": "2025-08-02T22:31:58.247678", "type": "COMPLETE", "summary": "Task 완료: 4. 안전한 JavaScript 실행 메커니즘 구현"}

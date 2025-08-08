@@ -88,11 +88,12 @@ def _task_to_dict(task) -> Dict[str, Any]:
         'id': task.id,
         'title': getattr(task, 'title', getattr(task, 'name', '')),
         'description': getattr(task, 'description', ''),
-        'status': str(getattr(task, 'status', 'todo')),
+        'status': getattr(task, 'status', TaskStatus.TODO).value if hasattr(getattr(task, 'status', TaskStatus.TODO), 'value') else str(getattr(task, 'status', 'todo')),
         'created_at': getattr(task, 'created_at', ''),
         'updated_at': getattr(task, 'updated_at', ''),
         'priority': getattr(task, 'priority', 'normal'),
-        'completed_at': getattr(task, 'completed_at', None)
+        'completed_at': getattr(task, 'completed_at', None),
+        'number': getattr(task, 'number', None)
     }
 
 class FlowAPI:
@@ -286,6 +287,27 @@ class FlowAPI:
         """Task 상태 업데이트 (편의 메서드)"""
         return self.update_task(plan_id, task_id, status=status)
 
+
+    def update_task_status_by_number(self, plan_id: str, number: int, status: str) -> Dict[str, Any]:
+        """번호로 Task 상태 업데이트
+
+        Args:
+            plan_id: Plan ID
+            number: Task 번호 (1-based)
+            status: 새로운 상태 (todo, in_progress, done, cancelled)
+
+        Returns:
+            표준 응답 형식
+        """
+        # 먼저 번호로 Task를 찾음
+        task_result = self.get_task_by_number(plan_id, number)
+        if not task_result['ok']:
+            return task_result
+
+        # Task ID를 사용해서 상태 업데이트
+        task_id = task_result['data']['id']
+        return self.update_task_status(plan_id, task_id, status)
+
     def search(self, query: str) -> Dict[str, Any]:
         """Plan과 Task 통합 검색"""
         query_lower = query.lower()
@@ -353,10 +375,54 @@ class FlowAPI:
         self._res(True, {})
         return self
 
+    def help(self) -> Dict[str, Any]:
+        """FlowAPI 사용법 도움말
+        
+        Returns:
+            표준 응답 형식, data에 도움말 정보
+        """
+        help_text = """
+FlowAPI 사용법 가이드
+
+🔹 표준 응답 메서드 (result['ok'] 확인 필요):
+  - create_plan(name, description="")
+  - list_plans(status=None, limit=10)
+  - get_plan(plan_id)
+  - update_plan(plan_id, **kwargs)
+  - delete_plan(plan_id)
+  - create_task(plan_id, name, description="")
+  - add_task(plan_id, title, **kwargs)
+  - get_task(plan_id, task_id)
+  - get_task_by_number(plan_id, number)
+  - list_tasks(plan_id, status=None)
+  - update_task(plan_id, task_id, **kwargs)
+  - update_task_status(plan_id, task_id, status)
+  - search(query)
+  - get_stats()
+  - get_current_plan()
+  - get_context(key)
+
+🔹 체이닝 메서드 (FlowAPI 객체 반환):
+  - select_plan(plan_id)  # 반환값 확인 불필요
+  - set_context(key, value)
+  - clear_context()
+
+🔹 Task 필드:
+  - title (not 'name')
+  - status: todo/in_progress/done/cancelled
+  - number: 자동 할당 (기존 Task는 None 가능)
+
+🔹 Git Status 필드:
+  - files: 모든 변경 파일 목록
+  - count: 변경 파일 수
+  - branch: 현재 브랜치
+  - clean: 클린 상태 여부
+        """
+        return self._res(True, {"help": help_text, "methods": dir(self)})
+
 
 # 싱글톤 인스턴스 관리
 _flow_api_instance = None
-
 
 def get_flow_api() -> FlowAPI:
     """FlowAPI 싱글톤 인스턴스 반환"""

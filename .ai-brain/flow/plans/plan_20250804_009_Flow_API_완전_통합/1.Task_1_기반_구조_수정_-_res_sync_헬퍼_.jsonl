@@ -1,2 +1,0 @@
-{"timestamp": "2025-08-04T05:48:34.050754", "event_type": "TASK_INFO", "ts": "2025-08-04T05:48:34.050754", "type": "TASK_INFO", "title": "Task 1: 기반 구조 수정 - _res, _sync 헬퍼 추가", "priority": "medium", "estimate": null, "description": ""}
-{"timestamp": "2025-08-04T05:48:34.052763", "event_type": "DESIGN", "ts": "2025-08-04T05:48:34.052763", "type": "DESIGN", "content": "Task가 생성되었습니다."}

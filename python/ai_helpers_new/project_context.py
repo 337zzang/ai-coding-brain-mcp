@@ -22,15 +22,15 @@ class ProjectContext:
         # 환경변수 우선
         env_path = os.environ.get("PROJECT_BASE_PATH")
         if env_path:
-            self._base_path = Path(env_path)
+            self._base_path = Path(env_path).expanduser().resolve()
         else:
             # 기본값: 홈/Desktop
-            self._base_path = Path.home() / "Desktop"
+            self._base_path = (Path.home() / "Desktop").resolve()
 
     def set_project(self, project_name: str) -> None:
         """현재 프로젝트 설정"""
         self._current_project = project_name
-        self._project_path = self._base_path / project_name
+        self._project_path = (self._base_path / project_name).resolve()
 
     def get_project_name(self) -> Optional[str]:
         """현재 프로젝트 이름 반환"""

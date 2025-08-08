@@ -130,6 +130,10 @@ class UltraSimpleFlowManager:
             status=TaskStatus.TODO
         )
 
+        # Task 번호 자동 할당
+        existing_numbers = [t.number for t in plan.tasks.values() if hasattr(t, 'number') and t.number is not None]
+        task.number = max(existing_numbers) + 1 if existing_numbers else 1
+
         plan.tasks[task_id] = task
         plan.updated_at = datetime.now().isoformat()
 
@@ -139,7 +143,7 @@ class UltraSimpleFlowManager:
 
         # TaskLogger 자동 생성
         try:
-            task_number = len(plan.tasks)
+            task_number = task.number
             logger = EnhancedTaskLogger(plan_id, task_number, name)
             logger.task_info(title=name)
             logger.design("Task가 생성되었습니다.")

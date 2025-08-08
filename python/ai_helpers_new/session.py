@@ -69,6 +69,14 @@ class Session:
         # Mark as initialized
         self._initialized = True
 
+
+        # Clear any cached project information
+        try:
+            import ai_helpers_new.project as project_module
+            if hasattr(project_module, '_current_project_cache'):
+                project_module._current_project_cache = None
+        except ImportError:
+            pass
         return self.project_context
 
     @property

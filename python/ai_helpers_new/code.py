@@ -1,514 +1,819 @@
 """
-AI Helpers Code Module
-코드 분석과 수정을 위한 단순하고 실용적인 함수들
+Code manipulation helper functions with improved replace, insert, and delete operations.
+Integrated version combining all file editing capabilities.
 """
+
 import ast
-from pathlib import Path
-from typing import Dict, Any, List, Optional
-from .util import ok, err
+import re
+import os
+import difflib
+from typing import Dict, List, Optional, Any, Union, Tuple
+from .wrappers import ensure_response, safe_execution
 
+# safe_execution을 wrap_output으로 별칭 설정
+wrap_output = safe_execution
 
-def parse(path: str) -> Dict[str, Any]:
-    """Python 파일을 파싱하여 함수와 클래스 정보 추출
+# Utility functions for indentation handling
+def get_common_indent(text: str) -> int:
+    """Calculate the common indentation level (counting only spaces)."""
+    # Standardize tabs to spaces for consistency
+    text = text.replace('\t', '    ')
+    lines = text.split('\n')
+    # We look at lines that have content (non-whitespace)
+    non_empty_lines = [line for line in lines if line.strip()]
+    if not non_empty_lines:
+        return 0
 
-    Returns:
-        성공: {
-            'ok': True,
-            'data': {
-                'functions': [{'name': 'func1', 'line': 10, 'args': ['a', 'b'], ...}, ...],
-                'classes': [{'name': 'Class1', 'line': 20, 'methods': ['method1'], ...}, ...],
-                'imports': ['os', 'sys', ...],
-                'globals': [{'name': 'VAR', 'line': 5, 'is_constant': True, ...}, ...]
-            },
-            'total_lines': 100
-        }
-        실패: {'ok': False, 'error': 에러메시지}
-    """
-    # 헬퍼 함수: 타입 표현 추출
-    def get_type_repr(node) -> Optional[str]:
-        if node is None:
-            return None
+    indents = []
+    for line in non_empty_lines:
+        # Count only leading spaces
+        indent = len(line) - len(line.lstrip(' '))
+        indents.append(indent)
 
-        # Python 3.9+ ast.unparse 지원
-        if hasattr(ast, 'unparse'):
-            try:
-                return ast.unparse(node)
-            except:
-                pass
+    return min(indents) if indents else 0
 
-        # Fallback for older versions
-        if isinstance(node, ast.Name):
-            return node.id
-        elif isinstance(node, ast.Constant):
-            return repr(node.value)
-        elif isinstance(node, ast.Attribute):
-            value = get_type_repr(node.value)
-            return f"{value}.{node.attr}" if value else node.attr
+# [FIX 1: Robust adjust_indentation]
+def adjust_indentation(text: str, target_indent: int, preserve_relative: bool = True) -> str:
+    """Adjust indentation of text block, handling spaces robustly."""
+    # Standardize tabs to spaces
+    text = text.replace('\t', '    ')
+    lines = text.split('\n')
+    if not lines:
+        return text
+
+    # Get current base indentation
+    current_indent = get_common_indent(text) if preserve_relative else 0
+
+    # Calculate adjustment
+    target_indent = max(0, target_indent)  # Ensure non-negative target
+    indent_diff = target_indent - current_indent
+
+    # Apply adjustment
+    adjusted_lines = []
+    for line in lines:
+        # Handle empty lines when indenting
+        if not line.strip() and indent_diff >= 0:
+            adjusted_lines.append(line)
+            continue
+
+        if preserve_relative:
+            if indent_diff > 0:
+                # Adding indentation
+                adjusted_lines.append(' ' * indent_diff + line)
+            elif indent_diff < 0:
+                # Removing indentation (Safe Dedent)
+                to_remove = -indent_diff
+                # Calculate actual leading spaces
+                actual_indent = len(line) - len(line.lstrip(' '))
+                # Remove minimum of requested amount and available spaces (Prevents over-stripping)
+                remove_amount = min(actual_indent, to_remove)
+                adjusted_lines.append(line[remove_amount:])
+            else:
+                adjusted_lines.append(line)
         else:
+            # Not preserving relative: reset to target indent
+            if line.strip():
+                adjusted_lines.append(' ' * target_indent + line.lstrip(' '))
+            else:
+                adjusted_lines.append("")  # Reset empty lines
+
+    return '\n'.join(adjusted_lines)
+
+def find_fuzzy_match(content: str, pattern: str, threshold: float = 0.8) -> Optional[Tuple[int, int, str]]:
+    """Find fuzzy match for pattern in content."""
+    lines = content.split('\n')
+    pattern_lines = pattern.strip().split('\n')
+
+    # Try exact match first
+    pattern_str = '\n'.join(pattern_lines)
+    if pattern_str in content:
+        start = content.index(pattern_str)
+        return (start, start + len(pattern_str), pattern_str)
+
+    # Normalize for fuzzy matching
+    def normalize(text):
+        return re.sub(r'\s+', ' ', text.strip())
+
+    pattern_normalized = normalize(pattern)
+
+    # Sliding window search
+    best_match = None
+    best_ratio = threshold
+
+    # Use splitlines(True) to accurately calculate start index if available
+    try:
+        content_lines_with_endings = content.splitlines(True)
+    except TypeError:
+        content_lines_with_endings = [l + '\n' for l in content.split('\n')]
+        if content_lines_with_endings and not content.endswith('\n'):
+            content_lines_with_endings[-1] = content_lines_with_endings[-1][:-1]
+
+    for i in range(len(lines) - len(pattern_lines) + 1):
+        window = lines[i:i + len(pattern_lines)]
+        window_text = '\n'.join(window)
+        window_normalized = normalize(window_text)
+
+        ratio = difflib.SequenceMatcher(None, pattern_normalized, window_normalized).ratio()
+
+        if ratio > best_ratio:
+            best_ratio = ratio
+
+            # Calculate start index more accurately
+            start = sum(len(line) for line in content_lines_with_endings[:i])
+
+            # Calculate end index
+            end = start + len(window_text)
+
+            # Ensure end does not exceed content length
+            end = min(end, len(content))
+
+            best_match = (start, end, content[start:end])
+
+    return best_match
+
+
+@wrap_output
+def parse(filepath: str) -> Dict[str, Any]:
+    """Parse a Python file and extract its structure."""
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"File not found: {filepath}")
+
+    with open(filepath, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    try:
+        tree = ast.parse(content)
+    except SyntaxError as e:
+        raise ValueError(f"Syntax error in {filepath}: {e}")
+
+    functions = []
+    classes = []
+
+    def get_type_repr(annotation):
+        """Get string representation of type annotation."""
+        if annotation is None:
             return None
+        if isinstance(annotation, ast.Name):
+            return annotation.id
+        elif isinstance(annotation, ast.Constant):
+            return repr(annotation.value)
+        elif isinstance(annotation, ast.Attribute):
+            value = get_type_repr(annotation.value)
+            return f"{value}.{annotation.attr}" if value else annotation.attr
+        elif isinstance(annotation, ast.Subscript):
+            value = get_type_repr(annotation.value)
+            slice_repr = get_type_repr(annotation.slice)
+            return f"{value}[{slice_repr}]" if value else f"[{slice_repr}]"
+        elif isinstance(annotation, ast.Tuple):
+            elements = [get_type_repr(elt) for elt in annotation.elts]
+            return f"({', '.join(filter(None, elements))})"
+        elif isinstance(annotation, ast.List):
+            elements = [get_type_repr(elt) for elt in annotation.elts]
+            return f"[{', '.join(filter(None, elements))}]"
+        elif hasattr(annotation, 'value'):
+            return get_type_repr(annotation.value)
+        else:
+            return ast.unparse(annotation) if hasattr(ast, 'unparse') else None
 
-    # AST 수집기 클래스
-    class ASTCollector(ast.NodeVisitor):
-        def __init__(self):
-            self.functions = []
-            self.classes = []
-            self.imports = []
-            self.globals = []
-            self._current_class = None
-
-        def visit_FunctionDef(self, node):
-            self._collect_function(node, is_async=False)
-            self.generic_visit(node)
-
-        def visit_AsyncFunctionDef(self, node):
-            self._collect_function(node, is_async=True)
-            self.generic_visit(node)
-
-        def _collect_function(self, node, is_async):
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):
             func_info = {
                 'name': node.name,
                 'line': node.lineno,
-                'args': [arg.arg for arg in node.args.args],
-                'is_async': is_async,
-                'decorators': [get_type_repr(d) for d in node.decorator_list],
-                'returns': get_type_repr(node.returns),
-                'docstring': ast.get_docstring(node)
+                'args': [],
+                'return_type': get_type_repr(node.returns) if node.returns else None,
+                'is_async': isinstance(node, ast.AsyncFunctionDef),
+                'decorators': [get_type_repr(d) for d in node.decorator_list]
             }
 
-            if hasattr(node, 'end_lineno'):
-                func_info['end_line'] = node.end_lineno
+            for arg in node.args.args:
+                arg_info = {
+                    'name': arg.arg,
+                    'type': get_type_repr(arg.annotation) if arg.annotation else None
+                }
+                func_info['args'].append(arg_info)
 
-            if self._current_class is not None:
-                self._current_class['methods'].append(func_info)
-            else:
-                self.functions.append(func_info)
+            functions.append(func_info)
 
-        def visit_ClassDef(self, node):
+        elif isinstance(node, ast.ClassDef):
             class_info = {
                 'name': node.name,
                 'line': node.lineno,
+                'bases': [],
                 'methods': [],
-                'bases': [get_type_repr(base) for base in node.bases],
-                'decorators': [get_type_repr(d) for d in node.decorator_list],
-                'docstring': ast.get_docstring(node)
+                'decorators': [get_type_repr(d) for d in node.decorator_list]
             }
 
-            if hasattr(node, 'end_lineno'):
-                class_info['end_line'] = node.end_lineno
+            for base in node.bases:
+                base_name = get_type_repr(base)
+                if base_name:
+                    class_info['bases'].append(base_name)
 
-            self.classes.append(class_info)
+            for item in node.body:
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    method_info = {
+                        'name': item.name,
+                        'line': item.lineno,
+                        'is_async': isinstance(item, ast.AsyncFunctionDef),
+                        'args': [arg.arg for arg in item.args.args]
+                    }
+                    class_info['methods'].append(method_info)
 
-            old_class = self._current_class
-            self._current_class = class_info
-            self.generic_visit(node)
-            self._current_class = old_class
+            classes.append(class_info)
 
-        def visit_Import(self, node):
-            for alias in node.names:
-                self.imports.append(alias.name)
-
-        def visit_ImportFrom(self, node):
-            if node.module:
-                self.imports.append(node.module)
-
-        def visit_Assign(self, node):
-            if self._current_class is None:
-                for target in node.targets:
-                    if isinstance(target, ast.Name):
-                        self.globals.append({
-                            'name': target.id,
-                            'line': node.lineno,
-                            'is_constant': target.id.isupper()
-                        })
-
-    # 파일 읽기
-    try:
-        content = Path(path).read_text(encoding='utf-8')
-    except FileNotFoundError:
-        return err(f'File not found: {path}')
-    except PermissionError:
-        return err(f'Permission denied: {path}')
-    except UnicodeDecodeError as e:
-        return err(f'Encoding error: {e}')
-    except Exception as e:
-        return err(f'Failed to read file: {e}')
-
-    # AST 파싱
-    try:
-        tree = ast.parse(content, filename=path)
-    except SyntaxError as e:
-        return err(f'Syntax error at line {e.lineno}: {e.msg}')
-    except Exception as e:
-        return err(f'Parse error: {e}')
-
-    # 정보 수집
-    collector = ASTCollector()
-    collector.visit(tree)
-
-    # 중복 제거
-    collector.imports = list(dict.fromkeys(collector.imports))
-
-    return ok({
-        'functions': collector.functions,
-        'classes': collector.classes,
-        'imports': collector.imports,
-        'globals': collector.globals
-    }, total_lines=content.count('\n') + 1, path=path)
-def view(path: str, name: str) -> Dict[str, Any]:
-    """특정 함수나 클래스의 코드 보기
-
-    Returns:
-        성공: {'ok': True, 'data': '코드 내용', 'line_start': 10, 'line_end': 20}
-        실패: {'ok': False, 'error': 에러메시지}
-    """
-    try:
-        lines = Path(path).read_text(encoding='utf-8').splitlines()
-
-        # AST로 위치 찾기
-        tree = ast.parse('\n'.join(lines))
-
-        for node in tree.body:
-            node_name = None
-
-            if isinstance(node, ast.FunctionDef) and node.name == name:
-                node_name = node.name
-            elif isinstance(node, ast.ClassDef) and node.name == name:
-                node_name = node.name
-            else:
-                # 클래스 내부 메서드도 확인
-                if isinstance(node, ast.ClassDef):
-                    for item in node.body:
-                        if isinstance(item, ast.FunctionDef) and item.name == name:
-                            node = item
-                            node_name = f"{node.name}.{item.name}"
-                            break
-
-            if node_name:
-                start = node.lineno - 1
-                end = getattr(node, 'end_lineno', start + 1)
-
-                code_lines = lines[start:end]
-                return ok(
-                    '\n'.join(code_lines),
-                    line_start=start + 1,
-                    line_end=end,
-                    type='function' if isinstance(node, ast.FunctionDef) else 'class'
-                )
-
-        return err(f"'{name}' not found in {path}")
-
-    except Exception as e:
-        return err(f"View error: {e}", path=path)
+    return {
+        'functions': functions,
+        'classes': classes,
+        'imports': [node for node in ast.walk(tree) if isinstance(node, (ast.Import, ast.ImportFrom))],
+        'file': filepath,
+        'lines': len(content.splitlines())
+    }
 
 
-def safe_replace(path: str, old: str, new: str, preview: bool = False, validate: bool = False) -> Dict[str, Any]:
-    """지능형 코드 교체 - 자동으로 최적의 방법 선택
-    
-    Args:
-        path: 파일 경로
-        old: 찾을 패턴
-        new: 교체할 패턴
-        preview: True면 미리보기만, False면 실제 수정
-    
-    Returns:
-        성공: {'ok': True, 'data': {'replacements': N, 'mode': 'ast'/'text', 'backup': path}, 'preview': diff}
-        실패: {'ok': False, 'error': 메시지}
-    
-    Examples:
-        # 함수 호출 변경 (AST 모드 자동 감지)
-        safe_replace("app.py", "print", "logger.info")
-        
-        # 미리보기
-        result = safe_replace("test.py", "old_var", "new_var", preview=True)
-        print(result['preview'])
-    """
-    try:
-        from pathlib import Path
-        import shutil
-        import difflib
-        
-        p = Path(path)
-        if not p.exists():
-            return err(f"File not found: {path}")
-            
-        # 파일 읽기
-        content = p.read_text(encoding='utf-8')
-        
-        # 모드 자동 감지
-        mode = "text"  # 기본값
-        
-        # Python 파일이고 유효한 식별자면 AST 모드 고려
-        if path.endswith('.py') and old.isidentifier() and new.isidentifier():
-            try:
-                # libcst 사용 가능한지 확인
-                import libcst as cst
-                
-                # 간단한 AST 파싱 테스트
-                tree = cst.parse_module(content)
-                mode = "ast"
-            except:
-                mode = "text"
-        
-        # 교체 수행
-        if mode == "text":
-            # 단순 텍스트 교체
-            occurrences = content.count(old)
-            if occurrences == 0:
-                return ok({'replacements': 0, 'mode': mode}, message="No matches found")
-                
-            new_content = content.replace(old, new)
-            replacements = occurrences
-            
-        else:  # mode == "ast"
-            try:
-                import libcst as cst
-                
-                # AST 기반 교체를 위한 Transformer
-                class NameReplacer(cst.CSTTransformer):
-                    def __init__(self, old_name: str, new_name: str):
-                        self.old_name = old_name
-                        self.new_name = new_name
-                        self.replacements = 0
-                        
-                    def visit_Name(self, node: cst.Name) -> None:
-                        # 변수명/함수명 방문
-                        pass
-                        
-                    def leave_Name(self, original_node: cst.Name, updated_node: cst.Name) -> cst.Name:
-                        # 이름 교체
-                        if updated_node.value == self.old_name:
-                            self.replacements += 1
-                            return updated_node.with_changes(value=self.new_name)
-                        return updated_node
-                    
-                    def leave_Call(self, original_node: cst.Call, updated_node: cst.Call) -> cst.Call:
-                        # 함수 호출 처리
-                        if isinstance(updated_node.func, cst.Name) and updated_node.func.value == self.old_name:
-                            # 이미 leave_Name에서 처리됨
-                            pass
-                        return updated_node
-                
-                # 파싱 및 변환
-                tree = cst.parse_module(content)
-                replacer = NameReplacer(old, new)
-                modified_tree = tree.visit(replacer)
-                new_content = modified_tree.code
-                replacements = replacer.replacements
-                
-                if replacements == 0:
-                    return ok({'replacements': 0, 'mode': mode}, message="No matches found")
-                    
-                # 문법 검증
-                compile(new_content, path, 'exec')
-                
-            except SyntaxError as e:
-                # AST 모드 실패 시 텍스트 모드로 폴백
-                mode = "text"
-                occurrences = content.count(old)
-                if occurrences == 0:
-                    return ok({'replacements': 0, 'mode': mode}, message="No matches found")
-                new_content = content.replace(old, new)
-                replacements = occurrences
-            except Exception as e:
-                # libcst 관련 오류
-                return err(f"AST parsing failed: {e}")
-        
-        # 미리보기 모드
-        if preview:
-            diff = difflib.unified_diff(
-                content.splitlines(keepends=True),
-                new_content.splitlines(keepends=True),
-                fromfile=f"{path} (original)",
-                tofile=f"{path} (modified)",
-                n=3
-            )
-            diff_text = ''.join(diff)
-            
-            return ok({
-                'replacements': replacements,
-                'mode': mode,
-                'preview': diff_text
-            })
-        
-        # validate 모드: 수정 후 AST 검증
-        if validate and not preview:
-            # 수정된 내용으로 AST 검증
-            try:
-                import ast
-                modified_content = original_content
-                for old_text, new_text in replacements:
-                    modified_content = modified_content.replace(old_text, new_text)
+@wrap_output
+def view(filepath: str, target: Optional[str] = None) -> Union[str, Dict[str, Any]]:
+    """View code content with optional target focus."""
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"File not found: {filepath}")
 
-                # AST 파싱으로 구문 검증
-                ast.parse(modified_content)
-                # 추가로 compile 테스트
-                compile(modified_content, path, 'exec')
-            except SyntaxError as e:
-                return Response(
-                    ok=False,
-                    error=f"구문 오류로 수정 취소: Line {e.lineno} - {e.msg}",
-                    line=e.lineno,
-                    validate_failed=True
-                )
-            except Exception as e:
-                return Response(
-                    ok=False,
-                    error=f"검증 실패로 수정 취소: {str(e)}",
-                    validate_failed=True
-                )
+    with open(filepath, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
 
-        # 실제 수정
-        # 백업 생성
-        backup_path = f"{path}.backup"
-        shutil.copy2(path, backup_path)
-        
-        # 파일 쓰기
-        # validate 모드: AST 검증 후 저장
-        if validate and path.endswith('.py'):
-            try:
-                import ast
-                ast.parse(new_content)
-                # 추가로 compile 검증
-                compile(new_content, path, 'exec')
-            except SyntaxError as e:
-                # 구문 오류 시 수정 취소
-                return err(f"Syntax error after replacement: Line {e.lineno} - {e.msg}")
-            except Exception as e:
-                return err(f"Validation failed: {str(e)}")
+    if target is None:
+        return ''.join(lines)
 
-        p.write_text(new_content, encoding='utf-8')
-        
-        return ok({
-            'replacements': replacements,
-            'mode': mode,
-            'backup': backup_path
-        })
-        
-    except Exception as e:
-        return err(f"Replace failed: {e}")
+    # Parse file to find target
+    parsed = parse(filepath)
+    if isinstance(parsed, dict) and 'data' in parsed:
+        parsed = parsed['data']
 
+    target_line = None
+    target_type = None
 
-def replace(path: str, old: str, new: str, count: int = 1) -> Dict[str, Any]:
-    """파일에서 텍스트 교체
+    # Search in functions
+    for func in parsed.get('functions', []):
+        if func['name'] == target:
+            target_line = func['line']
+            target_type = 'function'
+            break
 
-    Args:
-        path: 파일 경로
-        old: 찾을 텍스트
-        new: 교체할 텍스트
-        count: 교체 횟수 (기본값: 1, -1이면 모두 교체)
-
-    Returns:
-        성공: {'ok': True, 'data': 교체된 횟수, 'backup': 백업 경로}
-        실패: {'ok': False, 'error': 에러메시지}
-    """
-    try:
-        import shutil
-        p = Path(path)
-
-        if not p.exists():
-            return err(f"File not found: {path}")
-
-        content = p.read_text(encoding='utf-8')
-
-        # 교체할 내용이 있는지 확인
-        occurrences = content.count(old)
-        if occurrences == 0:
-            return ok(0, message="No matches found")
-
-        # 백업 생성
-        backup_path = f"{path}.backup"
-        shutil.copy2(path, backup_path)
-
-        # 교체
-        if count == -1:
-            new_content = content.replace(old, new)
-            replaced = occurrences
-        else:
-            new_content = content.replace(old, new, count)
-            replaced = min(count, occurrences)
-
-        # 새 파일 쓰기
-        p.write_text(new_content, encoding='utf-8')
-
-        return ok(replaced, backup=backup_path, path=path)
-
-    except Exception as e:
-        return err(f"Replace error: {e}", path=path)
-
-
-def insert(path: str, marker: str, code: str, after: bool = True) -> Dict[str, Any]:
-    """마커 위치에 코드 삽입
-
-    Args:
-        path: 파일 경로
-        marker: 삽입 위치를 표시하는 텍스트
-        code: 삽입할 코드
-        after: True면 마커 뒤에, False면 마커 앞에 삽입
-
-    Returns:
-        성공: {'ok': True, 'data': '삽입됨', 'line': 삽입된 줄 번호}
-        실패: {'ok': False, 'error': 에러메시지}
-    """
-    try:
-        lines = Path(path).read_text(encoding='utf-8').splitlines()
-
-        # 마커 찾기
-        insert_line = None
-        for i, line in enumerate(lines):
-            if marker in line:
-                insert_line = i + 1 if after else i
+    # Search in classes
+    if target_line is None:
+        for cls in parsed.get('classes', []):
+            if cls['name'] == target:
+                target_line = cls['line']
+                target_type = 'class'
                 break
 
-        if insert_line is None:
-            return err(f"Marker '{marker}' not found", path=path)
+            # Search in methods
+            for method in cls.get('methods', []):
+                if method['name'] == target or f"{cls['name']}.{method['name']}" == target:
+                    target_line = method['line']
+                    target_type = 'method'
+                    break
 
-        # 코드 삽입
-        code_lines = code.splitlines()
+    if target_line is None:
+        # Try to find as a text pattern
+        for i, line in enumerate(lines, 1):
+            if target in line:
+                target_line = i
+                target_type = 'text'
+                break
 
-        # 들여쓰기 맞추기 (마커 줄의 들여쓰기 사용)
-        if 0 <= insert_line - 1 < len(lines):
-            marker_line = lines[insert_line - 1]
-            indent = len(marker_line) - len(marker_line.lstrip())
-            code_lines = [' ' * indent + line if line.strip() else line for line in code_lines]
+    if target_line is None:
+        return f"Target '{target}' not found in {filepath}"
 
-        # 삽입
-        for i, code_line in enumerate(code_lines):
-            lines.insert(insert_line + i, code_line)
+    # Calculate range (fixed 10 lines context)
+    context_lines = 10
+    start_line = max(1, target_line - context_lines)
+    end_line = min(len(lines), target_line + context_lines)
 
-        # 파일 쓰기
-        Path(path).write_text('\n'.join(lines), encoding='utf-8')
+    # Build output
+    output_lines = []
+    for i in range(start_line, end_line + 1):
+        line_num = str(i).rjust(4)
+        marker = '>>> ' if i == target_line else '    '
+        output_lines.append(f"{line_num} {marker}{lines[i-1].rstrip()}")
 
-        return ok('삽입됨', line=insert_line + 1, path=path)
-
-    except Exception as e:
-        return err(f"Insert error: {e}", path=path)
+    header = f"\n=== {filepath} - {target_type}: {target} (line {target_line}) ===\n"
+    return header + '\n'.join(output_lines)
 
 
-def functions(path: str) -> Dict[str, Any]:
-    """파일의 모든 함수 목록만 빠르게 추출
+@wrap_output
+def replace(
+    filepath: str, 
+    old_code: str, 
+    new_code: str,
+    fuzzy: bool = True,
+    threshold: float = 0.8,
+    preview: bool = False
+) -> Dict[str, Any]:
+    """
+    Replace code in a file with improved indentation handling and fuzzy matching.
+
+    Args:
+        filepath: Path to the file
+        old_code: Code to replace
+        new_code: New code
+        fuzzy: Enable fuzzy matching if exact match fails
+        threshold: Fuzzy matching threshold (0.0 to 1.0)
+        preview: If True, show preview without making changes
 
     Returns:
-        성공: {'ok': True, 'data': ['func1', 'func2', ...]}
-        실패: {'ok': False, 'error': 에러메시지}
+        Dict with operation status and details
     """
-    result = parse(path)
-    if not result['ok']:
-        return result
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"File not found: {filepath}")
 
-    func_names = [f['name'] for f in result['data']['functions']]
-    return ok(func_names, count=len(func_names))
+    with open(filepath, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    # Normalize line endings
+    old_code = old_code.replace('\r\n', '\n').replace('\r', '\n')
+    new_code = new_code.replace('\r\n', '\n').replace('\r', '\n')
+
+    # Remove trailing whitespace from old_code for better matching
+    old_lines = old_code.split('\n')
+    old_lines = [line.rstrip() for line in old_lines]
+    old_code_normalized = '\n'.join(old_lines)
+
+    # Find match
+    match_found = False
+    match_start = -1
+    match_end = -1
+    matched_text = ""
+
+    # Try exact match first (with normalized old_code)
+    if old_code_normalized in content:
+        match_start = content.index(old_code_normalized)
+        match_end = match_start + len(old_code_normalized)
+        matched_text = old_code_normalized
+        match_found = True
+
+    # Try fuzzy match if enabled and exact match failed
+    if not match_found and fuzzy:
+        match_result = find_fuzzy_match(content, old_code, threshold)
+        if match_result:
+            match_start, match_end, matched_text = match_result
+            match_found = True
+
+    if not match_found:
+        # Provide helpful error message
+        lines = content.split('\n')
+        snippet_lines = []
+        search_pattern = old_lines[0].strip() if old_lines else ""
+
+        for i, line in enumerate(lines):
+            if search_pattern and search_pattern in line:
+                start = max(0, i - 2)
+                end = min(len(lines), i + 3)
+                snippet_lines = lines[start:end]
+                break
+
+        error_msg = f"Pattern not found in {filepath}"
+        if snippet_lines:
+            error_msg += f"\nDid you mean this area?\n"
+            error_msg += '\n'.join(snippet_lines)
+
+        raise ValueError(error_msg)
+
+    # --- [FIX 3: Improved Indentation Detection and Application (Block vs Inline)] ---
+    # 1. Find the start of the line where the match begins.
+    # rfind returns -1 if not found (start of file), so +1 gives 0.
+    line_start_index = content.rfind('\n', 0, match_start) + 1
+
+    # 2. Get the prefix on that line before the match.
+    prefix = content[line_start_index:match_start]
+
+    # 3. Determine if it's an inline replacement (prefix contains non-whitespace code).
+    # We check if the prefix stripped of spaces/tabs is empty.
+    is_inline_replacement = prefix.strip(' \t') != ""
+    match_type = "exact" if matched_text == old_code_normalized else "fuzzy"
+
+    if not is_inline_replacement:
+        # Block-like replacement (prefix is only whitespace or empty).
+        # Standardize tabs in prefix for calculation
+        target_indent = len(prefix.replace('\t', '    '))
+
+        # Handle Case: Match includes indentation, but prefix is empty (starts at beginning of the line)
+        if target_indent == 0 and match_start == line_start_index:
+            # Use the indentation of the matched text itself as the target indent.
+            first_line_of_match = matched_text.split('\n')[0]
+
+            if first_line_of_match.strip():
+                # Calculate using spaces/tabs
+                standardized_match_line = first_line_of_match.replace('\t', '    ')
+                match_text_indent = len(standardized_match_line) - len(standardized_match_line.lstrip(' '))
+                target_indent = match_text_indent
+
+        # Apply indentation to all lines using the robust utility
+        adjusted_new_code = adjust_indentation(new_code, target_indent, preserve_relative=True)
+
+    else:
+        # Inline replacement.
+        alignment_column = len(prefix.replace('\t', '    '))
+
+        # We must NOT indent the first line, as it continues the existing line.
+        # Subsequent lines should align with the starting column.
+
+        lines = new_code.split('\n')
+        if len(lines) <= 1:
+            # Single line inline replacement, no adjustment needed.
+            adjusted_new_code = new_code
+        else:
+            first_line = lines[0]
+            # Subsequent lines (from the second line onwards)
+            # Join them back to a string to process with adjust_indentation
+            subsequent_lines_str = '\n'.join(lines[1:])
+
+            # Adjust subsequent lines to the alignment column, preserving relative structure.
+            adjusted_subsequent = adjust_indentation(subsequent_lines_str, alignment_column, preserve_relative=True)
+
+            # Combine
+            adjusted_new_code = first_line + '\n' + adjusted_subsequent
+
+    # Perform replacement
+    new_content = content[:match_start] + adjusted_new_code + content[match_end:]
+
+    if preview:
+        # Show preview
+        old_lines = matched_text.split('\n')
+        new_lines = adjusted_new_code.split('\n')
+
+        preview_text = "\n=== Preview of changes ===\n"
+        preview_text += f"Match Type: {match_type}, Inline: {is_inline_replacement}\n"
+        preview_text += "--- Old code ---\n"
+        for line in old_lines[:5]:
+            preview_text += f"- {line}\n"
+        if len(old_lines) > 5:
+            preview_text += f"  ... ({len(old_lines) - 5} more lines)\n"
+
+        preview_text += "\n+++ New code +++\n"
+        for line in new_lines[:5]:
+            preview_text += f"+ {line}\n"
+        if len(new_lines) > 5:
+            preview_text += f"  ... ({len(new_lines) - 5} more lines)\n"
+
+        return {
+            'preview': preview_text,
+            'will_replace': True,
+            'match_type': match_type
+        }
+
+    # Verify syntax if it's a Python file
+    if filepath.endswith('.py'):
+        try:
+            ast.parse(new_content)
+        except SyntaxError as e:
+            error_msg = f"Syntax error after replacement: {e}"
+            error_msg += f"\nAt line {e.lineno}: {e.text}" if e.text else ""
+            raise ValueError(error_msg)
+
+    # Write the file
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(new_content)
+
+    return {
+        'status': 'success',
+        'file': filepath,
+        'matched': matched_text[:100] + '...' if len(matched_text) > 100 else matched_text,
+        'match_type': match_type,
+        'lines_changed': len(matched_text.split('\n')),
+        'new_lines': len(adjusted_new_code.split('\n'))
+    }
 
 
-def classes(path: str) -> Dict[str, Any]:
-    """파일의 모든 클래스 목록만 빠르게 추출
+@wrap_output  
+def insert(
+    filepath: str,
+    content_to_insert: str,  # Renamed 'content' parameter to avoid confusion with file content
+    position: Optional[Union[int, str]] = None,
+    after: bool = False,
+    before: bool = False,
+    auto_indent: bool = True
+) -> Dict[str, Any]:
+    """
+    Insert content into a file at specified position with smart indentation.
+
+    Args:
+        filepath: Path to the file
+        content_to_insert: Content to insert
+        position: Line number (int) or marker text (str) to find position
+        after: Insert after the position (default: False)
+        before: Insert before the position (default: True if not after)
+        auto_indent: Automatically match indentation (default: True)
 
     Returns:
-        성공: {'ok': True, 'data': ['Class1', 'Class2', ...]}
-        실패: {'ok': False, 'error': 에러메시지}
+        Dict with operation status and details
     """
-    result = parse(path)
-    if not result['ok']:
-        return result
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"File not found: {filepath}")
 
-    class_names = [c['name'] for c in result['data']['classes']]
-    return ok(class_names, count=len(class_names))
+    with open(filepath, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    # Normalize line endings in content to insert
+    content_to_insert = content_to_insert.replace('\r\n', '\n').replace('\r', '\n')
+
+    # Determine insert position (insert_line is 0-based index)
+    insert_line = 0
+
+    if position is None:
+        # Insert at beginning
+        insert_line = 0
+    elif isinstance(position, int):
+        # Direct line number (1-based input)
+        insert_line = max(0, min(position - 1, len(lines)))
+        if after:
+            insert_line += 1
+    elif isinstance(position, str):
+        # Find marker text
+        found = False
+        for i, line in enumerate(lines):
+            if position in line:
+                insert_line = i
+                if after:
+                    insert_line += 1
+                found = True
+                break
+
+        if not found:
+            # Try fuzzy match
+            from difflib import SequenceMatcher
+            best_ratio = 0
+            best_line = 0
+
+            for i, line in enumerate(lines):
+                ratio = SequenceMatcher(None, position.strip(), line.strip()).ratio()
+                if ratio > best_ratio:
+                    best_ratio = ratio
+                    best_line = i
+
+            if best_ratio > 0.6:  # Threshold for fuzzy match
+                insert_line = best_line
+                if after:
+                    insert_line += 1
+            else:
+                raise ValueError(f"Marker text '{position}' not found in file")
+
+    # --- [FIX 2: Auto-detect indentation and apply correctly] ---
+    if auto_indent:
+        # 1. Determine the target indentation level based on context
+        context_line_str = ""
+
+        # Determine the context line to infer indentation
+        # Strategy: Prefer the line we are inserting before. If empty, look around.
+        if insert_line < len(lines):
+            context_line_str = lines[insert_line]
+
+        # If the immediate context line is empty or we are at EOF, try to find a better context
+        if not context_line_str.strip():
+            # Look behind if possible
+            if insert_line > 0:
+                for i in range(insert_line - 1, -1, -1):
+                    if lines[i].strip():
+                        context_line_str = lines[i]
+                        break
+            # If still empty, look ahead
+            if not context_line_str.strip() and insert_line < len(lines):
+                for i in range(insert_line, len(lines)):
+                    if lines[i].strip():
+                        context_line_str = lines[i]
+                        break
+
+        # Calculate indentation
+        if context_line_str and context_line_str.strip():
+            # Standardize tabs in context line for calculation
+            standardized_context = context_line_str.replace('\t', '    ')
+            target_indent = len(standardized_context) - len(standardized_context.lstrip(' '))
+        else:
+            target_indent = 0
+
+        # 2. Apply indentation using the robust adjust_indentation function
+        # This preserves the relative indentation within the content block.
+        content_to_insert = adjust_indentation(content_to_insert, target_indent, preserve_relative=True)
+
+    # Ensure content ends with newline if needed (and not empty)
+    if not content_to_insert.endswith('\n') and content_to_insert.strip():
+        content_to_insert += '\n'
+
+    # Insert content
+    if insert_line >= len(lines):
+        # Append at end
+        if lines and not lines[-1].endswith('\n'):
+            lines[-1] += '\n'
+        lines.append(content_to_insert)
+    else:
+        # Insert at position
+        lines.insert(insert_line, content_to_insert)
+
+    # Write back
+    new_content = ''.join(lines)
+
+    # Verify syntax for Python files
+    if filepath.endswith('.py'):
+        try:
+            ast.parse(new_content)
+        except SyntaxError as e:
+            error_msg = f"Syntax error after insertion: {e}"
+            error_msg += f"\nAt line {e.lineno}: {e.text}" if e.text else ""
+            raise ValueError(error_msg)
+
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(new_content)
+
+    return {
+        'status': 'success',
+        'file': filepath,
+        'inserted_at': insert_line + 1,  # Convert to 1-based
+        'lines_added': len(content_to_insert.splitlines()),
+        'total_lines': len(new_content.splitlines())
+    }
+
+
+@wrap_output
+def delete(
+    filepath: str,
+    target: Union[int, str, Tuple[int, int], List[int]],
+    mode: str = 'auto',
+    preview: bool = False
+) -> Dict[str, Any]:
+    """
+    Delete content from a file with multiple targeting options.
+
+    Args:
+        filepath: Path to the file
+        target: What to delete - can be:
+            - int: Single line number
+            - str: Pattern to search and delete
+            - Tuple[int, int]: Range of lines (start, end)
+            - List[int]: Multiple specific lines
+        mode: Deletion mode:
+            - 'auto': Auto-detect based on target
+            - 'line': Delete single line
+            - 'lines': Delete multiple lines
+            - 'range': Delete range of lines
+            - 'pattern': Delete lines matching pattern
+            - 'block': Delete code block (class/function)
+            - 'empty': Delete empty lines
+        preview: Show preview without deleting
+
+    Returns:
+        Dict with operation status and details
+    """
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"File not found: {filepath}")
+
+    with open(filepath, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    original_count = len(lines)
+    lines_to_delete = set()
+
+    # Auto-detect mode if needed
+    if mode == 'auto':
+        if isinstance(target, int):
+            mode = 'line'
+        elif isinstance(target, tuple) and len(target) == 2:
+            mode = 'range'
+        elif isinstance(target, list):
+            mode = 'lines'
+        elif isinstance(target, str):
+            # Check if it's a code structure
+            if any(keyword in target for keyword in ['def ', 'class ', 'async def ']):
+                mode = 'block'
+            else:
+                mode = 'pattern'
+
+    # Process based on mode
+    if mode == 'line':
+        if isinstance(target, int):
+            if 1 <= target <= len(lines):
+                lines_to_delete.add(target - 1)  # Convert to 0-based
+            else:
+                raise ValueError(f"Line {target} out of range (1-{len(lines)})")
+
+    elif mode == 'lines':
+        if isinstance(target, list):
+            for line_num in target:
+                if 1 <= line_num <= len(lines):
+                    lines_to_delete.add(line_num - 1)
+
+    elif mode == 'range':
+        if isinstance(target, tuple) and len(target) == 2:
+            start, end = target
+            start = max(1, start)
+            end = min(len(lines), end)
+            for i in range(start - 1, end):
+                lines_to_delete.add(i)
+
+    elif mode == 'pattern':
+        if isinstance(target, str):
+            pattern = re.compile(target) if '*' not in target else None
+            for i, line in enumerate(lines):
+                if pattern:
+                    if pattern.search(line):
+                        lines_to_delete.add(i)
+                else:
+                    if target in line:
+                        lines_to_delete.add(i)
+
+    elif mode == 'block':
+        if isinstance(target, str):
+            # Find the start of the block
+            block_start = -1
+            for i, line in enumerate(lines):
+                if target in line:
+                    block_start = i
+                    break
+
+            if block_start >= 0:
+                # Determine indentation level
+                indent_level = len(lines[block_start]) - len(lines[block_start].lstrip())
+
+                # Find the end of the block
+                lines_to_delete.add(block_start)
+                for i in range(block_start + 1, len(lines)):
+                    line = lines[i]
+                    if line.strip():  # Non-empty line
+                        line_indent = len(line) - len(line.lstrip())
+                        if line_indent <= indent_level:
+                            break  # End of block
+                    lines_to_delete.add(i)
+
+    elif mode == 'empty':
+        for i, line in enumerate(lines):
+            if not line.strip():
+                lines_to_delete.add(i)
+
+    if not lines_to_delete:
+        return {
+            'status': 'no_match',
+            'message': f"No lines matched the target: {target}"
+        }
+
+    if preview:
+        preview_lines = []
+        for i in sorted(lines_to_delete):
+            preview_lines.append(f"Line {i + 1}: {lines[i].rstrip()}")
+
+        return {
+            'preview': True,
+            'will_delete': len(lines_to_delete),
+            'lines': preview_lines[:10],  # Show first 10
+            'total_lines': original_count
+        }
+
+    # Create new content without deleted lines
+    new_lines = [line for i, line in enumerate(lines) if i not in lines_to_delete]
+    new_content = ''.join(new_lines)
+
+    # Verify syntax for Python files
+    if filepath.endswith('.py') and new_content.strip():
+        try:
+            ast.parse(new_content)
+        except SyntaxError as e:
+            error_msg = f"Syntax error after deletion: {e}"
+            error_msg += f"\nAt line {e.lineno}: {e.text}" if e.text else ""
+            raise ValueError(error_msg)
+
+    # Write back
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(new_content)
+
+    return {
+        'status': 'success',
+        'file': filepath,
+        'deleted_lines': len(lines_to_delete),
+        'original_lines': original_count,
+        'remaining_lines': len(new_lines),
+        'mode': mode
+    }
+
+
+@wrap_output
+def functions(filepath: str) -> List[Dict[str, Any]]:
+    """Get list of functions in a Python file."""
+    parsed = parse(filepath)
+    if isinstance(parsed, dict) and 'data' in parsed:
+        return parsed['data'].get('functions', [])
+    return parsed.get('functions', [])
+
+@wrap_output
+def classes(filepath: str) -> List[Dict[str, Any]]:
+    """Get list of classes in a Python file."""
+    parsed = parse(filepath)
+    if isinstance(parsed, dict) and 'data' in parsed:
+        return parsed['data'].get('classes', [])
+    return parsed.get('classes', [])
+
+# Export all functions
+__all__ = [
+    'parse',
+    'view', 
+    'replace',
+    'insert',
+    'delete',
+    'functions',
+    'classes'
+]

@@ -4,8 +4,12 @@ def _safe_import(module_path, names, package=None):
     """안전한 import - 실패 시 기본값 반환"""
     results = {}
     try:
-        if package:
-            module = __import__(module_path, fromlist=names, package=package)
+        # __import__는 package 키워드 인자를 지원하지 않음
+        # package는 상대 import 시 현재 패키지명으로 사용
+        if package and module_path.startswith('.'):
+            # 상대 import를 절대 import로 변환
+            full_module_path = package + module_path
+            module = __import__(full_module_path, fromlist=names)
         else:
             module = __import__(module_path, fromlist=names)
 
@@ -144,7 +148,11 @@ __all__ = [
     'search_files',
     'view',
     'write',
-    'write_json'
+    'write_json',
+    'fix_task_numbers',
+    'validate_flow_response', 
+    'get_task_safe',
+    'git_status_normalized'
 ]
 
 
@@ -161,7 +169,15 @@ try:
         web_extract_batch, web_extract_attributes, web_extract_form,
         # 레코딩 함수
         web_record_start, web_record_stop, web_record_status,
-        web_demo
+        web_demo,
+        # 세션 유지 함수 (2025-08-06)
+        web_connect, web_disconnect, web_check_session,
+        web_list_sessions, web_goto_session,
+        # 팝업 처리 함수 (2025-08-06)
+        handle_popup, handle_alert, wait_and_click,
+        handle_modal_by_class, close_popup, confirm_popup, cancel_popup,
+        # 기존 브라우저 연결 함수 (2025-08-06)
+        connect_to_existing_browser, launch_browser_with_debugging, get_browser_ws_endpoint
     )
     
     # __all__에 web 함수들 추가
@@ -172,7 +188,15 @@ try:
         'web_screenshot', 'web_generate_script', 'web_get_data',
         'web_extract_batch', 'web_extract_attributes', 'web_extract_form',
         'web_record_start', 'web_record_stop', 'web_record_status',
-        'web_demo'
+        'web_demo',
+        # 세션 유지 함수
+        'web_connect', 'web_disconnect', 'web_check_session',
+        'web_list_sessions', 'web_goto_session',
+        # 팝업 처리 함수
+        'handle_popup', 'handle_alert', 'wait_and_click',
+        'handle_modal_by_class', 'close_popup', 'confirm_popup', 'cancel_popup',
+        # 기존 브라우저 연결 함수
+        'connect_to_existing_browser', 'launch_browser_with_debugging', 'get_browser_ws_endpoint'
     ])
 except ImportError as e:
     print(f"Warning: Web automation helpers not available: {e}")
@@ -189,3 +213,11 @@ def get_flow_api():
 
     manager = UltraSimpleFlowManager()
     return FlowAPI(manager)
+# Task Logger Helpers (v76.1)
+from .task_logger_helpers import (
+    get_task_logger,
+    log_test_result,
+    log_code_change,
+    log_analysis,
+    log_progress
+)

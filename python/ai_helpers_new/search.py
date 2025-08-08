@@ -9,9 +9,32 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from .util import ok, err
 
+# 정규식 캐시 (성능 최적화)
+_regex_cache = {}
+_MAX_CACHE_SIZE = 100
 
-def search_files(pattern: str, path: str = ".", recursive: bool = True, max_depth: Optional[int] = None) -> Dict[str, Any]:
-    """파일명 패턴으로 파일 검색
+def _get_compiled_regex(pattern: str, flags=re.IGNORECASE):
+    """컴파일된 정규식을 캐시에서 가져오거나 새로 생성"""
+    cache_key = (pattern, flags)
+
+    if cache_key not in _regex_cache:
+        # 캐시 크기 제한
+        if len(_regex_cache) >= _MAX_CACHE_SIZE:
+            # LRU 방식: 가장 오래된 절반 제거
+            keys = list(_regex_cache.keys())
+            for key in keys[:_MAX_CACHE_SIZE // 2]:
+                del _regex_cache[key]
+
+        _regex_cache[cache_key] = re.compile(pattern, flags)
+
+    return _regex_cache[cache_key]
+
+
+
+
+def search_files(pattern: str, path: str = ".", recursive: bool = True, 
+                 max_depth: Optional[int] = None) -> Dict[str, Any]:
+    """파일명 패턴으로 파일 검색 (최적화 버전)
 
     Args:
         pattern: 파일명 패턴 (예: "*.py", "test_*.txt", "test")
@@ -22,55 +45,56 @@ def search_files(pattern: str, path: str = ".", recursive: bool = True, max_dept
     Returns:
         성공: {'ok': True, 'data': ['path1', 'path2', ...], 'count': 개수}
         실패: {'ok': False, 'error': 에러메시지}
-
-    Examples:
-        h.search_files("*.py")  # 모든 .py 파일
-        h.search_files("test")  # 'test'가 포함된 모든 파일
-        h.search_files("test*", "src/", max_depth=2)  # src/ 아래 2단계까지
     """
     try:
-        found_files = []
-        search_path = Path(path)
+        from pathlib import Path
+        import fnmatch
 
-        if not search_path.exists():
+        # 자동 와일드카드 변환
+        if '*' not in pattern and '?' not in pattern:
+            pattern = f'*{pattern}*'
+
+        base_path = Path(path).resolve()
+        if not base_path.exists():
             return err(f"Path not found: {path}")
 
-        # 패턴에 와일드카드가 없으면 양쪽에 추가
-        if '*' not in pattern and '?' not in pattern:
-            pattern = f"*{pattern}*"
+        results = []
 
-        # recursive=False인 경우 max_depth를 1로 설정
-        if not recursive and max_depth is None:
-            max_depth = 1
+        # 제외 패턴 (성능 향상)
+        exclude_dirs = {'__pycache__', '.git', 'node_modules', '.pytest_cache', 
+                       'dist', 'build', '.venv', 'venv', '.idea', '.vscode'}
 
-        # 현재 깊이 추적을 위한 헬퍼 함수
-        def search_with_depth(current_path, current_depth=0):
-            # max_depth 체크
-            if max_depth is not None and current_depth >= max_depth:
-                return
+        if recursive:
+            # pathlib의 rglob 사용 - 훨씬 빠름
+            for file_path in base_path.rglob(pattern):
+                # 제외 디렉토리 체크
+                if any(exc in file_path.parts for exc in exclude_dirs):
+                    continue
 
-            try:
-                for item in current_path.iterdir():
-                    if item.is_file() and fnmatch.fnmatch(item.name, pattern):
-                        rel_path = os.path.relpath(item, path)
-                        found_files.append(rel_path)
-                    elif item.is_dir() and not item.name.startswith('.'):
-                        if recursive and (max_depth is None or current_depth < max_depth - 1):
-                            search_with_depth(item, current_depth + 1)
-            except PermissionError:
-                pass  # 권한 없는 디렉토리 무시
+                if file_path.is_file():
+                    rel_path = file_path.relative_to(base_path)
 
-        # 검색 시작
-        search_with_depth(search_path)
+                    # max_depth 체크
+                    if max_depth and len(rel_path.parts) > max_depth:
+                        continue
 
-        return ok(sorted(found_files), count=len(found_files), pattern=pattern)
+                    # Windows 경로 정규화
+                    results.append(str(rel_path).replace(os.sep, '/'))
+        else:
+            # 현재 디렉토리만
+            for file_path in base_path.glob(pattern):
+                if file_path.is_file():
+                    results.append(file_path.name)
+
+        return ok(results, count=len(results))
 
     except Exception as e:
-        return err(f"Search files error: {e}")
+        return err(f"Search failed: {str(e)}")
 
 
-def search_code(pattern: str, path: str = ".", file_pattern: str = "*", max_results: int = 100) -> Dict[str, Any]:
-    """파일 내용에서 패턴 검색 (정규식 지원)
+def search_code(pattern: str, path: str = ".", file_pattern: str = "*", 
+                max_results: int = 1000) -> Dict[str, Any]:
+    """파일 내용에서 패턴 검색 - 스트리밍 최적화 버전
 
     Args:
         pattern: 검색할 패턴 (정규식)
@@ -92,66 +116,70 @@ def search_code(pattern: str, path: str = ".", file_pattern: str = "*", max_resu
         실패: {'ok': False, 'error': 에러메시지}
     """
     try:
-        # 정규식 컴파일
+        # 정규식 컴파일 (캐시 사용)
+        regex = _get_compiled_regex(pattern, re.IGNORECASE)
+    except re.error as e:
+        return err(f"Invalid regex pattern: {e}")
+
+    # 파일 목록 가져오기
+    files_result = search_files(file_pattern, path)
+    if not files_result['ok']:
+        return files_result
+
+    results = []
+    files_searched = 0
+    truncated = False
+
+    # 바이너리 파일 확장자
+    binary_extensions = {'.pyc', '.pyo', '.exe', '.dll', '.so', '.dylib', 
+                        '.jpg', '.jpeg', '.png', '.gif', '.pdf', '.zip'}
+
+    for file_path in files_result['data']:
+        if max_results and len(results) >= max_results:
+            truncated = True
+            break
+
+        full_path = os.path.join(path, file_path)
+
+        # 바이너리 파일 스킵
+        if any(full_path.endswith(ext) for ext in binary_extensions):
+            continue
+
         try:
-            regex = re.compile(pattern, re.IGNORECASE)
-        except re.error as e:
-            return err(f"Invalid regex pattern: {e}")
+            # 스트리밍 방식으로 파일 읽기
+            with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
+                files_searched += 1
 
-        matches = []
-        files_searched = 0
+                for line_num, line in enumerate(f, 1):
+                    if max_results and len(results) >= max_results:
+                        truncated = True
+                        break
 
-        # 파일 목록 가져오기
-        files_result = h.search_files(file_pattern, path, recursive=True)
-        if not files_result['ok']:
-            return files_result
+                    # 매칭 확인
+                    match = regex.search(line)
+                    if match:
+                        results.append({
+                            'file': file_path.replace(os.sep, '/'),
+                            'line': line_num,
+                            'text': line.rstrip()[:200],  # 최대 200자
+                            'match': match.group(0)[:100]  # 최대 100자
+                        })
 
-        for file_path in files_result['data']:
-            # 파일 열기 전 체크 - 불필요한 I/O 방지
-            if len(matches) >= max_results:
-                break
-                
-            full_path = os.path.join(path, file_path)
+                    # 큰 파일에서 라인 제한
+                    if line_num > 10000:  # 10000줄 이상은 스킵
+                        break
 
-            # 바이너리 파일 스킵
-            if full_path.endswith(('.pyc', '.pyo', '.so', '.dll', '.exe')):
-                continue
+        except (IOError, OSError) as e:
+            # 파일 읽기 실패는 무시하고 계속
+            continue
+        except UnicodeDecodeError:
+            # 인코딩 오류는 무시
+            continue
 
-            try:
-                with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    files_searched += 1
-                    
-                    for line_num, line in enumerate(f, 1):
-                        match = regex.search(line)
-                        if match:
-                            matches.append({
-                                'file': file_path,
-                                'line': line_num,
-                                'text': line.rstrip(),
-                                'match': match.group(0)
-                            })
-                            
-                            # 정확한 수에 도달하면 즉시 반환
-                            if len(matches) == max_results:
-                                return ok(
-                                    matches,
-                                    count=len(matches),
-                                    files_searched=files_searched,
-                                    truncated=True
-                                )
-            except:
-                # 읽을 수 없는 파일은 스킵
-                continue
-
-        return ok(
-            matches,
-            count=len(matches),
-            files_searched=files_searched,
-            truncated=len(matches) >= max_results
-        )
-
-    except Exception as e:
-        return err(f"Search failed: {str(e)}")
+    return ok(results, 
+             count=len(results),
+             files_searched=files_searched,
+             truncated=truncated)
 
 
 def find_function(name: str, path: str = ".", strict: bool = False) -> Dict[str, Any]:
@@ -187,7 +215,7 @@ def find_function(name: str, path: str = ".", strict: bool = False) -> Dict[str,
     # 함수 정의 패턴
     pattern = rf'^\s*def\s+{re.escape(name)}\s*\('
 
-    result = h.search_code(pattern, path, "*.py")
+    result = search_code(pattern, path, "*.py")
     if not result['ok']:
         return result
 
@@ -217,9 +245,10 @@ def _find_function_ast(name: str, path: str) -> Dict[str, Any]:
 
     py_files = py_files_result['data'][:100]  # 성능을 위해 제한
 
-    for file_path in py_files:
+    for file_name in py_files:
         try:
             # 파일 읽기
+            file_path = os.path.join(path, file_name)
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
@@ -299,7 +328,7 @@ def find_class(name: str, path: str = ".", strict: bool = False) -> Dict[str, An
     # 클래스 정의 패턴
     pattern = rf'^\s*class\s+{re.escape(name)}\s*[\(:]'
 
-    result = h.search_code(pattern, path, "*.py")
+    result = search_code(pattern, path, "*.py")
     if not result['ok']:
         return result
 
@@ -329,9 +358,10 @@ def _find_class_ast(name: str, path: str) -> Dict[str, Any]:
 
     py_files = py_files_result['data'][:100]  # 성능을 위해 제한
 
-    for file_path in py_files:
+    for file_name in py_files:
         try:
             # 파일 읽기
+            file_path = os.path.join(path, file_name)
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
@@ -435,6 +465,9 @@ def _grep_file(file_path: Path, pattern: str, context: int = 0) -> List[Dict[str
     """파일 하나에서 grep 수행 (내부 함수)"""
     matches = []
     pattern_lower = pattern.lower()
+    # 정규식 캐시 사용 (옵션)
+    import re
+    use_regex = False  # 필요시 활성화
 
     try:
         lines = file_path.read_text(encoding='utf-8', errors='ignore').splitlines()
@@ -478,7 +511,7 @@ def find_in_file(file_path: str, pattern: str) -> Dict[str, Any]:
     if not Path(file_path).exists():
         return err(f"File not found: {file_path}")
 
-    result = h.search_code(pattern, os.path.dirname(file_path) or '.', 
+    result = search_code(pattern, os.path.dirname(file_path) or '.', 
                         os.path.basename(file_path))
 
     if result['ok']:

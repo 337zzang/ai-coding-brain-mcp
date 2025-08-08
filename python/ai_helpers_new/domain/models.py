@@ -17,6 +17,32 @@ class TaskStatus(Enum):
     DONE = "done"
     CANCELLED = "cancelled"
 
+    @classmethod
+    def _missing_(cls, value):
+        """대소문자 무관 및 별칭 처리"""
+        if isinstance(value, str):
+            # 소문자로 변환
+            value_lower = value.lower()
+
+            # 별칭 처리
+            aliases = {
+                'completed': 'done',
+                'canceled': 'cancelled',
+                'in progress': 'in_progress',
+                'inprogress': 'in_progress'
+            }
+
+            if value_lower in aliases:
+                value_lower = aliases[value_lower]
+
+            # Enum 값과 매칭
+            for member in cls:
+                if member.value == value_lower:
+                    return member
+
+        # 매칭 실패 시 None 반환
+        return None
+
 
 @dataclass
 class Task:
@@ -30,6 +56,7 @@ class Task:
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
     completed_at: Optional[str] = None
     assignee: Optional[str] = None
+    number: Optional[int] = None
     tags: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -45,6 +72,7 @@ class Task:
             "updated_at": self.updated_at,
             "completed_at": self.completed_at,
             "assignee": self.assignee,
+            "number": self.number,
             "tags": self.tags,
             "metadata": self.metadata
         }
@@ -56,7 +84,7 @@ class Task:
         valid_fields = {
             'id', 'title', 'description', 'status', 'priority',
             'created_at', 'updated_at', 'completed_at',
-            'assignee', 'tags', 'metadata'
+            'assignee', 'number', 'tags', 'metadata'
         }
 
         # 필터링된 데이터로 Task 생성

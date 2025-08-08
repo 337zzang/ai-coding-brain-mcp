@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-05T00:07:50.733977", "event_type": "TASK_INFO", "ts": "2025-08-05T00:07:50.733977", "type": "TASK_INFO", "title": "Task 4: 실행 히스토리 및 diff 추적", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-05T00:07:50.734986", "event_type": "DESIGN", "ts": "2025-08-05T00:07:50.734986", "type": "DESIGN", "content": "Task가 생성되었습니다."}

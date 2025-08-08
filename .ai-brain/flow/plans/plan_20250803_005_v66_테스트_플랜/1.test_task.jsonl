@@ -1,2 +1,0 @@
-{"timestamp": "2025-08-03T10:46:11.441549", "event_type": "TASK_INFO", "ts": "2025-08-03T10:46:11.441549", "type": "TASK_INFO", "title": "테스트 Task", "priority": "low", "estimate": "10m", "description": ""}
-{"timestamp": "2025-08-03T10:46:11.452933", "event_type": "TODO", "ts": "2025-08-03T10:46:11.452933", "type": "TODO", "items": ["TODO #1: 테스트"]}

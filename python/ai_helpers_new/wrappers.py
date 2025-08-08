@@ -1,9 +1,9 @@
+from typing import Dict, Any, Optional, List
 
 """
 AI Helpers 표준화 래퍼
 기존 함수를 수정하지 않고 표준 API 패턴 제공
 """
-from typing import Dict, Any, List, Optional
 from .core.fs import scan_directory as core_scan_directory, ScanOptions
 
 # 표준 패턴: {ok: bool, data: Any, error?: str}
@@ -84,11 +84,31 @@ def scan_directory(path: str = '.',
     """
     try:
         if output == 'list':
-            # 기존 방식 - core 사용
+            # 개선된 방식 - 구조화된 데이터 반환 (2025-08-07)
             options = ScanOptions(output="flat", max_depth=max_depth)
             result = core_scan_directory(path, options=options)
             if result["ok"]:
-                return ensure_response(result["data"], count=len(result["data"]), path=path)
+                items = result["data"]
+                # 파일과 디렉토리 분리
+                import os
+                directories = []
+                files = []
+                for item in items:
+                    if item.endswith('/') or item.endswith(os.sep):
+                        directories.append(item)
+                    else:
+                        files.append(item)
+
+                structured_data = {
+                    'root': path,
+                    'directories': directories,
+                    'files': files,
+                    'directory_count': len(directories),
+                    'file_count': len(files),
+                    'total_count': len(items),
+                    'items': items  # 원본 리스트도 포함 (호환성)
+                }
+                return ensure_response(structured_data, path=path)
             else:
                 return ensure_response(None, error=result.get("error", "Unknown error"), path=path)
 
@@ -136,3 +156,299 @@ def get_current_project() -> Dict[str, Any]:
 safe_scan_directory = scan_directory
 safe_scan_directory_dict = scan_directory_dict
 safe_get_current_project = get_current_project
+
+
+# Execute_code 문제 해결을 위한 헬퍼 함수들
+
+def fix_task_numbers(plan_id: str) -> Dict[str, Any]:
+    """기존 Task들의 누락된 number 필드 복구
+
+    Args:
+        plan_id: 플랜 ID
+
+    Returns:
+        표준 응답 형식 {"ok": bool, "data": dict, "error": str}
+    """
+    try:
+        from .flow_api import get_flow_api
+        api = get_flow_api()
+        tasks_result = api.list_tasks(plan_id)
+
+        if not tasks_result['ok']:
+            return {"ok": False, "data": None, "error": tasks_result['error']}
+
+        tasks = tasks_result['data']
+        fixed_count = 0
+
+        # number가 None인 Task들 찾아서 수정
+        for i, task in enumerate(tasks, 1):
+            if task.get('number') is None:
+                update_result = api.update_task(plan_id, task['id'], number=i)
+                if update_result['ok']:
+                    fixed_count += 1
+
+        return {
+            "ok": True,
+            "data": {
+                "total_tasks": len(tasks),
+                "fixed_count": fixed_count,
+                "message": f"Fixed {fixed_count} tasks with missing numbers"
+            },
+            "error": None
+        }
+    except Exception as e:
+        return {"ok": False, "data": None, "error": str(e)}
+
+
+def validate_flow_response(response: Any, method_name: str = "") -> bool:
+    """FlowAPI 응답 검증 헬퍼
+
+    Args:
+        response: API 응답
+        method_name: 메서드 이름 (디버깅용)
+
+    Returns:
+        응답이 표준 형식인지 여부
+    """
+    if isinstance(response, dict) and 'ok' in response:
+        return True
+
+    # 체이닝 메서드들은 FlowAPI 객체 반환
+    chaining_methods = ['select_plan', 'set_context', 'clear_context']
+    if method_name in chaining_methods:
+        return hasattr(response, '__class__') and response.__class__.__name__ == 'FlowAPI'
+
+    return False
+
+
+def get_task_safe(plan_id: str, task_id: str) -> Dict[str, Any]:
+    """Task 데이터를 안전하게 가져오기 (title 필드 보장)
+
+    Args:
+        plan_id: 플랜 ID
+        task_id: Task ID
+
+    Returns:
+        표준 응답 형식, data에 정규화된 Task 정보
+    """
+    try:
+        from .flow_api import get_flow_api
+        api = get_flow_api()
+        result = api.get_task(plan_id, task_id)
+
+        if not result['ok']:
+            return result
+
+        task = result['data']
+
+        # title 필드 확인 및 정규화
+        if 'title' not in task and 'name' in task:
+            task['title'] = task['name']
+        elif 'title' not in task:
+            task['title'] = f"Task {task.get('id', 'Unknown')}"
+
+        # number 필드 확인
+        if task.get('number') is None:
+            # ID에서 추출 시도
+            try:
+                task_id_parts = task['id'].split('_')
+                if len(task_id_parts) >= 3:
+                    task['number'] = int(task_id_parts[2][:6])
+            except:
+                task['number'] = None
+
+        return {"ok": True, "data": task, "error": None}
+    except Exception as e:
+        return {"ok": False, "data": None, "error": str(e)}
+
+
+def git_status_normalized() -> Dict[str, Any]:
+    """정규화된 Git 상태 반환 (modified, added, deleted 필드 추가)
+
+    Returns:
+        표준 응답 형식, data에 확장된 Git 정보
+    """
+    try:
+        from .git import git_status
+        result = git_status()
+        if not result['ok']:
+            return result
+
+        data = result['data']
+        files = data.get('files', [])
+
+        # 파일 분류
+        modified = []
+        added = []
+        deleted = []
+
+        for file_info in files:
+            if isinstance(file_info, str):
+                # 문자열 형태의 파일 정보 파싱
+                parts = file_info.split()
+                if len(parts) >= 2:
+                    status = parts[0]
+                    filepath = ' '.join(parts[1:])
+
+                    if status == 'M':
+                        modified.append(filepath)
+                    elif status == 'A' or status == '??':
+                        added.append(filepath)
+                    elif status == 'D':
+                        deleted.append(filepath)
+
+        # 확장된 데이터 구조
+        data['modified'] = modified
+        data['added'] = added
+        data['deleted'] = deleted
+
+        return {"ok": True, "data": data, "error": None}
+    except Exception as e:
+        return {"ok": False, "data": None, "error": str(e)}
+
+
+# Excel 세션 상태 확인
+def check_excel_session():
+    """
+    Excel 세션이 활성 상태인지 확인합니다.
+
+    Returns:
+        dict: 표준 응답 형식
+            - ok: bool - 성공 여부
+            - data: dict - 세션 정보 (active, workbook_name)
+            - error: str or None
+    """
+    try:
+        from . import excel
+        manager = excel.get_excel_manager()
+
+        if manager.excel and manager.workbook:
+            return {
+                "ok": True,
+                "data": {
+                    "active": True,
+                    "workbook_name": manager.workbook.FullName,
+                    "sheet_count": manager.workbook.Sheets.Count,
+                    "active_sheet": manager.workbook.ActiveSheet.Name
+                },
+                "error": None
+            }
+        else:
+            return {
+                "ok": True,
+                "data": {
+                    "active": False,
+                    "workbook_name": None,
+                    "sheet_count": 0,
+                    "active_sheet": None
+                },
+                "error": None
+            }
+    except ImportError:
+        return {
+            "ok": False,
+            "data": {"active": False},
+            "error": "Excel module not available (Windows only)"
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "data": {"active": False},
+            "error": str(e)
+        }
+
+# 웹 자동화 세션 상태 확인
+def check_web_session():
+    """
+    웹 자동화 브라우저 세션이 활성 상태인지 확인합니다.
+
+    Returns:
+        dict: 표준 응답 형식
+            - ok: bool - 성공 여부
+            - data: dict - 세션 정보 (active, url, title)
+            - error: str or None
+    """
+    try:
+        from . import web_automation_helpers as web
+
+        # web_check_session이 있는지 확인
+        if hasattr(web, 'web_check_session'):
+            result = web.web_check_session()
+            return result
+        else:
+            # 대체 방법: 브라우저 상태 직접 확인
+            if hasattr(web, 'browser') and web.browser is not None:
+                try:
+                    current_url = web.browser.current_url
+                    current_title = web.browser.title
+                    return {
+                        "ok": True,
+                        "data": {
+                            "active": True,
+                            "url": current_url,
+                            "title": current_title
+                        },
+                        "error": None
+                    }
+                except:
+                    return {
+                        "ok": True,
+                        "data": {
+                            "active": False,
+                            "url": None,
+                            "title": None
+                        },
+                        "error": None
+                    }
+            else:
+                return {
+                    "ok": True,
+                    "data": {
+                        "active": False,
+                        "url": None,
+                        "title": None
+                    },
+                    "error": None
+                }
+    except ImportError:
+        return {
+            "ok": False,
+            "data": {"active": False},
+            "error": "Web automation module not available"
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "data": {"active": False},
+            "error": str(e)
+        }
+
+# 모든 세션 상태 한번에 확인
+def check_all_sessions():
+    """
+    Excel과 웹 자동화 세션 상태를 모두 확인합니다.
+
+    Returns:
+        dict: 표준 응답 형식
+            - ok: bool - 성공 여부
+            - data: dict - 각 세션 정보
+            - error: str or None
+    """
+    try:
+        excel_status = check_excel_session()
+        web_status = check_web_session()
+
+        return {
+            "ok": True,
+            "data": {
+                "excel": excel_status['data'],
+                "web": web_status['data']
+            },
+            "error": None
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "data": None,
+            "error": str(e)
+        }

@@ -1,2 +1,0 @@
-{"timestamp": "2025-08-03T22:53:04.382982", "event_type": "TASK_INFO", "ts": "2025-08-03T22:53:04.382982", "type": "TASK_INFO", "title": "[매우높음] simple_flow_commands.py 책임 분리 - flow_api, flow_cli, flow_views 모듈화", "priority": "medium", "estimate": null, "description": ""}
-{"timestamp": "2025-08-03T22:53:04.384004", "event_type": "DESIGN", "ts": "2025-08-03T22:53:04.384004", "type": "DESIGN", "content": "Task가 생성되었습니다."}

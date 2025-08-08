@@ -20,7 +20,6 @@ import builtins
 from pathlib import Path
 from typing import Dict, Any, Optional
 from contextlib import contextmanager
-import textwrap  # [FIX 4: Added import for handling indentation in exec]
 
 # 프로젝트 경로 초기화 (o3 권장사항 반영)
 from pathlib import Path
@@ -267,44 +266,24 @@ def execute_locally(code: str, repl_globals: dict) -> Dict[str, Any]:
         'timestamp': dt.datetime.now().isoformat() + 'Z'
     }
 
-    # [FIX 4: Normalize input code indentation]
-    normalized_code = textwrap.dedent(code)
-
     try:
-        # 코드 실행 (normalized_code 사용)
+        # 코드 실행
         with capture_output() as (stdout, stderr):
-            # Compile first to handle syntax errors cleanly
-            try:
-                compiled_code = compile(normalized_code, '<stdin>', 'exec')
-            except SyntaxError as e:
-                if "f-string" in str(e):
-                    result['stderr'] = format_fstring_error(e, normalized_code)
-                else:
-                    result['stderr'] = f"❌ Syntax Error: {str(e)}\n"
-                    tb_lines = traceback.format_exception_only(type(e), e)
-                    result['stderr'] += "".join(tb_lines)
-                result['success'] = False
-                result['debug_info']['execution'] = 'syntax_error'
-                return result
-
-            exec(compiled_code, repl_globals)
+            exec(code, repl_globals)
 
         result['stdout'] = stdout.getvalue()
         result['stderr'] = stderr.getvalue()
 
         # 사용자 정의 변수 카운트
-        default_keys = ['helpers', 'h', 'sys', 'os', 'json', 'Path', 'dt', 'time', 'platform',
-                        'EXECUTION_HISTORY', 'get_recent_executions', 'get_failed_executions',
-                        'get_execution_stats', 'clear_execution_history']
-        user_vars = [k for k in repl_globals.keys()
-                    if not k.startswith('_') and k not in default_keys]
+        user_vars = [k for k in repl_globals.keys() 
+                    if not k.startswith('_') and 
+                    k not in ['helpers', 'sys', 'os', 'json', 'Path', 'dt', 'time', 'platform']]
         result['variable_count'] = len(user_vars)
 
     except Exception as e:
-        # Runtime errors
         result['success'] = False
         result['stderr'] = f"❌ Runtime Error: {type(e).__name__}: {str(e)}"
-        result['debug_info']['execution'] = 'runtime_error'
+        result['debug_info']['execution'] = 'error'
 
         # 상세 에러 정보는 stderr에 추가
         with io.StringIO() as error_details:

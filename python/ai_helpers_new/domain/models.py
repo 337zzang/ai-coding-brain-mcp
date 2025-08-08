@@ -84,7 +84,7 @@ class Task:
         valid_fields = {
             'id', 'title', 'description', 'status', 'priority',
             'created_at', 'updated_at', 'completed_at',
-            'assignee', 'number', 'tags', 'metadata'
+            'assignee', 'tags', 'metadata'
         }
 
         # 필터링된 데이터로 Task 생성

@@ -285,7 +285,6 @@ def flow_project_with_workflow(
         plans_result = flow_api.list_plans(limit=3)
         if plans_result['ok'] and plans_result['data']:
             plans = plans_result['data']
-            plans_data = plans  # result_data에 포함시킬 플랜 데이터
             print(f"\n📋 최신 플랜 {len(plans)}개:")
             print("=" * 60)
 
@@ -361,8 +360,6 @@ def flow_project_with_workflow(
         pass
 
 
-    # 플랜 데이터 초기화 (2025-08-07)
-    plans_data = None
     # 7) Flow 상태
     flow_info = None
     try:
@@ -377,61 +374,14 @@ def flow_project_with_workflow(
     # 8) 결과 반환
     result_data = {
         'project': project,
-        'project_name': project,  # 일관성을 위해 추가
         'path': str(project_path),
         'info': proj_info,
         'docs': docs,
         'git': git_info,
-'flow': flow_info,
-'plans': plans_data if 'plans_data' in locals() else None,  # 플랜 정보 추가 (2025-08-07)
-'switched_from': previous_project
+        'flow': flow_info,
+        'switched_from': previous_project
     }
 
-    # 2025-08-07 개선: os.chdir 실행 및 호환성 키 추가
-    import os
-    
-    # 디렉토리 변경 (기본적으로 수행)
-    try:
-        project_path = result_data.get("path")
-        if project_path:
-            os.chdir(project_path)
-            result_data["current_dir"] = os.getcwd()
-            result_data["cwd"] = os.getcwd()
-    except Exception as e:
-        print(f"⚠️ 디렉토리 변경 실패: {e}")
-    
-    # Git 호환성 키 추가
-    if result_data.get("git") and "count" in result_data["git"]:
-        result_data["git"]["changes"] = result_data["git"]["count"]
-    
-    # Flow 정보가 없으면 추가 시도
-    if not result_data.get("flow"):
-        try:
-            # 동적 import로 순환 참조 방지
-            from .flow_api import FlowAPI
-            from .ultra_simple_flow_manager import UltraSimpleFlowManager
-            
-            flow_home = Path(project_path) / ".ai-brain" / "flow" if project_path else None
-            if flow_home and flow_home.exists():
-                manager = UltraSimpleFlowManager(
-                    storage_path=flow_home,
-                    project_name=result_data.get("project", "")
-                )
-                api = FlowAPI(manager)
-                plans_result = api.list_plans(limit=3)
-                if plans_result.get("ok"):
-                    result_data["flow"] = {
-                        "recent_plans": plans_result.get("data", []),
-                        "count": len(plans_result.get("data", []))
-                    }
-        except Exception as e:
-            # Flow 로드 실패는 무시 (선택적 기능)
-            pass
-    
-    # 버전 정보 추가
-    result_data["_version"] = "1.1.0"
-    result_data["_modified"] = "2025-08-07"
-    
     return ok(result_data)
 # 나머지 함수들은 그대로 유지
 @safe_execution
@@ -615,56 +565,73 @@ def select_plan_and_show(plan_selector):
     except Exception as e:
         return {'ok': False, 'error': str(e)}
 
-# 원본 함수 백업 (재귀 방지)
-import copy
-_original_flow_project_with_workflow = None
 
-def setup_safe_wrapper():
-    """안전한 wrapper 설정"""
-    global _original_flow_project_with_workflow, flow_project_with_workflow
+# ============================================
+# ProjectContext 클래스 (project_context.py에서 이동)
+# ============================================
 
-    # 원본 함수가 아직 백업되지 않은 경우에만 백업
-    if _original_flow_project_with_workflow is None:
-        # 현재 flow_project_with_workflow가 wrapper가 아닌 경우에만
-        if flow_project_with_workflow.__name__ != 'flow_project_with_workflow_safe':
-            _original_flow_project_with_workflow = flow_project_with_workflow
+class ProjectContext:
+    """프로젝트 경로를 관리하는 Context 클래스
 
-            def flow_project_with_workflow_safe(
-                project: str,
-                *,
-                auto_read_docs: bool = True,
-                readme_lines: int = 60,
-                file_dir_lines: int = 120
-            ) -> Dict[str, Any]:
-                """
-                flow_project_with_workflow의 안전한 wrapper
-                항상 표준 응답 형식을 보장합니다.
-                """
-                try:
-                    # 원본 함수 호출 (재귀 방지)
-                    result = _original_flow_project_with_workflow(
-                        project,
-                        auto_read_docs=auto_read_docs,
-                        readme_lines=readme_lines,
-                        file_dir_lines=file_dir_lines
-                    )
+    os.chdir을 사용하지 않고 프로젝트별 경로를 관리합니다.
+    """
 
-                    # 반환값 타입 확인 및 표준화
-                    if isinstance(result, dict) and 'ok' in result:
-                        return result
-                    elif isinstance(result, str):
-                        return {'ok': False, 'error': f'Unexpected string: {result[:100]}', 'data': None}
-                    elif result is None:
-                        return {'ok': False, 'error': 'Function returned None', 'data': None}
-                    else:
-                        return {'ok': True, 'data': result}
+    def __init__(self):
+        self._current_project: Optional[str] = None
+        self._project_path: Optional[Path] = None
+        self._base_path: Optional[Path] = None
+        self._initialize_base_path()
 
-                except Exception as e:
-                    return {'ok': False, 'error': f'Exception: {e}', 'data': None}
+    def _initialize_base_path(self):
+        """기본 프로젝트 경로 초기화"""
+        # 환경변수 우선
+        env_path = os.environ.get("PROJECT_BASE_PATH")
+        if env_path:
+            self._base_path = Path(env_path)
+        else:
+            # 기본값: 홈/Desktop
+            self._base_path = Path.home() / "Desktop"
 
-            # 함수 교체
-            flow_project_with_workflow = flow_project_with_workflow_safe
-            return flow_project_with_workflow
+    def set_project(self, project_name: str) -> None:
+        """현재 프로젝트 설정"""
+        self._current_project = project_name
+        self._project_path = self._base_path / project_name
 
-# wrapper 설정 실행
-setup_safe_wrapper()
+    def get_project_name(self) -> Optional[str]:
+        """현재 프로젝트 이름 반환"""
+        return self._current_project
+
+    def get_project_path(self) -> Optional[Path]:
+        """현재 프로젝트 경로 반환"""
+        return self._project_path
+
+    def resolve_path(self, relative_path: str) -> Path:
+        """상대 경로를 프로젝트 기준 절대 경로로 변환"""
+        if self._project_path:
+            return self._project_path / relative_path
+        else:
+            # 프로젝트가 설정되지 않은 경우 현재 디렉토리 기준
+            return Path.cwd() / relative_path
+
+    def get_base_path(self) -> Path:
+        """기본 프로젝트 경로 반환"""
+        return self._base_path
+
+    def set_base_path(self, path: str) -> None:
+        """기본 프로젝트 경로 설정"""
+        self._base_path = Path(path)
+
+
+# 전역 ProjectContext 인스턴스
+_project_context = ProjectContext()
+
+
+def get_project_context() -> ProjectContext:
+    """ProjectContext 싱글톤 인스턴스 반환"""
+    return _project_context
+
+
+def resolve_project_path(relative_path: str) -> str:
+    """편의 함수: 상대 경로를 프로젝트 기준 절대 경로로 변환"""
+    return str(get_project_context().resolve_path(relative_path))
+

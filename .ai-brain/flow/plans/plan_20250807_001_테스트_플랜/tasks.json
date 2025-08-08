@@ -1,0 +1,44 @@
+{
+  "task_20250807_132753_9a8c76": {
+    "id": "task_20250807_132753_9a8c76",
+    "title": "테스트 Task 1",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-07T13:27:53.314820",
+    "updated_at": "2025-08-07T13:27:53.314820",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250807_132753_730cbb": {
+    "id": "task_20250807_132753_730cbb",
+    "title": "테스트 Task 2",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-07T13:27:53.325409",
+    "updated_at": "2025-08-07T13:27:53.325409",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250807_132753_25a99a": {
+    "id": "task_20250807_132753_25a99a",
+    "title": "테스트 Task 3",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-07T13:27:53.351740",
+    "updated_at": "2025-08-07T13:27:53.351740",
+    "completed_at": null,
+    "assignee": null,
+    "number": 1,
+    "tags": [],
+    "metadata": {}
+  }
+}

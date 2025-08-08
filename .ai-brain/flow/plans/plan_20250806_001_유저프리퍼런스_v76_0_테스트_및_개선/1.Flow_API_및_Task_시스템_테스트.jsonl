@@ -1,0 +1,7 @@
+{"timestamp": "2025-08-06T10:47:17.416090", "event_type": "TASK_INFO", "ts": "2025-08-06T10:47:17.416090", "type": "TASK_INFO", "title": "Flow API 및 Task 시스템 테스트", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-06T10:47:17.417086", "event_type": "DESIGN", "ts": "2025-08-06T10:47:17.417086", "type": "DESIGN", "content": "Task가 생성되었습니다."}
+{"timestamp": "2025-08-06T11:03:33.679979", "event_type": "ANALYZE", "ts": "2025-08-06T11:03:33.679979", "type": "ANALYZE", "target": "FlowAPI 메서드", "findings": "22개 메서드 중 21개 정상 작동, delete_task 메서드는 문서에만 존재"}
+{"timestamp": "2025-08-06T11:03:45.508252", "event_type": "ANALYZE", "ts": "2025-08-06T11:03:45.508252", "type": "ANALYZE", "target": "FlowAPI 메서드", "findings": "22개 메서드 중 21개 정상 작동"}
+{"timestamp": "2025-08-06T11:03:45.509253", "event_type": "CODE", "ts": "2025-08-06T11:03:45.509253", "type": "CODE", "action": "modify", "file": "search.py", "summary": "참조 오류 수정"}
+{"timestamp": "2025-08-06T11:03:45.509253", "event_type": "NOTE", "ts": "2025-08-06T11:03:45.509253", "type": "NOTE", "content": "테스트 진행 중"}
+{"timestamp": "2025-08-06T11:03:45.510089", "event_type": "BLOCKER", "ts": "2025-08-06T11:03:45.510089", "type": "BLOCKER", "issue": "find_function 오류", "severity": "high", "solution": "코드 수정"}

@@ -1,0 +1,58 @@
+{
+  "task_20250806_112800_d9ce7a": {
+    "id": "task_20250806_112800_d9ce7a",
+    "title": "Excel 모듈 확인",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-06T11:28:00.567800",
+    "updated_at": "2025-08-06T11:28:00.567800",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250806_112800_db16f7": {
+    "id": "task_20250806_112800_db16f7",
+    "title": "Excel 기본 기능 테스트",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-06T11:28:00.580800",
+    "updated_at": "2025-08-06T11:28:00.580800",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250806_112800_518d38": {
+    "id": "task_20250806_112800_518d38",
+    "title": "Excel 고급 기능 테스트",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-06T11:28:00.596538",
+    "updated_at": "2025-08-06T11:28:00.596538",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250806_112800_b12039": {
+    "id": "task_20250806_112800_b12039",
+    "title": "실용 예제 작성",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-06T11:28:00.613506",
+    "updated_at": "2025-08-06T11:28:00.613506",
+    "completed_at": null,
+    "assignee": null,
+    "number": 1,
+    "tags": [],
+    "metadata": {}
+  }
+}

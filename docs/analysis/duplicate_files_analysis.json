@@ -1,0 +1,2880 @@
+{
+  "project 관련": {
+    "python/ai_helpers_new/project.py": {
+      "size": 24207,
+      "lines": 670,
+      "functions": 13,
+      "classes": 0,
+      "function_names": [
+        {
+          "name": "_read_if_exists",
+          "line": 20,
+          "args": [
+            {
+              "name": "path",
+              "type": "str"
+            },
+            {
+              "name": "max_lines",
+              "type": "int"
+            }
+          ],
+          "return_type": "Optional[str]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "get_current_project",
+          "line": 36,
+          "args": [],
+          "return_type": "dict",
+          "is_async": false,
+          "decorators": [
+            "safe_execution"
+          ]
+        },
+        {
+          "name": "get_current_project",
+          "line": 104,
+          "args": [],
+          "return_type": "dict",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "_get_project_search_paths",
+          "line": 135,
+          "args": [],
+          "return_type": "List[Path]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "flow_project_with_workflow",
+          "line": 185,
+          "args": [
+            {
+              "name": "project",
+              "type": "str"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": [
+            "safe_execution"
+          ]
+        },
+        {
+          "name": "scan_directory",
+          "line": 438,
+          "args": [
+            {
+              "name": "path",
+              "type": "str"
+            },
+            {
+              "name": "output",
+              "type": "str"
+            },
+            {
+              "name": "max_depth",
+              "type": "int"
+            },
+            {
+              "name": "exclude_patterns",
+              "type": "List[str]"
+            }
+          ],
+          "return_type": "Any",
+          "is_async": false,
+          "decorators": [
+            "safe_execution"
+          ]
+        },
+        {
+          "name": "scan_directory_dict",
+          "line": 454,
+          "args": [
+            {
+              "name": "path",
+              "type": "str"
+            },
+            {
+              "name": "max_depth",
+              "type": "int"
+            },
+            {
+              "name": "ignore_patterns",
+              "type": "Optional[List[str]]"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": [
+            "safe_execution"
+          ]
+        },
+        {
+          "name": "select_plan_and_show",
+          "line": 528,
+          "args": [
+            {
+              "name": "plan_selector",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "setup_safe_wrapper",
+          "line": 622,
+          "args": [],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "should_ignore",
+          "line": 464,
+          "args": [
+            {
+              "name": "name",
+              "type": "str"
+            }
+          ],
+          "return_type": "bool",
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": []
+    },
+    "python/ai_helpers_new/project_improved.py": {
+      "size": 2466,
+      "lines": 79,
+      "functions": 1,
+      "classes": 0,
+      "function_names": [
+        {
+          "name": "flow_project_with_workflow",
+          "line": 1,
+          "args": [
+            {
+              "name": "project",
+              "type": "str"
+            },
+            {
+              "name": "auto_read_docs",
+              "type": "bool"
+            },
+            {
+              "name": "readme_lines",
+              "type": "int"
+            },
+            {
+              "name": "file_dir_lines",
+              "type": "int"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": []
+    },
+    "python/ai_helpers_new/project_refactored.py": {
+      "size": 4617,
+      "lines": 124,
+      "functions": 1,
+      "classes": 0,
+      "function_names": [
+        {
+          "name": "flow_project_with_workflow",
+          "line": 1,
+          "args": [
+            {
+              "name": "project_name",
+              "type": "str"
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": []
+    },
+    "python/ai_helpers_new/project_context.py": {
+      "size": 2476,
+      "lines": 71,
+      "functions": 10,
+      "classes": 1,
+      "function_names": [
+        {
+          "name": "get_project_context",
+          "line": 64,
+          "args": [],
+          "return_type": "ProjectContext",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "resolve_project_path",
+          "line": 69,
+          "args": [
+            {
+              "name": "relative_path",
+              "type": "str"
+            }
+          ],
+          "return_type": "str",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "__init__",
+          "line": 14,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "_initialize_base_path",
+          "line": 20,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "set_project",
+          "line": 30,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "project_name",
+              "type": "str"
+            }
+          ],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "get_project_name",
+          "line": 35,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": "Optional[str]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "get_project_path",
+          "line": 39,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": "Optional[Path]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "resolve_path",
+          "line": 43,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "relative_path",
+              "type": "str"
+            }
+          ],
+          "return_type": "Path",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "get_base_path",
+          "line": 51,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": "Path",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "set_base_path",
+          "line": 55,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "path",
+              "type": "str"
+            }
+          ],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": [
+        {
+          "name": "ProjectContext",
+          "line": 8,
+          "bases": [],
+          "methods": [
+            {
+              "name": "__init__",
+              "line": 14,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "_initialize_base_path",
+              "line": 20,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "set_project",
+              "line": 30,
+              "is_async": false,
+              "args": [
+                "self",
+                "project_name"
+              ]
+            },
+            {
+              "name": "get_project_name",
+              "line": 35,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "get_project_path",
+              "line": 39,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "resolve_path",
+              "line": 43,
+              "is_async": false,
+              "args": [
+                "self",
+                "relative_path"
+              ]
+            },
+            {
+              "name": "get_base_path",
+              "line": 51,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "set_base_path",
+              "line": 55,
+              "is_async": false,
+              "args": [
+                "self",
+                "path"
+              ]
+            }
+          ],
+          "decorators": []
+        }
+      ]
+    }
+  },
+  "replace/코드수정 관련": {
+    "python/ai_helpers_new/integrate_replace_block.py": {
+      "size": 1441,
+      "lines": 54,
+      "functions": 1,
+      "classes": 0,
+      "function_names": [
+        {
+          "name": "integrate_replace_block",
+          "line": 9,
+          "args": [],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": []
+    },
+    "python/ai_helpers_new/replace_block_final.py": {
+      "size": 14405,
+      "lines": 419,
+      "functions": 11,
+      "classes": 1,
+      "function_names": [
+        {
+          "name": "replace_block",
+          "line": 138,
+          "args": [
+            {
+              "name": "file_path",
+              "type": "str"
+            },
+            {
+              "name": "old_text",
+              "type": "str"
+            },
+            {
+              "name": "new_text",
+              "type": "str"
+            },
+            {
+              "name": "fuzzy",
+              "type": "bool"
+            },
+            {
+              "name": "threshold",
+              "type": "float"
+            },
+            {
+              "name": "preview",
+              "type": "bool"
+            },
+            {
+              "name": "validate",
+              "type": "bool"
+            },
+            {
+              "name": "backup",
+              "type": "bool"
+            },
+            {
+              "name": "verbose",
+              "type": "bool"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "replace_block_preview",
+          "line": 374,
+          "args": [
+            {
+              "name": "file_path",
+              "type": "str"
+            },
+            {
+              "name": "old_text",
+              "type": "str"
+            },
+            {
+              "name": "new_text",
+              "type": "str"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "replace_block_exact",
+          "line": 379,
+          "args": [
+            {
+              "name": "file_path",
+              "type": "str"
+            },
+            {
+              "name": "old_text",
+              "type": "str"
+            },
+            {
+              "name": "new_text",
+              "type": "str"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "replace_block_safe",
+          "line": 384,
+          "args": [
+            {
+              "name": "file_path",
+              "type": "str"
+            },
+            {
+              "name": "old_text",
+              "type": "str"
+            },
+            {
+              "name": "new_text",
+              "type": "str"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "replace",
+          "line": 400,
+          "args": [
+            {
+              "name": "path",
+              "type": "str"
+            },
+            {
+              "name": "old",
+              "type": "str"
+            },
+            {
+              "name": "new",
+              "type": "str"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "safe_replace",
+          "line": 405,
+          "args": [
+            {
+              "name": "path",
+              "type": "str"
+            },
+            {
+              "name": "old",
+              "type": "str"
+            },
+            {
+              "name": "new",
+              "type": "str"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "detect_pattern_type",
+          "line": 26,
+          "args": [
+            {
+              "name": "pattern",
+              "type": "str"
+            }
+          ],
+          "return_type": "str",
+          "is_async": false,
+          "decorators": [
+            "staticmethod"
+          ]
+        },
+        {
+          "name": "normalize_pattern",
+          "line": 47,
+          "args": [
+            {
+              "name": "pattern",
+              "type": "str"
+            },
+            {
+              "name": "pattern_type",
+              "type": "str"
+            }
+          ],
+          "return_type": "str",
+          "is_async": false,
+          "decorators": [
+            "staticmethod"
+          ]
+        },
+        {
+          "name": "find_pattern_with_fuzzy",
+          "line": 64,
+          "args": [
+            {
+              "name": "content",
+              "type": "str"
+            },
+            {
+              "name": "pattern",
+              "type": "str"
+            },
+            {
+              "name": "threshold",
+              "type": "float"
+            }
+          ],
+          "return_type": "Optional[Tuple[(int, int, float, str)]]",
+          "is_async": false,
+          "decorators": [
+            "staticmethod"
+          ]
+        },
+        {
+          "name": "apply_indentation",
+          "line": 103,
+          "args": [
+            {
+              "name": "new_text",
+              "type": "str"
+            },
+            {
+              "name": "original_indent",
+              "type": "str"
+            }
+          ],
+          "return_type": "str",
+          "is_async": false,
+          "decorators": [
+            "staticmethod"
+          ]
+        }
+      ],
+      "class_names": [
+        {
+          "name": "ReplaceBlock",
+          "line": 22,
+          "bases": [],
+          "methods": [
+            {
+              "name": "detect_pattern_type",
+              "line": 26,
+              "is_async": false,
+              "args": [
+                "pattern"
+              ]
+            },
+            {
+              "name": "normalize_pattern",
+              "line": 47,
+              "is_async": false,
+              "args": [
+                "pattern",
+                "pattern_type"
+              ]
+            },
+            {
+              "name": "find_pattern_with_fuzzy",
+              "line": 64,
+              "is_async": false,
+              "args": [
+                "content",
+                "pattern",
+                "threshold"
+              ]
+            },
+            {
+              "name": "apply_indentation",
+              "line": 103,
+              "is_async": false,
+              "args": [
+                "new_text",
+                "original_indent"
+              ]
+            },
+            {
+              "name": "validate_python_syntax",
+              "line": 123,
+              "is_async": false,
+              "args": [
+                "content",
+                "file_path"
+              ]
+            }
+          ],
+          "decorators": []
+        }
+      ]
+    },
+    "python/ai_helpers_new/improved_insert_delete.py": {
+      "size": 5246,
+      "lines": 163,
+      "functions": 2,
+      "classes": 0,
+      "function_names": [
+        {
+          "name": "insert_v2",
+          "line": 5,
+          "args": [
+            {
+              "name": "path",
+              "type": "str"
+            },
+            {
+              "name": "marker",
+              "type": "Union[(str, int)]"
+            },
+            {
+              "name": "code",
+              "type": "str"
+            },
+            {
+              "name": "after",
+              "type": "bool"
+            },
+            {
+              "name": "indent_auto",
+              "type": "bool"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "delete_lines",
+          "line": 82,
+          "args": [
+            {
+              "name": "path",
+              "type": "str"
+            },
+            {
+              "name": "start",
+              "type": "Union[(str, int)]"
+            },
+            {
+              "name": "end",
+              "type": "Optional[Union[(str, int)]]"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": []
+    },
+    "python/ai_helpers_new/code.py": {
+      "size": 29876,
+      "lines": 819,
+      "functions": 12,
+      "classes": 0,
+      "function_names": [
+        {
+          "name": "get_common_indent",
+          "line": 17,
+          "args": [
+            {
+              "name": "text",
+              "type": "str"
+            }
+          ],
+          "return_type": "int",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "adjust_indentation",
+          "line": 36,
+          "args": [
+            {
+              "name": "text",
+              "type": "str"
+            },
+            {
+              "name": "target_indent",
+              "type": "int"
+            },
+            {
+              "name": "preserve_relative",
+              "type": "bool"
+            }
+          ],
+          "return_type": "str",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "find_fuzzy_match",
+          "line": 82,
+          "args": [
+            {
+              "name": "content",
+              "type": "str"
+            },
+            {
+              "name": "pattern",
+              "type": "str"
+            },
+            {
+              "name": "threshold",
+              "type": "float"
+            }
+          ],
+          "return_type": "Optional[Tuple[(int, int, str)]]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "parse",
+          "line": 136,
+          "args": [
+            {
+              "name": "filepath",
+              "type": "str"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": [
+            "wrap_output"
+          ]
+        },
+        {
+          "name": "view",
+          "line": 234,
+          "args": [
+            {
+              "name": "filepath",
+              "type": "str"
+            },
+            {
+              "name": "target",
+              "type": "Optional[str]"
+            }
+          ],
+          "return_type": "Union[(str, Dict[(str, Any)])]",
+          "is_async": false,
+          "decorators": [
+            "wrap_output"
+          ]
+        },
+        {
+          "name": "replace",
+          "line": 303,
+          "args": [
+            {
+              "name": "filepath",
+              "type": "str"
+            },
+            {
+              "name": "old_code",
+              "type": "str"
+            },
+            {
+              "name": "new_code",
+              "type": "str"
+            },
+            {
+              "name": "fuzzy",
+              "type": "bool"
+            },
+            {
+              "name": "threshold",
+              "type": "float"
+            },
+            {
+              "name": "preview",
+              "type": "bool"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": [
+            "wrap_output"
+          ]
+        },
+        {
+          "name": "insert",
+          "line": 487,
+          "args": [
+            {
+              "name": "filepath",
+              "type": "str"
+            },
+            {
+              "name": "content_to_insert",
+              "type": "str"
+            },
+            {
+              "name": "position",
+              "type": "Optional[Union[(int, str)]]"
+            },
+            {
+              "name": "after",
+              "type": "bool"
+            },
+            {
+              "name": "before",
+              "type": "bool"
+            },
+            {
+              "name": "auto_indent",
+              "type": "bool"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": [
+            "wrap_output"
+          ]
+        },
+        {
+          "name": "delete",
+          "line": 635,
+          "args": [
+            {
+              "name": "filepath",
+              "type": "str"
+            },
+            {
+              "name": "target",
+              "type": "Union[(int, str, Tuple[(int, int)], List[int])]"
+            },
+            {
+              "name": "mode",
+              "type": "str"
+            },
+            {
+              "name": "preview",
+              "type": "bool"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": [
+            "wrap_output"
+          ]
+        },
+        {
+          "name": "functions",
+          "line": 795,
+          "args": [
+            {
+              "name": "filepath",
+              "type": "str"
+            }
+          ],
+          "return_type": "List[Dict[(str, Any)]]",
+          "is_async": false,
+          "decorators": [
+            "wrap_output"
+          ]
+        },
+        {
+          "name": "classes",
+          "line": 803,
+          "args": [
+            {
+              "name": "filepath",
+              "type": "str"
+            }
+          ],
+          "return_type": "List[Dict[(str, Any)]]",
+          "is_async": false,
+          "decorators": [
+            "wrap_output"
+          ]
+        }
+      ],
+      "class_names": []
+    }
+  },
+  "flow 관련": {
+    "python/ai_helpers_new/flow_api.py": {
+      "size": 16357,
+      "lines": 432,
+      "functions": 30,
+      "classes": 1,
+      "function_names": [
+        {
+          "name": "ok_response",
+          "line": 17,
+          "args": [
+            {
+              "name": "data",
+              "type": null
+            },
+            {
+              "name": "message",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "error_response",
+          "line": 23,
+          "args": [
+            {
+              "name": "error",
+              "type": null
+            },
+            {
+              "name": "data",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "get_manager",
+          "line": 33,
+          "args": [],
+          "return_type": "UltraSimpleFlowManager",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "_plan_to_dict",
+          "line": 64,
+          "args": [
+            {
+              "name": "plan",
+              "type": null
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "_task_to_dict",
+          "line": 82,
+          "args": [
+            {
+              "name": "task",
+              "type": null
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "get_flow_api",
+          "line": 427,
+          "args": [],
+          "return_type": "FlowAPI",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "__init__",
+          "line": 108,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "manager",
+              "type": "Optional[UltraSimpleFlowManager]"
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "_res",
+          "line": 121,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "ok",
+              "type": "bool"
+            },
+            {
+              "name": "data",
+              "type": "Any"
+            },
+            {
+              "name": "error",
+              "type": "str"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "_sync",
+          "line": 126,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "plan_id",
+              "type": "str"
+            }
+          ],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "create_plan",
+          "line": 131,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "name",
+              "type": "str"
+            },
+            {
+              "name": "description",
+              "type": "str"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": [
+        {
+          "name": "FlowAPI",
+          "line": 99,
+          "bases": [],
+          "methods": [
+            {
+              "name": "__init__",
+              "line": 108,
+              "is_async": false,
+              "args": [
+                "self",
+                "manager"
+              ]
+            },
+            {
+              "name": "_res",
+              "line": 121,
+              "is_async": false,
+              "args": [
+                "self",
+                "ok",
+                "data",
+                "error"
+              ]
+            },
+            {
+              "name": "_sync",
+              "line": 126,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id"
+              ]
+            },
+            {
+              "name": "create_plan",
+              "line": 131,
+              "is_async": false,
+              "args": [
+                "self",
+                "name",
+                "description"
+              ]
+            },
+            {
+              "name": "select_plan",
+              "line": 139,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id"
+              ]
+            },
+            {
+              "name": "get_current_plan",
+              "line": 150,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "list_plans",
+              "line": 160,
+              "is_async": false,
+              "args": [
+                "self",
+                "status",
+                "limit"
+              ]
+            },
+            {
+              "name": "get_plan",
+              "line": 171,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id"
+              ]
+            },
+            {
+              "name": "update_plan",
+              "line": 178,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id"
+              ]
+            },
+            {
+              "name": "delete_plan",
+              "line": 199,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id"
+              ]
+            },
+            {
+              "name": "create_task",
+              "line": 207,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id",
+                "name",
+                "description"
+              ]
+            },
+            {
+              "name": "add_task",
+              "line": 217,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id",
+                "title"
+              ]
+            },
+            {
+              "name": "get_task",
+              "line": 222,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id",
+                "task_id"
+              ]
+            },
+            {
+              "name": "get_task_by_number",
+              "line": 233,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id",
+                "number"
+              ]
+            },
+            {
+              "name": "list_tasks",
+              "line": 246,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id",
+                "status"
+              ]
+            },
+            {
+              "name": "update_task",
+              "line": 261,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id",
+                "task_id"
+              ]
+            },
+            {
+              "name": "update_task_status",
+              "line": 286,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id",
+                "task_id",
+                "status"
+              ]
+            },
+            {
+              "name": "update_task_status_by_number",
+              "line": 291,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id",
+                "number",
+                "status"
+              ]
+            },
+            {
+              "name": "search",
+              "line": 311,
+              "is_async": false,
+              "args": [
+                "self",
+                "query"
+              ]
+            },
+            {
+              "name": "get_stats",
+              "line": 334,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "set_context",
+              "line": 361,
+              "is_async": false,
+              "args": [
+                "self",
+                "key",
+                "value"
+              ]
+            },
+            {
+              "name": "get_context",
+              "line": 367,
+              "is_async": false,
+              "args": [
+                "self",
+                "key"
+              ]
+            },
+            {
+              "name": "clear_context",
+              "line": 371,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "help",
+              "line": 378,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            }
+          ],
+          "decorators": []
+        }
+      ]
+    },
+    "python/ai_helpers_new/flow_cli.py": {
+      "size": 12897,
+      "lines": 349,
+      "functions": 9,
+      "classes": 0,
+      "function_names": [
+        {
+          "name": "ok_response",
+          "line": 16,
+          "args": [
+            {
+              "name": "data",
+              "type": null
+            },
+            {
+              "name": "message",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "error_response",
+          "line": 22,
+          "args": [
+            {
+              "name": "error",
+              "type": null
+            },
+            {
+              "name": "data",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "get_flow_api_instance",
+          "line": 33,
+          "args": [],
+          "return_type": "FlowAPI",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "flow",
+          "line": 41,
+          "args": [
+            {
+              "name": "command",
+              "type": "str"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "handle_task_command",
+          "line": 121,
+          "args": [
+            {
+              "name": "manager",
+              "type": "UltraSimpleFlowManager"
+            },
+            {
+              "name": "args",
+              "type": "List[str]"
+            }
+          ],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "select_plan",
+          "line": 170,
+          "args": [
+            {
+              "name": "plan_id",
+              "type": "Optional[str]"
+            }
+          ],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "create_plan",
+          "line": 251,
+          "args": [
+            {
+              "name": "manager",
+              "type": "UltraSimpleFlowManager"
+            },
+            {
+              "name": "name",
+              "type": "Optional[str]"
+            }
+          ],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "delete_plan",
+          "line": 264,
+          "args": [
+            {
+              "name": "manager",
+              "type": "UltraSimpleFlowManager"
+            },
+            {
+              "name": "plan_id",
+              "type": "Optional[str]"
+            }
+          ],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "switch_project",
+          "line": 292,
+          "args": [
+            {
+              "name": "project_name",
+              "type": "Optional[str]"
+            }
+          ],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": []
+    },
+    "python/ai_helpers_new/flow_context.py": {
+      "size": 11832,
+      "lines": 375,
+      "functions": 21,
+      "classes": 2,
+      "function_names": [
+        {
+          "name": "find_project_path",
+          "line": 15,
+          "args": [
+            {
+              "name": "project_name",
+              "type": "str"
+            }
+          ],
+          "return_type": "Optional[Path]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "__post_init__",
+          "line": 80,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "resolve_path",
+          "line": 108,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "relative_path",
+              "type": "Union[(str, Path)]"
+            }
+          ],
+          "return_type": "Path",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "ensure_directory",
+          "line": 126,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "relative_path",
+              "type": "Union[(str, Path)]"
+            }
+          ],
+          "return_type": "Path",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "_detect_project_type",
+          "line": 140,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": "str",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "_load_metadata",
+          "line": 156,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "save_metadata",
+          "line": 168,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "get_relative_path",
+          "line": 176,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "absolute_path",
+              "type": "Union[(str, Path)]"
+            }
+          ],
+          "return_type": "Path",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "list_files",
+          "line": 195,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "pattern",
+              "type": "str"
+            },
+            {
+              "name": "recursive",
+              "type": "bool"
+            }
+          ],
+          "return_type": "List[Path]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "read_file",
+          "line": 213,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "relative_path",
+              "type": "Union[(str, Path)]"
+            },
+            {
+              "name": "encoding",
+              "type": "str"
+            }
+          ],
+          "return_type": "Optional[str]",
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": [
+        {
+          "name": "ProjectContext",
+          "line": 67,
+          "bases": [],
+          "methods": [
+            {
+              "name": "__post_init__",
+              "line": 80,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "resolve_path",
+              "line": 108,
+              "is_async": false,
+              "args": [
+                "self",
+                "relative_path"
+              ]
+            },
+            {
+              "name": "ensure_directory",
+              "line": 126,
+              "is_async": false,
+              "args": [
+                "self",
+                "relative_path"
+              ]
+            },
+            {
+              "name": "_detect_project_type",
+              "line": 140,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "_load_metadata",
+              "line": 156,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "save_metadata",
+              "line": 168,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "get_relative_path",
+              "line": 176,
+              "is_async": false,
+              "args": [
+                "self",
+                "absolute_path"
+              ]
+            },
+            {
+              "name": "list_files",
+              "line": 195,
+              "is_async": false,
+              "args": [
+                "self",
+                "pattern",
+                "recursive"
+              ]
+            },
+            {
+              "name": "read_file",
+              "line": 213,
+              "is_async": false,
+              "args": [
+                "self",
+                "relative_path",
+                "encoding"
+              ]
+            },
+            {
+              "name": "write_file",
+              "line": 232,
+              "is_async": false,
+              "args": [
+                "self",
+                "relative_path",
+                "content",
+                "encoding"
+              ]
+            },
+            {
+              "name": "get_project_info",
+              "line": 254,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "__str__",
+              "line": 271,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "__repr__",
+              "line": 275,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            }
+          ],
+          "decorators": [
+            "dataclass"
+          ]
+        },
+        {
+          "name": "FlowContext",
+          "line": 283,
+          "bases": [],
+          "methods": [
+            {
+              "name": "set_plan",
+              "line": 296,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id",
+                "plan_data"
+              ]
+            },
+            {
+              "name": "set_task",
+              "line": 318,
+              "is_async": false,
+              "args": [
+                "self",
+                "task_id",
+                "task_data"
+              ]
+            },
+            {
+              "name": "clear_task",
+              "line": 343,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "clear_plan",
+              "line": 347,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "get_state",
+              "line": 352,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "_get_timestamp",
+              "line": 366,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "__str__",
+              "line": 371,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            }
+          ],
+          "decorators": [
+            "dataclass"
+          ]
+        }
+      ]
+    },
+    "python/ai_helpers_new/flow_manager_utils.py": {
+      "size": 2206,
+      "lines": 63,
+      "functions": 4,
+      "classes": 0,
+      "function_names": [
+        {
+          "name": "get_current_session",
+          "line": 12,
+          "args": [],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "get_manager",
+          "line": 25,
+          "args": [],
+          "return_type": "UltraSimpleFlowManager",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "get_current_plan_id",
+          "line": 53,
+          "args": [],
+          "return_type": "Optional[str]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "set_current_plan_id",
+          "line": 58,
+          "args": [
+            {
+              "name": "plan_id",
+              "type": "Optional[str]"
+            }
+          ],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": []
+    },
+    "python/ai_helpers_new/flow_session.py": {
+      "size": 1227,
+      "lines": 49,
+      "functions": 6,
+      "classes": 1,
+      "function_names": [
+        {
+          "name": "get_flow_session",
+          "line": 47,
+          "args": [],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "__new__",
+          "line": 9,
+          "args": [
+            {
+              "name": "cls",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "__init__",
+          "line": 15,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "manager",
+          "line": 24,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": [
+            "property"
+          ]
+        },
+        {
+          "name": "flow_api",
+          "line": 31,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": [
+            "property"
+          ]
+        },
+        {
+          "name": "reset",
+          "line": 37,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": [
+        {
+          "name": "FlowSession",
+          "line": 2,
+          "bases": [],
+          "methods": [
+            {
+              "name": "__new__",
+              "line": 9,
+              "is_async": false,
+              "args": [
+                "cls"
+              ]
+            },
+            {
+              "name": "__init__",
+              "line": 15,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "manager",
+              "line": 24,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "flow_api",
+              "line": 31,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "reset",
+              "line": 37,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            }
+          ],
+          "decorators": []
+        }
+      ]
+    },
+    "python/ai_helpers_new/flow_views.py": {
+      "size": 22020,
+      "lines": 546,
+      "functions": 11,
+      "classes": 0,
+      "function_names": [
+        {
+          "name": "ok_response",
+          "line": 16,
+          "args": [
+            {
+              "name": "data",
+              "type": null
+            },
+            {
+              "name": "message",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "format_timestamp",
+          "line": 23,
+          "args": [
+            {
+              "name": "timestamp",
+              "type": "str"
+            }
+          ],
+          "return_type": "str",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "show_status",
+          "line": 32,
+          "args": [
+            {
+              "name": "manager",
+              "type": "UltraSimpleFlowManager"
+            }
+          ],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "show_plans",
+          "line": 70,
+          "args": [
+            {
+              "name": "manager",
+              "type": "UltraSimpleFlowManager"
+            }
+          ],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "display_task_history",
+          "line": 89,
+          "args": [
+            {
+              "name": "plan_id",
+              "type": "str"
+            },
+            {
+              "name": "show_all",
+              "type": "bool"
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "show_tasks",
+          "line": 247,
+          "args": [
+            {
+              "name": "manager",
+              "type": "UltraSimpleFlowManager"
+            },
+            {
+              "name": "plan_id",
+              "type": "str"
+            }
+          ],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "_show_project_summary",
+          "line": 274,
+          "args": [],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "_show_direct_structure",
+          "line": 417,
+          "args": [],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "show_help",
+          "line": 506,
+          "args": [],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "help_flow",
+          "line": 539,
+          "args": [],
+          "return_type": "None",
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": []
+    },
+    "python/ai_helpers_new/contextual_flow_manager.py": {
+      "size": 8662,
+      "lines": 268,
+      "functions": 12,
+      "classes": 1,
+      "function_names": [
+        {
+          "name": "__init__",
+          "line": 26,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "flow_path",
+              "type": "Path"
+            },
+            {
+              "name": "project_context",
+              "type": "ProjectContext"
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "create_plan",
+          "line": 44,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "name",
+              "type": "str"
+            },
+            {
+              "name": "description",
+              "type": "str"
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "get_plan",
+          "line": 85,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "plan_id",
+              "type": "str"
+            }
+          ],
+          "return_type": "Optional[Dict[(str, Any)]]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "list_plans",
+          "line": 102,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": "List[Dict[(str, Any)]]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "select_plan",
+          "line": 125,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "plan_id",
+              "type": "str"
+            }
+          ],
+          "return_type": "bool",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "add_task",
+          "line": 143,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "title",
+              "type": "str"
+            },
+            {
+              "name": "description",
+              "type": "str"
+            }
+          ],
+          "return_type": "Optional[Dict[(str, Any)]]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "update_task_status",
+          "line": 186,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "task_id",
+              "type": "str"
+            },
+            {
+              "name": "status",
+              "type": "str"
+            }
+          ],
+          "return_type": "bool",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "get_context",
+          "line": 222,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": "FlowContext",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "_load_flow_state",
+          "line": 226,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "_save_flow_state",
+          "line": 240,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": [
+        {
+          "name": "ContextualFlowManager",
+          "line": 18,
+          "bases": [],
+          "methods": [
+            {
+              "name": "__init__",
+              "line": 26,
+              "is_async": false,
+              "args": [
+                "self",
+                "flow_path",
+                "project_context"
+              ]
+            },
+            {
+              "name": "create_plan",
+              "line": 44,
+              "is_async": false,
+              "args": [
+                "self",
+                "name",
+                "description"
+              ]
+            },
+            {
+              "name": "get_plan",
+              "line": 85,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id"
+              ]
+            },
+            {
+              "name": "list_plans",
+              "line": 102,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "select_plan",
+              "line": 125,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id"
+              ]
+            },
+            {
+              "name": "add_task",
+              "line": 143,
+              "is_async": false,
+              "args": [
+                "self",
+                "title",
+                "description"
+              ]
+            },
+            {
+              "name": "update_task_status",
+              "line": 186,
+              "is_async": false,
+              "args": [
+                "self",
+                "task_id",
+                "status"
+              ]
+            },
+            {
+              "name": "get_context",
+              "line": 222,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "_load_flow_state",
+              "line": 226,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "_save_flow_state",
+              "line": 240,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "get_current_plan",
+              "line": 253,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "get_current_task",
+              "line": 259,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            }
+          ],
+          "decorators": []
+        }
+      ]
+    },
+    "python/ai_helpers_new/ultra_simple_flow_manager.py": {
+      "size": 9132,
+      "lines": 271,
+      "functions": 12,
+      "classes": 1,
+      "function_names": [
+        {
+          "name": "__init__",
+          "line": 22,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "project_path",
+              "type": "Optional[str]"
+            },
+            {
+              "name": "use_enhanced",
+              "type": "bool"
+            }
+          ],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "create_plan",
+          "line": 46,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "name",
+              "type": "str"
+            },
+            {
+              "name": "description",
+              "type": "str"
+            }
+          ],
+          "return_type": "Plan",
+          "is_async": false,
+          "decorators": [
+            "auto_record()"
+          ]
+        },
+        {
+          "name": "get_plan",
+          "line": 60,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "plan_id",
+              "type": "str"
+            }
+          ],
+          "return_type": "Optional[Plan]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "list_plans",
+          "line": 82,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": "List[Plan]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "update_plan",
+          "line": 93,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "plan_id",
+              "type": "str"
+            }
+          ],
+          "return_type": "bool",
+          "is_async": false,
+          "decorators": [
+            "auto_record()"
+          ]
+        },
+        {
+          "name": "delete_plan",
+          "line": 111,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "plan_id",
+              "type": "str"
+            }
+          ],
+          "return_type": "bool",
+          "is_async": false,
+          "decorators": [
+            "auto_record()"
+          ]
+        },
+        {
+          "name": "create_task",
+          "line": 120,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "plan_id",
+              "type": "str"
+            },
+            {
+              "name": "name",
+              "type": "str"
+            }
+          ],
+          "return_type": "Optional[Task]",
+          "is_async": false,
+          "decorators": [
+            "auto_record()"
+          ]
+        },
+        {
+          "name": "update_task_status",
+          "line": 157,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "plan_id",
+              "type": "str"
+            },
+            {
+              "name": "task_id",
+              "type": "str"
+            },
+            {
+              "name": "status",
+              "type": "str"
+            }
+          ],
+          "return_type": "bool",
+          "is_async": false,
+          "decorators": [
+            "auto_record()"
+          ]
+        },
+        {
+          "name": "get_task_by_number",
+          "line": 202,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            },
+            {
+              "name": "plan_id",
+              "type": "str"
+            },
+            {
+              "name": "task_number",
+              "type": "int"
+            }
+          ],
+          "return_type": "Optional[Task]",
+          "is_async": false,
+          "decorators": []
+        },
+        {
+          "name": "get_stats",
+          "line": 228,
+          "args": [
+            {
+              "name": "self",
+              "type": null
+            }
+          ],
+          "return_type": "Dict[(str, Any)]",
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": [
+        {
+          "name": "UltraSimpleFlowManager",
+          "line": 19,
+          "bases": [],
+          "methods": [
+            {
+              "name": "__init__",
+              "line": 22,
+              "is_async": false,
+              "args": [
+                "self",
+                "project_path",
+                "use_enhanced"
+              ]
+            },
+            {
+              "name": "create_plan",
+              "line": 46,
+              "is_async": false,
+              "args": [
+                "self",
+                "name",
+                "description"
+              ]
+            },
+            {
+              "name": "get_plan",
+              "line": 60,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id"
+              ]
+            },
+            {
+              "name": "list_plans",
+              "line": 82,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "update_plan",
+              "line": 93,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id"
+              ]
+            },
+            {
+              "name": "delete_plan",
+              "line": 111,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id"
+              ]
+            },
+            {
+              "name": "create_task",
+              "line": 120,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id",
+                "name"
+              ]
+            },
+            {
+              "name": "update_task_status",
+              "line": 157,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id",
+                "task_id",
+                "status"
+              ]
+            },
+            {
+              "name": "get_task_by_number",
+              "line": 202,
+              "is_async": false,
+              "args": [
+                "self",
+                "plan_id",
+                "task_number"
+              ]
+            },
+            {
+              "name": "get_stats",
+              "line": 228,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            },
+            {
+              "name": "_generate_plan_id",
+              "line": 241,
+              "is_async": false,
+              "args": [
+                "self",
+                "name"
+              ]
+            },
+            {
+              "name": "_generate_task_id",
+              "line": 267,
+              "is_async": false,
+              "args": [
+                "self"
+              ]
+            }
+          ],
+          "decorators": []
+        }
+      ]
+    },
+    "python/ai_helpers_new/simple_flow_commands.py": {
+      "size": 2292,
+      "lines": 84,
+      "functions": 1,
+      "classes": 0,
+      "function_names": [
+        {
+          "name": "help_flow",
+          "line": 68,
+          "args": [],
+          "return_type": null,
+          "is_async": false,
+          "decorators": []
+        }
+      ],
+      "class_names": []
+    }
+  }
+}

@@ -11,32 +11,203 @@ from typing import Dict, List, Optional, Any, Union, Tuple
 from .wrappers import ensure_response, safe_execution
 
 # safe_execution을 wrap_output으로 별칭 설정
+
+
+def _normalize_for_fuzzy(text: str) -> str:
+    """Fuzzy matching을 위한 텍스트 정규화
+    
+    - 각 줄의 선행 공백 제거
+    - 빈 줄 제거
+    - 비교용으로만 사용 (실제 치환에는 원본 사용)
+    """
+    lines = [line.lstrip() for line in text.splitlines()]
+    return '\n'.join([line for line in lines if line.strip()])
+
 wrap_output = safe_execution
 
+
+
+# ============================================
+# ReplaceBlock 클래스 (replace_block_final.py에서 통합)
+# ============================================
+
+class ReplaceBlock:
+    """최종 통합 Replace Block 클래스"""
+    
+    @staticmethod
+    def detect_pattern_type(pattern: str) -> str:
+        """패턴 타입 자동 감지"""
+        # f-string
+        if pattern.startswith(('f"', "f'")):
+            return 'fstring'
+        # raw string
+        elif pattern.startswith(('r"', "r'")):
+            return 'raw'
+        # 삼중 따옴표
+        elif pattern.startswith(('"""', "'''")):
+            return 'triple'
+        # 멀티라인
+        elif '\n' in pattern:
+            return 'multiline'
+        # 특수 문자 많음
+        elif any(c in pattern for c in ['{', '}', '\\', '^', '$', '*', '+', '?', '[', ']']):
+            return 'special'
+        else:
+            return 'normal'
+    
+    @staticmethod
+    def normalize_pattern(pattern: str, pattern_type: str) -> str:
+        """패턴 정규화"""
+        if pattern_type == 'fstring':
+            # f-string의 {} 표현식을 와일드카드로
+            normalized = re.escape(pattern)
+            normalized = re.sub(r'\\{[^}]+\\}', r'\\{[^}]+\\}', normalized)
+            return normalized
+        
+        elif pattern_type == 'raw':
+            # raw string은 그대로
+            return re.escape(pattern)
+        
+        else:
+            # 일반 문자열은 줄바꿈 정규화
+            return pattern.replace('\r\n', '\n')
+    
+    @staticmethod
+    def find_pattern_with_fuzzy(content: str, pattern: str, threshold: float = 0.7) -> Optional[Tuple[int, int, float, str]]:
+        """Fuzzy matching으로 패턴 찾기
+        
+        Returns:
+            (시작 라인, 끝 라인, 유사도, 실제 매칭된 텍스트)
+        """
+        lines = content.split('\n')
+        pattern_lines = pattern.split('\n')
+        pattern_len = len(pattern_lines)
+        
+        # 들여쓰기 제거한 패턴
+        pattern_stripped_lines = [line.strip() for line in pattern_lines]
+        
+        best_match = None
+        best_ratio = 0.0
+        best_text = ""
+        
+        # 슬라이딩 윈도우
+        for i in range(len(lines) - pattern_len + 1):
+            window = lines[i:i + pattern_len]
+            window_stripped = [line.strip() for line in window]
+            
+            # 내용만으로 비교
+            pattern_content = '\n'.join(pattern_stripped_lines)
+            window_content = '\n'.join(window_stripped)
+            
+            matcher = difflib.SequenceMatcher(None, pattern_content, window_content)
+            ratio = matcher.ratio()
+            
+            if ratio > best_ratio and ratio >= threshold:
+                best_ratio = ratio
+                best_match = (i, i + pattern_len)
+                best_text = '\n'.join(window)
+        
+        if best_match:
+            return (*best_match, best_ratio, best_text)
+        return None
+    
+    @staticmethod
+    def apply_indentation(new_text: str, original_indent: str) -> str:
+        """새 텍스트에 원본 들여쓰기 적용"""
+        lines = new_text.split('\n')
+        result = []
+        
+        for i, line in enumerate(lines):
+            if line.strip():  # 내용이 있는 줄
+                if i == 0:
+                    # 첫 줄은 원본 들여쓰기 사용
+                    result.append(original_indent + line.lstrip())
+                else:
+                    # 나머지는 상대적 들여쓰기 유지
+                    # 원본 첫 줄의 들여쓰기를 기준으로
+                    result.append(original_indent + line)
+            else:
+                result.append(line)
+        
+        return '\n'.join(result)
+    
+    @staticmethod
+    def validate_python_syntax(content: str, file_path: str) -> Tuple[bool, Optional[str]]:
+        """Python 구문 검증"""
+        try:
+            ast.parse(content)
+            compile(content, file_path, 'exec')
+            return True, None
+        except SyntaxError as e:
+            error_msg = f"Line {e.lineno}: {e.msg}"
+            if e.text:
+                error_msg += f"\n  {e.text.strip()}"
+            return False, error_msg
+        except Exception as e:
+            return False, str(e)
+
+
+
+
 # Utility functions for indentation handling
+
+
+def _get_indent_level(source: str, line_no: int) -> int:
+    """정확한 들여쓰기 레벨 계산
+
+    tokenize를 사용하여 주어진 라인의 정확한 들여쓰기 레벨을 계산합니다.
+
+    Args:
+        source: 소스 코드 전체
+        line_no: 들여쓰기를 확인할 라인 번호 (1-based)
+
+    Returns:
+        들여쓰기 공백 수
+    """
+    import tokenize
+    import io
+
+    try:
+        # tokenize로 들여쓰기 추적
+        indent_stack = []
+        tokens = tokenize.generate_tokens(io.StringIO(source).readline)
+
+        for tok in tokens:
+            if tok.start[0] > line_no:
+                break
+            if tok.type == tokenize.INDENT:
+                indent_stack.append(tok.end[1])
+            elif tok.type == tokenize.DEDENT and indent_stack:
+                indent_stack.pop()
+
+        return indent_stack[-1] if indent_stack else 0
+    except:
+        # 폴백: 이전 줄의 들여쓰기 사용
+        lines = source.splitlines()
+        if 0 < line_no <= len(lines):
+            # line_no는 1-based이므로 -1
+            line = lines[line_no - 1]
+            return len(line) - len(line.lstrip())
+        return 0
+
+
 def get_common_indent(text: str) -> int:
-    """Calculate the common indentation level (counting only spaces)."""
-    # Standardize tabs to spaces for consistency
-    text = text.replace('\t', '    ')
+    """Calculate the common indentation level."""
     lines = text.split('\n')
-    # We look at lines that have content (non-whitespace)
     non_empty_lines = [line for line in lines if line.strip()]
     if not non_empty_lines:
         return 0
 
     indents = []
     for line in non_empty_lines:
-        # Count only leading spaces
-        indent = len(line) - len(line.lstrip(' '))
-        indents.append(indent)
+        if line.strip():
+            indent = len(line) - len(line.lstrip())
+            indents.append(indent)
 
     return min(indents) if indents else 0
 
-# [FIX 1: Robust adjust_indentation]
 def adjust_indentation(text: str, target_indent: int, preserve_relative: bool = True) -> str:
-    """Adjust indentation of text block, handling spaces robustly."""
-    # Standardize tabs to spaces
-    text = text.replace('\t', '    ')
+    """Adjust indentation of text block."""
     lines = text.split('\n')
     if not lines:
         return text
@@ -45,37 +216,25 @@ def adjust_indentation(text: str, target_indent: int, preserve_relative: bool = 
     current_indent = get_common_indent(text) if preserve_relative else 0
 
     # Calculate adjustment
-    target_indent = max(0, target_indent)  # Ensure non-negative target
     indent_diff = target_indent - current_indent
 
     # Apply adjustment
     adjusted_lines = []
     for line in lines:
-        # Handle empty lines when indenting
-        if not line.strip() and indent_diff >= 0:
-            adjusted_lines.append(line)
-            continue
-
-        if preserve_relative:
+        if line.strip():  # Non-empty line
             if indent_diff > 0:
-                # Adding indentation
                 adjusted_lines.append(' ' * indent_diff + line)
             elif indent_diff < 0:
-                # Removing indentation (Safe Dedent)
+                # Remove indentation carefully
                 to_remove = -indent_diff
-                # Calculate actual leading spaces
-                actual_indent = len(line) - len(line.lstrip(' '))
-                # Remove minimum of requested amount and available spaces (Prevents over-stripping)
-                remove_amount = min(actual_indent, to_remove)
-                adjusted_lines.append(line[remove_amount:])
+                if line.startswith(' ' * to_remove):
+                    adjusted_lines.append(line[to_remove:])
+                else:
+                    adjusted_lines.append(line.lstrip())
             else:
                 adjusted_lines.append(line)
         else:
-            # Not preserving relative: reset to target indent
-            if line.strip():
-                adjusted_lines.append(' ' * target_indent + line.lstrip(' '))
-            else:
-                adjusted_lines.append("")  # Reset empty lines
+            adjusted_lines.append(line)
 
     return '\n'.join(adjusted_lines)
 
@@ -100,14 +259,6 @@ def find_fuzzy_match(content: str, pattern: str, threshold: float = 0.8) -> Opti
     best_match = None
     best_ratio = threshold
 
-    # Use splitlines(True) to accurately calculate start index if available
-    try:
-        content_lines_with_endings = content.splitlines(True)
-    except TypeError:
-        content_lines_with_endings = [l + '\n' for l in content.split('\n')]
-        if content_lines_with_endings and not content.endswith('\n'):
-            content_lines_with_endings[-1] = content_lines_with_endings[-1][:-1]
-
     for i in range(len(lines) - len(pattern_lines) + 1):
         window = lines[i:i + len(pattern_lines)]
         window_text = '\n'.join(window)
@@ -117,17 +268,9 @@ def find_fuzzy_match(content: str, pattern: str, threshold: float = 0.8) -> Opti
 
         if ratio > best_ratio:
             best_ratio = ratio
-
-            # Calculate start index more accurately
-            start = sum(len(line) for line in content_lines_with_endings[:i])
-
-            # Calculate end index
+            start = sum(len(line) + 1 for line in lines[:i])
             end = start + len(window_text)
-
-            # Ensure end does not exceed content length
-            end = min(end, len(content))
-
-            best_match = (start, end, content[start:end])
+            best_match = (start, end, window_text)
 
     return best_match
 
@@ -377,60 +520,24 @@ def replace(
 
         raise ValueError(error_msg)
 
-    # --- [FIX 3: Improved Indentation Detection and Application (Block vs Inline)] ---
-    # 1. Find the start of the line where the match begins.
-    # rfind returns -1 if not found (start of file), so +1 gives 0.
-    line_start_index = content.rfind('\n', 0, match_start) + 1
-
-    # 2. Get the prefix on that line before the match.
-    prefix = content[line_start_index:match_start]
-
-    # 3. Determine if it's an inline replacement (prefix contains non-whitespace code).
-    # We check if the prefix stripped of spaces/tabs is empty.
-    is_inline_replacement = prefix.strip(' \t') != ""
-    match_type = "exact" if matched_text == old_code_normalized else "fuzzy"
-
-    if not is_inline_replacement:
-        # Block-like replacement (prefix is only whitespace or empty).
-        # Standardize tabs in prefix for calculation
-        target_indent = len(prefix.replace('\t', '    '))
-
-        # Handle Case: Match includes indentation, but prefix is empty (starts at beginning of the line)
-        if target_indent == 0 and match_start == line_start_index:
-            # Use the indentation of the matched text itself as the target indent.
-            first_line_of_match = matched_text.split('\n')[0]
-
-            if first_line_of_match.strip():
-                # Calculate using spaces/tabs
-                standardized_match_line = first_line_of_match.replace('\t', '    ')
-                match_text_indent = len(standardized_match_line) - len(standardized_match_line.lstrip(' '))
-                target_indent = match_text_indent
-
-        # Apply indentation to all lines using the robust utility
-        adjusted_new_code = adjust_indentation(new_code, target_indent, preserve_relative=True)
-
+    # Detect indentation of the matched block
+    before_match = content[:match_start]
+    lines_before = before_match.split('\n')
+    if lines_before:
+        last_line = lines_before[-1] if match_start > 0 else ""
+        target_indent = len(last_line) - len(last_line.lstrip())
     else:
-        # Inline replacement.
-        alignment_column = len(prefix.replace('\t', '    '))
+        target_indent = 0
 
-        # We must NOT indent the first line, as it continues the existing line.
-        # Subsequent lines should align with the starting column.
+    # If match is not at start of line, use the indentation of the current line
+    if match_start > 0 and content[match_start - 1] != '\n':
+        # Find the start of the current line
+        line_start = content.rfind('\n', 0, match_start) + 1
+        line_prefix = content[line_start:match_start]
+        target_indent = len(line_prefix)
 
-        lines = new_code.split('\n')
-        if len(lines) <= 1:
-            # Single line inline replacement, no adjustment needed.
-            adjusted_new_code = new_code
-        else:
-            first_line = lines[0]
-            # Subsequent lines (from the second line onwards)
-            # Join them back to a string to process with adjust_indentation
-            subsequent_lines_str = '\n'.join(lines[1:])
-
-            # Adjust subsequent lines to the alignment column, preserving relative structure.
-            adjusted_subsequent = adjust_indentation(subsequent_lines_str, alignment_column, preserve_relative=True)
-
-            # Combine
-            adjusted_new_code = first_line + '\n' + adjusted_subsequent
+    # Adjust new code indentation
+    adjusted_new_code = adjust_indentation(new_code, target_indent, preserve_relative=True)
 
     # Perform replacement
     new_content = content[:match_start] + adjusted_new_code + content[match_end:]
@@ -441,7 +548,6 @@ def replace(
         new_lines = adjusted_new_code.split('\n')
 
         preview_text = "\n=== Preview of changes ===\n"
-        preview_text += f"Match Type: {match_type}, Inline: {is_inline_replacement}\n"
         preview_text += "--- Old code ---\n"
         for line in old_lines[:5]:
             preview_text += f"- {line}\n"
@@ -457,7 +563,7 @@ def replace(
         return {
             'preview': preview_text,
             'will_replace': True,
-            'match_type': match_type
+            'match_type': 'exact' if old_code_normalized in content else 'fuzzy'
         }
 
     # Verify syntax if it's a Python file
@@ -477,8 +583,8 @@ def replace(
         'status': 'success',
         'file': filepath,
         'matched': matched_text[:100] + '...' if len(matched_text) > 100 else matched_text,
-        'match_type': match_type,
-        'lines_changed': len(matched_text.split('\n')),
+        'match_type': 'exact' if old_code_normalized in content else 'fuzzy',
+        'lines_changed': len(old_lines),
         'new_lines': len(adjusted_new_code.split('\n'))
     }
 
@@ -486,7 +592,7 @@ def replace(
 @wrap_output  
 def insert(
     filepath: str,
-    content_to_insert: str,  # Renamed 'content' parameter to avoid confusion with file content
+    content: str,
     position: Optional[Union[int, str]] = None,
     after: bool = False,
     before: bool = False,
@@ -497,7 +603,7 @@ def insert(
 
     Args:
         filepath: Path to the file
-        content_to_insert: Content to insert
+        content: Content to insert
         position: Line number (int) or marker text (str) to find position
         after: Insert after the position (default: False)
         before: Insert before the position (default: True if not after)
@@ -512,17 +618,14 @@ def insert(
     with open(filepath, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
-    # Normalize line endings in content to insert
-    content_to_insert = content_to_insert.replace('\r\n', '\n').replace('\r', '\n')
-
-    # Determine insert position (insert_line is 0-based index)
+    # Determine insert position
     insert_line = 0
 
     if position is None:
         # Insert at beginning
         insert_line = 0
     elif isinstance(position, int):
-        # Direct line number (1-based input)
+        # Direct line number
         insert_line = max(0, min(position - 1, len(lines)))
         if after:
             insert_line += 1
@@ -540,6 +643,10 @@ def insert(
         if not found:
             # Try fuzzy match
             from difflib import SequenceMatcher
+    
+            # Normalize for better fuzzy matching (ignore indentation)
+            norm_content = _normalize_for_fuzzy(content)
+            norm_pattern = _normalize_for_fuzzy(pattern)
             best_ratio = 0
             best_line = 0
 
@@ -556,56 +663,59 @@ def insert(
             else:
                 raise ValueError(f"Marker text '{position}' not found in file")
 
-    # --- [FIX 2: Auto-detect indentation and apply correctly] ---
-    if auto_indent:
-        # 1. Determine the target indentation level based on context
-        context_line_str = ""
+    # Auto-detect indentation if enabled
+    if auto_indent and insert_line > 0 and insert_line <= len(lines):
+        # Use _get_indent_level for accurate indentation calculation
+        file_content = '\n'.join(lines)
+        indent_level = _get_indent_level(file_content, insert_line)
 
-        # Determine the context line to infer indentation
-        # Strategy: Prefer the line we are inserting before. If empty, look around.
-        if insert_line < len(lines):
-            context_line_str = lines[insert_line]
+        # Apply indentation to content
+        import textwrap
+        indented_content = textwrap.indent(content.rstrip('\n'), ' ' * indent_level)
 
-        # If the immediate context line is empty or we are at EOF, try to find a better context
-        if not context_line_str.strip():
-            # Look behind if possible
-            if insert_line > 0:
-                for i in range(insert_line - 1, -1, -1):
-                    if lines[i].strip():
-                        context_line_str = lines[i]
+        # For Python files, verify syntax
+        if filepath.endswith('.py'):
+            # Test insertion
+            test_lines = lines.copy()
+            test_lines.insert(insert_line - 1, indented_content)
+            test_content = '\n'.join(test_lines)
+
+            try:
+                compile(test_content, '<test>', 'exec')
+                content = indented_content  # Use indented version if successful
+            except SyntaxError:
+                # Try adjusting indentation
+                for adjust in [-4, 4, -8, 8, 0]:
+                    new_indent = max(0, indent_level + adjust)
+                    adjusted_content = textwrap.indent(content.rstrip('\n'), ' ' * new_indent)
+
+                    test_lines = lines.copy()
+                    test_lines.insert(insert_line - 1, adjusted_content)
+                    test_content = '\n'.join(test_lines)
+
+                    try:
+                        compile(test_content, '<test>', 'exec')
+                        content = adjusted_content  # Success with adjusted indentation
                         break
-            # If still empty, look ahead
-            if not context_line_str.strip() and insert_line < len(lines):
-                for i in range(insert_line, len(lines)):
-                    if lines[i].strip():
-                        context_line_str = lines[i]
-                        break
-
-        # Calculate indentation
-        if context_line_str and context_line_str.strip():
-            # Standardize tabs in context line for calculation
-            standardized_context = context_line_str.replace('\t', '    ')
-            target_indent = len(standardized_context) - len(standardized_context.lstrip(' '))
+                    except SyntaxError:
+                        continue
+                # If all attempts fail, use original content
         else:
-            target_indent = 0
+            content = indented_content
 
-        # 2. Apply indentation using the robust adjust_indentation function
-        # This preserves the relative indentation within the content block.
-        content_to_insert = adjust_indentation(content_to_insert, target_indent, preserve_relative=True)
-
-    # Ensure content ends with newline if needed (and not empty)
-    if not content_to_insert.endswith('\n') and content_to_insert.strip():
-        content_to_insert += '\n'
+    # Ensure content ends with newline if needed
+    if not content.endswith('\n') and insert_line < len(lines):
+        content += '\n'
 
     # Insert content
     if insert_line >= len(lines):
         # Append at end
         if lines and not lines[-1].endswith('\n'):
             lines[-1] += '\n'
-        lines.append(content_to_insert)
+        lines.append(content)
     else:
         # Insert at position
-        lines.insert(insert_line, content_to_insert)
+        lines.insert(insert_line, content)
 
     # Write back
     new_content = ''.join(lines)
@@ -626,8 +736,8 @@ def insert(
         'status': 'success',
         'file': filepath,
         'inserted_at': insert_line + 1,  # Convert to 1-based
-        'lines_added': len(content_to_insert.splitlines()),
-        'total_lines': len(new_content.splitlines())
+        'lines_added': len(content.split('\n')),
+        'total_lines': len(new_content.split('\n'))
     }
 
 
@@ -817,3 +927,122 @@ __all__ = [
     'functions',
     'classes'
 ]
+
+
+# ============================================
+# Improved Insert/Delete 함수 (재추가)
+# ============================================
+
+
+def insert_v2(path: str, marker: Union[str, int], code: str,
+              after: bool = True, indent_auto: bool = True) -> Dict[str, Any]:
+    """개선된 insert - 들여쓰기 자동 처리
+
+    Args:
+        path: 파일 경로
+        marker: 삽입 위치 (문자열 패턴 또는 라인 번호)
+        code: 삽입할 코드
+        after: True면 마커 뒤에, False면 앞에 삽입
+        indent_auto: True면 들여쓰기 자동 감지/적용
+
+    Returns:
+        표준 응답 형식
+    """
+    try:
+        # 파일 읽기
+        with open(path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+
+        # 마커 위치 찾기
+        if isinstance(marker, int):
+            position = marker - 1  # 라인 번호는 1부터 시작
+        else:
+            position = None
+            for i, line in enumerate(lines):
+                if marker in line:
+                    position = i
+                    break
+
+            if position is None:
+                return {'ok': False, 'error': f'Marker "{marker}" not found'}
+
+        # 들여쓰기 감지
+        if indent_auto and position < len(lines):
+            target_line = lines[position]
+            indent = len(target_line) - len(target_line.lstrip())
+            # 코드에 들여쓰기 적용
+            indented_code = '\n'.join(' ' * indent + line if line.strip() else line 
+                                     for line in code.split('\n'))
+        else:
+            indented_code = code
+
+        # 삽입
+        if after:
+            lines.insert(position + 1, indented_code + '\n')
+        else:
+            lines.insert(position, indented_code + '\n')
+
+        # 파일 저장
+        with open(path, 'w', encoding='utf-8') as f:
+            f.writelines(lines)
+
+        return {'ok': True, 'data': 'Inserted successfully'}
+
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}
+
+
+
+def delete_lines(path: str, start: Union[str, int], end: Optional[Union[str, int]] = None) -> Dict[str, Any]:
+    """라인 삭제 함수
+
+    Args:
+        path: 파일 경로
+        start: 시작 위치 (라인 번호 또는 패턴)
+        end: 끝 위치 (없으면 한 줄만 삭제)
+
+    Returns:
+        표준 응답 형식
+    """
+    try:
+        # 파일 읽기
+        with open(path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+
+        # 시작 위치 찾기
+        if isinstance(start, int):
+            start_pos = start - 1
+        else:
+            start_pos = None
+            for i, line in enumerate(lines):
+                if start in line:
+                    start_pos = i
+                    break
+            if start_pos is None:
+                return {'ok': False, 'error': f'Start marker "{start}" not found'}
+
+        # 끝 위치 찾기
+        if end is None:
+            end_pos = start_pos
+        elif isinstance(end, int):
+            end_pos = end - 1
+        else:
+            end_pos = None
+            for i in range(start_pos, len(lines)):
+                if end in lines[i]:
+                    end_pos = i
+                    break
+            if end_pos is None:
+                return {'ok': False, 'error': f'End marker "{end}" not found'}
+
+        # 삭제
+        del lines[start_pos:end_pos + 1]
+
+        # 파일 저장
+        with open(path, 'w', encoding='utf-8') as f:
+            f.writelines(lines)
+
+        return {'ok': True, 'data': f'Deleted lines {start_pos+1} to {end_pos+1}'}
+
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}

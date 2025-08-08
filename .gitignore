@@ -141,3 +141,18 @@ commit_message.txt
 *_backup*
 *_backup*/
 **/vendor/
+
+# AI Brain Flow 시스템 (로컬 작업 데이터)
+.ai-brain/
+*.jsonl
+
+# 백업 파일
+*.bak
+*.backup
+
+# Python 캐시
+*.pyc
+
+# OS 생성 파일
+.DS_Store
+Thumbs.db

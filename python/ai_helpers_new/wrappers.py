@@ -8,6 +8,26 @@ from .core.fs import scan_directory as core_scan_directory, ScanOptions
 
 # 표준 패턴: {ok: bool, data: Any, error?: str}
 
+def wrap_output(func):
+    """함수 출력을 표준 응답 형식으로 래핑하는 데코레이터
+    
+    모든 반환값을 {'ok': True/False, 'data': ..., 'error': ...} 형태로 변환합니다.
+    """
+    import functools
+    
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+            # 이미 표준 응답인 경우 그대로 반환
+            if isinstance(result, dict) and 'ok' in result:
+                return result
+            # 아니면 성공 응답으로 래핑
+            return {'ok': True, 'data': result}
+        except Exception as e:
+            return {'ok': False, 'error': str(e), 'data': None}
+    return wrapper
+
 
 def ensure_response(data: Any, error: str = None, **extras) -> Dict[str, Any]:
     """모든 데이터를 표준 응답 형식으로 변환
@@ -84,31 +104,11 @@ def scan_directory(path: str = '.',
     """
     try:
         if output == 'list':
-            # 개선된 방식 - 구조화된 데이터 반환 (2025-08-07)
+            # 기존 방식 - core 사용
             options = ScanOptions(output="flat", max_depth=max_depth)
             result = core_scan_directory(path, options=options)
             if result["ok"]:
-                items = result["data"]
-                # 파일과 디렉토리 분리
-                import os
-                directories = []
-                files = []
-                for item in items:
-                    if item.endswith('/') or item.endswith(os.sep):
-                        directories.append(item)
-                    else:
-                        files.append(item)
-
-                structured_data = {
-                    'root': path,
-                    'directories': directories,
-                    'files': files,
-                    'directory_count': len(directories),
-                    'file_count': len(files),
-                    'total_count': len(items),
-                    'items': items  # 원본 리스트도 포함 (호환성)
-                }
-                return ensure_response(structured_data, path=path)
+                return ensure_response(result["data"], count=len(result["data"]), path=path)
             else:
                 return ensure_response(None, error=result.get("error", "Unknown error"), path=path)
 

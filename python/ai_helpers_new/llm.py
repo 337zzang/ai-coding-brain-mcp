@@ -24,6 +24,91 @@ except ImportError:
     print("[WARNING] OpenAI 패키지가 설치되지 않았습니다. pip install openai")
 
 # 전역 작업 관리
+
+# ============ 파일 기반 상태 관리 (비동기 처리 개선) ============
+import json
+import os
+
+# 작업 상태 저장 경로
+TASK_STORAGE_DIR = ".ai-brain/o3_tasks"
+
+def _ensure_storage_dir():
+    """작업 저장소 디렉토리 생성"""
+    os.makedirs(TASK_STORAGE_DIR, exist_ok=True)
+
+def _get_task_file_path(task_id: str) -> str:
+    """작업 파일 경로 반환"""
+    return os.path.join(TASK_STORAGE_DIR, f"{task_id}.json")
+
+def save_task_state(task_id: str, state: Dict[str, Any]):
+    """작업 상태를 파일로 저장"""
+    _ensure_storage_dir()
+    file_path = _get_task_file_path(task_id)
+
+    # datetime 객체를 문자열로 변환
+    state_copy = state.copy()
+    for key in ['start_time', 'end_time', 'last_update']:
+        if key in state_copy and isinstance(state_copy[key], datetime):
+            state_copy[key] = state_copy[key].isoformat()
+
+    try:
+        with _task_lock:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(state_copy, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        print(f"❌ 작업 상태 저장 실패: {e}")
+        return False
+
+def load_task_state(task_id: str) -> Optional[Dict[str, Any]]:
+    """파일에서 작업 상태 로드"""
+    file_path = _get_task_file_path(task_id)
+
+    if not os.path.exists(file_path):
+        # 메모리에서 먼저 확인 (하위 호환성)
+        with _task_lock:
+            if task_id in _tasks:
+                return _tasks[task_id]
+        return None
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            state = json.load(f)
+
+        # 문자열을 datetime으로 변환
+        for key in ['start_time', 'end_time', 'last_update']:
+            if key in state and state[key]:
+                state[key] = datetime.fromisoformat(state[key])
+
+        return state
+    except Exception as e:
+        print(f"❌ 작업 상태 로드 실패: {e}")
+        # 메모리에서 확인
+        with _task_lock:
+            return _tasks.get(task_id)
+
+def update_task_status(task_id: str, status: str, **kwargs):
+    """작업 상태 업데이트"""
+    # 기존 상태 로드
+    state = load_task_state(task_id)
+    if not state:
+        state = {'id': task_id}
+
+    # 상태 업데이트
+    state['status'] = status
+    state['last_update'] = datetime.now()
+
+    # 추가 필드 업데이트
+    for key, value in kwargs.items():
+        state[key] = value
+
+    # 파일로 저장
+    save_task_state(task_id, state)
+
+    # 메모리에도 업데이트 (하위 호환성)
+    with _task_lock:
+        _tasks[task_id] = state
+
 _tasks = {}
 _task_counter = 0
 _task_lock = threading.Lock()
@@ -87,36 +172,42 @@ def _call_o3_api(question: str, context: Optional[str] = None,
 
 def _run_o3_task(task_id: str, question: str, context: Optional[str] = None,
                  api_key: Optional[str] = None, reasoning_effort: str = "high"):
-    """백그라운드에서 o3 작업 실행"""
-    # 상태 업데이트
+    """백그라운드에서 o3 작업 실행 (개선 버전)"""
+
+    # 초기 상태를 파일과 메모리에 저장
+    initial_state = {
+        'id': task_id,
+        'status': 'running',
+        'question': question[:200] if len(question) > 200 else question,
+        'start_time': datetime.now(),
+        'reasoning_effort': reasoning_effort
+    }
+
+    # 파일로 저장
+    save_task_state(task_id, initial_state)
+
+    # 메모리에도 저장 (하위 호환성)
     with _task_lock:
-        _tasks[task_id]['status'] = 'running'
-        _tasks[task_id]['start_time'] = datetime.now()
+        _tasks[task_id] = initial_state.copy()
 
     try:
         # API 호출
         result = _call_o3_api(question, context, api_key, reasoning_effort)
 
-        # 결과 저장
-        with _task_lock:
-            if 'error' in result:
-                _tasks[task_id]['status'] = 'error'
-                _tasks[task_id]['error'] = result['error']
-            else:
-                _tasks[task_id]['status'] = 'completed'
-                _tasks[task_id]['result'] = result
+        # 결과에 따라 상태 업데이트
+        if 'error' in result:
+            update_task_status(task_id, 'error', 
+                             error=result['error'],
+                             end_time=datetime.now())
+        else:
+            update_task_status(task_id, 'completed',
+                             result=result,
+                             end_time=datetime.now())
 
     except Exception as e:
-        with _task_lock:
-            _tasks[task_id]['status'] = 'error'
-            _tasks[task_id]['error'] = str(e)
-
-    finally:
-        with _task_lock:
-            _tasks[task_id]['end_time'] = datetime.now()
-
-
-@safe_execution
+        update_task_status(task_id, 'error',
+                         error=str(e),
+                         end_time=datetime.now())
 def ask_o3_async(question: str, context: Optional[str] = None, 
                  reasoning_effort: Union[str, None] = "high", 
                  _api_key: Optional[str] = None) -> Dict[str, Any]:
@@ -209,30 +300,26 @@ def check_o3_status(task_id: str) -> Dict[str, Any]:
 
 @safe_execution
 def get_o3_result(task_id: str) -> dict:
-    """o3 작업 결과 가져오기
+    """o3 작업 결과 가져오기 (개선 버전)
 
-    Args:
-        task_id: 작업 ID
-
-    Returns:
-        결과 딕셔너리
+    파일에서 먼저 확인, 없으면 메모리 확인
     """
-    with _task_lock:
-        task = _tasks.get(task_id)
+    # 파일에서 상태 로드
+    state = load_task_state(task_id)
 
-    if not task:
+    if not state:
         return err(f"Task {task_id} not found")
 
-    if task['status'] != 'completed':
-        return err(f"Task {task_id} is {task['status']}, not completed")
+    if state.get('status') != 'completed':
+        status = state.get('status', 'unknown')
+        return err(f"Task {task_id} is {status}, not completed")
 
     # 결과 반환
-    result = task.get('result')
+    result = state.get('result')
     if not result:
         return err(f"No result found for task {task_id}")
 
     return ok(result)
-
 @safe_execution
 def save_o3_result(task_id: str) -> dict:
     """o3 작업 결과를 파일로 저장

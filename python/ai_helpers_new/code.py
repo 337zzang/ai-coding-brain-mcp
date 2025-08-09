@@ -252,6 +252,33 @@ def parse(filepath: str) -> Dict[str, Any]:
     functions = []
     classes = []
 
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef):
+            functions.append({
+                'name': node.name,
+                'lineno': node.lineno,
+                'args': [arg.arg for arg in node.args.args],
+                'decorators': [d.id if hasattr(d, 'id') else str(d)
+                              for d in node.decorator_list]
+            })
+        elif isinstance(node, ast.ClassDef):
+            classes.append({
+                'name': node.name,
+                'lineno': node.lineno,
+                'bases': [base.id if hasattr(base, 'id') else str(base)
+                         for base in node.bases],
+                'decorators': [d.id if hasattr(d, 'id') else str(d)
+                              for d in node.decorator_list]
+            })
+
+    # Return the parsed structure
+    return {
+        'functions': functions,
+        'classes': classes,
+        'imports': [],  # TODO: implement import extraction
+        'globals': []   # TODO: implement global variable extraction
+    }
+
 def get_type_repr(annotation):
     """Get string representation of type annotation."""
     if annotation is None:
@@ -894,4 +921,3 @@ __all__ = [
 # ============================================
 # Improved Insert/Delete 함수 (재추가)
 # ============================================
-

@@ -93,7 +93,7 @@ def run_git_command(args: List[str], cwd: Optional[str] = None, timeout: int = 3
 
         # 결과 처리
         if result.returncode == 0:
-            return ok(result.stdout.strip(), stderr=result.stderr.strip() if result.stderr else None)
+            return ok(result.stdout.strip())
         else:
             stderr = result.stderr.strip() if result.stderr else f"Command failed with code {result.returncode}"
             return err(f"Git command failed: {stderr}")

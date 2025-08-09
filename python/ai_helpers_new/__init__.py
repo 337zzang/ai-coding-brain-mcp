@@ -55,9 +55,10 @@ git_checkout_b = getattr(_facade, 'git_checkout_b', None)
 git_merge = getattr(_facade, 'git_merge', None)
 
 # LLM/O3 관련
-ask_o3 = getattr(_facade, 'ask_o3', None)
+# ask_o3는 없으므로 ask_o3_practical로 대체
+ask_o3 = None  # 동기 버전 없음, ask_o3_practical 또는 ask_o3_async 사용
 ask_o3_async = getattr(_facade, 'ask_o3_async', None)
-ask_o3_practical = getattr(_facade, 'ask_o3_practical', None)
+from .llm import ask_o3_practical
 check_o3_status = getattr(_facade, 'check_o3_status', None)
 get_o3_result = getattr(_facade, 'get_o3_result', None)
 show_o3_progress = getattr(_facade, 'show_o3_progress', None)
@@ -69,6 +70,13 @@ create_task_logger = getattr(_facade, 'create_task_logger', None)
 
 # Project 관련
 get_current_project = getattr(_facade, 'get_current_project', None)
+
+# 유저 프리퍼런스 v3.0 누락 함수 추가 (2025-08-09)
+select_plan_and_show = getattr(_facade, 'select_plan_and_show', None)
+fix_task_numbers = getattr(_facade, 'fix_task_numbers', None)
+flow_project = getattr(_facade, 'flow_project', None)
+project_info = getattr(_facade, 'project_info', None)
+list_projects = getattr(_facade, 'list_projects', None)
 flow_project_with_workflow = getattr(_facade, 'flow_project_with_workflow', None)
 fp = getattr(_facade, 'fp', flow_project_with_workflow)  # 별칭
 
@@ -127,8 +135,11 @@ __all__ = [
     'ask_o3', 'ask_o3_async', 'get_o3_result', 'check_o3_status',
     'show_o3_progress', 'clear_completed_tasks',
     'get_flow_api', 'create_task_logger',
-    'get_current_project', 'flow_project_with_workflow',
-    'search_imports', 'get_statistics',
+'get_current_project', 'flow_project_with_workflow',
+'search_imports', 'get_statistics',
+# 유저 프리퍼런스 v3.0 누락 함수 추가 (2025-08-09)
+'select_plan_and_show', 'fix_task_numbers', 'flow_project',
+'project_info', 'list_projects',
     
     # 도메인 모델
     'Plan', 'Task', 'TaskStatus',

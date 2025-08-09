@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-search.py - AI Helpers Search Module (개선된 버전)
+search.py - 개선된 버전
 생성일: 2025-08-09
 
 주요 개선사항:
-- 치명적 버그 4개 수정 (중복 정의, 외부 의존, AST mode, 소스 추출)
-- 성능 개선 5개 적용 (제너레이터, 스트리밍, 캐싱 등)
-- 코드 품질 개선 4개 (예외 처리, 테스트 패턴, 통합, 옵션)
-
-v2.0.0 - Complete rewrite with bug fixes and performance improvements
+- 치명적 버그 4개 수정
+- 성능 개선 5개 적용
+- 코드 품질 개선 4개
 """
 
 
@@ -51,6 +49,9 @@ def clear_all_caches():
     for cache in _caches:
         if hasattr(cache, 'cache_clear'):
             cache.cache_clear()
+
+# Part 2: 파일 탐색 제너레이터
+
 def search_files_generator(
     path: str, 
     pattern: str = "*",
@@ -88,6 +89,9 @@ def search_files_generator(
             logger.debug(f"Cannot access {current_path}: {e}")
 
     yield from walk_with_depth(base_path)
+
+# Part 3: AST 기반 검색 (Python 3.8+ 지원)
+
 @lru_cache(maxsize=256)
 @_register_cache
 def _load_ast_cached(file_path: str) -> tuple:
@@ -186,6 +190,9 @@ def _find_class_ast(
                 'mode': 'ast',  # 수정됨: 'regex' -> 'ast'
                 'type': 'class'
             }
+
+# Part 4: 코드 검색 함수들 (성능 최적화)
+
 def search_code(
     pattern: str,
     path: str = ".",
@@ -293,6 +300,9 @@ def grep(
         use_regex=use_regex,
         case_sensitive=False
     )
+
+# Part 5: 통계 함수 (캐싱 적용, 중복 제거)
+
 @lru_cache(maxsize=32)
 @_register_cache
 def get_statistics(
@@ -469,83 +479,38 @@ def clear_cache():
     return {'ok': True, 'data': 'All caches cleared'}
 
 
-# ============================================
-# Namespace Style Wrapper (Facade Pattern)
-# ============================================
-
+# Namespace 스타일 래퍼 추가 (Facade 패턴)
 class SearchNamespace:
-    """검색 함수들을 위한 네임스페이스 (Facade 패턴)"""
+    """검색 함수들을 위한 네임스페이스"""
 
     @staticmethod
-    def files(pattern="*", path=".", max_depth=None, exclude_patterns=None):
-        """파일 검색 (리스트 반환)"""
-        return list(search_files_generator(path, pattern, max_depth, exclude_patterns))
+    def files(pattern="*", path=".", **kwargs):
+        return list(search_files_generator(path, pattern, **kwargs))
 
     @staticmethod
-    def code(pattern, path=".", file_pattern="*.py", **kwargs):
-        """코드 내용 검색"""
-        return search_code(pattern, path, file_pattern, **kwargs)
+    def code(pattern, path=".", **kwargs):
+        return search_code(pattern, path, **kwargs)
 
     @staticmethod
-    def function(name, path=".", strict=False):
-        """함수 검색 (AST 기반)"""
-        return search_function(name, path, strict)
+    def function(name, path=".", **kwargs):
+        return search_function(name, path, **kwargs)
 
     @staticmethod
-    def class_(name, path=".", strict=False):
-        """클래스 검색 (AST 기반)"""
-        return search_class(name, path, strict)
+    def class_(name, path=".", **kwargs):
+        return search_class(name, path, **kwargs)
 
     @staticmethod
     def imports(module_name, path="."):
-        """import 문 검색"""
         return search_imports(module_name, path)
 
     @staticmethod
-    def statistics(path=".", include_tests=False):
-        """코드베이스 통계"""
-        return get_statistics(path, include_tests)
+    def statistics(path=".", **kwargs):
+        return get_statistics(path, **kwargs)
 
-    @staticmethod
-    def grep(pattern, path=".", context=2, **kwargs):
-        """grep 스타일 검색"""
-        return grep(pattern, path, context, **kwargs)
-
-# 네임스페이스 인스턴스 생성
+# 네임스페이스 인스턴스
 search = SearchNamespace()
 
-# ============================================
-# Legacy Compatibility Aliases (하위 호환성)
-# ============================================
-
-# 기존 함수명 별칭 (기존 코드 호환성 유지)
-search_files = lambda path=".", pattern="*", **kwargs: search.files(pattern, path, **kwargs)
-find_function = lambda name, path=".", **kwargs: search.function(name, path, **kwargs)
-find_class = lambda name, path=".", **kwargs: search.class_(name, path, **kwargs)
-
-# 표준 래퍼 적용 함수들 export
-__all__ = [
-    # Core functions
-    'search_files_generator',
-    'search_code',
-    'search_function', 
-    'search_class',
-    'search_imports',
-    'get_statistics',
-    'grep',
-    'find_in_file',
-
-    # Utilities
-    'is_binary_file',
-    'clear_cache',
-    'get_cache_info',
-
-    # Namespace
-    'search',
-    'SearchNamespace',
-
-    # Legacy aliases
-    'search_files',
-    'find_function',
-    'find_class',
-]
+# 기존 호환성을 위한 별칭
+search_files = search.files
+find_function = search.function
+find_class = search.class_

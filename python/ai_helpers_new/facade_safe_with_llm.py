@@ -125,7 +125,7 @@ class LLMNamespace(SafeNamespace):
         module = self._get_module()
 
         # O3 기본 함수들
-        self.ask = self._safe_getattr('ask_o3_practical')  # ask_o3 없음, practical 사용
+        self.ask = self._safe_getattr('ask_o3')
         self.ask_async = self._safe_getattr('ask_o3_async')
         self.ask_practical = self._safe_getattr('ask_o3_practical')
 
@@ -138,8 +138,8 @@ class LLMNamespace(SafeNamespace):
         self.clear_completed = self._safe_getattr('clear_completed_tasks')
 
         # LLM 일반 함수들 (있다면)
-        self.complete = None  # llm_complete 없음
-        self.stream = None  # llm_stream 없음
+        self.complete = self._safe_getattr('llm_complete')
+        self.stream = self._safe_getattr('llm_stream')
 
     def create_context(self):
         """O3 Context Builder 생성"""
@@ -201,21 +201,13 @@ class AiHelpersFacade:
             self.functions = code.functions
             self.classes = code.classes
             
-            # Search 함수들 (개선된 버전)
+            # Search 함수들
             self.search_files = search.search_files
             self.search_code = search.search_code
             self.find_function = search.find_function
             self.find_class = search.find_class
             self.grep = search.grep
-            self.find_in_file = getattr(search, 'find_in_file', None)
-
-            # 새로운 search 함수들
-            self.search_files_generator = getattr(search, 'search_files_generator', None)
-            self.search_function = getattr(search, 'search_function', None)
-            self.search_class = getattr(search, 'search_class', None)
-            self.is_binary_file = getattr(search, 'is_binary_file', None)
-            self.clear_cache = getattr(search, 'clear_cache', None)
-            self.get_cache_info = getattr(search, 'get_cache_info', None)
+            
             # Git 함수들
             self.git_status = git.git_status
             self.git_add = git.git_add

@@ -647,3 +647,241 @@ def resolve_project_path(relative_path: str) -> str:
     """편의 함수: 상대 경로를 프로젝트 기준 절대 경로로 변환"""
     return str(get_project_context().resolve_path(relative_path))
 
+
+
+# ============= 유저 프리퍼런스 v3.0 누락 함수 추가 =============
+# 2025-08-09: 테스트에서 발견된 누락 함수들 구현
+
+def select_plan_and_show(plan_id_or_number: str):
+    """플랜 선택 및 상세 정보 표시 (JSONL 로그 포함)
+
+    Args:
+        plan_id_or_number: 플랜 ID 또는 번호
+
+    Returns:
+        dict: {'ok': bool, 'data': dict, 'error': str}
+    """
+    try:
+        from .flow_api import FlowAPI
+        import os
+        import json
+
+        api = FlowAPI()
+
+        # 플랜 선택
+        select_result = api.select_plan(plan_id_or_number)
+        if not select_result['ok']:
+            return select_result
+
+        plan_id = select_result['data']['id']
+
+        # 플랜 정보 가져오기
+        plan_info = api.get_plan(plan_id)
+        if not plan_info['ok']:
+            return plan_info
+
+        # Task 목록 가져오기
+        tasks = api.list_tasks(plan_id)
+        if not tasks['ok']:
+            return tasks
+
+        # JSONL 로그 파일 읽기
+        flow_dir = get_project_context().resolve_path(".ai-brain/flow")
+        plan_dir = flow_dir / "plans" / plan_id
+
+        logs = []
+        if plan_dir.exists():
+            for task_file in sorted(plan_dir.glob("*.jsonl")):
+                with open(task_file, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        if line.strip():
+                            logs.append(json.loads(line))
+
+        return {
+            'ok': True,
+            'data': {
+                'plan': plan_info['data'],
+                'tasks': tasks['data'],
+                'logs': logs,
+                'log_count': len(logs)
+            }
+        }
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}
+
+
+def fix_task_numbers(plan_id: str):
+    """Task number가 None인 경우 자동 복구
+
+    Args:
+        plan_id: 플랜 ID
+
+    Returns:
+        dict: {'ok': bool, 'data': dict, 'error': str}
+    """
+    try:
+        from .flow_api import FlowAPI
+
+        api = FlowAPI()
+
+        # Task 목록 가져오기
+        tasks_result = api.list_tasks(plan_id)
+        if not tasks_result['ok']:
+            return tasks_result
+
+        tasks = tasks_result['data']
+        fixed_count = 0
+
+        # Task number 복구
+        for i, task in enumerate(tasks, 1):
+            if task.get('number') is None:
+                # Task 업데이트
+                update_result = api.update_task(
+                    plan_id, 
+                    task['id'],
+                    number=i
+                )
+                if update_result['ok']:
+                    fixed_count += 1
+
+        return {
+            'ok': True,
+            'data': {
+                'fixed_count': fixed_count,
+                'total_tasks': len(tasks),
+                'message': f"Fixed {fixed_count} task numbers"
+            }
+        }
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}
+
+
+def flow_project(project_name: str):
+    """단순 프로젝트 전환 (워크플로우 없이)
+
+    Args:
+        project_name: 프로젝트 이름
+
+    Returns:
+        dict: {'ok': bool, 'data': dict, 'error': str}
+    """
+    try:
+        # 프로젝트 전환
+        set_current_project(project_name)
+
+        # 프로젝트 정보 가져오기
+        project = get_project_metadata(project_name)
+        if not project:
+            return {'ok': False, 'error': f"Project '{project_name}' not found"}
+
+        return {
+            'ok': True,
+            'data': {
+                'project': project_name,
+                'path': str(project['path']),
+                'type': project.get('type', 'unknown'),
+                'switched': True
+            }
+        }
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}
+
+
+def project_info():
+    """현재 프로젝트 상세 정보
+
+    Returns:
+        dict: {'ok': bool, 'data': dict, 'error': str}
+    """
+    try:
+        # 현재 프로젝트 정보
+        current = get_current_project()
+        if not current['ok']:
+            return current
+
+        project_data = current['data']
+        project_name = project_data['name']
+
+        # 추가 정보 수집
+        project_path = Path(project_data['path'])
+
+        # 파일 통계
+        py_files = list(project_path.glob("**/*.py"))
+        js_files = list(project_path.glob("**/*.js"))
+        ts_files = list(project_path.glob("**/*.ts"))
+        md_files = list(project_path.glob("**/*.md"))
+
+        # Git 정보
+        git_dir = project_path / ".git"
+        has_git = git_dir.exists()
+
+        # Flow 정보
+        flow_dir = project_path / ".ai-brain" / "flow"
+        has_flow = flow_dir.exists()
+
+        return {
+            'ok': True,
+            'data': {
+                'name': project_name,
+                'path': str(project_path),
+                'type': project_data.get('type', 'unknown'),
+                'has_git': has_git,
+                'has_flow': has_flow,
+                'statistics': {
+                    'python_files': len(py_files),
+                    'javascript_files': len(js_files),
+                    'typescript_files': len(ts_files),
+                    'markdown_files': len(md_files),
+                    'total_files': len(py_files) + len(js_files) + len(ts_files) + len(md_files)
+                }
+            }
+        }
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}
+
+
+def list_projects():
+    """모든 프로젝트 목록
+
+    Returns:
+        dict: {'ok': bool, 'data': list, 'error': str}
+    """
+    try:
+        import os
+
+        # 프로젝트 베이스 디렉토리
+        base_dir = Path(os.path.expanduser("~/Desktop"))
+        if not base_dir.exists():
+            base_dir = Path.cwd().parent
+
+        projects = []
+
+        # 프로젝트 폴더 스캔
+        for item in base_dir.iterdir():
+            if item.is_dir() and not item.name.startswith('.'):
+                # 프로젝트 타입 판별
+                project_type = None
+                if (item / "package.json").exists():
+                    project_type = "node"
+                elif (item / "pyproject.toml").exists() or (item / "setup.py").exists():
+                    project_type = "python"
+                elif (item / ".git").exists():
+                    project_type = "git"
+
+                if project_type:
+                    projects.append({
+                        'name': item.name,
+                        'path': str(item),
+                        'type': project_type,
+                        'has_flow': (item / ".ai-brain" / "flow").exists()
+                    })
+
+        # 이름순 정렬
+        projects.sort(key=lambda x: x['name'])
+
+        return {
+            'ok': True,
+            'data': projects
+        }
+    except Exception as e:
+        return {'ok': False, 'error': str(e)}

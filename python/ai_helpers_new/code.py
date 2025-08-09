@@ -101,127 +101,6 @@ def _normalize_for_fuzzy(text: str) -> str:
 
     return normalized
 
-class ReplaceBlock:
-    """최종 통합 Replace Block 클래스"""
-    
-    @staticmethod
-    def detect_pattern_type(pattern: str) -> str:
-        """패턴 타입 자동 감지"""
-        # f-string
-        if pattern.startswith(('f"', "f'")):
-            return 'fstring'
-        # raw string
-        elif pattern.startswith(('r"', "r'")):
-            return 'raw'
-        # 삼중 따옴표
-        elif pattern.startswith(('"""', "'''")):
-            return 'triple'
-        # 멀티라인
-        elif '\n' in pattern:
-            return 'multiline'
-        # 특수 문자 많음
-        elif any(c in pattern for c in ['{', '}', '\\', '^', '$', '*', '+', '?', '[', ']']):
-            return 'special'
-        else:
-            return 'normal'
-    
-    @staticmethod
-    def normalize_pattern(pattern: str, pattern_type: str) -> str:
-        """패턴 정규화"""
-        if pattern_type == 'fstring':
-            # f-string의 {} 표현식을 와일드카드로
-            normalized = re.escape(pattern)
-            normalized = re.sub(r'\\{[^}]+\\}', r'\\{[^}]+\\}', normalized)
-            return normalized
-        
-        elif pattern_type == 'raw':
-            # raw string은 그대로
-            return re.escape(pattern)
-        
-        else:
-            # 일반 문자열은 줄바꿈 정규화
-            return pattern.replace('\r\n', '\n')
-    
-    @staticmethod
-    def find_pattern_with_fuzzy(content: str, pattern: str, threshold: float = 0.7) -> Optional[Tuple[int, int, float, str]]:
-        """Fuzzy matching으로 패턴 찾기
-        
-        Returns:
-            (시작 라인, 끝 라인, 유사도, 실제 매칭된 텍스트)
-        """
-        lines = content.split('\n')
-        pattern_lines = pattern.split('\n')
-        pattern_len = len(pattern_lines)
-        
-        # 들여쓰기 제거한 패턴
-        pattern_stripped_lines = [line.strip() for line in pattern_lines]
-        
-        best_match = None
-        best_ratio = 0.0
-        best_text = ""
-        
-        # 슬라이딩 윈도우
-        for i in range(len(lines) - pattern_len + 1):
-            window = lines[i:i + pattern_len]
-            window_stripped = [line.strip() for line in window]
-            
-            # 내용만으로 비교
-            pattern_content = '\n'.join(pattern_stripped_lines)
-            window_content = '\n'.join(window_stripped)
-            
-            matcher = difflib.SequenceMatcher(None, pattern_content, window_content)
-            ratio = matcher.ratio()
-            
-            if ratio > best_ratio and ratio >= threshold:
-                best_ratio = ratio
-                best_match = (i, i + pattern_len)
-                best_text = '\n'.join(window)
-        
-        if best_match:
-            return (*best_match, best_ratio, best_text)
-        return None
-    
-    @staticmethod
-    def apply_indentation(new_text: str, original_indent: str) -> str:
-        """새 텍스트에 원본 들여쓰기 적용"""
-        lines = new_text.split('\n')
-        result = []
-        
-        for i, line in enumerate(lines):
-            if line.strip():  # 내용이 있는 줄
-                if i == 0:
-                    # 첫 줄은 원본 들여쓰기 사용
-                    result.append(original_indent + line.lstrip())
-                else:
-                    # 나머지는 상대적 들여쓰기 유지
-                    # 원본 첫 줄의 들여쓰기를 기준으로
-                    result.append(original_indent + line)
-            else:
-                result.append(line)
-        
-        return '\n'.join(result)
-    
-    @staticmethod
-    def validate_python_syntax(content: str, file_path: str) -> Tuple[bool, Optional[str]]:
-        """Python 구문 검증"""
-        try:
-            ast.parse(content)
-            compile(content, file_path, 'exec')
-            return True, None
-        except SyntaxError as e:
-            error_msg = f"Line {e.lineno}: {e.msg}"
-            if e.text:
-                error_msg += f"\n  {e.text.strip()}"
-            return False, error_msg
-        except Exception as e:
-            return False, str(e)
-
-
-
-
-# Utility functions for indentation handling
-
-
 def _get_indent_level(source: str, line_no: int) -> int:
     """정확한 들여쓰기 레벨 계산
 
@@ -320,8 +199,19 @@ def find_fuzzy_match(content: str, pattern: str, threshold: float = 0.8) -> Opti
         return (start, start + len(pattern_str), pattern_str)
 
     # Normalize for fuzzy matching
-    def normalize(text):
-        return re.sub(r'\s+', ' ', text.strip())
+def normalize(text):
+    """Safe normalization that preserves code structure"""
+    import textwrap
+    # Remove common indentation but preserve line structure
+    text = textwrap.dedent(text)
+    # Remove trailing whitespace from each line
+    lines = [line.rstrip() for line in text.split('\n')]
+    # Remove empty lines at start and end
+    while lines and not lines[0]:
+        lines.pop(0)
+    while lines and not lines[-1]:
+        lines.pop()
+    return '\n'.join(lines)
 
     pattern_normalized = normalize(pattern)
 
@@ -362,32 +252,32 @@ def parse(filepath: str) -> Dict[str, Any]:
     functions = []
     classes = []
 
-    def get_type_repr(annotation):
-        """Get string representation of type annotation."""
-        if annotation is None:
-            return None
-        if isinstance(annotation, ast.Name):
-            return annotation.id
-        elif isinstance(annotation, ast.Constant):
-            return repr(annotation.value)
-        elif isinstance(annotation, ast.Attribute):
-            value = get_type_repr(annotation.value)
-            return f"{value}.{annotation.attr}" if value else annotation.attr
-        elif isinstance(annotation, ast.Subscript):
-            value = get_type_repr(annotation.value)
-            slice_repr = get_type_repr(annotation.slice)
-            return f"{value}[{slice_repr}]" if value else f"[{slice_repr}]"
-        elif isinstance(annotation, ast.Tuple):
-            elements = [get_type_repr(elt) for elt in annotation.elts]
-            return f"({', '.join(filter(None, elements))})"
-        elif isinstance(annotation, ast.List):
-            elements = [get_type_repr(elt) for elt in annotation.elts]
-            return f"[{', '.join(filter(None, elements))}]"
-        elif hasattr(annotation, 'value'):
-            return get_type_repr(annotation.value)
-        else:
-            return ast.unparse(annotation) if hasattr(ast, 'unparse') else None
+def get_type_repr(annotation):
+    """Get string representation of type annotation."""
+    if annotation is None:
+        return None
 
+    # Try ast.unparse first (Python 3.9+)
+    if hasattr(ast, 'unparse'):
+        try:
+            return ast.unparse(annotation)
+        except Exception:
+            pass  # Fall back to manual handling
+
+    # Fallback for Python < 3.9 or if unparse fails
+    if isinstance(annotation, ast.Name):
+        return annotation.id
+    elif isinstance(annotation, ast.Constant):
+        return repr(annotation.value)
+    elif isinstance(annotation, ast.Attribute):
+        value = get_type_repr(annotation.value)
+        return f"{value}.{annotation.attr}" if value else annotation.attr
+    else:
+        # Generic fallback
+        try:
+            return str(annotation)
+        except:
+            return None
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):
             func_info = {
@@ -444,7 +334,7 @@ def parse(filepath: str) -> Dict[str, Any]:
 
 
 @wrap_output
-def view(filepath: str, target: Optional[str] = None) -> Union[str, Dict[str, Any]]:
+def view(filepath: str, target: Optional[str] = None, context_lines: int = 10) -> Union[str, Dict[str, Any]]:
     """View code content with optional target focus."""
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"File not found: {filepath}")
@@ -457,8 +347,20 @@ def view(filepath: str, target: Optional[str] = None) -> Union[str, Dict[str, An
 
     # Parse file to find target
     parsed = parse(filepath)
+    if not parsed.get('ok'):
+        return {
+        'ok': False,
+        'error': f"Failed to parse file: {parsed.get('error', 'Unknown error')}"
+        }
     if isinstance(parsed, dict) and 'data' in parsed:
         parsed = parsed['data']
+    
+    # Additional check for None data
+    if parsed is None:
+        return {
+            'ok': False,
+            'error': 'Parse returned no data'
+        }
 
     target_line = None
     target_type = None
@@ -497,7 +399,7 @@ def view(filepath: str, target: Optional[str] = None) -> Union[str, Dict[str, An
         return f"Target '{target}' not found in {filepath}"
 
     # Calculate range (fixed 10 lines context)
-    context_lines = 10
+# context_lines is now a parameter with default value 10
     start_line = max(1, target_line - context_lines)
     end_line = min(len(lines), target_line + context_lines)
 
@@ -716,7 +618,7 @@ def insert(
     
             # Normalize for better fuzzy matching (ignore indentation)
             norm_content = _normalize_for_fuzzy(content)
-            norm_pattern = _normalize_for_fuzzy(pattern)
+            norm_position = _normalize_for_fuzzy(position)
             best_ratio = 0
             best_line = 0
 
@@ -753,23 +655,13 @@ def insert(
             try:
                 compile(test_content, '<test>', 'exec')
                 content = indented_content  # Use indented version if successful
-            except SyntaxError:
-                # Try adjusting indentation
-                for adjust in [-4, 4, -8, 8, 0]:
-                    new_indent = max(0, indent_level + adjust)
-                    adjusted_content = textwrap.indent(content.rstrip('\n'), ' ' * new_indent)
-
-                    test_lines = lines.copy()
-                    test_lines.insert(insert_line - 1, adjusted_content)
-                    test_content = '\n'.join(test_lines)
-
-                    try:
-                        compile(test_content, '<test>', 'exec')
-                        content = adjusted_content  # Success with adjusted indentation
-                        break
-                    except SyntaxError:
-                        continue
-                # If all attempts fail, use original content
+            except SyntaxError as e:
+                # Don't try to guess indentation - return clear error
+                return {
+                    'ok': False,
+                    'error': f'Syntax error after insertion at line {insert_line}: {e}',
+                    'suggestion': 'Check indentation level and code structure'
+                }
         else:
             content = indented_content
 
@@ -1003,116 +895,3 @@ __all__ = [
 # Improved Insert/Delete 함수 (재추가)
 # ============================================
 
-
-def insert_v2(path: str, marker: Union[str, int], code: str,
-              after: bool = True, indent_auto: bool = True) -> Dict[str, Any]:
-    """개선된 insert - 들여쓰기 자동 처리
-
-    Args:
-        path: 파일 경로
-        marker: 삽입 위치 (문자열 패턴 또는 라인 번호)
-        code: 삽입할 코드
-        after: True면 마커 뒤에, False면 앞에 삽입
-        indent_auto: True면 들여쓰기 자동 감지/적용
-
-    Returns:
-        표준 응답 형식
-    """
-    try:
-        # 파일 읽기
-        with open(path, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-
-        # 마커 위치 찾기
-        if isinstance(marker, int):
-            position = marker - 1  # 라인 번호는 1부터 시작
-        else:
-            position = None
-            for i, line in enumerate(lines):
-                if marker in line:
-                    position = i
-                    break
-
-            if position is None:
-                return {'ok': False, 'error': f'Marker "{marker}" not found'}
-
-        # 들여쓰기 감지
-        if indent_auto and position < len(lines):
-            target_line = lines[position]
-            indent = len(target_line) - len(target_line.lstrip())
-            # 코드에 들여쓰기 적용
-            indented_code = '\n'.join(' ' * indent + line if line.strip() else line 
-                                     for line in code.split('\n'))
-        else:
-            indented_code = code
-
-        # 삽입
-        if after:
-            lines.insert(position + 1, indented_code + '\n')
-        else:
-            lines.insert(position, indented_code + '\n')
-
-        # 파일 저장
-        with open(path, 'w', encoding='utf-8') as f:
-            f.writelines(lines)
-
-        return {'ok': True, 'data': 'Inserted successfully'}
-
-    except Exception as e:
-        return {'ok': False, 'error': str(e)}
-
-
-
-def delete_lines(path: str, start: Union[str, int], end: Optional[Union[str, int]] = None) -> Dict[str, Any]:
-    """라인 삭제 함수
-
-    Args:
-        path: 파일 경로
-        start: 시작 위치 (라인 번호 또는 패턴)
-        end: 끝 위치 (없으면 한 줄만 삭제)
-
-    Returns:
-        표준 응답 형식
-    """
-    try:
-        # 파일 읽기
-        with open(path, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-
-        # 시작 위치 찾기
-        if isinstance(start, int):
-            start_pos = start - 1
-        else:
-            start_pos = None
-            for i, line in enumerate(lines):
-                if start in line:
-                    start_pos = i
-                    break
-            if start_pos is None:
-                return {'ok': False, 'error': f'Start marker "{start}" not found'}
-
-        # 끝 위치 찾기
-        if end is None:
-            end_pos = start_pos
-        elif isinstance(end, int):
-            end_pos = end - 1
-        else:
-            end_pos = None
-            for i in range(start_pos, len(lines)):
-                if end in lines[i]:
-                    end_pos = i
-                    break
-            if end_pos is None:
-                return {'ok': False, 'error': f'End marker "{end}" not found'}
-
-        # 삭제
-        del lines[start_pos:end_pos + 1]
-
-        # 파일 저장
-        with open(path, 'w', encoding='utf-8') as f:
-            f.writelines(lines)
-
-        return {'ok': True, 'data': f'Deleted lines {start_pos+1} to {end_pos+1}'}
-
-    except Exception as e:
-        return {'ok': False, 'error': str(e)}

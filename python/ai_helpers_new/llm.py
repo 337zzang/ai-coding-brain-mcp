@@ -59,10 +59,9 @@ def _call_o3_api(question: str, context: Optional[str] = None,
 
         # API 호출
         response = client.chat.completions.create(
-            model="o3",
+            model="gpt-5",
             messages=messages,
-            reasoning_effort=reasoning_effort,
-            max_completion_tokens=36000
+            reasoning_effort=reasoning_effort
         )
 
         # 결과 파싱

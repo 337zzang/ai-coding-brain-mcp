@@ -5,7 +5,7 @@ import platform
 import shutil  # Phase 2: 크로스플랫폼 Git 탐색
 from typing import Dict, Any, List, Optional
 from .util import ok, err
-from .wrappers import safe_execution
+from .wrappers import safe_execution, wrap_output
 
 
 # ============================================================
@@ -663,3 +663,35 @@ def current_branch() -> Dict[str, Any]:
         return ok(result['data'].strip())
 
     return err("Could not determine current branch")
+
+
+def git_status_normalized() -> Dict[str, Any]:
+    """Git 상태를 확장된 형식으로 반환
+
+    Returns:
+        dict: {
+            'branch': str,
+            'modified_count': int,
+            'untracked_count': int,
+            'staged_count': int,
+            'files': list,
+            'clean': bool
+        }
+    """
+    status = git_status()
+    if not status.get('ok'):
+        return status
+
+    data = status.get('data', {})
+
+    # 정규화된 형식으로 변환
+    normalized = {
+        'branch': data.get('branch', 'unknown'),
+        'modified_count': len([f for f in data.get('files', []) if f.get('type') == 'modified']),
+        'untracked_count': len([f for f in data.get('files', []) if f.get('type') == 'untracked']),
+        'staged_count': len([f for f in data.get('files', []) if f.get('index') not in [' ', '?']]),
+        'files': data.get('files', []),
+        'clean': data.get('clean', False)
+    }
+
+    return normalized

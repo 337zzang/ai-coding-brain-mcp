@@ -192,13 +192,28 @@ def search_code(
     file_pattern: str = "*.py",
     max_results: int = 100,
     context_lines: int = 0,
+    context: Optional[int] = None,
     use_regex: bool = True,
     case_sensitive: bool = False
 ) -> Dict[str, Any]:
     """
     개선된 코드 검색 - 제너레이터 기반으로 조기 종료 지원
-    grep 기능 통합 (context_lines, case_sensitive 옵션)
-    """
+    grep 기능 통합 (context_lines, context, case_sensitive 옵션)
+
+    Args:
+        pattern: 검색할 패턴
+        path: 검색 경로
+        file_pattern: 파일 패턴
+        max_results: 최대 결과 수
+        context_lines: 컨텍스트 라인 수 (이전/이후)
+        context: context_lines의 별칭 (호환성을 위해 추가)
+        use_regex: 정규식 사용 여부
+        case_sensitive: 대소문자 구분
+"""
+    # context가 주어지면 context_lines 대신 사용
+    if context is not None:
+        context_lines = context
+
     results = []
 
     # 패턴 컴파일
@@ -479,11 +494,17 @@ class SearchNamespace:
     @staticmethod
     def files(pattern="*", path=".", max_depth=None, exclude_patterns=None):
         """파일 검색 (리스트 반환)"""
-        return list(search_files_generator(path, pattern, max_depth, exclude_patterns))
+        try:
+            result = list(search_files_generator(path, pattern, max_depth, exclude_patterns))
+            # wrap_output 형식으로 반환
+            return {'ok': True, 'data': result}
+        except Exception as e:
+            return {'ok': False, 'error': str(e), 'data': []}
 
     @staticmethod
     def code(pattern, path=".", file_pattern="*.py", **kwargs):
-        """코드 내용 검색"""
+        """코드 내용 검색 - context와 context_lines 모두 지원"""
+        # search_code 함수가 이제 context를 직접 처리하므로 그대로 전달
         return search_code(pattern, path, file_pattern, **kwargs)
 
     @staticmethod

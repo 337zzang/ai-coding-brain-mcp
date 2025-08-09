@@ -6,6 +6,7 @@ Version: 2.7.0
 
 # 1. Facade 인스턴스 가져오기 (안전한 버전 사용)
 from .facade_safe import get_facade
+from .git import git_status, git_add, git_commit, git_push, git_pull, git_branch, git_checkout, git_checkout_b, git_merge, git_log, git_diff, git_stash, git_stash_pop, current_branch, git_status_normalized
 _facade = get_facade()
 
 # 2. 네임스페이스 직접 노출 (새로운 방식)

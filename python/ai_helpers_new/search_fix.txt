@@ -1,0 +1,7 @@
+    @staticmethod
+    def code(pattern, path=".", file_pattern="*.py", **kwargs):
+        """코드 내용 검색"""
+        # context 파라미터를 context_lines로 매핑
+        if 'context' in kwargs:
+            kwargs['context_lines'] = kwargs.pop('context')
+        return search_code(pattern, path, file_pattern, **kwargs)

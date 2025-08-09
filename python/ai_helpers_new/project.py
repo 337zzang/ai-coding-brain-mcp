@@ -6,7 +6,7 @@ import os
 import platform
 import json
 from typing import Dict, Any, List, Optional
-from .project_context import get_project_context, resolve_project_path
+# from .project_context import get_project_context, resolve_project_path  # 리팩토링 후 제거
 from datetime import datetime
 from pathlib import Path
 from .util import ok, err

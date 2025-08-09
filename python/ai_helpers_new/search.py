@@ -488,3 +488,359 @@ def find_in_file(file_path: str, pattern: str) -> Dict[str, Any]:
             del match['file']
 
     return result
+
+# ============= 새로 추가된 함수들 =============
+
+
+def get_statistics(path: str = ".") -> Dict[str, Any]:
+    """코드베이스 통계를 수집합니다.
+
+    Args:
+        path: 분석할 경로
+
+    Returns:
+        통계 정보 딕셔너리
+    """
+    from pathlib import Path
+    import ast
+
+    stats = {
+        "total_files": 0,
+        "python_files": 0,
+        "total_lines": 0,
+        "code_lines": 0,
+        "comment_lines": 0,
+        "blank_lines": 0,
+        "functions": 0,
+        "classes": 0,
+        "imports": 0
+    }
+
+    # Python 파일 검색
+    py_files = search_files("*.py", path)
+    if not py_files.get("ok"):
+        return py_files
+
+    stats["python_files"] = len(py_files["data"])
+
+    for file_path in py_files["data"]:
+        try:
+            # 파일 읽기
+            source = Path(file_path).read_text(encoding="utf-8")
+            lines = source.splitlines()
+
+            stats["total_lines"] += len(lines)
+
+            # 라인 유형 분석
+            for line in lines:
+                stripped = line.strip()
+                if not stripped:
+                    stats["blank_lines"] += 1
+                elif stripped.startswith("#"):
+                    stats["comment_lines"] += 1
+                else:
+                    stats["code_lines"] += 1
+
+            # AST 분석
+            try:
+                tree = ast.parse(source)
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.FunctionDef):
+                        stats["functions"] += 1
+                    elif isinstance(node, ast.ClassDef):
+                        stats["classes"] += 1
+                    elif isinstance(node, (ast.Import, ast.ImportFrom)):
+                        stats["imports"] += 1
+            except SyntaxError:
+                pass
+
+        except Exception:
+            pass
+
+    # 전체 파일 수 (Python 외)
+    all_files = search_files("*", path)
+    if all_files.get("ok"):
+        stats["total_files"] = len(all_files["data"])
+
+    return {"ok": True, "data": stats}
+
+
+# 전역 캐시 레지스트리
+_CACHE_REGISTRY = []
+
+def _register_cache(func):
+    """캐시 함수를 레지스트리에 등록"""
+    if hasattr(func, 'cache_info'):
+        _CACHE_REGISTRY.append(func)
+    return func
+
+
+def get_cache_info() -> Dict[str, Any]:
+    """캐시 정보를 반환합니다.
+
+    Returns:
+        캐시 통계 정보
+    """
+    cache_info = {}
+
+    for func in _CACHE_REGISTRY:
+        if hasattr(func, 'cache_info'):
+            info = func.cache_info()
+            cache_info[func.__name__] = {
+                "hits": info.hits,
+                "misses": info.misses,
+                "maxsize": info.maxsize,
+                "currsize": info.currsize,
+                "hit_rate": info.hits / (info.hits + info.misses) if (info.hits + info.misses) > 0 else 0
+            }
+
+    total_hits = sum(v["hits"] for v in cache_info.values())
+    total_misses = sum(v["misses"] for v in cache_info.values())
+
+    return {
+        "ok": True,
+        "data": {
+            "functions": cache_info,
+            "total_hits": total_hits,
+            "total_misses": total_misses,
+            "total_hit_rate": total_hits / (total_hits + total_misses) if (total_hits + total_misses) > 0 else 0
+        }
+    }
+
+
+def clear_cache() -> Dict[str, Any]:
+    """모든 캐시를 초기화합니다.
+
+    Returns:
+        초기화 결과
+    """
+    cleared = []
+
+    for func in _CACHE_REGISTRY:
+        if hasattr(func, 'cache_clear'):
+            func.cache_clear()
+            cleared.append(func.__name__)
+
+    return {
+        "ok": True,
+        "data": {
+            "cleared_functions": cleared,
+            "count": len(cleared)
+        }
+    }
+
+
+# Export할 public 함수들
+__all__ = [
+    'search_files',
+    'search_files',
+    'search_code',
+    'find_function',
+    'find_class',
+    'grep',
+    'find_in_file',
+    'search_imports',
+    'get_statistics',
+    'get_cache_info',
+    'clear_cache'
+]
+
+
+@wrap_output
+def search_imports(module_name: str, path: str = ".", recursive: bool = True):
+    """
+    주어진 모듈명이 import되는 모든 위치를 AST로 찾아냅니다.
+
+    Args:
+        module_name: 검색할 모듈명
+        path: 검색 시작 경로
+        recursive: 하위 디렉토리 포함 여부
+
+    Returns:
+        {'ok': True, 'data': [{'file': str, 'line': int, 'code': str}, ...]}
+    """
+    import ast
+    from pathlib import Path
+
+    if not module_name:
+        raise ValueError('module_name must be non-empty')
+
+    results = []
+    search_path = Path(path).resolve()
+
+    # Python 파일 찾기
+    if recursive:
+        py_files = search_path.rglob("*.py")
+    else:
+        py_files = search_path.glob("*.py")
+
+    for py_file in py_files:
+        try:
+            with open(py_file, 'r', encoding='utf-8') as f:
+                source = f.read()
+                lines = source.splitlines()
+
+            # AST 파싱
+            try:
+                tree = ast.parse(source, filename=str(py_file))
+            except SyntaxError:
+                continue  # 구문 오류가 있는 파일은 건너뛰기
+
+            # AST 노드 순회
+            for node in ast.walk(tree):
+                found = False
+                line_no = 0
+
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        if alias.name == module_name or alias.name.startswith(f"{module_name}."):
+                            found = True
+                            line_no = node.lineno
+                            break
+
+                elif isinstance(node, ast.ImportFrom):
+                    if node.module and (node.module == module_name or 
+                                       node.module.startswith(f"{module_name}.")):
+                        found = True
+                        line_no = node.lineno
+
+                if found and line_no > 0:
+                    # 해당 라인의 코드 가져오기
+                    code_line = lines[line_no - 1] if line_no <= len(lines) else ""
+
+                    # 상대 경로로 변환
+                    try:
+                        relative_path = py_file.relative_to(Path.cwd())
+                    except:
+                        relative_path = py_file
+
+                    results.append({
+                        'file': str(relative_path),
+                        'line': line_no,
+                        'code': code_line.strip()
+                    })
+
+        except Exception as e:
+            continue  # 파일 읽기 오류는 무시
+
+    return results
+
+
+@wrap_output
+def get_statistics(path: str = ".", include_tests: bool = False):
+    """
+    코드베이스 통계를 수집합니다.
+
+    Args:
+        path: 분석할 경로
+        include_tests: 테스트 파일 포함 여부
+
+    Returns:
+        {'ok': True, 'data': {stats...}}
+    """
+    from pathlib import Path
+    import ast
+
+    stats = {
+        'total_files': 0,
+        'python_files': 0,
+        'total_lines': 0,
+        'code_lines': 0,
+        'comment_lines': 0,
+        'blank_lines': 0,
+        'functions': 0,
+        'classes': 0,
+        'imports': 0,
+        'files_with_errors': 0,
+        'largest_file': None,
+        'most_complex_file': None,
+        'by_extension': {}
+    }
+
+    search_path = Path(path).resolve()
+    largest_lines = 0
+    most_functions = 0
+
+    for py_file in search_path.rglob("*"):
+        if py_file.is_file():
+            # 파일 확장자별 카운트
+            ext = py_file.suffix
+            stats['by_extension'][ext] = stats['by_extension'].get(ext, 0) + 1
+            stats['total_files'] += 1
+
+            if ext == '.py':
+                # 테스트 파일 제외 옵션
+                if not include_tests and ('test' in py_file.name.lower() or 
+                                         'test' in str(py_file.parent).lower()):
+                    continue
+
+                stats['python_files'] += 1
+
+                try:
+                    with open(py_file, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()
+
+                    file_lines = len(lines)
+                    stats['total_lines'] += file_lines
+
+                    # 가장 큰 파일 추적
+                    if file_lines > largest_lines:
+                        largest_lines = file_lines
+                        stats['largest_file'] = {
+                            'path': str(py_file.relative_to(search_path)),
+                            'lines': file_lines
+                        }
+
+                    # 라인 타입 분석
+                    for line in lines:
+                        stripped = line.strip()
+                        if not stripped:
+                            stats['blank_lines'] += 1
+                        elif stripped.startswith('#'):
+                            stats['comment_lines'] += 1
+                        else:
+                            stats['code_lines'] += 1
+
+                    # AST 분석
+                    try:
+                        source = ''.join(lines)
+                        tree = ast.parse(source)
+
+                        file_functions = 0
+                        file_classes = 0
+                        file_imports = 0
+
+                        for node in ast.walk(tree):
+                            if isinstance(node, ast.FunctionDef):
+                                stats['functions'] += 1
+                                file_functions += 1
+                            elif isinstance(node, ast.ClassDef):
+                                stats['classes'] += 1
+                                file_classes += 1
+                            elif isinstance(node, (ast.Import, ast.ImportFrom)):
+                                stats['imports'] += 1
+                                file_imports += 1
+
+                        # 가장 복잡한 파일 추적
+                        complexity = file_functions + file_classes
+                        if complexity > most_functions:
+                            most_functions = complexity
+                            stats['most_complex_file'] = {
+                                'path': str(py_file.relative_to(search_path)),
+                                'functions': file_functions,
+                                'classes': file_classes
+                            }
+
+                    except SyntaxError:
+                        stats['files_with_errors'] += 1
+
+                except Exception:
+                    pass  # 파일 읽기 오류 무시
+
+    # 비율 계산
+    if stats['total_lines'] > 0:
+        stats['code_ratio'] = round(stats['code_lines'] / stats['total_lines'] * 100, 2)
+        stats['comment_ratio'] = round(stats['comment_lines'] / stats['total_lines'] * 100, 2)
+
+    return stats
+

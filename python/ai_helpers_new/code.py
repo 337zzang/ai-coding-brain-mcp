@@ -8,28 +8,98 @@ import re
 import os
 import difflib
 from typing import Dict, List, Optional, Any, Union, Tuple
-from .wrappers import ensure_response, safe_execution
+
+# wrap_output import 문제 해결
+try:
+    from .wrappers import wrap_output, ensure_response, safe_execution
+except (ImportError, NameError):
+    # 순환 import 문제 발생 시 더미 데코레이터 사용
+    def wrap_output(func):
+        """Fallback wrapper when circular import occurs"""
+        return func
+    def ensure_response(result):
+        return result
+    def safe_execution(func):
+        return func
+
 
 # safe_execution을 wrap_output으로 별칭 설정
 
 
-def _normalize_for_fuzzy(text: str) -> str:
-    """Fuzzy matching을 위한 텍스트 정규화
-    
-    - 각 줄의 선행 공백 제거
-    - 빈 줄 제거
-    - 비교용으로만 사용 (실제 치환에는 원본 사용)
+def _normalize_code(block: str) -> str:
     """
-    lines = [line.lstrip() for line in text.splitlines()]
-    return '\n'.join([line for line in lines if line.strip()])
+    코드 블록을 정규화하여 fuzzy matching 정확도 향상
 
-wrap_output = safe_execution
+    1. 공통 들여쓰기 제거 (textwrap.dedent)
+    2. 우측 공백 제거 (rstrip)
+    3. 연속 공백을 단일 공백으로 (re.sub)
+    4. 양끝 빈줄 제거
+    5. 탭을 공백으로 변환
+    """
+    import textwrap
+    import re
+
+    # 빈 문자열 처리
+    if not block:
+        return ""
+
+    # 공통 들여쓰기 제거
+    block = textwrap.dedent(block)
+
+    # 각 줄 처리
+    normalized_lines = []
+    for line in block.splitlines():
+        # 우측 공백 제거
+        line = line.rstrip()
+        # 탭을 공백으로 변환
+        line = line.replace('\t', '    ')
+        # 연속 공백을 단일 공백으로 (문자열 내부는 제외)
+        if not line.strip().startswith(('#', '"', "'")):
+            line = re.sub(r'  +', ' ', line)
+        normalized_lines.append(line)
+
+    # 양끝 빈줄 제거
+    while normalized_lines and not normalized_lines[0]:
+        normalized_lines.pop(0)
+    while normalized_lines and not normalized_lines[-1]:
+        normalized_lines.pop()
+
+    return '\n'.join(normalized_lines)
 
 
 
-# ============================================
-# ReplaceBlock 클래스 (replace_block_final.py에서 통합)
-# ============================================
+
+def _normalize_for_fuzzy(text: str) -> str:
+    """Fuzzy matching을 위한 텍스트 정규화 (개선된 버전)
+
+    - 공통 들여쓰기 제거 (textwrap.dedent)
+    - 각 줄의 우측 공백 제거
+    - 연속 공백을 단일 공백으로
+    - 양끝 빈줄 제거
+    """
+    import textwrap
+    import re
+
+    # 빈 문자열 처리
+    if not text:
+        return ""
+
+    # 1. 공통 들여쓰기 제거
+    text = textwrap.dedent(text)
+
+    # 2. 각 줄 처리
+    lines = []
+    for line in text.splitlines():
+        # 우측 공백 제거
+        line = line.rstrip()
+        # 연속 공백/탭을 단일 공백으로
+        line = re.sub(r'[ \t]+', ' ', line)
+        lines.append(line)
+
+    # 3. 재조합 및 양끝 정리
+    normalized = '\n'.join(lines).strip()
+
+    return normalized
 
 class ReplaceBlock:
     """최종 통합 Replace Block 클래스"""

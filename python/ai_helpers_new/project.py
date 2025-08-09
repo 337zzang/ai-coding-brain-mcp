@@ -372,6 +372,17 @@ def flow_project_with_workflow(
         pass
 
     # 8) 결과 반환
+    # plan_count 추가 (v3.0 호환성)
+    plan_count = 0
+    try:
+        from .flow_api import FlowAPI
+        flow_api = FlowAPI()
+        plans_result = flow_api.list_plans()
+        if plans_result['ok'] and plans_result['data']:
+            plan_count = len(plans_result['data'])
+    except:
+        pass
+    
     result_data = {
         'project': project,
         'path': str(project_path),
@@ -379,7 +390,8 @@ def flow_project_with_workflow(
         'docs': docs,
         'git': git_info,
         'flow': flow_info,
-        'switched_from': previous_project
+        'switched_from': previous_project,
+        'plan_count': plan_count  # 추가
     }
 
     return ok(result_data)

@@ -1,368 +1,361 @@
 """
-AI Helpers File Module
-파일 읽기/쓰기를 위한 단순하고 실용적인 함수들
+AI Helpers File Module - 개선 버전
+데이터 무결성과 성능을 개선한 파일 입출력 모듈
 """
 from pathlib import Path
 import json
 import shutil
+import os
+import tempfile
+from datetime import datetime
+from typing import Any, Dict, Union, Optional, List
+from collections import deque
+from itertools import islice
 from .util import ok, err
-from typing import Any, Dict, Union
-
 
 
 def resolve_project_path(path: Union[str, Path]) -> Path:
     """
-    Resolve path using ProjectContext if available.
+    프로젝트 경로 해결 - 순환 참조 제거 버전
 
-    If a project is active in the session, relative paths are resolved
-    relative to the project base. Otherwise, they're resolved relative
-    to the current working directory.
-
-    Args:
-        path: Path to resolve (can be relative or absolute)
-
-    Returns:
-        Resolved absolute path
+    환경 변수 AI_PROJECT_BASE를 사용하거나 현재 디렉토리 기준
     """
-    from .session import get_current_session
+    if isinstance(path, str):
+        path = Path(path)
 
-    path_obj = Path(path)
+    # 절대 경로는 그대로 반환
+    if path.is_absolute():
+        return path
 
-    # If already absolute, return as is
-    if path_obj.is_absolute():
-        return path_obj
+    # 환경 변수에서 프로젝트 경로 확인
+    project_base = os.environ.get('AI_PROJECT_BASE')
 
-    # Try to get project context from session
-    try:
-        session = get_current_session()
-        if session.is_initialized and session.project_context:
-            # Resolve relative to project base
-            return session.project_context.resolve_path(path)
-    except:
-        pass
-
-    # Fallback to current working directory
-    return Path.cwd() / path
+    if project_base:
+        return Path(project_base) / path
+    else:
+        # 현재 작업 디렉토리 기준
+        return Path.cwd() / path
 
 
-def read(path: str, encoding: str = 'utf-8', offset: int = 0, length: int = None) -> Dict[str, Any]:
-    """파일을 읽어서 내용 반환 (부분 읽기 지원)
+def write(filepath: Union[str, Path], 
+          content: str, 
+          backup: bool = False, 
+          encoding: str = 'utf-8') -> Dict[str, Any]:
+    """
+    원자적 쓰기를 구현한 안전한 파일 쓰기
 
-    Args:
-        path: 파일 경로
-        encoding: 파일 인코딩 (기본: utf-8)
-        offset: 시작 라인 번호 (0-based, 음수는 끝에서부터)
-        length: 읽을 라인 수 (None이면 끝까지)
-
-    Returns:
-        성공: {'ok': True, 'data': 내용, 'path': 경로, 'lines': 줄수, 'size': 크기}
-        실패: {'ok': False, 'error': 에러메시지}
+    데이터 무결성을 보장하기 위해 임시 파일에 먼저 쓰고
+    성공 시에만 원본을 교체합니다.
     """
     try:
-        p = resolve_project_path(path)
+        p = resolve_project_path(filepath)
+        p.parent.mkdir(parents=True, exist_ok=True)
+
+        backup_path = None
+
+        # 백업 처리 (타임스탬프 포함)
+        if backup and p.exists():
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            backup_path = p.with_name(f"{p.stem}.{timestamp}.backup{p.suffix}")
+            shutil.copy2(p, backup_path)
+
+        # 원자적 쓰기 - 임시 파일 사용
+        temp_fd, temp_path = tempfile.mkstemp(
+            dir=p.parent,
+            prefix=f'.tmp_{p.name}_',
+            text=True
+        )
+
+        try:
+            # 임시 파일에 쓰기
+            with os.fdopen(temp_fd, 'w', encoding=encoding) as f:
+                f.write(content)
+                f.flush()
+                os.fsync(f.fileno())  # 디스크에 강제 동기화
+
+            # 원자적 교체
+            if os.name == 'nt':  # Windows
+                if p.exists():
+                    os.replace(temp_path, str(p))
+                else:
+                    os.rename(temp_path, str(p))
+            else:  # Unix/Linux/Mac
+                os.rename(temp_path, str(p))  # 원자적 작업
+
+            return ok({
+                'path': str(p),
+                'size': len(content),
+                'backup': str(backup_path) if backup_path else None
+            })
+
+        except Exception as e:
+            # 임시 파일 정리
+            if os.path.exists(temp_path):
+                try:
+                    os.unlink(temp_path)
+                except:
+                    pass
+            raise
+
+    except Exception as e:
+        return err(f"Write failed: {e}")
+
+
+def read(filepath: Union[str, Path],
+         encoding: str = 'utf-8',
+         offset: int = 0,
+         length: Optional[int] = 1000) -> Dict[str, Any]:
+    """
+    효율적인 부분 읽기 구현
+
+    - offset >= 0: 시작 부분부터 읽기 (islice 사용)
+    - offset < 0: 끝 부분부터 읽기 (deque 사용)
+    """
+    try:
+        p = resolve_project_path(filepath)
+
         if not p.exists():
-            return err(f"File not found: {path}", path=path)
+            return err(f"File not found: {filepath}")
 
-        # 전체 읽기 (기존 동작)
-        if offset == 0 and length is None:
-            content = p.read_text(encoding=encoding)
-            stat = p.stat()
-            return ok(
-                content,
-                path=str(p.absolute()),
-                lines=content.count('\n') + 1,
-                size=stat.st_size,
-                encoding=encoding
-            )
+        # 작은 파일은 전체 읽기 (10KB 미만)
+        file_size = p.stat().st_size
+        if file_size < 1024 * 10:
+            content = p.read_text(encoding=encoding, errors='replace')
+            lines = content.splitlines()
 
-        # 부분 읽기
-        lines = []
-        total_lines = 0
+            if offset < 0:  # 끝에서부터
+                selected = lines[offset:] if abs(offset) <= len(lines) else lines
+            else:
+                end = offset + length if length else None
+                selected = lines[offset:end]
 
-        with open(p, 'r', encoding=encoding) as f:
-            # offset < 0: 마지막 N줄 읽기
+            return ok('\n'.join(selected))
+
+        # 큰 파일은 효율적 처리
+        with open(p, 'r', encoding=encoding, errors='replace') as f:
             if offset < 0:
-                from collections import deque
+                # Tail 읽기 - deque 사용 (메모리 효율적)
                 lines = deque(maxlen=abs(offset))
                 for line in f:
                     lines.append(line.rstrip('\n'))
-                    total_lines += 1
-                lines = list(lines)
-                if length is not None:
-                    lines = lines[:length]
+                content = '\n'.join(lines)
             else:
-                # offset >= 0: 특정 위치부터 읽기
-                # offset까지 스킵
-                for i in range(offset):
-                    if f.readline() == '':
-                        break
-                    total_lines += 1
-
-                # length만큼 읽기
-                if length is None:
-                    for line in f:
-                        lines.append(line.rstrip('\n'))
-                        total_lines += 1
+                # 정방향 읽기 - islice 사용 (I/O 효율적)
+                if length:
+                    lines = list(islice(f, offset, offset + length))
                 else:
-                    for i in range(length):
-                        line = f.readline()
-                        if line == '':
-                            break
-                        lines.append(line.rstrip('\n'))
-                        total_lines += 1
+                    lines = list(islice(f, offset, None))
+                content = ''.join(lines).rstrip('\n')
 
-        content = '\n'.join(lines)
-        stat = p.stat()
+        return ok(content)
 
-        return ok(
-            content,
-            path=str(p.absolute()),
-            lines=len(lines),
-            total_lines=total_lines + offset if offset >= 0 else total_lines,
-            size=stat.st_size,
-            encoding=encoding,
-            offset=offset,
-            length=length
-        )
     except Exception as e:
-        return err(str(e), path=path)
+        return err(f"Read failed: {e}")
 
 
-def write(path: str, content: str, encoding: str = 'utf-8', backup: bool = False) -> Dict[str, Any]:
-    """파일에 내용 쓰기
-
-    Returns:
-        성공: {'ok': True, 'data': 쓴 바이트 수, 'path': 경로}
-        실패: {'ok': False, 'error': 에러메시지}
-    """
+def append(filepath: Union[str, Path],
+           content: str,
+           encoding: str = 'utf-8') -> Dict[str, Any]:
+    """파일 끝에 내용 추가 (원자적 쓰기 적용)"""
     try:
-        p = resolve_project_path(path)
+        p = resolve_project_path(filepath)
 
-        # 백업 옵션
-        if backup and p.exists():
-            backup_path = f"{p}.backup"
-            shutil.copy2(p, backup_path)
+        # 기존 내용 읽기
+        existing_content = ""
+        if p.exists():
+            existing_content = p.read_text(encoding=encoding, errors='replace')
+            if existing_content and not existing_content.endswith('\n'):
+                existing_content += '\n'
 
-        # 디렉토리 생성
-        p.parent.mkdir(parents=True, exist_ok=True)
+        # 원자적 쓰기로 추가
+        new_content = existing_content + content
+        return write(filepath, new_content, backup=False, encoding=encoding)
 
-        # 파일 쓰기
-        p.write_text(content, encoding=encoding)
-
-        return ok(
-            len(content),
-            path=str(p.absolute()),
-            lines=content.count('\n') + 1
-        )
     except Exception as e:
-        return err(str(e), path=path)
+        return err(f"Append failed: {e}")
 
 
-def append(path: str, content: str, encoding: str = 'utf-8') -> Dict[str, Any]:
-    """파일에 내용 추가
-
-    Returns:
-        성공: {'ok': True, 'data': 추가한 바이트 수, 'path': 경로}
-        실패: {'ok': False, 'error': 에러메시지}
-    """
+def info(filepath: Union[str, Path]) -> Dict[str, Any]:
+    """메모리 효율적인 파일 정보 조회"""
     try:
-        p = resolve_project_path(path)
+        p = resolve_project_path(filepath)
 
-        # 파일이 없으면 새로 생성
         if not p.exists():
-            return write(path, content, encoding)
-
-        # 기존 내용에 추가
-        with open(p, 'a', encoding=encoding) as f:
-            f.write(content)
-
-        return ok(
-            len(content),
-            path=str(p.absolute()),
-            appended=True
-        )
-    except Exception as e:
-        return err(str(e), path=path)
-
-
-def read_json(path: str) -> Dict[str, Any]:
-    """JSON 파일 읽기
-
-    Returns:
-        성공: {'ok': True, 'data': 파싱된 객체}
-        실패: {'ok': False, 'error': 에러메시지}
-    """
-    result = read(path)
-    if not result['ok']:
-        return result
-
-    try:
-        data = json.loads(result['data'])
-        return ok(data, path=path)
-    except json.JSONDecodeError as e:
-        return err(f"Invalid JSON: {e}", path=path)
-
-
-def write_json(path: str, data: Any, indent: int = 2) -> Dict[str, Any]:
-    """객체를 JSON으로 저장
-
-    Returns:
-        성공: {'ok': True, 'data': 쓴 바이트 수}
-        실패: {'ok': False, 'error': 에러메시지}
-    """
-    try:
-        content = json.dumps(data, indent=indent, ensure_ascii=False, default=lambda o: o.isoformat() if hasattr(o, 'isoformat') else str(o))
-        return write(path, content)
-    except Exception as e:
-        return err(f"JSON encoding error: {e}", path=path)
-
-
-def exists(path: str) -> Dict[str, Any]:
-    """파일 존재 여부 확인
-
-    Returns:
-        Dict with keys:
-        - ok: bool - 작업 성공 여부
-        - data: bool - 파일 존재 여부
-        - path: str - 확인한 경로
-    """
-    try:
-        result = Path(path).exists()
-        return ok(result, path=str(path))
-    except Exception as e:
-        return err(f"Failed to check existence: {str(e)}")
-
-
-def info(path: str) -> Dict[str, Any]:
-    """파일 정보 조회
-
-    Returns:
-        성공: {'ok': True, 'data': {'size': 크기, 'lines': 줄수, 'lineCount': 줄수, ...}}
-        실패: {'ok': False, 'error': 에러메시지}
-    """
-    try:
-        p = resolve_project_path(path)
-        if not p.exists():
-            return err(f"File not found: {path}", path=path)
+            return err(f"File not found: {filepath}")
 
         stat = p.stat()
+        is_file = p.is_file()
 
-        # 텍스트 파일인 경우 줄 수 계산
-        lines = None
-        line_count = None
-        last_line = None
-        append_position = None
+        result = {
+            'exists': True,
+            'is_file': is_file,
+            'is_directory': p.is_dir(),
+            'size': stat.st_size,
+            'created': stat.st_ctime,
+            'modified': stat.st_mtime,
+            'path': str(p.absolute())
+        }
 
-        # 텍스트 파일 확장자 확대
-        text_extensions = {'.py', '.txt', '.md', '.json', '.js', '.ts', '.jsx', '.tsx',
-                          '.yml', '.yaml', '.xml', '.html', '.css', '.scss', '.java',
-                          '.c', '.cpp', '.h', '.hpp', '.sh', '.bash', '.ini', '.cfg',
-                          '.log', '.csv', '.sql', '.r', '.m'}
-
-        if p.is_file() and (p.suffix.lower() in text_extensions or p.suffix == ''):
+        # 텍스트 파일인 경우만 라인 수 계산 (100MB 미만)
+        if is_file and stat.st_size < 100 * 1024 * 1024:
             try:
-                with open(p, 'r', encoding='utf-8') as f:
-                    lines_list = f.readlines()
-                    lines = len(lines_list)
-                    line_count = lines  # 같은 값을 lineCount로도 제공
-                    last_line = lines - 1 if lines > 0 else 0
-                    append_position = lines
+                line_count = 0
+
+                # 메모리 효율적인 라인 카운트
+                with open(p, 'r', encoding='utf-8', errors='ignore') as f:
+                    for line_count, _ in enumerate(f, 1):
+                        pass
+
+                result.update({
+                    'lines': line_count,
+                    'lineCount': line_count,
+                    'lastLine': line_count - 1 if line_count > 0 else 0,
+                    'appendPosition': line_count
+                })
             except:
                 # 바이너리 파일이거나 읽기 실패
                 pass
 
-        return ok({
-            'size': stat.st_size,
-            'lines': lines,
-            'lineCount': line_count,  # Desktop Commander 호환성
-            'lastLine': last_line,
-            'appendPosition': append_position,
-            'modified': stat.st_mtime,
-            'created': stat.st_ctime,
-            'is_file': p.is_file(),
-            'is_dir': p.is_dir(),
-            'suffix': p.suffix,
-            'name': p.name,
-            'type': 'file' if p.is_file() else 'directory'
-        }, path=str(p.absolute()))
+        return ok(result)
 
     except Exception as e:
-        return err(str(e), path=path)
+        return err(f"Info failed: {e}")
 
-def list_directory(path: str = ".") -> Dict[str, Any]:
-    """디렉토리 내용 조회
 
-    Args:
-        path: 조회할 디렉토리 경로
-
-    Returns:
-        {'ok': True, 'data': ['file1', 'dir1/', ...]}
-        {'ok': False, 'error': '에러 메시지'}
-    """
-    import os
-    from pathlib import Path
-
+def exists(filepath: Union[str, Path]) -> Dict[str, Any]:
+    """파일/디렉토리 존재 여부 확인 (일관성 개선)"""
     try:
-        p = resolve_project_path(path).resolve()
-        if not p.exists():
-            return err(f"경로가 존재하지 않습니다: {path}")
-
-        if not p.is_dir():
-            return err(f"디렉토리가 아닙니다: {path}")
-
-        items = []
-        for item in sorted(os.listdir(p)):
-            item_path = p / item
-            if item_path.is_dir():
-                items.append(f"[DIR] {item}")
-            else:
-                items.append(f"[FILE] {item}")
-
-        return ok(items, count=len(items), path=str(p))
-
-    except PermissionError:
-        return err(f"권한이 없습니다: {path}")
+        p = resolve_project_path(filepath)  # 일관성을 위해 추가
+        return ok({
+            'exists': p.exists(),
+            'path': str(p)
+        })
     except Exception as e:
-        return err(f"디렉토리 조회 실패: {str(e)}")
+        return err(f"Exists check failed: {e}")
 
 
-def get_file_info(path: str) -> Dict[str, Any]:
-    """info 함수의 별칭 (Desktop Commander 호환성)
-
-    Returns:
-        성공: {'ok': True, 'data': {'size': 크기, 'lines': 줄수, ...}}
-        실패: {'ok': False, 'error': 에러메시지}
-    """
-    return info(path)
-
-
-def create_directory(path: str, parents: bool = True, exist_ok: bool = True) -> Dict[str, Any]:
-    """디렉토리 생성
-
-    Args:
-        path: 생성할 디렉토리 경로
-        parents: True면 부모 디렉토리도 자동 생성
-        exist_ok: True면 이미 존재해도 에러 없음
-
-    Returns:
-        성공: {'ok': True, 'data': {'created': bool, 'path': str}}
-        실패: {'ok': False, 'error': 에러메시지}
-    """
+def list_directory(path: Union[str, Path] = '.') -> Dict[str, Any]:
+    """구조화된 디렉토리 목록 반환"""
     try:
         p = resolve_project_path(path)
-        already_exists = p.exists()
 
-        if already_exists and p.is_file():
-            return err(f"Path exists as file: {path}", path=str(p.absolute()))
+        if not p.exists():
+            return err(f"Directory not found: {path}")
 
-        p.mkdir(parents=parents, exist_ok=exist_ok)
+        if not p.is_dir():
+            return err(f"Not a directory: {path}")
+
+        items = []
+        for item in sorted(p.iterdir()):
+            try:
+                stat = item.stat()
+                items.append({
+                    'name': item.name,
+                    'type': 'directory' if item.is_dir() else 'file',
+                    'size': stat.st_size,
+                    'modified': stat.st_mtime,
+                    'path': str(item)
+                })
+            except (PermissionError, OSError):
+                # 접근 권한이 없는 항목은 건너뜀
+                continue
 
         return ok({
-            'created': not already_exists,
-            'already_existed': already_exists,
-            'is_absolute': p.is_absolute(),
-            'parent': str(p.parent)
-        }, path=str(p.absolute()))
+            'path': str(p),
+            'items': items,
+            'count': len(items)
+        })
 
     except Exception as e:
-        return err(f"Failed to create directory: {str(e)}", path=path)
+        return err(f"List directory failed: {e}")
+
+
+def create_directory(path: Union[str, Path]) -> Dict[str, Any]:
+    """디렉토리 생성 (중첩 디렉토리 지원)"""
+    try:
+        p = resolve_project_path(path)
+        p.mkdir(parents=True, exist_ok=True)
+        return ok({'path': str(p), 'created': True})
+    except Exception as e:
+        return err(f"Create directory failed: {e}")
+
+
+def read_json(filepath: Union[str, Path]) -> Dict[str, Any]:
+    """JSON 파일 읽기"""
+    try:
+        result = read(filepath, length=None)  # 전체 읽기
+        if not result['ok']:
+            return result
+
+        data = json.loads(result['data'])
+        return ok(data)
+    except json.JSONDecodeError as e:
+        return err(f"Invalid JSON: {e}")
+    except Exception as e:
+        return err(f"Read JSON failed: {e}")
+
+
+def write_json(filepath: Union[str, Path],
+               data: Any,
+               indent: int = 2,
+               backup: bool = True) -> Dict[str, Any]:
+    """원자적 JSON 쓰기"""
+    try:
+        content = json.dumps(data, indent=indent, ensure_ascii=False)
+        return write(filepath, content, backup=backup)
+    except Exception as e:
+        return err(f"Write JSON failed: {e}")
+
+
+# 기존 함수들과의 호환성 유지
+def get_file_info(filepath):
+    """info() 함수의 별칭"""
+    return info(filepath)
+
+
+def scan_directory(path='.', max_depth=None):
+    """재귀적 디렉토리 스캔 (깊이 제한 포함)"""
+    try:
+        p = resolve_project_path(path)
+
+        if not p.exists():
+            return err(f"Directory not found: {path}")
+
+        def scan_recursive(dir_path, current_depth=0):
+            items = []
+
+            if max_depth is not None and current_depth >= max_depth:
+                return items
+
+            try:
+                for item in sorted(dir_path.iterdir()):
+                    try:
+                        stat = item.stat()
+                        item_info = {
+                            'name': item.name,
+                            'type': 'directory' if item.is_dir() else 'file',
+                            'size': stat.st_size,
+                            'path': str(item.relative_to(p))
+                        }
+
+                        if item.is_dir():
+                            children = scan_recursive(item, current_depth + 1)
+                            if children:
+                                item_info['children'] = children
+
+                        items.append(item_info)
+                    except (PermissionError, OSError):
+                        continue
+            except PermissionError:
+                pass
+
+            return items
+
+        structure = scan_recursive(p)
+        return ok({
+            'path': str(p),
+            'structure': structure
+        })
+
+    except Exception as e:
+        return err(f"Scan directory failed: {e}")

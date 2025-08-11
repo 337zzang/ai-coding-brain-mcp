@@ -694,4 +694,4 @@ def git_status_normalized() -> Dict[str, Any]:
         'clean': data.get('clean', False)
     }
 
-    return normalized
+    return ok(normalized)

@@ -235,7 +235,26 @@ def exists(filepath: Union[str, Path]) -> Dict[str, Any]:
 
 
 def list_directory(path: Union[str, Path] = '.') -> Dict[str, Any]:
-    """구조화된 디렉토리 목록 반환"""
+    """구조화된 디렉토리 목록 반환
+
+    Args:
+        path: 디렉토리 경로 (기본값: 현재 디렉토리)
+
+    Returns:
+        {
+            'ok': True,
+            'data': {
+                'path': str,           # 디렉토리 절대 경로
+                'items': List[dict],   # 파일/폴더 목록
+                'entries': List[dict], # items와 동일 (별칭)
+                'count': int           # 총 항목 수
+            }
+        }
+
+    Note:
+        - 'items'와 'entries'는 동일한 데이터를 가리킴
+        - 각 항목은 {name, type, size, modified, path} 포함
+    """
     try:
         p = resolve_project_path(path)
 
@@ -263,6 +282,7 @@ def list_directory(path: Union[str, Path] = '.') -> Dict[str, Any]:
         return ok({
             'path': str(p),
             'items': items,
+            'entries': items,  # 별칭: items와 동일, 하위 호환성
             'count': len(items)
         })
 
@@ -359,3 +379,25 @@ def scan_directory(path='.', max_depth=None):
 
     except Exception as e:
         return err(f"Scan directory failed: {e}")
+
+
+def debug_list_directory(path: Union[str, Path] = '.') -> None:
+    """list_directory 결과를 디버그하기 위한 헬퍼 함수
+
+    반환값의 구조를 시각적으로 표시하여 사용법을 명확히 함
+    """
+    result = list_directory(path)
+    if result['ok']:
+        print(f"✅ list_directory('{path}') 성공")
+        print(f"   경로: {result['data']['path']}")
+        print(f"   항목 수: {result['data']['count']}")
+        print(f"   사용 가능한 키: {list(result['data'].keys())}")
+        print(f"   💡 TIP: 'items' 또는 'entries' 둘 다 사용 가능")
+
+        if result['data']['items']:
+            print(f"\n   첫 번째 항목 구조:")
+            first = result['data']['items'][0]
+            for key, value in first.items():
+                print(f"     - {key}: {type(value).__name__}")
+    else:
+        print(f"❌ 오류: {result.get('error')}")

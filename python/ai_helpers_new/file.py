@@ -234,7 +234,7 @@ def exists(filepath: Union[str, Path]) -> Dict[str, Any]:
         return err(f"Exists check failed: {e}")
 
 
-def list_directory(path: Union[str, Path] = '.') -> Dict[str, Any]:
+def list_directory(path: Union[str, Path] = '.', debug: bool = False) -> Dict[str, Any]:
     """구조화된 디렉토리 목록 반환
 
     Args:
@@ -279,12 +279,28 @@ def list_directory(path: Union[str, Path] = '.') -> Dict[str, Any]:
                 # 접근 권한이 없는 항목은 건너뜀
                 continue
 
-        return ok({
+        result = ok({
             'path': str(p),
             'items': items,
             'entries': items,  # 별칭: items와 동일, 하위 호환성
             'count': len(items)
         })
+
+        # Debug 모드일 때 구조 정보 출력
+        if debug:
+            print(f"✅ list_directory('{path}') 성공")
+            print(f"   경로: {result['data']['path']}")
+            print(f"   항목 수: {result['data']['count']}")
+            print(f"   사용 가능한 키: {list(result['data'].keys())}")
+            print(f"   💡 TIP: 'items' 또는 'entries' 둘 다 사용 가능")
+
+            if items:
+                print(f"\n   첫 번째 항목 구조:")
+                first = items[0]
+                for key, value in first.items():
+                    print(f"     - {key}: {type(value).__name__}")
+
+        return result
 
     except Exception as e:
         return err(f"List directory failed: {e}")
@@ -380,24 +396,3 @@ def scan_directory(path='.', max_depth=None):
     except Exception as e:
         return err(f"Scan directory failed: {e}")
 
-
-def debug_list_directory(path: Union[str, Path] = '.') -> None:
-    """list_directory 결과를 디버그하기 위한 헬퍼 함수
-
-    반환값의 구조를 시각적으로 표시하여 사용법을 명확히 함
-    """
-    result = list_directory(path)
-    if result['ok']:
-        print(f"✅ list_directory('{path}') 성공")
-        print(f"   경로: {result['data']['path']}")
-        print(f"   항목 수: {result['data']['count']}")
-        print(f"   사용 가능한 키: {list(result['data'].keys())}")
-        print(f"   💡 TIP: 'items' 또는 'entries' 둘 다 사용 가능")
-
-        if result['data']['items']:
-            print(f"\n   첫 번째 항목 구조:")
-            first = result['data']['items'][0]
-            for key, value in first.items():
-                print(f"     - {key}: {type(value).__name__}")
-    else:
-        print(f"❌ 오류: {result.get('error')}")

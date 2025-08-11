@@ -54,9 +54,6 @@ class FileNamespace(SafeNamespace):
         # 경로 작업
         self.resolve_project_path = self._safe_getattr('resolve_project_path')
 
-        # 디버그 헬퍼
-        self.debug_list_directory = self._safe_getattr('debug_list_directory')
-
 
 class CodeNamespace(SafeNamespace):
     """코드 분석/수정 관련 함수들"""

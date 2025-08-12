@@ -35,8 +35,8 @@ def _read_if_exists(path: str, max_lines: int = 80) -> Optional[str]:
 @safe_execution
 def get_current_project() -> dict:
     """현재 프로젝트 정보 가져오기 (Session 기반)"""
-    from .session import get_current_session
-
+    from .session import get_current_session, set_current_project
+    
     global _current_project_cache
 
     # cache 변수가 최초 호출 때 정의돼 있지 않으면 초기화
@@ -56,9 +56,16 @@ def get_current_project() -> dict:
             return err(f"프로젝트 초기화 실패: {e}")
 
     # 프로젝트 정보 가져오기
-    project_ctx = session.project_context
-    if not project_ctx:
+    session_ctx = session.project_context
+    if not session_ctx:
         return err("프로젝트가 설정되지 않았습니다")
+    
+    # ProjectContext 인스턴스 생성
+    from .flow_context import ProjectContext
+    if isinstance(session_ctx, dict) and session_ctx.get('path'):
+        project_ctx = ProjectContext(session_ctx['path'])
+    else:
+        return err("프로젝트 컨텍스트 정보가 유효하지 않습니다")
 
     # 캐시 확인
     project_path = str(project_ctx.base_path)
@@ -67,7 +74,7 @@ def get_current_project() -> dict:
 
     try:
         # 프로젝트 정보 수집
-        project_info = project_ctx.get_project_info()
+        project_info = project_ctx.to_dict()  # get_project_info 대신 to_dict 사용
 
         # 추가 정보 수집
         # Git 정보
@@ -221,7 +228,9 @@ def flow_project_with_workflow(
 
     try:
         # 프로젝트 설정
-        project_ctx = session.set_project(project, str(project_path))
+        session.set_project(project, project_path)
+        # ProjectContext 인스턴스 생성
+        project_ctx = ProjectContext(project_path)
     except Exception as e:
         return err(f"프로젝트 설정 실패: {e}")
 
@@ -230,7 +239,7 @@ def flow_project_with_workflow(
     _current_project_cache = None
 
     # 3) 프로젝트 정보 수집
-    proj_info = project_ctx.get_project_info()
+    proj_info = project_ctx.to_dict()  # get_project_info 대신 to_dict 사용()
 
     # 캐시 파일 업데이트
     try:
@@ -255,7 +264,28 @@ def flow_project_with_workflow(
     # 5) 문서 자동 읽기
     docs: Dict[str, str] = {}
     if auto_read_docs:
-        # ProjectContext의 read_file 메서드 사용
+        # README 파일 읽기
+        readme_txt = project_ctx.get_readme(readme_lines)
+        if readme_txt:
+            docs["readme.md"] = readme_txt
+            print("\n📖 README.md 내용:")
+            print("=" * 70)
+            print(readme_txt)
+
+        # file_directory.md 파일 직접 읽기
+        from pathlib import Path
+        fd_path = Path(project_path) / "file_directory.md"
+        if fd_path.exists():
+            try:
+                with open(fd_path, 'r', encoding='utf-8') as f:
+                    lines = f.readlines()[:file_dir_lines]
+                    fd_txt = ''.join(lines)
+                    docs["file_directory.md"] = fd_txt
+                    print("\n📁 프로젝트 구조 (file_directory.md):")
+                    print("=" * 70)
+                    print(fd_txt)
+            except Exception:
+                pass  # file 메서드 사용
         readme_txt = project_ctx.read_file("readme.md")
         if readme_txt:
             # 줄 수 제한
@@ -766,20 +796,28 @@ def flow_project(project_name: str):
         dict: {'ok': bool, 'data': dict, 'error': str}
     """
     try:
-        # 프로젝트 전환
-        set_current_project(project_name)
-
-        # 프로젝트 정보 가져오기
-        project = get_project_metadata(project_name)
-        if not project:
+        # Import 필요한 모듈들
+        from .session import get_current_session
+        from .flow_context import find_project_path
+        
+        # 프로젝트 경로 찾기
+        project_path = find_project_path(project_name)
+        if not project_path:
             return {'ok': False, 'error': f"Project '{project_name}' not found"}
+        
+        # 세션을 통해 프로젝트 설정
+        session = get_current_session()
+        try:
+            session.set_project(project_name, project_path)
+        except Exception as e:
+            return {'ok': False, 'error': f"Failed to set project: {str(e)}"}
 
         return {
             'ok': True,
             'data': {
                 'project': project_name,
-                'path': str(project['path']),
-                'type': project.get('type', 'unknown'),
+                'path': str(project_path),
+                'type': 'project',
                 'switched': True
             }
         }

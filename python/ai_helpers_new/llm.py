@@ -13,7 +13,110 @@ from .file import read, read_json, write, exists
 
 
 # 전역 o3 작업 저장소
-o3_tasks = {}  # 작업 ID를 키로 하는 딕셔너리
+o3_tasks = {}
+
+# ============ O3 작업 관리 시스템 통합 ============
+try:
+    from .o3_task_manager import (
+        save_o3_task, load_o3_task, delete_o3_task,
+        cleanup_o3_tasks, get_o3_statistics, archive_o3_tasks
+    )
+    O3_MANAGER_AVAILABLE = True
+except ImportError:
+    O3_MANAGER_AVAILABLE = False
+    print("⚠️ O3 작업 관리 시스템 사용 불가")
+
+def _save_task_with_manager(task_id: str, data: Dict[str, Any]):
+    """작업 관리 시스템을 통한 저장"""
+    if O3_MANAGER_AVAILABLE:
+        save_o3_task(task_id, data)
+
+    # 메모리에도 저장 (하위 호환성)
+    with _task_lock:
+        _tasks[task_id] = data
+
+def _load_task_with_manager(task_id: str) -> Optional[Dict[str, Any]]:
+    """작업 관리 시스템을 통한 로드"""
+    if O3_MANAGER_AVAILABLE:
+        task_data = load_o3_task(task_id)
+        if task_data:
+            return task_data
+
+    # 메모리에서 확인
+    with _task_lock:
+        return _tasks.get(task_id)
+
+# 관리 명령어들
+def cleanup_old_o3_tasks(days: int = 7) -> Dict[str, Any]:
+    """오래된 O3 작업 정리
+
+    Args:
+        days: 보관 기간 (기본 7일)
+
+    Returns:
+        정리 결과
+    """
+    if not O3_MANAGER_AVAILABLE:
+        return err("O3 작업 관리 시스템 사용 불가")
+
+    deleted = cleanup_o3_tasks(days)
+    return ok({
+        'deleted_count': deleted,
+        'message': f'{deleted}개 파일 정리 완료'
+    })
+
+def get_o3_task_statistics() -> Dict[str, Any]:
+    """O3 작업 통계 조회"""
+    if not O3_MANAGER_AVAILABLE:
+        return err("O3 작업 관리 시스템 사용 불가")
+
+    stats = get_o3_statistics()
+
+    # 포맷팅
+    if stats['oldest_file']:
+        oldest_time = datetime.fromtimestamp(stats['oldest_file'][1])
+        stats['oldest_file'] = f"{stats['oldest_file'][0]} ({oldest_time.strftime('%Y-%m-%d %H:%M')})"
+
+    if stats['newest_file']:
+        newest_time = datetime.fromtimestamp(stats['newest_file'][1])
+        stats['newest_file'] = f"{stats['newest_file'][0]} ({newest_time.strftime('%Y-%m-%d %H:%M')})"
+
+    # 크기 포맷팅
+    if stats['total_size'] > 1024 * 1024:
+        stats['total_size_formatted'] = f"{stats['total_size'] / (1024*1024):.2f} MB"
+    elif stats['total_size'] > 1024:
+        stats['total_size_formatted'] = f"{stats['total_size'] / 1024:.2f} KB"
+    else:
+        stats['total_size_formatted'] = f"{stats['total_size']} bytes"
+
+    return ok(stats)
+
+def archive_completed_o3_tasks() -> Dict[str, Any]:
+    """완료된 O3 작업 아카이브"""
+    if not O3_MANAGER_AVAILABLE:
+        return err("O3 작업 관리 시스템 사용 불가")
+
+    archived = archive_o3_tasks()
+    return ok({
+        'archived_count': archived,
+        'message': f'{archived}개 작업 아카이브 완료'
+    })
+
+def delete_o3_task_by_id(task_id: str) -> Dict[str, Any]:
+    """특정 O3 작업 삭제"""
+    if not O3_MANAGER_AVAILABLE:
+        return err("O3 작업 관리 시스템 사용 불가")
+
+    if delete_o3_task(task_id):
+        # 메모리에서도 삭제
+        with _task_lock:
+            _tasks.pop(task_id, None)
+
+        return ok({'message': f'Task {task_id} 삭제 완료'})
+    else:
+        return err(f'Task {task_id} 삭제 실패')
+
+_tasks = {}  # 작업 ID를 키로 하는 딕셔너리
 
 # OpenAI 설정
 try:

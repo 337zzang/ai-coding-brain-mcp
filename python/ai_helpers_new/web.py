@@ -25,7 +25,9 @@ logger = logging.getLogger("web_automation")
 logger.setLevel(logging.INFO)
 
 # 로그 디렉토리
-LOG_DIR = Path("logs/web_automation")
+# 프로젝트 절대 경로 기준 로그 디렉토리
+project_root = Path(r"C:\Users\82106\Desktop\ai-coding-brain-mcp")
+LOG_DIR = project_root / "logs" / "web_automation"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 # 파일 핸들러
@@ -244,6 +246,8 @@ def web_click(selector: str, session_id: str = None) -> bool:
         try:
             page.click(selector)
             logger.info(f"web_click: {selector} (session: {sid})")
+            # 코드 생성용 구조화된 로그
+            logger.info(f"CODE_GEN: click|{selector}|{sid}")
             return True
         except Exception as e:
             logger.error(f"web_click failed: {e}")
@@ -257,6 +261,8 @@ def web_type(selector: str, text: str, session_id: str = None) -> bool:
         try:
             page.type(selector, text)
             logger.info(f"web_type: {selector} (session: {sid})")
+            # 코드 생성용 구조화된 로그  
+            logger.info(f"CODE_GEN: type|{selector}|{text}|{sid}")
             return True
         except Exception as e:
             logger.error(f"web_type failed: {e}")

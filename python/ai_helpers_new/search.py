@@ -492,8 +492,8 @@ class SearchNamespace:
     """검색 함수들을 위한 네임스페이스 (Facade 패턴)"""
 
     @staticmethod
-    def files(pattern="*", path=".", max_depth=None, exclude_patterns=None):
-        """파일 검색 (리스트 반환)"""
+    def files(path=".", pattern="*", max_depth=None, exclude_patterns=None):
+        """파일 검색 - 개선된 버전 (path가 첫 번째 매개변수)"""
         try:
             result = list(search_files_generator(path, pattern, max_depth, exclude_patterns))
             # wrap_output 형식으로 반환
@@ -540,9 +540,15 @@ search = SearchNamespace()
 # ============================================
 
 # 기존 함수명 별칭 (기존 코드 호환성 유지)
-search_files = lambda path=".", pattern="*", **kwargs: search.files(pattern, path, **kwargs)
-find_function = lambda name, path=".", **kwargs: search.function(name, path, **kwargs)
-find_class = lambda name, path=".", **kwargs: search.class_(name, path, **kwargs)
+def search_files(path=".", pattern="*", **kwargs):
+    """파일 검색 함수 (하위 호환성 유지)"""
+    try:
+        result = list(search_files_generator(path, pattern, **kwargs))
+        return {'ok': True, 'data': result}
+    except Exception as e:
+        return {'ok': False, 'error': str(e), 'data': []}
+find_function = lambda name, path=".", **kwargs: search_function(name, path, **kwargs)
+find_class = lambda name, path=".", **kwargs: search_class(name, path, **kwargs)
 
 # 표준 래퍼 적용 함수들 export
 __all__ = [
@@ -567,6 +573,48 @@ __all__ = [
 
     # Legacy aliases
     'search_files',
+    'smart_search_files',
     'find_function',
     'find_class',
 ]
+
+
+def smart_search_files(arg1=".", arg2="*", **kwargs):
+    """
+    스마트 파일 검색 - 매개변수 순서 자동 감지
+
+    매개변수 순서가 잘못되었을 가능성을 감지하고 자동으로 수정합니다.
+
+    Args:
+        arg1: path 또는 pattern
+        arg2: pattern 또는 path
+        **kwargs: 추가 옵션
+
+    Returns:
+        {'ok': True, 'data': [파일 경로 리스트]}
+    """
+    # 첫 번째 인자가 패턴처럼 보이는지 확인
+    looks_like_pattern = (
+        '*' in str(arg1) or 
+        '?' in str(arg1) or
+        '[' in str(arg1) or
+        (arg1 and '.' in str(arg1).split('/')[-1] and not os.path.exists(arg1))
+    )
+
+    # 두 번째 인자가 경로처럼 보이는지 확인
+    looks_like_path = (
+        os.path.exists(str(arg2)) or
+        arg2 in ['.', '..', '/', '\\'] or
+        (arg2 and ('/' in str(arg2) or '\\' in str(arg2)))
+    )
+
+    # 순서가 반대일 가능성이 있으면 교체
+    if looks_like_pattern and looks_like_path:
+        import warnings
+        warnings.warn(
+            f"매개변수 순서가 반대일 수 있습니다. path='{arg2}', pattern='{arg1}'로 해석합니다.",
+            UserWarning
+        )
+        arg1, arg2 = arg2, arg1
+
+    return search_files(arg1, arg2, **kwargs)

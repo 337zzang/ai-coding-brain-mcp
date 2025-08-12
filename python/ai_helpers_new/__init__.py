@@ -37,6 +37,13 @@ classes = getattr(_facade, 'classes', None)
 
 # 검색 관련
 search_files = getattr(_facade, 'search_files', None)
+if search_files is None:
+    # facade에서 못 가져오면 search 모듈에서 직접 import
+    try:
+        from .search import search_files
+    except ImportError:
+        search_files = None
+        
 search_code = getattr(_facade, 'search_code', None)
 find_function = getattr(_facade, 'find_function', None)
 find_class = getattr(_facade, 'find_class', None)
@@ -171,3 +178,12 @@ def help():
 # 초기화 메시지
 import warnings
 warnings.filterwarnings("default", category=DeprecationWarning)
+
+
+# O3 작업 관리 함수들
+from .llm import (
+    cleanup_old_o3_tasks,
+    get_o3_task_statistics,
+    archive_completed_o3_tasks,
+    delete_o3_task_by_id
+)

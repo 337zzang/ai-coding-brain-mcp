@@ -1,4 +1,6 @@
 from typing import Dict, Any, Optional, List
+import pprint
+import html
 
 """
 AI Helpers 표준화 래퍼
@@ -6,7 +8,94 @@ AI Helpers 표준화 래퍼
 """
 from .core.fs import scan_directory as core_scan_directory, ScanOptions
 
-# 표준 패턴: {ok: bool, data: Any, error?: str}
+
+# ==================================================
+# REPL 최적화를 위한 HelperResult 클래스 (v1.0)
+# Added: 2025-08-11
+# ==================================================
+
+
+class HelperResult(dict):
+    """
+    AI Helper 표준 응답 객체 (REPL 최적화 버전)
+
+    dict를 상속받아 완벽한 하위 호환성을 유지하면서,
+    REPL 환경에서 'data' 필드만 깔끔하게 출력되도록 합니다.
+
+    Example:
+        >>> result = HelperResult({'ok': True, 'data': ['file1.py', 'file2.py']})
+        >>> result  # REPL에서 data만 출력
+        ['file1.py', 'file2.py']
+        >>> result['ok']  # dict처럼 사용 가능
+        True
+    """
+
+    def __repr__(self):
+        """REPL에서의 표현 (data 필드만 깔끔하게)"""
+        return self._formatted_output()
+
+    def __str__(self):
+        """문자열 변환 시 표현"""
+        return self._formatted_output()
+
+    def _formatted_output(self):
+        """포맷팅된 출력 생성"""
+        if self.get('ok'):
+            data = self.get('data')
+            if data is None:
+                # 성공했지만 데이터가 없는 경우 (예: write 작업)
+                return "✅ Success (No data returned)"
+
+            # 데이터를 예쁘게 출력
+            try:
+                # pprint를 사용하여 구조화된 출력
+                return pprint.pformat(data, indent=2, width=120)
+            except Exception:
+                # pprint 실패 시 기본 repr 사용
+                return repr(data)
+        else:
+            # 실패 시 에러 메시지 출력
+            error = self.get('error', 'Unknown error')
+            error_type = self.get('error_type', '')
+            if error_type:
+                return f"❌ Error [{error_type}]: {error}"
+            return f"❌ Error: {error}"
+
+    def _repr_html_(self):
+        """Jupyter 노트북 등에서의 리치 디스플레이 지원"""
+        if self.get('ok'):
+            data = self.get('data')
+            if data is None:
+                return "<div style='color: green;'>✅ <b>Success</b> (No data returned)</div>"
+
+            # HTML 형식으로 출력
+            formatted = self._formatted_output()
+            escaped = html.escape(formatted)
+            return f"<pre style='background: #f5f5f5; padding: 10px;'>{escaped}</pre>"
+        else:
+            error = html.escape(self.get('error', 'Unknown error'))
+            return f"<div style='color: red;'>❌ <b>Error:</b> {error}</div>"
+
+    def as_dict(self):
+        """일반 dict로 변환 (필요시 사용)"""
+        return dict(self)
+
+    def to_json(self):
+        """JSON 직렬화를 위한 메서드"""
+        import json
+        return json.dumps(dict(self), ensure_ascii=False)
+
+
+
+
+
+# ==================================================
+# safe_execution 데코레이터 및 헬퍼 함수들 (v1.0)
+# Added: 2025-08-11
+# ==================================================
+
+import functools
+from typing import Any, Optional
 
 def wrap_output(func):
     """함수 출력을 표준 응답 형식으로 래핑하는 데코레이터
@@ -29,65 +118,70 @@ def wrap_output(func):
     return wrapper
 
 
-def ensure_response(data: Any, error: str = None, **extras) -> Dict[str, Any]:
-    """모든 데이터를 표준 응답 형식으로 변환
+def ensure_response(data: Any, error: str = None, **extras) -> HelperResult:
+    """모든 데이터를 표준 응답 형식(HelperResult)으로 변환
 
     Args:
         data: 반환할 데이터
         error: 에러 메시지 (있는 경우)
-        **extras: 추가 필드 (count, path 등)
+        **extras: 추가 메타데이터
 
     Returns:
-        {'ok': bool, 'data': Any, 'error': str, ...}
+        HelperResult: 표준 응답 형식 (REPL 최적화)
     """
     if error:
-        error_info = {'ok': False, 'error': error}
+        # 에러 응답을 HelperResult로 생성
+        error_info = HelperResult({'ok': False, 'error': error, 'data': None})
         # exception 객체가 전달된 경우 타입 정보 추가
         if 'exception' in extras:
             exc = extras.pop('exception')
             error_info['error_type'] = type(exc).__name__
         error_info.update(extras)
         return error_info
-        
-    if isinstance(data, dict) and 'ok' in data:
-        # 이미 표준 응답이지만 extras가 있으면 병합
+
+    # 이미 표준 응답이지만 HelperResult가 아닌 경우 변환
+    if isinstance(data, dict) and 'ok' in data and not isinstance(data, HelperResult):
+        response = HelperResult(data)
+        if extras:
+            response.update(extras)
+        return response
+
+    # 이미 HelperResult인 경우
+    if isinstance(data, HelperResult):
         if extras:
             data.update(extras)
         return data
 
-    response = {'ok': True, 'data': data}
+    # 새로운 HelperResult 생성
+    response = HelperResult({'ok': True, 'data': data})
     response.update(extras)
     return response
-
-
 def safe_execution(func):
-    """함수 실행을 안전하게 래핑하는 데코레이터
-    
-    모든 예외를 자동으로 {'ok': False, 'error': ...} 형태로 변환합니다.
+    """함수 실행을 안전하게 래핑하고 HelperResult를 반환하는 데코레이터
+
+    모든 AI Helper 함수에 적용되는 표준 래퍼입니다.
+    예외를 잡아서 HelperResult 형태로 변환합니다.
     """
-    import functools
-    
+    if not callable(func):
+        return func
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
             result = func(*args, **kwargs)
-            # 이미 표준 응답인 경우 그대로 반환
-            if isinstance(result, dict) and 'ok' in result:
-                return result
-            # 아니면 ensure_response로 래핑
+            # ensure_response를 통해 HelperResult로 변환 보장
             return ensure_response(result)
         except Exception as e:
+            # 에러 발생 시 HelperResult 반환
             return ensure_response(
                 None, 
                 str(e), 
                 exception=e,
                 function=func.__name__,
-                args=args[:3] if len(args) > 3 else args,  # 긴 인자는 처음 3개만
-                kwargs=list(kwargs.keys())  # 키만 기록
+                args=args,
+                kwargs=list(kwargs.keys()) if kwargs else []
             )
     return wrapper
-
-
 def scan_directory(path: str = '.', 
                   max_depth: Optional[int] = None,
                   output: str = 'list') -> Dict[str, Any]:

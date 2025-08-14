@@ -12,6 +12,7 @@ import json
 import tempfile
 import io
 import traceback
+import textwrap
 import time
 import datetime as dt
 import platform
@@ -32,12 +33,9 @@ except ImportError:
     TASKLOGGER_AVAILABLE = False
     EnhancedTaskLogger = None
 
-try:
-    from repl_kernel.manager import WorkerManager
-    WORKER_AVAILABLE = True
-except ImportError:
-    WORKER_AVAILABLE = False
-    WorkerManager = None
+# repl_kernel 제거 - json_repl_session만 사용
+WORKER_AVAILABLE = False
+WorkerManager = None
 
 
 # === 네임스페이스 격리를 위한 LazyHelperProxy ===
@@ -122,7 +120,7 @@ def _init_project_paths():
 PROJECT_ROOT = _init_project_paths()
 
 # === 환경변수 기반 설정 (v7.2) ===
-USE_SUBPROCESS_WORKER = os.environ.get('USE_SUBPROCESS_WORKER', '0') == '1'
+# USE_SUBPROCESS_WORKER 제거 - json_repl_session만 사용
 FLOW_PLAN_ID = os.environ.get('FLOW_PLAN_ID', 'local')
 FLOW_TASK_ID = os.environ.get('FLOW_TASK_ID', 'adhoc')
 FLOW_TASK_NAME = os.environ.get('FLOW_TASK_NAME', 'repl_session')
@@ -228,23 +226,8 @@ if TASKLOGGER_AVAILABLE:
         REPL_LOGGER = None
 
 
-# === Subprocess Worker Manager (Task 3) ===
-_worker_manager = None
-
-def get_worker_manager():
-    """Worker Manager 싱글톤 인스턴스 반환"""
-    global _worker_manager
-    if _worker_manager is None:
-        if WORKER_AVAILABLE:
-            try:
-                from repl_kernel.manager import SubprocessWorkerManager
-                _worker_manager = SubprocessWorkerManager()
-                if DEBUG_MODE:
-                    print("[DEBUG] SubprocessWorkerManager initialized", file=sys.stderr)
-            except Exception as e:
-                print(f"[ERROR] Failed to initialize SubprocessWorkerManager: {e}", file=sys.stderr)
-                _worker_manager = None
-    return _worker_manager
+# === Subprocess Worker Manager 제거 (repl_kernel 삭제) ===
+# json_repl_session만 사용하므로 worker manager 불필요
 
 def execute_locally(code: str, repl_globals: dict) -> Dict[str, Any]:
     """로컬에서 코드 실행 (기존 exec 방식)"""
@@ -266,10 +249,17 @@ def execute_locally(code: str, repl_globals: dict) -> Dict[str, Any]:
         'timestamp': dt.datetime.now().isoformat() + 'Z'
     }
 
+# === 들여쓰기 및 탭/공백 정규화 (안전망) ===
+    # 1. 탭을 공백 4개로 변환 (PEP 8 표준)
+    normalized_code = code.replace('\t', '    ')
+    # 2. 공통된 앞쪽 공백 제거 (dedent)
+    normalized_code = textwrap.dedent(normalized_code)
+    # ===============================
+
     try:
-        # 코드 실행
+        # 코드 실행 (정규화된 코드로 실행)
         with capture_output() as (stdout, stderr):
-            exec(code, repl_globals)
+            exec(normalized_code, repl_globals)
 
         result['stdout'] = stdout.getvalue()
         result['stderr'] = stderr.getvalue()
@@ -356,38 +346,9 @@ def execute_code(code: str) -> Dict[str, Any]:
             repl_globals['helpers'] = helpers
             repl_globals['h'] = helpers  # h 별칭도 추가
 
-    # === Task 3: Subprocess Worker 분기 ===
-    if USE_SUBPROCESS_WORKER and WORKER_AVAILABLE:
-        if DEBUG_MODE:
-            print(f"[DEBUG] Using subprocess worker for execution", file=sys.stderr)
-        
-        manager = get_worker_manager()
-        if manager:
-            try:
-                # Worker에서 실행
-                result = manager.execute(code, timeout=30.0)
-                
-                # 결과 형식 통일
-                if 'success' not in result:
-                    result['success'] = not result.get('error', False)
-                if 'debug_info' not in result:
-                    result['debug_info'] = {}
-                result['debug_info']['execution_mode'] = 'worker'
-                
-                # Worker는 repl_globals를 직접 수정하지 않으므로 variable_count는 0
-                result['variable_count'] = 0
-                
-            except Exception as e:
-                if DEBUG_MODE:
-                    print(f"[DEBUG] Worker execution failed: {e}, falling back to local", file=sys.stderr)
-                # Fallback to local execution
-                result = execute_locally(code, repl_globals)
-        else:
-            # Worker manager 초기화 실패 시 로컬 실행
-            result = execute_locally(code, repl_globals)
-    else:
-        # 로컬 실행 (기본)
-        result = execute_locally(code, repl_globals)
+    # === Task 3: 로컬 실행 (repl_kernel 제거) ===
+    # 항상 로컬에서 실행 - json_repl_session만 사용
+    result = execute_locally(code, repl_globals)
 
 
     # 실행 히스토리 기록 (Task 2)

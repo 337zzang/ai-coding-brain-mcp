@@ -1,12 +1,14 @@
 from typing import Dict, Any, Optional, List
 import pprint
 import html
+from functools import wraps
 
 """
 AI Helpers 표준화 래퍼
 기존 함수를 수정하지 않고 표준 API 패턴 제공
 """
 from .core.fs import scan_directory as core_scan_directory, ScanOptions
+from .util import safe_get_data, get_list_items
 
 
 # ==================================================
@@ -39,27 +41,58 @@ class HelperResult(dict):
         return self._formatted_output()
 
     def _formatted_output(self):
-        """포맷팅된 출력 생성"""
+        """포맷팅된 출력 생성 - 개선된 버전"""
         if self.get('ok'):
             data = self.get('data')
             if data is None:
                 # 성공했지만 데이터가 없는 경우 (예: write 작업)
-                return "✅ Success (No data returned)"
+                return "✅ Success"
 
-            # 데이터를 예쁘게 출력
+            # 데이터 타입별 최적화된 출력
             try:
-                # pprint를 사용하여 구조화된 출력
-                return pprint.pformat(data, indent=2, width=120)
+                if isinstance(data, list):
+                    if len(data) == 0:
+                        return "✅ [] (empty)"
+                    elif len(data) <= 5:
+                        # 5개 이하는 전체 표시
+                        return pprint.pformat(data, indent=2, width=120)
+                    else:
+                        # 많은 항목은 요약 표시
+                        preview = data[:3]
+                        return f"✅ [{len(data)} items] {pprint.pformat(preview, indent=2, width=80)}..."
+                
+                elif isinstance(data, dict):
+                    if len(data) == 0:
+                        return "✅ {} (empty)"
+                    elif len(data) <= 3:
+                        # 3개 이하 키는 전체 표시
+                        return pprint.pformat(data, indent=2, width=120)
+                    else:
+                        # 많은 키는 요약 표시
+                        keys = list(data.keys())[:3]
+                        preview = {k: data[k] for k in keys}
+                        return f"✅ [{len(data)} keys] {pprint.pformat(preview, indent=2, width=80)}..."
+                
+                elif isinstance(data, str):
+                    if len(data) <= 100:
+                        return f"✅ {repr(data)}"
+                    else:
+                        return f"✅ {repr(data[:100])}... ({len(data)} chars)"
+                
+                else:
+                    # 기타 타입 (bool, int, etc.)
+                    return f"✅ {repr(data)}"
+                    
             except Exception:
-                # pprint 실패 시 기본 repr 사용
-                return repr(data)
+                # pprint 실패 시 기본 처리
+                return f"✅ {repr(data)}"
         else:
             # 실패 시 에러 메시지 출력
             error = self.get('error', 'Unknown error')
             error_type = self.get('error_type', '')
             if error_type:
-                return f"❌ Error [{error_type}]: {error}"
-            return f"❌ Error: {error}"
+                return f"❌ [{error_type}] {error}"
+            return f"❌ {error}"
 
     def _repr_html_(self):
         """Jupyter 노트북 등에서의 리치 디스플레이 지원"""
@@ -152,7 +185,13 @@ def ensure_response(data: Any, error: str = None, **extras) -> HelperResult:
             data.update(extras)
         return data
 
-    # 새로운 HelperResult 생성
+    # Boolean False는 실패로 처리 (개선됨)
+    if isinstance(data, bool) and not data:
+        error_response = HelperResult({'ok': False, 'error': 'Operation failed', 'data': data})
+        error_response.update(extras)
+        return error_response
+
+    # 일반 데이터는 성공 응답으로 생성
     response = HelperResult({'ok': True, 'data': data})
     response.update(extras)
     return response
@@ -546,3 +585,88 @@ def check_all_sessions():
             "data": None,
             "error": str(e)
         }
+
+
+# ==================================================
+# API 응답 표준화 래퍼 (v2.0)
+# Added: 2025-08-14
+# ==================================================
+
+def standardize_api_response(func):
+    """
+    모든 API를 {'ok', 'data', 'error'} 플랫 구조로 통일
+    
+    중첩된 data 구조를 평탄화하고 일관된 응답 형식을 보장합니다.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+            
+            # 이미 표준 형식이면 확인 후 반환
+            if isinstance(result, dict) and 'ok' in result:
+                # 중첩된 data 구조 평탄화
+                if 'data' in result and isinstance(result['data'], dict):
+                    data = result['data']
+                    # list_directory 형식 평탄화
+                    if 'items' in data or 'entries' in data:
+                        items = data.get('items') or data.get('entries', [])
+                        return {'ok': True, 'data': items}
+                    # 중첩된 data.data 구조 평탄화
+                    if 'data' in data:
+                        return {'ok': True, 'data': data['data']}
+                return result
+                
+            # 비표준 형식 변환
+            return {'ok': True, 'data': result}
+            
+        except Exception as e:
+            return {'ok': False, 'data': None, 'error': str(e)}
+    return wrapper
+
+def safe_api_wrapper(func):
+    """
+    API 호출을 안전하게 래핑하고 표준 응답 보장
+    
+    KeyError나 AttributeError를 방지하고 일관된 응답을 제공합니다.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+            
+            # None 반환 처리
+            if result is None:
+                return {'ok': False, 'data': None, 'error': 'Function returned None'}
+            
+            # 표준화
+            from .util import normalize_api_response
+            return normalize_api_response(result)
+            
+        except (KeyError, AttributeError) as e:
+            return {'ok': False, 'data': None, 'error': f'Data access error: {e}'}
+        except Exception as e:
+            return {'ok': False, 'data': None, 'error': str(e)}
+    return wrapper
+
+def flatten_list_directory_response(result):
+    """
+    list_directory 응답을 평탄화
+    
+    중첩된 data.items 구조를 data: [items] 형태로 변환
+    """
+    if not isinstance(result, dict) or not result.get('ok'):
+        return result
+        
+    data = result.get('data', {})
+    if isinstance(data, dict) and ('items' in data or 'entries' in data):
+        items = data.get('items') or data.get('entries', [])
+        return {
+            'ok': True,
+            'data': items,
+            'metadata': {
+                'path': data.get('path'),
+                'count': data.get('count', len(items))
+            }
+        }
+    return result

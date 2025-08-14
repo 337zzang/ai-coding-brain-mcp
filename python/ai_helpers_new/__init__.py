@@ -16,8 +16,13 @@ search = _facade.search
 git = _facade.git
 llm = getattr(_facade, 'llm', None)
 o3 = getattr(_facade, 'o3', None)
-flow = getattr(_facade, 'flow', None)
+web = getattr(_facade, 'web', None)
 project = getattr(_facade, 'project', None)
+memory = getattr(_facade, 'memory', None)
+unified = getattr(_facade, 'unified', None)
+
+# util 모듈도 직접 export (안전 함수들 포함)
+from . import util
 
 # 3. 주요 함수들 하위 호환성 - 모두 안전하게 가져오기
 # 파일 관련
@@ -26,6 +31,8 @@ write = getattr(_facade, 'write', None)
 append = getattr(_facade, 'append', None)
 exists = getattr(_facade, 'exists', None)
 get_file_info = getattr(_facade, 'get_file_info', None)
+cleanup_backups = getattr(_facade, 'cleanup_backups', None)
+remove_backups = getattr(_facade, 'remove_backups', None)
 
 # 코드 관련
 parse = getattr(_facade, 'parse', None)
@@ -45,8 +52,9 @@ if search_files is None:
         search_files = None
         
 search_code = getattr(_facade, 'search_code', None)
-find_function = getattr(_facade, 'find_function', None)
-find_class = getattr(_facade, 'find_class', None)
+# find_function과 find_class는 search.py에 구현되지 않음 - 제거
+# find_function = getattr(_facade, 'find_function', None)
+# find_class = getattr(_facade, 'find_class', None)
 grep = getattr(_facade, 'grep', None)
 
 # Git 관련
@@ -61,6 +69,30 @@ git_branch = getattr(_facade, 'git_branch', None)
 git_checkout = getattr(_facade, 'git_checkout', None)
 git_checkout_b = getattr(_facade, 'git_checkout_b', None)
 git_merge = getattr(_facade, 'git_merge', None)
+
+
+# Excel 관련
+try:
+    from .excel import (
+        excel,
+        ExcelManager,
+        excel_connect,
+        excel_disconnect,
+        excel_read_range,
+        excel_read_table,
+        excel_write_range,
+        excel_list_sheets,
+        excel_add_sheet,
+        excel_delete_sheet,
+        excel_select_sheet,
+        excel_create_pivot,
+        excel_apply_formula,
+        get_excel_manager
+    )
+    print("[OK] Excel module loaded successfully")
+except ImportError as e:
+    print(f"⚠️ Excel module not available: {e}")
+    excel = None
 
 # LLM/O3 관련
 # ask_o3는 없으므로 ask_o3_practical로 대체
@@ -133,12 +165,12 @@ __author__ = "AI Coding Brain Team"
 # Public API 정의 (최소)
 __all__ = [
     # 네임스페이스 (새로운 방식)
-    'file', 'code', 'search', 'git',
+    'file', 'code', 'search', 'git', 'memory', 'unified',
     
     # 주요 함수들 (하위 호환성)
     'read', 'write', 'append', 'exists', 'get_file_info',
     'parse', 'replace', 'insert', 'view', 'functions', 'classes',
-    'search_files', 'search_code', 'find_function', 'find_class', 'grep',
+    'search_files', 'search_code', 'grep',  # find_function, find_class 제거
     'git_status', 'git_commit', 'git_add', 'git_diff', 'git_log',
     'ask_o3', 'ask_o3_async', 'get_o3_result', 'check_o3_status',
     'show_o3_progress', 'clear_completed_tasks',

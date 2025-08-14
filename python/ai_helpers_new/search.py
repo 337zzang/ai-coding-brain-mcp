@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 [배치테스트]
 # -*- coding: utf-8 -*-
 """
 search.py - AI Helpers Search Module (개선된 버전)
@@ -55,14 +55,30 @@ def search_files_generator(
     path: str, 
     pattern: str = "*",
     max_depth: Optional[int] = None,
-    exclude_patterns: Optional[set] = None
+    exclude_patterns: Optional[set] = None,
+    recursive: bool = True  # 신규 파라미터 추가
 ) -> Generator[str, None, None]:
     """
     파일을 발견하는 즉시 yield하는 제너레이터
     메모리 효율적이고 조기 종료 가능
+
+    Args:
+        path: 검색 경로
+        pattern: 파일 패턴
+        max_depth: 최대 검색 깊이
+        exclude_patterns: 제외할 패턴들
+        recursive: 재귀 검색 여부 (기본값: True)
     """
     exclude_patterns = exclude_patterns or {'.git', '__pycache__', 'node_modules'}
     base_path = Path(path).resolve()
+
+    # max_depth와 recursive를 기반으로 실제 탐색 깊이 결정
+    if not recursive:
+        effective_max_depth = 0  # 재귀 비활성화 시 현재 폴더만
+    elif max_depth is not None:
+        effective_max_depth = max_depth
+    else:
+        effective_max_depth = None  # 무제한 깊이
 
     def should_exclude(file_path: Path) -> bool:
         for part in file_path.parts:
@@ -71,7 +87,8 @@ def search_files_generator(
         return False
 
     def walk_with_depth(current_path: Path, current_depth: int = 0):
-        if max_depth is not None and current_depth > max_depth:
+        # 깊이 제한 확인
+        if effective_max_depth is not None and current_depth > effective_max_depth:
             return
 
         try:
@@ -83,6 +100,7 @@ def search_files_generator(
                     if pattern == "*" or item.match(pattern):
                         yield str(item)
                 elif item.is_dir():
+                    # 재귀적으로 탐색
                     yield from walk_with_depth(item, current_depth + 1)
         except (PermissionError, OSError) as e:
             logger.debug(f"Cannot access {current_path}: {e}")
@@ -492,16 +510,76 @@ class SearchNamespace:
     """검색 함수들을 위한 네임스페이스 (Facade 패턴)"""
 
     @staticmethod
-    def files(path=".", pattern="*", max_depth=None, exclude_patterns=None):
-        """파일 검색 - 개선된 버전 (path가 첫 번째 매개변수)"""
+    @staticmethod
+    def files(arg1=".", arg2="*", recursive=None, max_depth=None, exclude_patterns=None):
+        """스마트 파일 검색 - 매개변수 순서 자동 감지 및 재귀 옵션 제공
+
+        Args:
+            arg1: 경로 또는 패턴 (자동 감지)
+            arg2: 패턴 또는 경로 (자동 감지)
+            recursive: 재귀 검색 여부 (None=자동, True=재귀, False=현재 폴더만)
+            max_depth: 최대 검색 깊이
+            exclude_patterns: 제외할 패턴들
+
+        Examples:
+            h.search.files("*.py")           # 현재 폴더에서 재귀적으로 .py 검색
+            h.search.files(".", "*.py")      # 표준 순서
+            h.search.files("*.py", ".")      # 반대 순서도 OK
+            h.search.files("src", recursive=False)  # src 폴더만 검색
+        """
+        import os
+
+        # === Smart Parameter Detection Logic ===
+        # 첫 번째 인자가 패턴처럼 보이는지 확인
+        looks_like_pattern1 = (
+            '*' in str(arg1) or 
+            '?' in str(arg1) or 
+            '[' in str(arg1) or
+            (arg1 and '.' in str(arg1).split('/')[-1].split('\\')[-1] 
+             and not os.path.exists(arg1))
+        )
+
+        # 두 번째 인자가 경로처럼 보이는지 확인
+        looks_like_path2 = (
+            os.path.exists(str(arg2)) or 
+            arg2 in ['.', '..', '/', '\\'] or
+            (arg2 and ('/' in str(arg2) or '\\' in str(arg2)))
+        )
+
+        # 순서 결정
+        if looks_like_pattern1 and looks_like_path2:
+            # 순서가 반대일 가능성 (e.g., "*.py", "src")
+            path, pattern = arg2, arg1
+        elif looks_like_pattern1 and arg2 == "*":
+            # 첫 번째가 패턴이고 두 번째가 기본값 (e.g., h.search.files("*.py"))
+            path, pattern = ".", arg1
+        else:
+            # 표준 순서로 가정 (e.g., "src", "*.py")
+            path, pattern = arg1, arg2
+
+        # recursive 옵션 처리
+        if recursive is None:
+            # 자동 결정: ** 패턴이 있으면 재귀, 없으면 max_depth 따름
+            if '**' in pattern:
+                effective_max_depth = None  # 무제한 재귀
+            elif max_depth is not None:
+                effective_max_depth = max_depth
+            else:
+                effective_max_depth = None  # 기본값: 재귀
+        elif recursive is False:
+            effective_max_depth = 0  # 현재 폴더만
+        else:  # recursive is True
+            effective_max_depth = max_depth if max_depth is not None else None
+
         try:
-            result = list(search_files_generator(path, pattern, max_depth, exclude_patterns))
-            # wrap_output 형식으로 반환
+            # 개선된 Generator 호출
+            result = list(search_files_generator(
+                path, pattern, effective_max_depth, exclude_patterns
+            ))
             return {'ok': True, 'data': result}
         except Exception as e:
             return {'ok': False, 'error': str(e), 'data': []}
 
-    @staticmethod
     def code(pattern, path=".", file_pattern="*.py", **kwargs):
         """코드 내용 검색 - context와 context_lines 모두 지원"""
         # search_code 함수가 이제 context를 직접 처리하므로 그대로 전달
@@ -540,45 +618,70 @@ search = SearchNamespace()
 # ============================================
 
 # 기존 함수명 별칭 (기존 코드 호환성 유지)
-def search_files(path=".", pattern="*", **kwargs):
-    """파일 검색 함수 (하위 호환성 유지)"""
+def search_files(path=".", pattern="*", recursive=True, **kwargs):
+    """파일 검색 함수 (하위 호환성 유지)
+
+    Args:
+        path: 검색 경로
+        pattern: 파일 패턴
+        recursive: 재귀 검색 여부 (기본값: True)
+        **kwargs: 추가 옵션 (max_depth, exclude_patterns 등)
+    """
     try:
-        result = list(search_files_generator(path, pattern, **kwargs))
+        # recursive 옵션을 generator에 전달
+        result = list(search_files_generator(path, pattern, recursive=recursive, **kwargs))
         return {'ok': True, 'data': result}
     except Exception as e:
         return {'ok': False, 'error': str(e), 'data': []}
-find_function = lambda name, path=".", **kwargs: search_function(name, path, **kwargs)
-find_class = lambda name, path=".", **kwargs: search_class(name, path, **kwargs)
 
-# 표준 래퍼 적용 함수들 export
-__all__ = [
-    # Core functions
-    'search_files_generator',
-    'search_code',
-    'search_function', 
-    'search_class',
-    'search_imports',
-    'get_statistics',
-    'grep',
-    'find_in_file',
-
-    # Utilities
-    'is_binary_file',
-    'clear_cache',
-    'get_cache_info',
-
-    # Namespace
-    'search',
-    'SearchNamespace',
-
-    # Legacy aliases
-    'search_files',
-    'smart_search_files',
-    'find_function',
-    'find_class',
-]
-
-
+def search_files_via_list(pattern="*", path=".", **kwargs):
+    """
+    list_directory 기반 대안 검색 (폴백 메서드)
+    
+    search_files가 실패할 경우 사용할 수 있는 대안 구현입니다.
+    list_directory를 사용하여 파일을 검색합니다.
+    
+    Args:
+        pattern: 파일 패턴 (와일드카드 지원)
+        path: 검색 경로
+        **kwargs: 추가 옵션
+    
+    Returns:
+        {'ok': bool, 'data': [파일 경로 리스트]}
+    """
+    try:
+        from .file import list_directory
+        from .util import get_list_items
+        import fnmatch
+        
+        result = list_directory(path)
+        
+        if not result.get('ok'):
+            return {'ok': False, 'data': [], 'error': result.get('error', 'list_directory failed')}
+            
+        items = get_list_items(result)
+        
+        # 패턴 매칭
+        matched = []
+        for item in items:
+            if item.get('type') == 'file':
+                name = item.get('name', '')
+                # 와일드카드 패턴 매칭
+                if pattern == "*" or fnmatch.fnmatch(name, pattern):
+                    # 전체 경로 또는 이름 반환
+                    file_path = item.get('path')
+                    if file_path:
+                        matched.append(file_path)
+                    else:
+                        # path가 없으면 이름만 반환
+                        matched.append(name)
+                    
+        return {'ok': True, 'data': matched}
+        
+    except ImportError as ie:
+        return {'ok': False, 'data': [], 'error': f'Import error: {ie}'}
+    except Exception as e:
+        return {'ok': False, 'data': [], 'error': f'search_files_via_list failed: {e}'}
 def smart_search_files(arg1=".", arg2="*", **kwargs):
     """
     스마트 파일 검색 - 매개변수 순서 자동 감지
@@ -618,3 +721,11 @@ def smart_search_files(arg1=".", arg2="*", **kwargs):
         arg1, arg2 = arg2, arg1
 
     return search_files(arg1, arg2, **kwargs)
+
+
+# Export list
+__all__ = [
+    'search_files', 'search_code', 'grep', 'search_imports', 'get_statistics',
+    'search_files_generator', 'search_files_via_list', 'smart_search_files',
+    'files'
+]

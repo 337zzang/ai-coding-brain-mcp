@@ -6,6 +6,7 @@ import warnings
 from typing import Any, Optional
 import functools
 import importlib
+import os
 
 # wrappers에서 필요한 것들 임포트
 try:
@@ -40,7 +41,7 @@ class SafeNamespace:
         return self._module
 
     def _safe_getattr(self, name: str, default=None):
-        """안전하게 속성 가져오고, 함수인 경우 safe_execution 래핑 적용
+        """안전하게 속성 가져오고, 함수인 경우 safe_execution + 표준화 래핑 적용
         결과적으로 모든 함수가 HelperResult를 반환하도록 보장합니다.
         """
         # 캐시 확인
@@ -62,8 +63,9 @@ class SafeNamespace:
             attr = getattr(module, name, default)
 
             if callable(attr):
-                # 함수인 경우 래퍼 적용
-                wrapped = safe_execution(attr)
+                # 함수인 경우 safe_execution + 표준화 래퍼 적용
+                from .wrappers import standardize_api_response
+                wrapped = standardize_api_response(safe_execution(attr))
                 # 캐시에 저장
                 self._wrapped_cache[name] = wrapped
                 return wrapped
@@ -96,18 +98,40 @@ class FileNamespace(SafeNamespace):
         self.info = self._safe_getattr('info')
         self.get_file_info = self._safe_getattr('get_file_info')
 
-        # 디렉토리 작업
+        # 디렉토리 작업 (list_directory는 평탄화 적용)
         self.create_directory = self._safe_getattr('create_directory')
-        self.list_directory = self._safe_getattr('list_directory')
-        _list_dir = self._safe_getattr('list_directory')
-        self.scan_directory = self._safe_getattr('scan_directory', _list_dir)
+        self.list_directory = self._create_flattened_list_directory()
+        self.list_files = self._safe_getattr('list_files')
+        self.list_dirs = self._safe_getattr('list_dirs')
+        self.scan_directory = self._safe_getattr('scan_directory')
 
         # JSON 작업
         self.read_json = self._safe_getattr('read_json')
         self.write_json = self._safe_getattr('write_json')
 
+        # 백업 파일 정리
+        self.cleanup_backups = self._safe_getattr('cleanup_backups')
+        self.remove_backups = self._safe_getattr('remove_backups')
+
         # 경로 작업
         self.resolve_project_path = self._safe_getattr('resolve_project_path')
+
+    def _create_flattened_list_directory(self):
+        """list_directory를 평탄화된 형태로 래핑"""
+        original_func = self._safe_getattr('list_directory')
+        
+        @functools.wraps(original_func)
+        def flattened_list_directory(*args, **kwargs):
+            result = original_func(*args, **kwargs)
+            
+            # 성공한 경우 평탄화 적용
+            if result and result.get('ok') and isinstance(result.get('data'), dict):
+                from .wrappers import flatten_list_directory_response
+                return flatten_list_directory_response(result)
+            
+            return result
+        
+        return flattened_list_directory
 
 
 class CodeNamespace(SafeNamespace):
@@ -131,15 +155,44 @@ class SearchNamespace(SafeNamespace):
         super().__init__('search')
         if self._get_module() is None: return
 
-        self.files = self._safe_getattr('search_files')
-        self.code = self._safe_getattr('search_code')
-        self.function = self._safe_getattr('find_function')
-        self.class_ = self._safe_getattr('find_class')
+        # 개선된 검색 함수들 (에러 처리 표준화)
+        self.files = self._create_improved_search_files()
+        self.code = self._create_improved_search_code()
         self.grep = self._safe_getattr('grep')
-
-        # Phase 1에서 추가된 함수
         self.imports = self._safe_getattr('search_imports')
         self.statistics = self._safe_getattr('get_statistics')
+
+    def _create_improved_search_files(self):
+        """search_files를 개선된 에러 처리로 래핑"""
+        original_func = getattr(getattr(self._get_module(), 'SearchNamespace', type('', (), {}))(), 'files', None)
+        
+        @functools.wraps(original_func)
+        def improved_search_files(*args, **kwargs):
+            result = original_func(*args, **kwargs)
+            
+            # 빈 결과를 에러로 처리하지 않고 성공으로 변경
+            if result and not result.get('ok') and result.get('data') == []:
+                return HelperResult({'ok': True, 'data': []})
+            
+            return result
+        
+        return improved_search_files
+
+    def _create_improved_search_code(self):
+        """search_code를 개선된 에러 처리로 래핑"""
+        original_func = self._safe_getattr('search_code')
+        
+        @functools.wraps(original_func)
+        def improved_search_code(*args, **kwargs):
+            result = original_func(*args, **kwargs)
+            
+            # 빈 결과를 에러로 처리하지 않고 성공으로 변경
+            if result and not result.get('ok') and result.get('data') == []:
+                return HelperResult({'ok': True, 'data': []})
+            
+            return result
+        
+        return improved_search_code
 
 
 class GitNamespace(SafeNamespace):
@@ -242,6 +295,37 @@ class ProjectNamespace(SafeNamespace):
         self.fix_task_numbers = self._safe_getattr('fix_task_numbers')
 
 
+class MemoryNamespace(SafeNamespace):
+    """Claude Code 메모리 연동 관련 함수들"""
+    def __init__(self):
+        super().__init__('memory_sync')
+        if self._get_module() is None: return
+
+        # 메모리 동기화 함수들
+        self.sync_with_flow = self._safe_getattr('sync_with_flow')
+        self.get_suggestions = self._safe_getattr('get_memory_suggestions')
+        self.save_context = self._safe_getattr('save_session_context')
+        
+        # 고급 기능
+        self.create_sync = self._safe_getattr('create_memory_sync')
+
+
+class UnifiedNamespace(SafeNamespace):
+    """Flow + Claude Code 통합 관련 함수들"""
+    def __init__(self):
+        super().__init__('unified_sync')
+        if self._get_module() is None: return
+
+        # 통합 동기화 함수들
+        self.create_todo = self._safe_getattr('unified_create_todo')
+        self.sync_status = self._safe_getattr('unified_sync_status')
+        self.migrate_session = self._safe_getattr('unified_migrate_session')
+        self.get_status = self._safe_getattr('get_unified_status')
+        
+        # UnifiedSync 클래스 생성
+        self.create_sync = self._safe_getattr('create_unified_sync')
+
+
 class AiHelpersFacade:
     """
     AI Helpers의 단일 진입점 (Facade Pattern) - HelperResult 버전
@@ -264,7 +348,12 @@ class AiHelpersFacade:
 
         # Project 네임스페이스  
         self.project = ProjectNamespace()
-
+        
+        # Memory 네임스페이스 (NEW!)
+        self.memory = MemoryNamespace()
+        
+        # Unified 네임스페이스 (Flow + Claude 통합)
+        self.unified = UnifiedNamespace()
 
         # 기존 함수들 직접 import (하위 호환성)
         self._setup_legacy_functions()
@@ -299,60 +388,17 @@ class AiHelpersFacade:
         return wrapper
 
     def _setup_legacy_functions(self):
-        """레거시 함수들 직접 노출 - 모두 HelperResult 반환"""
+        """레거시 함수들 직접 노출 - 최소한만 유지 (하위 호환성)"""
 
         # 각 모듈에서 필요한 함수들 가져오기
         modules = {}
-        for mod_name in ['file', 'code', 'search', 'git', 'project', 'llm']:
+        for mod_name in ['project', 'llm']:
             try:
                 modules[mod_name] = importlib.import_module(f'.{mod_name}', 'ai_helpers_new')
             except ImportError:
                 modules[mod_name] = None
 
-        # File 함수들 (HelperResult 래핑)
-        if modules['file']:
-            self.read = self._wrap_legacy_function(getattr(modules['file'], 'read', None))
-            self.write = self._wrap_legacy_function(getattr(modules['file'], 'write', None))
-            self.append = self._wrap_legacy_function(getattr(modules['file'], 'append', None))
-            self.exists = self._wrap_legacy_function(getattr(modules['file'], 'exists', None))
-            self.get_file_info = self._wrap_legacy_function(getattr(modules['file'], 'get_file_info', None))
-
-        # Code 함수들 (HelperResult 래핑)
-        if modules['code']:
-            self.parse = self._wrap_legacy_function(getattr(modules['code'], 'parse', None))
-            self.view = self._wrap_legacy_function(getattr(modules['code'], 'view', None))
-            self.replace = self._wrap_legacy_function(getattr(modules['code'], 'replace', None))
-            self.insert = self._wrap_legacy_function(getattr(modules['code'], 'insert', None))
-            self.functions = self._wrap_legacy_function(getattr(modules['code'], 'functions', None))
-            self.classes = self._wrap_legacy_function(getattr(modules['code'], 'classes', None))
-
-        # Search 함수들 (HelperResult 래핑)
-        if modules['search']:
-            s = modules['search']
-            self.search_files = self._wrap_legacy_function(getattr(s, 'search_files', None))
-            self.search_code = self._wrap_legacy_function(getattr(s, 'search_code', None))
-            self.find_function = self._wrap_legacy_function(getattr(s, 'find_function', None))
-            self.find_class = self._wrap_legacy_function(getattr(s, 'find_class', None))
-            self.grep = self._wrap_legacy_function(getattr(s, 'grep', None))
-            self.search_imports = self._wrap_legacy_function(getattr(s, 'search_imports', None))
-            self.get_statistics = self._wrap_legacy_function(getattr(s, 'get_statistics', None))
-
-        # Git 함수들 (HelperResult 래핑)
-        if modules['git']:
-            g = modules['git']
-            self.git_status = self._wrap_legacy_function(getattr(g, 'git_status', None))
-            self.git_add = self._wrap_legacy_function(getattr(g, 'git_add', None))
-            self.git_commit = self._wrap_legacy_function(getattr(g, 'git_commit', None))
-            self.git_diff = self._wrap_legacy_function(getattr(g, 'git_diff', None))
-            self.git_log = self._wrap_legacy_function(getattr(g, 'git_log', None))
-            self.git_branch = self._wrap_legacy_function(getattr(g, 'git_branch', None))
-            self.git_checkout = self._wrap_legacy_function(getattr(g, 'git_checkout', None))
-            self.git_checkout_b = self._wrap_legacy_function(getattr(g, 'git_checkout_b', None))
-            self.git_merge = self._wrap_legacy_function(getattr(g, 'git_merge', None))
-            self.git_push = self._wrap_legacy_function(getattr(g, 'git_push', None))
-            self.git_pull = self._wrap_legacy_function(getattr(g, 'git_pull', None))
-
-        # Project 함수들 (HelperResult 래핑)
+        # Project 함수들 (하위 호환성 유지 필요)
         if modules['project']:
             p = modules['project']
             self.get_current_project = self._wrap_legacy_function(getattr(p, 'get_current_project', None))
@@ -363,7 +409,7 @@ class AiHelpersFacade:
             self.project_info = self._wrap_legacy_function(getattr(p, 'project_info', None))
             self.list_projects = self._wrap_legacy_function(getattr(p, 'list_projects', None))
 
-        # LLM 함수들 (HelperResult 래핑)
+        # LLM 함수들 (하위 호환성 유지 필요)
         if modules['llm']:
             l = modules['llm']
             self.ask_o3 = self._wrap_legacy_function(getattr(l, 'ask_o3_practical', None))
@@ -390,8 +436,9 @@ class AiHelpersFacade:
         return (
             "<AiHelpersFacade - HelperResult Optimized v2.0>\n"
             "  Usage: h.<namespace>.<function>() or h.<function>()\n"
-            "  Namespaces: file, code, search, git, llm, o3\n"
-            "  ✨ All functions return HelperResult for clean REPL output!"
+            "  Namespaces: file, code, search, git, llm, o3, memory, unified\n"
+            "  ✨ All functions return HelperResult for clean REPL output!\n"
+            "  🔄 NEW: unified.* for Flow + Claude Code integration!"
         )
 
 

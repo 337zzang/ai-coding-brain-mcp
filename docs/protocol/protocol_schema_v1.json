@@ -1,0 +1,70 @@
+
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AI Coding Brain Protocol v1.0",
+
+  "definitions": {
+    "version": {
+      "type": "object",
+      "properties": {
+        "protocol": {"type": "string", "pattern": "^\d+\.\d+\.\d+$"},
+        "mcp_server": {"type": "string"},
+        "python_repl": {"type": "string"},
+        "ai_helpers": {"type": "string"}
+      },
+      "required": ["protocol"]
+    },
+
+    "request": {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {"const": "2.0"},
+        "method": {"type": "string"},
+        "params": {"type": "object"},
+        "id": {"type": ["string", "number"]},
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "timestamp": {"type": "string"},
+            "version": {"$ref": "#/definitions/version"},
+            "session_id": {"type": "string"}
+          }
+        }
+      },
+      "required": ["jsonrpc", "method", "id"]
+    },
+
+    "response": {
+      "type": "object",
+      "properties": {
+        "jsonrpc": {"const": "2.0"},
+        "result": {"type": "object"},
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {"type": "integer"},
+            "message": {"type": "string"},
+            "data": {"type": "object"}
+          }
+        },
+        "id": {"type": ["string", "number"]},
+        "metadata": {"$ref": "#/definitions/request/properties/metadata"}
+      },
+      "required": ["jsonrpc", "id"]
+    },
+
+    "handshake": {
+      "type": "object",
+      "properties": {
+        "type": {"const": "handshake"},
+        "client_version": {"$ref": "#/definitions/version"},
+        "capabilities": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "preferred_protocol": {"type": "string"}
+      },
+      "required": ["type", "client_version"]
+    }
+  }
+}

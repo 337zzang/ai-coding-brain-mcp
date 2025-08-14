@@ -23,7 +23,7 @@ def resolve_project_path(path: Union[str, Path]) -> Path:
     if isinstance(path, str):
         path = Path(path)
 
-    # 절대 경로는 그대로 반환
+    # 절대 경로는 그대로 반환 [배치테스트]
     if path.is_absolute():
         return path
 
@@ -306,6 +306,59 @@ def list_directory(path: Union[str, Path] = '.', debug: bool = False) -> Dict[st
         return err(f"List directory failed: {e}")
 
 
+
+def list_files(path: Union[str, Path] = '.') -> Dict[str, Any]:
+    """디렉토리 내 파일 이름 목록만 반환 (단순화 버전)
+
+    Args:
+        path: 디렉토리 경로 (기본값: 현재 디렉토리)
+
+    Returns:
+        HelperResult with list of file names
+
+    Example:
+        >>> files = h.file.list_files(".")['data']
+        >>> print(files)
+        ['file1.py', 'file2.txt', ...]
+    """
+    result = list_directory(path)
+    if not result['ok']:
+        return result
+
+    # list_directory의 반환 구조에서 파일 이름만 추출
+    files = [
+        item['name'] for item in result['data'].get('items', [])
+        if item['type'] == 'file'
+    ]
+    return ok(files)
+
+
+def list_dirs(path: Union[str, Path] = '.') -> Dict[str, Any]:
+    """디렉토리 내 하위 디렉토리 이름 목록만 반환 (단순화 버전)
+
+    Args:
+        path: 디렉토리 경로 (기본값: 현재 디렉토리)
+
+    Returns:
+        HelperResult with list of directory names
+
+    Example:
+        >>> dirs = h.file.list_dirs(".")['data']
+        >>> print(dirs)
+        ['dir1', 'dir2', ...]
+    """
+    result = list_directory(path)
+    if not result['ok']:
+        return result
+
+    # list_directory의 반환 구조에서 디렉토리 이름만 추출
+    dirs = [
+        item['name'] for item in result['data'].get('items', [])
+        if item['type'] == 'directory'
+    ]
+    return ok(dirs)
+
+
 def create_directory(path: Union[str, Path]) -> Dict[str, Any]:
     """디렉토리 생성 (중첩 디렉토리 지원)"""
     try:
@@ -341,6 +394,108 @@ def write_json(filepath: Union[str, Path],
         return write(filepath, content, backup=backup)
     except Exception as e:
         return err(f"Write JSON failed: {e}")
+
+
+def cleanup_backups(pattern: str = "*.backup.*",
+                    directory: str = ".",
+                    dry_run: bool = False) -> Dict[str, Any]:
+    """
+    백업 파일들을 정리하는 함수
+    
+    Args:
+        pattern: 삭제할 파일 패턴 (기본값: *.backup.*)
+        directory: 검색할 디렉토리 (기본값: 현재 디렉토리)
+        dry_run: True일 경우 실제 삭제하지 않고 목록만 반환
+        
+    Returns:
+        dict: {
+            'ok': bool,
+            'removed': 삭제된 파일 목록,
+            'count': 삭제된 파일 수,
+            'total_size': 삭제된 총 크기 (bytes),
+            'dry_run': dry_run 여부
+        }
+    """
+    import glob
+    import os
+    
+    try:
+        # 프로젝트 경로 해석
+        base_path = resolve_project_path(directory)
+        search_pattern = str(base_path / pattern)
+        
+        # 재귀적으로 백업 파일 찾기
+        backup_files = []
+        if '**' in pattern:
+            # 재귀 패턴
+            backup_files = glob.glob(search_pattern, recursive=True)
+        else:
+            # 단일 디렉토리
+            backup_files = glob.glob(search_pattern)
+            # 하위 디렉토리도 검색
+            recursive_pattern = str(base_path / "**" / pattern)
+            backup_files.extend(glob.glob(recursive_pattern, recursive=True))
+        
+        # 중복 제거
+        backup_files = list(set(backup_files))
+        
+        # 파일 정보 수집
+        removed_files = []
+        total_size = 0
+        errors = []
+        
+        for file_path in backup_files:
+            try:
+                file_size = os.path.getsize(file_path)
+                total_size += file_size
+                
+                if not dry_run:
+                    os.remove(file_path)
+                    removed_files.append(file_path)
+                else:
+                    # dry_run 모드에서는 삭제하지 않고 목록만
+                    removed_files.append(file_path)
+                    
+            except Exception as e:
+                errors.append(f"{file_path}: {str(e)}")
+        
+        result = {
+            'ok': True,
+            'removed': removed_files,
+            'count': len(removed_files),
+            'total_size': total_size,
+            'dry_run': dry_run,
+            'pattern': pattern,
+            'directory': str(base_path)
+        }
+        
+        if errors:
+            result['errors'] = errors
+            
+        if dry_run:
+            result['message'] = f"DRY RUN: {len(removed_files)} 파일 발견 (실제 삭제되지 않음)"
+        else:
+            result['message'] = f"{len(removed_files)} 파일 삭제됨"
+            
+        return result
+        
+    except Exception as e:
+        return err(f"Cleanup backups failed: {e}")
+
+
+def remove_backups(pattern: str = "*.backup.py",
+                   directory: str = "python/ai_helpers_new") -> Dict[str, Any]:
+    """
+    AI Helpers 백업 파일 삭제 (간편 함수)
+    
+    Args:
+        pattern: 삭제할 파일 패턴 (기본값: *.backup.py)
+        directory: 대상 디렉토리 (기본값: python/ai_helpers_new)
+        
+    Returns:
+        dict: cleanup_backups 결과
+    """
+    return cleanup_backups(pattern=pattern, directory=directory, dry_run=False)
 
 
 # 기존 함수들과의 호환성 유지

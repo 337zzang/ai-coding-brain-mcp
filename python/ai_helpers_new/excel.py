@@ -57,9 +57,10 @@ class ExcelManager:
     """Excel COM 객체 생명주기 관리"""
 
     def __init__(self):
-        self.excel = None
-        self.workbook = None
-        self._is_new_instance = False
+            self.excel = None
+            self.workbook = None
+            self.file_path = None  # 파일 경로 추가
+            self._is_new_instance = False
 
     def __del__(self):
         """소멸자: COM 객체 정리"""
@@ -112,11 +113,12 @@ class ExcelManager:
                     self.excel = self.workbook.Application
                     self.excel.Visible = True
                     self._is_new_instance = False
+                    self.file_path = os.path.abspath(file_path)  # file_path 저장
                     return success_response({
                         'excel': self.excel,
                         'workbook': self.workbook,
                         'connected_to_existing': True,
-                        'file_path': os.path.abspath(file_path)
+                        'file_path': self.file_path
                     })
                 except Exception:
                     # GetObject 실패 시 아래에서 새로 열기
@@ -141,11 +143,12 @@ class ExcelManager:
                     # 파일 경로가 없으면 빈 워크북 생성
                     self.workbook = self.excel.Workbooks.Add()
 
+                self.file_path = os.path.abspath(file_path) if file_path else None  # file_path 저장
                 return success_response({
                     'excel': self.excel,
                     'workbook': self.workbook,
                     'connected_to_existing': False,
-                    'file_path': os.path.abspath(file_path) if file_path else None
+                    'file_path': self.file_path
                 })
 
             except Exception as e:
@@ -571,11 +574,28 @@ def excel_add_sheet(name: str, position: Optional[int] = None) -> Response:
 
         # 시트 추가
         if position is None:
-            # 마지막에 추가
-            new_sheet = manager.workbook.Worksheets.Add(After=manager.workbook.Worksheets(manager.workbook.Worksheets.Count))
+            # 마지막에 추가 - 더 안전한 방식
+            sheet_count = manager.workbook.Worksheets.Count
+            if sheet_count > 0:
+                # 마지막 시트 뒤에 추가
+                last_sheet = manager.workbook.Worksheets.Item(sheet_count)
+                new_sheet = manager.workbook.Worksheets.Add(After=last_sheet)
+            else:
+                # 시트가 없으면 그냥 추가
+                new_sheet = manager.workbook.Worksheets.Add()
         else:
             # 특정 위치에 추가
-            new_sheet = manager.workbook.Worksheets.Add(Before=manager.workbook.Worksheets(position))
+            if position > 0 and position <= manager.workbook.Worksheets.Count:
+                target_sheet = manager.workbook.Worksheets.Item(position)
+                new_sheet = manager.workbook.Worksheets.Add(Before=target_sheet)
+            else:
+                # 잘못된 위치면 마지막에 추가
+                sheet_count = manager.workbook.Worksheets.Count
+                if sheet_count > 0:
+                    last_sheet = manager.workbook.Worksheets.Item(sheet_count)
+                    new_sheet = manager.workbook.Worksheets.Add(After=last_sheet)
+                else:
+                    new_sheet = manager.workbook.Worksheets.Add()
 
         new_sheet.Name = name
 
@@ -822,3 +842,117 @@ def excel_apply_formula(sheet: str, range_addr: str, formula: str) -> Response:
 
     except Exception as e:
         return error_response(f"수식 적용 실패: {str(e)}")
+
+
+# ============= Facade Pattern =============
+class ExcelFacade:
+    """Excel 작업을 위한 Facade 인터페이스"""
+
+    def __init__(self):
+        self.manager = get_excel_manager()
+
+    # 연결 관리
+    def connect(self, file_path: str) -> Response:
+        """Excel 파일에 연결"""
+        return excel_connect(file_path)
+
+    def disconnect(self, save: bool = False) -> Response:
+        """Excel 연결 종료"""
+        return excel_disconnect(save)
+
+    # 읽기 작업
+    def read(self, sheet: str, range_addr: str) -> Response:
+        """범위 읽기"""
+        return excel_read_range(sheet, range_addr)
+
+    def read_range(self, sheet: str, range_addr: str) -> Response:
+        """범위 읽기 (별칭)"""
+        return excel_read_range(sheet, range_addr)
+
+    def read_table(self, sheet: str, start_cell: str = "A1") -> Response:
+        """테이블 형태로 읽기"""
+        return excel_read_table(sheet, start_cell)
+
+    # 쓰기 작업
+    def write(self, sheet: str, range_addr: str, data: Any) -> Response:
+        """데이터 쓰기"""
+        return excel_write_range(sheet, range_addr, data)
+
+    def write_range(self, sheet: str, range_addr: str, data: Any) -> Response:
+        """범위에 쓰기 (별칭)"""
+        return excel_write_range(sheet, range_addr, data)
+
+    # 시트 관리
+    def list_sheets(self) -> Response:
+        """시트 목록"""
+        return excel_list_sheets()
+
+    def add_sheet(self, name: str, position: str = 'last') -> Response:
+            """시트 추가"""
+            # position을 적절한 타입으로 변환
+            if position == 'last':
+                pos = None
+            elif position == 'first':
+                pos = 1
+            elif isinstance(position, str) and position.isdigit():
+                pos = int(position)
+            else:
+                pos = None
+            return excel_add_sheet(name, pos)
+
+    def delete_sheet(self, name: str) -> Response:
+        """시트 삭제"""
+        return excel_delete_sheet(name)
+
+    def select_sheet(self, name: str) -> Response:
+        """시트 선택"""
+        return excel_select_sheet(name)
+
+    # 수식과 피벗
+    def apply_formula(self, sheet: str, range_addr: str, formula: str) -> Response:
+        """수식 적용"""
+        return excel_apply_formula(sheet, range_addr, formula)
+
+    def create_pivot(self, source_sheet: str, source_range: str = None, 
+                     target_sheet: str = 'PivotTable', target_cell: str = 'A1',
+                     rows: List[str] = None, columns: List[str] = None,
+                     values: List[dict] = None, filters: List[str] = None) -> Response:
+        """피벗 테이블 생성"""
+        return excel_create_pivot(source_sheet, source_range, target_sheet, 
+                                  target_cell, rows, columns, values, filters)
+
+    # 세션 확인
+    def check_session(self) -> Response:
+        """세션 상태 확인"""
+        manager = get_excel_manager()
+        return success_response({
+            'active': manager.excel is not None,
+            'workbook_open': manager.workbook is not None,
+            'file_path': manager.file_path if manager.workbook else None
+        })
+
+    # 매니저 접근
+    def get_manager(self):
+        """ExcelManager 인스턴스 반환"""
+        return get_excel_manager()
+
+# Facade 인스턴스 생성
+excel = ExcelFacade()
+
+# 레거시 호환성을 위한 직접 export
+__all__ = [
+    'excel',
+    'ExcelManager',
+    'excel_connect',
+    'excel_disconnect',
+    'excel_read_range',
+    'excel_read_table',
+    'excel_write_range',
+    'excel_list_sheets',
+    'excel_add_sheet',
+    'excel_delete_sheet',
+    'excel_select_sheet',
+    'excel_create_pivot',
+    'excel_apply_formula',
+    'get_excel_manager'
+]

@@ -1,0 +1,8 @@
+{
+  "claude_code": {
+    "version": "1.0.0",
+    "auto_analyze": true,
+    "pr_comments": true,
+    "commit_analysis": true
+  }
+}

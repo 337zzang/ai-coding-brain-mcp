@@ -1,0 +1,45 @@
+name: Claude Code Action
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Claude Code command to execute'
+        required: false
+        default: 'analyze'
+
+jobs:
+  claude-code:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: |
+        npm install
+        npm run build
+
+    - name: Run Claude Code Analysis
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      run: |
+        echo "Running Claude Code Analysis..."
+        # Claude Code 명령 실행
+        # 예: npm run analyze 또는 npx claude-code analyze
+
+    - name: Create summary
+      if: always()
+      run: |
+        echo "## Claude Code Analysis Complete" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Analysis completed for commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY

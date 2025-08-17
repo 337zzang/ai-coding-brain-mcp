@@ -1,0 +1,29 @@
+{
+  "version": "8.1",
+  "features": {
+    "plan_mode": true,
+    "think_levels": [
+      "think",
+      "think hard",
+      "think harder",
+      "ultrathink",
+      "megathink"
+    ],
+    "parallel_execution": true,
+    "auto_sync": true
+  },
+  "agents": {
+    "code-analyzer": {
+      "enabled": true,
+      "auto_trigger": true
+    },
+    "test-runner": {
+      "enabled": true,
+      "auto_trigger": true
+    },
+    "code-optimizer": {
+      "enabled": true,
+      "auto_trigger": true
+    }
+  }
+}

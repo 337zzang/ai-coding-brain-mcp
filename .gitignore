@@ -142,13 +142,31 @@ commit_message.txt
 *_backup*/
 **/vendor/
 
-# AI Brain Flow 시스템 (로컬 작업 데이터)
-.ai-brain/
-*.jsonl
+# Claude Code 훅 시스템 백업 (Git 추적 제외)
+.claude/backups/
+.claude/*-log.json
+.claude/session-context.md
+.claude/transcript-*.jsonl
 
-# 백업 파일
+# AI Brain Flow 시스템 (로컬 작업 데이터만 제외)
+.ai-brain/logs/
+.ai-brain/temp/
+.ai-brain/cache/
+# .ai-brain/flow/ 는 추적 (플랜 데이터 중요)
+
+# 백업 파일 (모든 형태)
 *.bak
 *.backup
+*_backup*
+*_backup*/
+backup_*/
+backups/
+
+# 임시 훅 파일
+*.tmp
+*.temp
+temp/
+tmp/
 
 # Python 캐시
 *.pyc

@@ -13,6 +13,20 @@ import tempfile
 import io
 import traceback
 import textwrap
+
+def safe_dedent(code, exclude_patterns=None):
+    """
+    안전한 dedent - 특정 패턴이 포함된 코드는 dedent하지 않음
+    """
+    if exclude_patterns is None:
+        exclude_patterns = ['old_code', 'new_code', 'replace(']
+
+    # exclude 패턴이 포함되어 있으면 dedent하지 않음
+    for pattern in exclude_patterns:
+        if pattern in code:
+            return code
+
+    return textwrap.dedent(code)
 import time
 import datetime as dt
 import platform
@@ -253,7 +267,7 @@ def execute_locally(code: str, repl_globals: dict) -> Dict[str, Any]:
     # 1. 탭을 공백 4개로 변환 (PEP 8 표준)
     normalized_code = code.replace('\t', '    ')
     # 2. 공통된 앞쪽 공백 제거 (dedent)
-    normalized_code = textwrap.dedent(normalized_code)
+    normalized_code = safe_dedent(normalized_code)
     # ===============================
 
     try:

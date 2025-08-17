@@ -198,8 +198,12 @@ def replace(
             return {"ok": False, "error": "새 코드가 비어있습니다"}
         
         # 2순위 Critical: 구문 검증 - new_code가 올바른 Python 구문인지 확인
+        # new_code 전처리: 들여쓰기 제거하여 compile 검사 통과
+        import textwrap
+        normalized_new_code = textwrap.dedent(new_code).strip()
+        
         try:
-            compile(new_code, '<string>', 'exec')
+            compile(normalized_new_code, '<string>', 'exec')
         except SyntaxError as e:
             return {"ok": False, "error": f"구문 오류: {e}"}
         
@@ -231,7 +235,7 @@ def replace(
                     # ⚠️ 중요: 검증은 이미 함수 시작부에서 완료되었으므로 바로 레거시 호출
                     # 기존 fuzzy matching 로직으로 폴백
                     if fuzzy:
-                        return _legacy_fuzzy_replace(filepath, content, old_code, new_code, threshold, preview)
+                        return _legacy_fuzzy_replace(content, old_code, new_code, threshold, preview)
                     elif old_code in content:
                         result_content = content.replace(old_code, new_code)
                     else:
@@ -257,7 +261,7 @@ def replace(
         # auto_indent가 False이거나 IndentationManager를 사용할 수 없는 경우
         # 기존 로직 수행 (검증은 이미 완료됨)
         if fuzzy:
-            return _legacy_fuzzy_replace(filepath, content, old_code, new_code, threshold, preview)
+            return _legacy_fuzzy_replace(content, old_code, new_code, threshold, preview)
         else:
             # 단순 문자열 교체
             if old_code in content:
@@ -279,77 +283,129 @@ def replace(
         print(f"❌ Replace error: {str(e)}")
         return False
 
-def _legacy_fuzzy_replace(filepath, content, old_code, new_code, threshold, preview):
-    """레거시 fuzzy matching 로직 (폴백용)"""
-    import difflib
+def _legacy_fuzzy_replace(content, old_code, new_code, threshold=0.8, preview=False):
+    """
+    개선된 레거시 fuzzy replace 함수
+    - 들여쓰기 중복 적용 제거
+    - 파일 스타일 감지 및 적용
+    - textwrap.dedent 정규화 추가
+    """
     import textwrap
+    from difflib import SequenceMatcher
 
-    # Normalize whitespace
-    old_normalized = re.sub(r'\s+', ' ', old_code.strip())
+    # 1. new_code 정규화 (핵심 개선!)
+    new_code = textwrap.dedent(new_code).strip()
+    old_code = textwrap.dedent(old_code).strip()
 
-    # Find best match in content
-    lines = content.split('\n')
-    best_match = None
+    lines = content.splitlines()
+
+    # 2. 파일 스타일 감지 (탭/공백, 들여쓰기 크기)
+    def detect_file_indent_style(content_lines, max_check=500):
+        """파일의 지배적 들여쓰기 스타일 감지"""
+        tab_count = 0
+        space_indents = []
+
+        for line in content_lines[:max_check]:
+            if line.strip():  # 빈 줄 제외
+                leading = line[:len(line) - len(line.lstrip())]
+                if '\t' in leading:
+                    tab_count += leading.count('\t')
+                elif leading:
+                    space_indents.append(len(leading))
+
+        # 탭 우선 판정
+        if tab_count > len(space_indents) * 0.3:  # 탭이 30% 이상
+            return '\t', 1
+
+        # 공백 기반 - 들여쓰기 크기 추정
+        if space_indents:
+            # 가장 작은 들여쓰기 단위 찾기
+            indent_size = 4  # 기본값
+            for size in [2, 3, 4, 8]:
+                if any(indent % size == 0 for indent in space_indents if indent > 0):
+                    indent_size = size
+                    break
+            return ' ', indent_size
+
+        return ' ', 4  # 기본값
+
+    indent_char, indent_size = detect_file_indent_style(lines)
+
+    # 3. 기존 fuzzy 매칭 로직 (변경 없음)
+    old_lines = old_code.splitlines()
+    new_lines = new_code.splitlines()
+
     best_score = 0
-    best_start = 0
-    best_end = 0
+    best_start = -1
+    best_end = -1
 
-    # Sliding window search
-    old_lines = old_code.strip().split('\n')
-    window_size = len(old_lines)
+    for start in range(len(lines) - len(old_lines) + 1):
+        for end in range(start + len(old_lines), min(start + len(old_lines) + 3, len(lines) + 1)):
+            candidate_lines = lines[start:end]
 
-    for i in range(len(lines) - window_size + 1):
-        window = lines[i:i + window_size]
-        window_text = '\n'.join(window)
-        window_normalized = re.sub(r'\s+', ' ', window_text.strip())
+            # 공백 무시하고 비교
+            candidate_text = '\n'.join(line.strip() for line in candidate_lines)
+            old_text = '\n'.join(line.strip() for line in old_lines)
 
-        # Calculate similarity
-        similarity = difflib.SequenceMatcher(None, old_normalized, window_normalized).ratio()
+            score = SequenceMatcher(None, candidate_text, old_text).ratio()
 
-        if similarity > best_score and similarity >= threshold:
-            best_score = similarity
-            best_match = window_text
-            best_start = i
-            best_end = i + window_size
+            if score > best_score:
+                best_score = score
+                best_start = start
+                best_end = end
 
-    if best_match:
-        # Get indentation from matched block
-        base_indent = len(lines[best_start]) - len(lines[best_start].lstrip()) if lines[best_start].strip() else 0
-        base_indent_str = ' ' * base_indent
+    if best_score < threshold:
+        return content  # 매칭 실패
 
-        # Apply indentation to new code
-        new_lines = new_code.strip().split('\n')
-        indented_new_lines = []
+    # 4. 개선된 들여쓰기 적용 로직 (핵심 수정!)
+    if lines[best_start].strip():
+        # 기준 들여쓰기 감지 (파일 원본 스타일 유지)
+        base_line = lines[best_start]
+        base_indent_str = base_line[:len(base_line) - len(base_line.lstrip())]
+    else:
+        base_indent_str = ''
 
-        for j, line in enumerate(new_lines):
-            if line.strip():  # Non-empty line
-                if j == 0:
-                    # First line uses base indentation
-                    indented_new_lines.append(base_indent_str + line.lstrip())
-                else:
-                    # Other lines: preserve relative indentation
-                    original_indent = len(line) - len(line.lstrip())
-                    indented_new_lines.append(base_indent_str + ' ' * original_indent + line.lstrip())
-            else:
-                indented_new_lines.append('')  # Keep empty lines
+    # new_code의 최소 들여쓰기 계산 (정규화를 위해)
+    new_code_min_indent = float('inf')
+    for line in new_lines:
+        if line.strip():
+            current_indent = len(line) - len(line.lstrip())
+            new_code_min_indent = min(new_code_min_indent, current_indent)
 
-        # Reconstruct content
-        new_content_lines = lines[:best_start] + indented_new_lines + lines[best_end:]
-        new_content = '\n'.join(new_content_lines)
+    if new_code_min_indent == float('inf'):
+        new_code_min_indent = 0
 
-        if preview:
-            return {
-                'preview': new_content,
-                'matched': best_match,
-                'score': best_score,
-                'location': f"lines {best_start+1}-{best_end}",
-                'success': True
-            }
+    # 5. 새 코드 재들여쓰기 (중복 방지!)
+    indented_new_lines = []
+    for line in new_lines:
+        if line.strip():
+            # 상대 들여쓰기 계산
+            original_indent = len(line) - len(line.lstrip())
+            relative_indent = original_indent - new_code_min_indent
 
-        success = safe_write_file(filepath, new_content)
-        return success
+            # 들여쓰기 레벨 계산
+            indent_levels = relative_indent // indent_size
+            remainder_spaces = relative_indent % indent_size
 
-    return False
+            # 최종 들여쓰기 생성 (파일 스타일 적용)
+            final_indent = base_indent_str + (indent_char * indent_size * indent_levels) + (' ' * remainder_spaces)
+            indented_new_lines.append(final_indent + line.lstrip())
+        else:
+            indented_new_lines.append('')  # 빈 줄 유지
+
+    # 6. 내용 교체
+    result_lines = lines[:best_start] + indented_new_lines + lines[best_end:]
+    
+    # Preview 처리
+    if preview:
+        return {
+            'ok': True,
+            'preview': '\n'.join(result_lines),
+            'changes': f'교체 완료: {best_score:.2f} 유사도',
+            'success': True
+        }
+    
+    return '\n'.join(result_lines)
 
 def _generate_diff(old_content, new_content):
     """Generate a simple diff between old and new content"""

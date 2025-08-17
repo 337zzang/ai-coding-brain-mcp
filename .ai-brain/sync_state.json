@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "last_sync": "2025-08-16T00:15:39.296334",
+  "active_mappings": {
+    "todo_2ee71bf2": {
+      "flow_task_id": "task_4ffb978c",
+      "flow_plan_id": "plan_20250816_001_Claude_일반_작업",
+      "last_synced": "2025-08-16T00:15:39.296334"
+    }
+  },
+  "pending_migrations": [],
+  "statistics": {
+    "total_todos_synced": 1
+  }
+}

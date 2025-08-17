@@ -1,0 +1,19 @@
+{
+  "id": "o3_task_0002",
+  "status": "completed",
+  "question": "간단한 테스트 질문입니다.",
+  "start_time": "2025-08-15T23:55:09.056466",
+  "reasoning_effort": "high",
+  "last_update": "2025-08-15T23:55:19.950575",
+  "result": {
+    "answer": "테스트 환영합니다! 무엇을 도와드릴까요?\n- 번역(한–영/영–한)\n- 문장 교정·요약\n- 간단한 계산·수학 문제\n- 코드 예제\n- 아이디어 브레인스토밍",
+    "reasoning_effort": "high",
+    "usage": {
+      "prompt_tokens": 13,
+      "completion_tokens": 579,
+      "total_tokens": 592,
+      "reasoning_tokens": 0
+    }
+  },
+  "end_time": "2025-08-15T23:55:19.950575"
+}

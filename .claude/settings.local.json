@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell:*)",
+      "Bash(dir \"C:\\Users\\82106\\.claude\\hooks\" /b)",
+      "mcp__ai-coding-brain-mcp__execute_code"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

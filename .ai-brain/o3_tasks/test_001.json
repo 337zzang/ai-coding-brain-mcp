@@ -1,0 +1,9 @@
+{
+  "id": "test_001",
+  "status": "completed",
+  "question": "파이썬 리스트 정렬 방법?",
+  "answer": "sort() 메서드 사용",
+  "start_time": "2025-07-31T07:33:58.460780",
+  "_saved_at": "2025-08-10T07:33:58.460780",
+  "_version": "1.0"
+}

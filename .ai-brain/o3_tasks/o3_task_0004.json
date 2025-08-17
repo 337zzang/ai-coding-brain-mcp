@@ -1,0 +1,19 @@
+{
+  "id": "o3_task_0004",
+  "status": "completed",
+  "question": "다음 Python 코드를 종합적으로 분석해주세요:\n\n파일: C:/Users/82106/Desktop/ai-coding-brain-mcp/test_sample.py\n코드:\n\ndef calculate_factorial(n):\n    \"\"\"재귀적 팩토리얼 계산 - 성능 이슈 있음\"\"\"\n    if n < 0:\n        return None\n    if n ",
+  "start_time": "2025-08-15T23:56:50.295174",
+  "reasoning_effort": "high",
+  "last_update": "2025-08-15T23:59:36.379467",
+  "result": {
+    "answer": "종합 분석 요약\n- 성능 최적화\n  - calculate_factorial: 재귀 호출 제거로 호출 오버헤드/스택 사용 제거. 매우 큰 n에서도 RecursionError 방지.\n  - find_duplicates: 중첩 루프(O(n^2))를 해시 기반 O(n)으로 변경.\n  - DataProcessor: 불필요한 upper().lower() 제거, 리스트 컴프리헨션으로 루프 최적화, 처리 후 메모리 즉시 해제.\n- 코드 품질\n  - 핵심 함수/메서드에 타입 힌팅 추가로 가독성과 유지보수성 향상.\n  - 간결한 변수/제어 흐름로직으로 읽기 쉬움.\n- 보안/안정성\n  - 입력 검증 추가(음수/비정수 factorial 차단). 대규모 입력에 대한 방어적 코멘트.\n  - DataProcessor가 누적 데이터로 메모리 점유가 커지는 문제를 처리 후 clear로 완화.\n- 아키텍처\n  - 현재 규모에서는 클래스/모듈 분리는 과도. 다만 DataProcessor는 “처리 후 비우는” 일회성 버퍼로 동작하게 해 누수 위험을 낮춤.\n  - 필요 시 외부에서 add_data 대신 일괄 처리용 process_all에 인자 추가 고려(호환성 영향 있어 현 단계에선 보류).\n\n구체적인 최적화 코드 제안(각 10줄 이내, 기존 구조 유지, 복붙 가능)\n\n1) calculate_factorial 교체\ndef calculate_factorial(n: int) -> int:\n    if not isinstance(n, int) or n < 0:\n        raise ValueError(\"n must be a non-negative integer\")\n    result = 1\n    for i in range(2, n + 1):\n        result *= i\n    return result\n\n2) find_duplicates 교체 (순서 보존, O(n))\ndef find_duplicates(arr: list) -> list:\n    if arr is None:\n        return []\n    seen, dups, dset = set(), [], set()\n    for x in arr:\n        if x in seen and x not in dset:\n            dups.append(x); dset.add(x)\n        else:\n            seen.add(x)\n    return dups\n\n3) DataProcessor 교체(메모리 해제 및 처리 최적화)\nclass DataProcessor:\n    def __init__(self) -> None:\n        self.data: list = []\n    def add_data(self, item) -> None:\n        self.data.append(item)\n    def process_all(self) -> list:\n        results = [str(item).strip().lower() for item in self.data]\n        self.data.clear()\n        return results\n\n예상 성능 향상율과 구현 우선순위\n- P0: find_duplicates O(n^2) → O(n)\n  - 대략적 향상: n=10^4 기준 50~500배 이상(입력 분포에 따라 다름). 메모리 O(n) 추가.\n- P0: DataProcessor.process_all 최적화 및 메모리 해제\n  - 처리 속도: 1.5~3배(리스트 컴프리헨션 + 불필요 변환 제거).\n  - 메모리: 처리 직후 버퍼 해제 → 누수 위험 실질적 제거.\n- P1: calculate_factorial 반복화 + 입력 검증\n  - 속도: 1.2~3배(재귀 오버헤드 제거). 스택 사용 일정, RecursionError 제거.\n- P2: 타입 힌팅/가독성 개선\n  - 정적 분석 용이, 유지보수 비용 절감(정량화 어려우나 품질 향상 큼).\n\n주의/호환성\n- factorial은 음수/비정수에 대해 ValueError를 발생. 기존에 None을 기대했다면 예외 처리로 전환 필요.\n- process_all이 처리 후 self.data를 비웁니다. 후속 로직에서 원본 데이터를 재사용하던 경우 주의(필요 시 clear 호출을 제거하거나 별도 옵션으로 분기).",
+    "reasoning_effort": "high",
+    "usage": {
+      "prompt_tokens": 579,
+      "completion_tokens": 6728,
+      "total_tokens": 7307,
+      "reasoning_tokens": 0
+    }
+  },
+  "end_time": "2025-08-15T23:59:36.377499"
+}

@@ -1,0 +1,3 @@
+{"timestamp": "2025-08-09T23:28:52.152523", "event_type": "TASK_INFO", "ts": "2025-08-09T23:28:52.152523", "type": "TASK_INFO", "title": "Test Task", "priority": "high", "estimate": "1h", "description": ""}
+{"timestamp": "2025-08-09T23:28:52.153520", "event_type": "TODO", "ts": "2025-08-09T23:28:52.153520", "type": "TODO", "items": ["Step 1", "Step 2"]}
+{"timestamp": "2025-08-09T23:28:52.154520", "event_type": "CODE", "ts": "2025-08-09T23:28:52.154520", "type": "CODE", "action": "create", "file": "test.py", "summary": "Test code"}

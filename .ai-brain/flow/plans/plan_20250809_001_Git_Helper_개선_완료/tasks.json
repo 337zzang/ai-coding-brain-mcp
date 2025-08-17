@@ -1,0 +1,16 @@
+{
+  "task_20250809_193716_99a929": {
+    "id": "task_20250809_193716_99a929",
+    "title": "Phase 1: 긴급 수정 (Dead code, Timeout, 인코딩)",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-09T19:37:16.611008",
+    "updated_at": "2025-08-09T19:37:16.611008",
+    "completed_at": null,
+    "assignee": null,
+    "number": 1,
+    "tags": [],
+    "metadata": {}
+  }
+}

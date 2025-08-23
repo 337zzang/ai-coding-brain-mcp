@@ -40,7 +40,8 @@
       "Read(/C:\\Users\\82106\\.claude/**)",
       "Read(/C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp2\\ai-coding-brain-mcp\\python/**)",
       "Read(/C:\\Users\\82106\\Desktop\\ai-coding-brain-mcp2\\ai-coding-brain-mcp\\python\\ai_helpers_new/**)",
-      "Read(/C:\\Users\\82106\\.claude/**)"
+      "Read(/C:\\Users\\82106\\.claude/**)",
+      "Bash(wsl:*)"
     ],
     "deny": [],
     "ask": [],

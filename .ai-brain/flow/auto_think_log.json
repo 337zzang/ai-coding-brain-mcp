@@ -1,0 +1,17 @@
+[
+  {
+    "timestamp": "2025-08-23T15:13:58.491485",
+    "analysis": {
+      "has_errors": false,
+      "error_type": null,
+      "patterns": {
+        "uses_helpers": true,
+        "uses_flow": false,
+        "is_test": true,
+        "is_complex": false
+      },
+      "code_lines": 5,
+      "output_size": 51
+    }
+  }
+]

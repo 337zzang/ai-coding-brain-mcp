@@ -41,9 +41,10 @@ class AutoThink:
     def _analyze(self, code: str, output: str) -> Dict[str, Any]:
         """코드와 출력 분석"""
         
-        # 오류 검사
-        error_keywords = ['error', 'exception', 'traceback', 'failed', '❌']
-        has_errors = any(kw.lower() in output.lower() for kw in error_keywords)
+        # 오류 검사 (더 정확한 감지)
+        error_keywords = ['Error', 'Exception', 'Traceback', 'failed', '❌', 'error', 'exception']
+        output_lower = output.lower()
+        has_errors = any(kw.lower() in output_lower for kw in error_keywords) or 'error' in output_lower
         
         # 오류 유형 파악
         error_type = None

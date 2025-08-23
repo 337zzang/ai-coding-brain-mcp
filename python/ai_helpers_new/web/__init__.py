@@ -419,3 +419,144 @@ list_sessions = lambda: list(_overlay_managers.keys())
 get_current_session = lambda: _current_session
 set_current_session = lambda sid: setattr(_web_auto, 'current_session', sid) or {'success': True}
 cleanup = close
+
+# GPS 오버레이 전용 함수들
+def init_gps_overlay(session_id: str = None, **config) -> Dict[str, Any]:
+    """GPS 오버레이 초기화"""
+    global _current_session, _gps_overlays
+    
+    session_id = session_id or _current_session
+    
+    if not _gps_overlay_available:
+        return {
+            'success': False,
+            'error': 'GPS 오버레이 모듈 사용 불가'
+        }
+    
+    try:
+        if session_id not in _gps_overlays:
+            gps = WebOverlayGPS(**config)
+            _gps_overlays[session_id] = gps
+            
+        return {
+            'success': True,
+            'session_id': session_id,
+            'gps_active': True,
+            'message': 'GPS 오버레이 초기화 완료'
+        }
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+def mark_gps_location(x: int, y: int, label: str = "Click Here", 
+                      color: str = "#FF0000", session_id: str = None) -> Dict[str, Any]:
+    """GPS 위치 마커 표시"""
+    global _current_session, _gps_overlays
+    
+    session_id = session_id or _current_session
+    
+    try:
+        gps = _gps_overlays.get(session_id)
+        if not gps:
+            return {'success': False, 'error': 'GPS 오버레이가 초기화되지 않음'}
+        
+        # JavaScript 코드 생성
+        js_code = gps.mark_click_location(x, y, label, color)
+        
+        return {
+            'success': True,
+            'x': x,
+            'y': y,
+            'label': label,
+            'color': color,
+            'js_code': js_code,
+            'message': f'GPS 마커 추가: ({x}, {y}) - {label}'
+        }
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+def highlight_gps_element(selector: str, color: str = "#00FF00", 
+                         label: str = None, session_id: str = None) -> Dict[str, Any]:
+    """GPS 요소 하이라이트"""
+    global _current_session, _gps_overlays
+    
+    session_id = session_id or _current_session
+    
+    try:
+        gps = _gps_overlays.get(session_id)
+        if not gps:
+            return {'success': False, 'error': 'GPS 오버레이가 초기화되지 않음'}
+        
+        # JavaScript 코드 생성
+        js_code = gps.highlight_element(selector, color, label)
+        
+        return {
+            'success': True,
+            'selector': selector,
+            'color': color,
+            'label': label,
+            'js_code': js_code,
+            'message': f'GPS 하이라이트: {selector}'
+        }
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+def draw_gps_path(points: List[Dict], color: str = "#0000FF", 
+                  session_id: str = None) -> Dict[str, Any]:
+    """GPS 경로 그리기"""
+    global _current_session, _gps_overlays
+    
+    session_id = session_id or _current_session
+    
+    try:
+        gps = _gps_overlays.get(session_id)
+        if not gps:
+            return {'success': False, 'error': 'GPS 오버레이가 초기화되지 않음'}
+        
+        # JavaScript 코드 생성
+        js_code = gps.draw_path(points, color)
+        
+        return {
+            'success': True,
+            'points': points,
+            'color': color,
+            'js_code': js_code,
+            'message': f'GPS 경로 그리기: {len(points)}개 포인트'
+        }
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+def clear_gps_overlay(session_id: str = None) -> Dict[str, Any]:
+    """GPS 오버레이 초기화"""
+    global _current_session, _gps_overlays
+    
+    session_id = session_id or _current_session
+    
+    try:
+        gps = _gps_overlays.get(session_id)
+        if not gps:
+            return {'success': False, 'error': 'GPS 오버레이가 초기화되지 않음'}
+        
+        # JavaScript 코드 생성
+        js_code = gps.clear_overlay()
+        
+        return {
+            'success': True,
+            'js_code': js_code,
+            'message': 'GPS 오버레이 초기화 완료'
+        }
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+def get_gps_status(session_id: str = None) -> Dict[str, Any]:
+    """GPS 오버레이 상태 조회"""
+    global _current_session, _gps_overlays
+    
+    session_id = session_id or _current_session
+    
+    return {
+        'success': True,
+        'gps_available': _gps_overlay_available,
+        'active_sessions': list(_gps_overlays.keys()),
+        'current_session': session_id,
+        'has_gps': session_id in _gps_overlays if session_id else False
+    }

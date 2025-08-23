@@ -264,11 +264,13 @@ class WebNamespace(SafeNamespace):
     def __init__(self):
         # 새로운 web 모듈 우선 시도
         try:
+            # SimpleWebAutomation 사용 (WebAutomation은 없음)
             from .web import (
-                WebAutomation, web,
-                web_start, web_goto, web_click, web_type,
-                web_close, web_screenshot, web_execute_js,
-                web_list_sessions
+                SimpleWebAutomation,
+                start as web_start, goto as web_goto, 
+                click as web_click, type_text as web_type,
+                close as web_close, screenshot as web_screenshot,
+                execute_js as web_execute_js, list_sessions as web_list_sessions
             )
 
             # 전역 WebAutomation 인스턴스 사용

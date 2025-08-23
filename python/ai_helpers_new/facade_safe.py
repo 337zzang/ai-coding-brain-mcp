@@ -476,6 +476,74 @@ class ExcelNamespace(SafeNamespace):
             self.execute_macro = self._safe_getattr('execute_macro')
 
 
+class JupyterNamespace(SafeNamespace):
+    """Jupyter Notebook 연동 네임스페이스
+    노트북 생성, 실행, 변환 등 Jupyter 관련 기능을 제공합니다.
+    """
+    def __init__(self):
+        super().__init__('jupyter')
+        module = self._get_module()
+        if module is None:
+            # 모듈이 없을 때 기본 동작
+            self.create_notebook = lambda *args, **kwargs: {'ok': False, 'error': 'Jupyter module not available'}
+            self.read_notebook = lambda *args, **kwargs: {'ok': False, 'error': 'Jupyter module not available'}
+            self.add_cell = lambda *args, **kwargs: {'ok': False, 'error': 'Jupyter module not available'}
+            self.execute_notebook = lambda *args, **kwargs: {'ok': False, 'error': 'Jupyter module not available'}
+            self.convert_to_python = lambda *args, **kwargs: {'ok': False, 'error': 'Jupyter module not available'}
+            self.start_notebook_server = lambda *args, **kwargs: {'ok': False, 'error': 'Jupyter module not available'}
+            self.list_kernels = lambda *args, **kwargs: {'ok': False, 'error': 'Jupyter module not available'}
+            self.install_kernel = lambda *args, **kwargs: {'ok': False, 'error': 'Jupyter module not available'}
+            self.extract_code_cells = lambda *args, **kwargs: {'ok': False, 'error': 'Jupyter module not available'}
+            self.clear_outputs = lambda *args, **kwargs: {'ok': False, 'error': 'Jupyter module not available'}
+        else:
+            # Jupyter 작업 함수들
+            self.create_notebook = self._safe_getattr('create_notebook')
+            self.read_notebook = self._safe_getattr('read_notebook')
+            self.add_cell = self._safe_getattr('add_cell')
+            self.execute_notebook = self._safe_getattr('execute_notebook')
+            self.convert_to_python = self._safe_getattr('convert_to_python')
+            self.start_notebook_server = self._safe_getattr('start_notebook_server')
+            self.list_kernels = self._safe_getattr('list_kernels')
+            self.install_kernel = self._safe_getattr('install_kernel')
+            self.extract_code_cells = self._safe_getattr('extract_code_cells')
+            self.clear_outputs = self._safe_getattr('clear_outputs')
+
+
+class UVNamespace(SafeNamespace):
+    """UV 패키지 매니저 네임스페이스
+    초고속 Python 패키지 관리를 위한 UV 도구를 제공합니다.
+    """
+    def __init__(self):
+        super().__init__('uv')
+        module = self._get_module()
+        if module is None:
+            # 모듈이 없을 때 기본 동작
+            self.install_uv = lambda *args, **kwargs: {'ok': False, 'error': 'UV module not available'}
+            self.init_project = lambda *args, **kwargs: {'ok': False, 'error': 'UV module not available'}
+            self.create_venv = lambda *args, **kwargs: {'ok': False, 'error': 'UV module not available'}
+            self.pip_install = lambda *args, **kwargs: {'ok': False, 'error': 'UV module not available'}
+            self.pip_sync = lambda *args, **kwargs: {'ok': False, 'error': 'UV module not available'}
+            self.pip_compile = lambda *args, **kwargs: {'ok': False, 'error': 'UV module not available'}
+            self.list_packages = lambda *args, **kwargs: {'ok': False, 'error': 'UV module not available'}
+            self.run_script = lambda *args, **kwargs: {'ok': False, 'error': 'UV module not available'}
+            self.cache_clean = lambda *args, **kwargs: {'ok': False, 'error': 'UV module not available'}
+            self.tool_install = lambda *args, **kwargs: {'ok': False, 'error': 'UV module not available'}
+            self.quick_setup = lambda *args, **kwargs: {'ok': False, 'error': 'UV module not available'}
+        else:
+            # UV 작업 함수들
+            self.install_uv = self._safe_getattr('install_uv')
+            self.init_project = self._safe_getattr('init_project')
+            self.create_venv = self._safe_getattr('create_venv')
+            self.pip_install = self._safe_getattr('pip_install')
+            self.pip_sync = self._safe_getattr('pip_sync')
+            self.pip_compile = self._safe_getattr('pip_compile')
+            self.list_packages = self._safe_getattr('list_packages')
+            self.run_script = self._safe_getattr('run_script')
+            self.cache_clean = self._safe_getattr('cache_clean')
+            self.tool_install = self._safe_getattr('tool_install')
+            self.quick_setup = self._safe_getattr('quick_setup')
+
+
 class AiHelpersFacade:
     """
     AI Helpers의 단일 진입점 (Facade Pattern) - HelperResult 버전

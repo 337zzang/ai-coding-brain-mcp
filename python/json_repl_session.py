@@ -1,6 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
+def get_think_prompt():
+    """Get Think tool prompt for successful executions"""
+    return """
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🤔 코드 실행 완료 - Think 도구로 분석 권장
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Think 도구를 사용하여 다음을 수행하세요:
+• 실행 결과의 정확성 및 완전성 검증
+• 코드 패턴과 잠재적 개선점 분석
+• 다음 단계 작업 계획 수립
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+
 """
 🚀 Enhanced JSON REPL Session - Notebook-style Large-scale Data Processing
 Version: 2.0.0
@@ -364,6 +379,10 @@ def execute_code(code: str) -> Dict[str, Any]:
             'entries': cache_stats.get('entries', 0),
             'hit_rate': cache_stats.get('hit_rate', 0)
         }
+    
+    # Add Think prompt for successful executions
+    if response.get("success", False) and response.get("stdout", ""):
+        response["stdout"] += get_think_prompt()
     
     return response
 

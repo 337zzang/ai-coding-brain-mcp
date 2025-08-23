@@ -359,6 +359,9 @@ class ProjectNamespace(SafeNamespace):
         self.scan_directory = self._safe_getattr('scan_directory')
         self.info = self._safe_getattr('project_info')
         self.fix_task_numbers = self._safe_getattr('fix_task_numbers')
+        
+        # list() 메서드 추가 (list_projects의 별칭)
+        self.list = self.list_projects if self.list_projects else lambda: {'ok': False, 'error': 'list_projects not available'}
 
 
 class MemoryNamespace(SafeNamespace):

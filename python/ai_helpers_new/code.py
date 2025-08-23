@@ -162,9 +162,11 @@ def classes(filepath: str) -> Dict[str, Any]:
         Dict with standard response format {'ok': bool, 'data': list}
     """
     parsed = parse(filepath)
-    if parsed.get('ok'):
-        return parsed['data'].get('classes', [])
-    return parsed.get('data', {}).get('classes', [])
+    if parsed.get('ok') and parsed.get('data'):
+        class_list = parsed['data'].get('classes', [])
+        # 클래스 이름만 추출하여 리스트로 반환
+        return [c['name'] for c in class_list] if class_list else []
+    return []
 
 # === 코드 수정 함수 ===
 

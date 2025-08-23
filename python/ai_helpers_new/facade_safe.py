@@ -576,6 +576,12 @@ class AiHelpersFacade:
         # Excel 네임스페이스 (Windows COM automation)
         self.excel = ExcelNamespace()
         
+        # Jupyter 네임스페이스 (Notebook 연동)
+        self.jupyter = JupyterNamespace()
+        
+        # UV 네임스페이스 (초고속 패키지 매니저)
+        self.uv = UVNamespace()
+        
         # Unified 네임스페이스 (Flow + Claude 통합)
 # DEPRECATED:         self.unified = UnifiedNamespace()
 

@@ -365,14 +365,32 @@ class ProjectNamespace(SafeNamespace):
         self.list = self.list_projects if self.list_projects else lambda: {'ok': False, 'error': 'list_projects not available'}
         
         # get_context 메서드 추가
-        self.get_context = self._safe_getattr('get_project_context')
-        if not self.get_context:
-            # get_project_context가 없으면 get_current_project를 사용
+        get_project_context_func = self._safe_getattr('get_project_context')
+        if get_project_context_func:
+            # get_project_context는 ProjectContext 객체를 반환하므로 래핑 필요
+            def wrapped_get_context():
+                try:
+                    context_obj = get_project_context_func()
+                    if context_obj:
+                        return HelperResult({
+                            'ok': True, 
+                            'data': {
+                                'current_project': context_obj.get_project_name() or 'Unknown',
+                                'project_path': str(context_obj._project_path) if context_obj._project_path else None,
+                                'base_path': str(context_obj._base_path) if context_obj._base_path else None
+                            }
+                        })
+                    return HelperResult({'ok': False, 'error': 'No context available'})
+                except Exception as e:
+                    return HelperResult({'ok': False, 'error': str(e)})
+            self.get_context = wrapped_get_context
+        else:
+            # 폴백: get_current_project 사용
             get_current = self._safe_getattr('get_current_project')
             if get_current:
-                self.get_context = lambda: {'ok': True, 'data': {'current_project': get_current().get('data', {}).get('name', 'Unknown')}}
+                self.get_context = lambda: get_current()
             else:
-                self.get_context = lambda: {'ok': False, 'error': 'Context not available'}
+                self.get_context = lambda: HelperResult({'ok': False, 'error': 'Context not available'})
 
 
 class MemoryNamespace(SafeNamespace):

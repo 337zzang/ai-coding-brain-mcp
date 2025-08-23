@@ -145,9 +145,11 @@ def functions(filepath: str) -> Dict[str, Any]:
         Dict with standard response format {'ok': bool, 'data': list}
     """
     parsed = parse(filepath)
-    if parsed.get('ok'):
-        return parsed['data'].get('functions', [])
-    return parsed.get('data', {}).get('functions', [])
+    if parsed.get('ok') and parsed.get('data'):
+        func_list = parsed['data'].get('functions', [])
+        # 함수 이름만 추출하여 리스트로 반환
+        return [f['name'] for f in func_list] if func_list else []
+    return []
 
 @wrap_output
 def classes(filepath: str) -> Dict[str, Any]:

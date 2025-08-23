@@ -338,35 +338,35 @@ class FlowAPI:
         """통계 정보 반환 - 타입 안전성 강화 버전"""
         plans = self.flow_manager.list_plans()
 
-    total_tasks = 0
-    task_stats = {"todo": 0, "in_progress": 0, "done": 0, "unknown": 0}
+        total_tasks = 0
+        task_stats = {"todo": 0, "in_progress": 0, "done": 0, "unknown": 0}
 
-    for plan in plans:
-        if hasattr(plan, 'tasks'):
-            # tasks가 딕셔너리인지 확인
-            tasks = plan.tasks if isinstance(plan.tasks, dict) else {}
-            total_tasks += len(tasks)
+        for plan in plans:
+            if hasattr(plan, 'tasks'):
+                # tasks가 딕셔너리인지 확인
+                tasks = plan.tasks if isinstance(plan.tasks, dict) else {}
+                total_tasks += len(tasks)
 
-            for task in tasks.values():
-                # 안전한 status 추출
-                status = None
+                for task in tasks.values():
+                    # 안전한 status 추출
+                    status = None
 
-                # 1. 객체 속성으로 시도
-                if hasattr(task, 'status'):
-                    status_val = getattr(task, 'status', None)
-                    # Enum이나 객체인 경우 value 속성 확인
-                    if hasattr(status_val, 'value'):
-                        status = str(status_val.value).lower()
-                    else:
-                        status = str(status_val).lower()
+                    # 1. 객체 속성으로 시도
+                    if hasattr(task, 'status'):
+                        status_val = getattr(task, 'status', None)
+                        # Enum이나 객체인 경우 value 속성 확인
+                        if hasattr(status_val, 'value'):
+                            status = str(status_val.value).lower()
+                        else:
+                            status = str(status_val).lower()
 
-                # 2. 딕셔너리 키로 시도
-                elif isinstance(task, dict):
-                    status = str(task.get('status', 'todo')).lower()
+                    # 2. 딕셔너리 키로 시도
+                    elif isinstance(task, dict):
+                        status = str(task.get('status', 'todo')).lower()
 
-                # 3. 기본값
-                if not status:
-                    status = 'todo'
+                    # 3. 기본값
+                    if not status:
+                        status = 'todo'
 
                 # 상태 분류 (안전한 방식)
                 if 'done' in status or 'completed' in status:

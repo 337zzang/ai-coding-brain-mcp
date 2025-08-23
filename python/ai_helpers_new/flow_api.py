@@ -181,9 +181,27 @@ class FlowAPI:
         """새 Plan 생성"""
         plan = self._manager.create_plan(name)
         if description:
-            plan.metadata["description"] = description
-        self._current_plan_id = plan.id
-        return self._res(True, _plan_to_dict(plan))
+            # plan이 dict인 경우와 객체인 경우 모두 처리
+            if isinstance(plan, dict):
+                if 'metadata' not in plan:
+                    plan['metadata'] = {}
+                plan['metadata']['description'] = description
+                plan_id = plan.get('id', name)
+            else:
+                if not hasattr(plan, 'metadata'):
+                    plan.metadata = {}
+                plan.metadata["description"] = description
+                plan_id = plan.id
+        else:
+            plan_id = plan.get('id', name) if isinstance(plan, dict) else plan.id
+        
+        self._current_plan_id = plan_id
+        
+        # plan이 이미 dict인 경우 그대로 반환
+        if isinstance(plan, dict):
+            return self._res(True, plan)
+        else:
+            return self._res(True, _plan_to_dict(plan))
 
     def select_plan(self, plan_id: str) -> "FlowAPI":
         """Plan 선택 (체이닝 가능)"""

@@ -1,176 +1,192 @@
-# Node modules
+# ==========================================
+# AI Coding Brain MCP - Production .gitignore
+# ==========================================
+
+# Node.js
+# ==========================================
 node_modules/
 dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Python
+# ==========================================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.eggs/
 
-# Logs
-*.log
-debug_flow.log
+# Environment Files
+# ==========================================
+.env
+.env.*
+*.env
+!.env.example
 
-# IDE
+# IDE & Editor Files
+# ==========================================
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# Environment
-.env
-*.env
+# Operating System Files
+# ==========================================
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# Backups
-backups/
-# memory/ # 워크플로우 데이터 추적 필요
-workflow_backup.json
+# Logs
+# ==========================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+debug_*.log
 
-# Test files
-test_*.txt
+# Testing
+# ==========================================
+test/
+tests/output/
+coverage/
+.coverage
+*.test.js
+*.spec.js
+test_*.py
+*_test.py
+*.test.ts
+*.spec.ts
 
-# Claude App files (DO NOT COMMIT)
-*.exe
-*.dll
-*.pak
-*.bin
-*.dat
-*.ico
-Squirrel-UpdateSelf.log
-squirrel.exe
-chrome_*
-d3dcompiler_*
-ffmpeg.dll
-icudtl.dat
-libEGL.dll
-libGLESv2.dll
-locales/
-resources/
-v8_context_snapshot.bin
-vk_swiftshader*
-vulkan-1.dll
-snapshot_blob.bin
-
-# Batch scripts (temporary)
-gemini_*.bat
-gemini_*.ps1
-run_gemini.bat
-setup_gemini.bat
-
-# LICENSE file (should not be in project)
-LICENSE
-
-# 임시 파일 및 폴더
+# Temporary Files
+# ==========================================
 *.tmp
 *.temp
 *.cache
 temp/
 tmp/
+.temp/
+.tmp/
+.cache/
 
-
-# Documentation
-# docs/ # 프로젝트 문서 추적 필요
-
-# Images
-image/
-
-# Python cache
-**/__pycache__/
-
-# Vendor dependencies
-python/vendor/
-
-# Build output
-python/build/
-
-# Git internal files (should not be tracked)
-.git/
+# Backup Files
+# ==========================================
+*.bak
 *.backup
-
-# 리팩토링 백업
-backup_before_refactor_*/
-backup_*/
-backup/ 
-  
-# Python 임시 파일 (2025-07-02 추가)  
-*.backup  
-*.backup_*  
-*.indent_backup  
-python/fix_*.py  
-fix_*.py  
-*_original_*.py  
-*_backup_*.py 
-commit_message.txt 
-*.backup2 
-
-# Patch files
-*.patch
-
-# Migration files
-*.migrated
-
-# Flow debugging
-debug_flow.log
-flow_improvement_plan.json
-flow_issues_report.md
-
-# 실행 스크립트
-run_tests.py
-diagnose_python_path.js
-
-# 마이그레이션/리팩토링 관련
-*_COMPLETE.md
-migration_strategy.md
-refactoring_*.md
-test_strategy.md
-
-# file_directory 캐시
-file_directory.md시 파일 (2025-07-02 추가)  
-*.backup  
-*.backup_*  
-*.indent_backup  
-python/fix_*.py  
-fix_*.py  
-*_original_*.py  
-*_backup_*.py 
-commit_message.txt 
-*.backup2 
-
-# Additional backup and vendor patterns
-# Added by AI Coding Brain optimization
 *_backup*
-*_backup*/
-**/vendor/
+backup*/
+backups/
+*.old
+*.orig
 
-# Claude Code 훅 시스템 백업 (Git 추적 제외)
+# Build Artifacts
+# ==========================================
+build/
+dist/
+out/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Documentation (generated)
+# ==========================================
+docs/build/
+docs/_build/
+*.pdf
+
+# Images & Media (test/debug)
+# ==========================================
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+!docs/images/*
+!assets/images/*
+
+# Database
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+
+# Package Files
+# ==========================================
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# AI Brain System (local data only)
+# ==========================================
+.ai-brain/logs/
+.ai-brain/temp/
+.ai-brain/cache/
+.ai-brain/sessions/
+# Note: .ai-brain/flow/ is tracked (important plan data)
+
+# Claude Code System
+# ==========================================
 .claude/backups/
 .claude/*-log.json
 .claude/session-context.md
 .claude/transcript-*.jsonl
+.claude/temp/
 
-# AI Brain Flow 시스템 (로컬 작업 데이터만 제외)
-.ai-brain/logs/
-.ai-brain/temp/
-.ai-brain/cache/
-# .ai-brain/flow/ 는 추적 (플랜 데이터 중요)
+# Browser Sessions
+# ==========================================
+.browser_sessions/
+.web_sessions/
 
-# 백업 파일 (모든 형태)
-*.bak
-*.backup
-*_backup*
-*_backup*/
-backup_*/
-backups/
+# REPL Cache
+# ==========================================
+.repl_cache/
+python/.repl_cache/
 
-# 임시 훅 파일
-*.tmp
-*.temp
-temp/
-tmp/
+# Migration/Refactoring Files
+# ==========================================
+*_COMPLETE.md
+migration_*.md
+refactoring_*.md
+*_migrated*
 
-# Python 캐시
-*.pyc
+# Debug & Analysis Files
+# ==========================================
+debug_*.json
+analysis_*.json
+report_*.json
+*.analysis
+*.debug
 
-# OS 생성 파일
-.DS_Store
-Thumbs.db
+# Test Data & Fixtures
+# ==========================================
+fixtures/temp/
+test_data/
+mock_data/
+sample_*.py
+edge_*.py
+demo_*.py
+
+# API Testing
+# ==========================================
+api/test/
+api/mock/
+
+# Miscellaneous
+# ==========================================
+nul
+*.patch
+file_directory.md
+captured_events_*.json

@@ -195,6 +195,63 @@ def ensure_response(data: Any, error: str = None, **extras) -> HelperResult:
     response = HelperResult({'ok': True, 'data': data})
     response.update(extras)
     return response
+def safe_get(result, *keys, default=None):
+    """중첩된 딕셔너리 안전 접근
+    
+    KeyError를 방지하면서 중첩된 딕셔너리 값에 접근합니다.
+    
+    Args:
+        result: 딕셔너리 또는 HelperResult 객체
+        *keys: 접근할 키들 (예: 'data', 'project')
+        default: 키가 없거나 None일 때 반환할 기본값
+    
+    Returns:
+        찾은 값 또는 default
+        
+    Example:
+        >>> result = {'data': {'project': 'test'}}
+        >>> safe_get(result, 'data', 'project')  # 'test'
+        >>> safe_get(result, 'data', 'missing')  # None
+    """
+    if not isinstance(result, dict):
+        return default
+    
+    current = result
+    for key in keys:
+        if isinstance(current, dict):
+            current = current.get(key, default)
+            if current is None:
+                return default
+        else:
+            return default
+    return current
+
+def safe_api_get(result, key_path, default=None):
+    """API 응답 전용 안전 접근 (ok 체크 포함)
+    
+    API 응답의 ok 상태를 확인하고 안전하게 데이터에 접근합니다.
+    
+    Args:
+        result: API 응답 (HelperResult 또는 dict)
+        key_path: 점으로 구분된 키 경로 (예: 'data.project.name')
+        default: 실패하거나 키가 없을 때 반환할 기본값
+    
+    Returns:
+        찾은 값 또는 default
+        
+    Example:
+        >>> result = {'ok': True, 'data': {'project': 'test'}}
+        >>> safe_api_get(result, 'data.project')  # 'test'
+        >>> safe_api_get(result, 'data.missing', 'default')  # 'default'
+    """
+    # API 호출 실패 시 즉시 default 반환
+    if not result or not result.get('ok', False):
+        return default
+    
+    # 점으로 구분된 키 경로를 분리
+    keys = key_path.split('.')
+    return safe_get(result, *keys, default=default)
+
 def safe_execution(func):
     """함수 실행을 안전하게 래핑하고 HelperResult를 반환하는 데코레이터
 

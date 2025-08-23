@@ -1,0 +1,90 @@
+{
+  "commands": {
+    "기본 명령어": {
+      "/superplan [작업]": {
+        "설명": "Plan Mode + planning-specialist + O3 자동 실행",
+        "특징": [
+          "초기 계획과 전문가 검토 병렬 진행",
+          "O3 레벨 심층 분석 자동 적용",
+          "리스크 매트릭스 자동 생성",
+          "신뢰도 점수 계산",
+          "통합된 강화 계획 제시"
+        ],
+        "파일": "superplan.md"
+      },
+      "/quickplan [작업]": {
+        "설명": "빠른 계획 수립 + 에이전트 검증",
+        "특징": [
+          "신속한 계획 생성",
+          "planning-specialist 자동 검증",
+          "기본 O3 분석",
+          "핵심 위험 요소만 파악"
+        ],
+        "파일": "quickplan.md"
+      }
+    },
+    "계획 분석 명령어": {
+      "/plan:analyze [계획]": {
+        "설명": "기존 계획을 여러 에이전트로 분석",
+        "특징": [
+          "planning-specialist 병렬 실행",
+          "code-analyzer 동시 실행",
+          "test-runner 전략 검증",
+          "통합 분석 보고서"
+        ],
+        "파일": "plan/analyze.md"
+      },
+      "/plan:review [계획]": {
+        "설명": "계획 빠른 검토",
+        "특징": [
+          "planning-specialist 단독 검토",
+          "완성도 체크",
+          "신뢰도 점수"
+        ],
+        "파일": "plan/review.md"
+      },
+      "/plan:o3 [작업]": {
+        "설명": "O3 레벨 심층 계획 분석",
+        "특징": [
+          "최대 추론 노력",
+          "다차원 평가",
+          "5개 이상 대안 분석",
+          "블랙스완 이벤트 고려"
+        ],
+        "파일": "plan/o3.md"
+      }
+    }
+  },
+  "usage_examples": {
+    "SuperPlan 사용": {
+      "명령": "claude> /superplan REST API 인증 시스템 구현",
+      "동작": [
+        "Plan Mode 진입",
+        "초기 계획 작성 시작",
+        "planning-specialist 병렬 호출",
+        "O3 분석 자동 실행",
+        "통합 계획 생성",
+        "ExitPlanMode로 승인 요청"
+      ]
+    },
+    "Plan Analyze 사용": {
+      "명령": "claude> /plan:analyze 현재 마이크로서비스 아키텍처",
+      "동작": [
+        "3개 에이전트 동시 실행",
+        "기술적/전략적/테스트 관점 분석",
+        "통합 분석 보고서 생성"
+      ]
+    },
+    "O3 Deep Analysis": {
+      "명령": "claude> /plan:o3 대규모 시스템 마이그레이션",
+      "동작": [
+        "최대 추론 노력 모드",
+        "대안 5개 이상 생성",
+        "리스크 심층 분석",
+        "의사결정 매트릭스 제공"
+      ]
+    }
+  },
+  "location": "~/.claude/commands/",
+  "created_date": "2025-08-17"
+}

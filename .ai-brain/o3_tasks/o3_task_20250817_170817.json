@@ -1,0 +1,10 @@
+{
+  "task_id": "o3_task_20250817_170817",
+  "created_at": "2025-08-17T17:08:17.202117",
+  "type": "parallel_code_analysis",
+  "file": "test_complex_code.py",
+  "status": "running",
+  "reasoning_effort": "high",
+  "parallel_with": "code-analyzer",
+  "expected_completion": "30-60 seconds"
+}

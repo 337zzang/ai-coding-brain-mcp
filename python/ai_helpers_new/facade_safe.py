@@ -223,6 +223,7 @@ class GitNamespace(SafeNamespace):
         self.reset = self._safe_getattr('git_reset')
         self.status_normalized = self._safe_getattr('git_status_normalized')
         self.current_branch = self._safe_getattr('current_branch')
+        self.get_current_branch = self.current_branch  # 별칭 추가 (테스트 호환성)
 
 
 class LLMNamespace(SafeNamespace):
@@ -259,22 +260,87 @@ class LLMNamespace(SafeNamespace):
 
 
 class WebNamespace(SafeNamespace):
-    """웹 자동화 관련 함수들"""
+    """웹 자동화 관련 함수들 - 새로운 모듈 구조 통합"""
     def __init__(self):
-        super().__init__('web')
-        if self._get_module() is None: return
+        # 새로운 web 모듈 우선 시도
+        try:
+            from .web import (
+                WebAutomation, web,
+                web_start, web_goto, web_click, web_type,
+                web_close, web_screenshot, web_execute_js,
+                web_list_sessions
+            )
 
-        # 웹 자동화 함수들
-        self.start = self._safe_getattr('web_start')
-        self.goto = self._safe_getattr('web_goto')
-        self.click = self._safe_getattr('web_click')
-        self.type = self._safe_getattr('web_type')
-        self.extract = self._safe_getattr('web_extract')
-        self.screenshot = self._safe_getattr('web_screenshot')
-        self.execute_js = self._safe_getattr('web_execute_js')
-        self.wait = self._safe_getattr('web_wait')
-        self.close = self._safe_getattr('web_close')
-        self.list_sessions = self._safe_getattr('web_list_sessions')
+            # 전역 WebAutomation 인스턴스 사용
+            self._web_instance = web
+            self._using_new_module = True
+
+            # 기존 API와 호환되는 메서드들
+            self.start = web_start
+            self.goto = web_goto
+            self.click = web_click
+            self.type = web_type
+            self.close = web_close
+            self.screenshot = web_screenshot
+            self.execute_js = web_execute_js
+            self.list_sessions = web_list_sessions
+
+            # 새로운 메서드들
+            self.wait = lambda selector, session_id=None, timeout=None:                 self._web_instance.wait(selector, session_id, timeout).to_dict()
+
+            self.get_info = lambda session_id=None:                 self._web_instance.get_info(session_id).to_dict()
+
+            self.cleanup = lambda: self._web_instance.cleanup().to_dict()
+
+            # 세션 관리
+            self.get_current_session = self._web_instance.get_current_session
+            self.set_current_session = self._web_instance.set_current_session
+
+            print("[WebNamespace] Using new web module structure")
+
+        except ImportError as e:
+            # 폴백: 기존 web.py 사용
+            print(f"[WebNamespace] Falling back to legacy web.py: {e}")
+            super().__init__('web')
+            self._using_new_module = False
+
+            if self._get_module() is None: 
+                return
+
+            # 기존 web.py 함수들
+            self.start = self._safe_getattr('web_start')
+            self.goto = self._safe_getattr('web_goto')
+            self.click = self._safe_getattr('web_click')
+            self.type = self._safe_getattr('web_type')
+            self.extract = self._safe_getattr('web_extract')
+            self.screenshot = self._safe_getattr('web_screenshot')
+            self.execute_js = self._safe_getattr('web_execute_js')
+            self.wait = self._safe_getattr('web_wait')
+            self.close = self._safe_getattr('web_close')
+            self.list_sessions = self._safe_getattr('web_list_sessions')
+
+            # 오버레이 관련 (레거시)
+            self.get_overlay_actions = self._safe_getattr('web_get_overlay_actions')
+            self.record_action = self._safe_getattr('web_record_action')
+            self.replay_actions = self._safe_getattr('web_replay_actions')
+            self.activate_overlay = self._safe_getattr('web_activate_overlay')
+            self.check_and_activate_overlay = self._safe_getattr('web_check_and_activate_overlay')
+            self.streaming_setup = self._safe_getattr('web_streaming_setup')
+            self.stop_stream = self._safe_getattr('web_stop_stream')
+            self.get_stream_data = self._safe_getattr('web_get_stream_data')
+            self.record_start = self._safe_getattr('web_record_start')
+            self.record_stop = self._safe_getattr('web_record_stop')
+            self.get_recorded_actions = self._safe_getattr('web_get_recorded_actions')
+            self.save_recording = self._safe_getattr('web_save_recording')
+            self.load_recording = self._safe_getattr('web_load_recording')
+            self.execute_js_safe = self._safe_getattr('web_execute_js_safe')
+            self.create_recorder = self._safe_getattr('web_create_recorder')
+            self.debug_info = self._safe_getattr('web_debug_info')
+            self.get_page_metrics = self._safe_getattr('web_get_page_metrics')
+
+    def __repr__(self):
+        module_type = "new" if getattr(self, '_using_new_module', False) else "legacy"
+        return f"<WebNamespace using {module_type} module>"
 
 
 class ProjectNamespace(SafeNamespace):
@@ -308,6 +374,29 @@ class MemoryNamespace(SafeNamespace):
         
         # 고급 기능
         self.create_sync = self._safe_getattr('create_memory_sync')
+
+
+class ContextNamespace(SafeNamespace):
+    """컨텍스트 캡처 네임스페이스"""
+    def __init__(self):
+        super().__init__('context_capture')
+        if self._get_module() is None: return
+        
+        # 컨텍스트 캡처 함수들
+        self.BrowserContextCapture = self._safe_getattr('BrowserContextCapture')
+        self.start_capture = self._safe_getattr('start_context_capture')
+        self.capture_and_print = self._safe_getattr('capture_and_print')
+        
+        # 빠른 시작 함수
+        def quick_start(url=None):
+            """컨텍스트 캡처 빠른 시작"""
+            try:
+                from .context_capture import start_context_capture
+                return start_context_capture(url)
+            except Exception as e:
+                return {'ok': False, 'error': str(e)}
+        
+        self.quick_start = quick_start
 
 
 class UnifiedNamespace(SafeNamespace):
@@ -345,6 +434,9 @@ class AiHelpersFacade:
 
         # Web 네임스페이스
         self.web = WebNamespace()
+        
+        # Context Capture 추가
+        self.context = ContextNamespace()
 
         # Project 네임스페이스  
         self.project = ProjectNamespace()

@@ -1,0 +1,90 @@
+{
+  "phase": "parallel_analysis",
+  "complexity": 85.0,
+  "think_level": "megathink",
+  "o3_required": true,
+  "project": {
+    "title": "AI-Powered Code Review System",
+    "description": "Intelligent PR/commit analysis with learning capabilities",
+    "scope": "Enterprise-level feature affecting multiple systems",
+    "estimated_effort": "2-4 weeks",
+    "integration_points": [
+      "GitHub API",
+      "AI Models",
+      "Learning System",
+      "Database"
+    ],
+    "technical_complexity": "high",
+    "business_impact": "high"
+  },
+  "insights": {
+    "core_challenges": [
+      "AI model selection and training for code analysis",
+      "Real-time processing of large codebases",
+      "Learning from historical review patterns",
+      "Integration with multiple VCS platforms",
+      "Maintaining review quality and consistency"
+    ],
+    "opportunities": [
+      "Leverage existing LLM capabilities for code understanding",
+      "Build on MCP protocol for seamless integration",
+      "Use vector databases for efficient pattern matching",
+      "Implement incremental learning for continuous improvement",
+      "Create modular architecture for platform flexibility"
+    ],
+    "key_decisions": [
+      "Choice of AI models (GPT-4, Claude, CodeBERT, custom)",
+      "Storage strategy for review history and patterns",
+      "Real-time vs batch processing architecture",
+      "Learning algorithm selection (reinforcement, supervised)",
+      "API design for extensibility"
+    ]
+  },
+  "timestamp": "2025-08-17T22:17:42.699486",
+  "code_patterns": {
+    "existing_patterns": [
+      "Python helpers: 44 modules",
+      "TypeScript modules: 27 files"
+    ],
+    "integration_points": [
+      "MCP handlers available",
+      "LLM integration ready"
+    ],
+    "potential_conflicts": []
+  },
+  "o3_task": {
+    "task_id": "o3_task_20250817_221824",
+    "status": "processing",
+    "started_at": "2025-08-17T22:18:24.226145",
+    "reasoning_effort": "high",
+    "estimated_completion": "10-15 minutes"
+  },
+  "external_context": {
+    "best_practices": [
+      "Use AST for accurate code parsing",
+      "Implement incremental analysis for performance",
+      "Cache review results for similar patterns",
+      "Use vector embeddings for semantic similarity"
+    ],
+    "technology_stack": {
+      "recommended": [
+        "OpenAI GPT-4 for code understanding",
+        "PostgreSQL + pgvector for embeddings",
+        "Redis for caching and queues",
+        "GitHub Actions for CI/CD integration"
+      ],
+      "alternatives": [
+        "Claude API for enhanced reasoning",
+        "Pinecone for vector database",
+        "RabbitMQ for message queuing"
+      ]
+    },
+    "industry_benchmarks": {
+      "review_speed": "< 30 seconds per PR",
+      "accuracy_target": "> 85% useful suggestions",
+      "false_positive_rate": "< 10%",
+      "adoption_rate": "> 70% of teams"
+    }
+  },
+  "analysis_progress": 40
+}

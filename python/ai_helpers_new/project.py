@@ -10,7 +10,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 from pathlib import Path
 from .util import ok, err
-from .wrappers import safe_execution
+from .wrappers import safe_execution, safe_api_get
 from .core.fs import scan_directory as core_scan_directory, ScanOptions
 
 
@@ -193,8 +193,8 @@ def flow_project_with_workflow(
     project: str,
     *,
     auto_read_docs: bool = True,
-    readme_lines: int = 60,
-    file_dir_lines: int = 120
+    claude_lines: int = 100,
+    readme_lines: int = 60
 ) -> Dict[str, Any]:
     """
     프로젝트 전환 & 워크플로우 초기화 + README / file_directory 자동 출력
@@ -261,50 +261,36 @@ def flow_project_with_workflow(
     if previous_project and previous_project != project:
         print(f"   (이전: {previous_project})")
 
-    # 5) 문서 자동 읽기
+    # 5) 문서 자동 읽기 - CLAUDE.md 우선
     docs: Dict[str, str] = {}
     if auto_read_docs:
-        # README 파일 읽기
-        readme_txt = project_ctx.get_readme(readme_lines)
-        if readme_txt:
-            docs["readme.md"] = readme_txt
-            print("\n📖 README.md 내용:")
-            print("=" * 70)
-            print(readme_txt)
-
-        # file_directory.md 파일 직접 읽기
         from pathlib import Path
-        fd_path = Path(project_path) / "file_directory.md"
-        if fd_path.exists():
+        
+        # CLAUDE.md 파일 확인 (Claude Code 통합)
+        claude_path = Path(project_path) / "CLAUDE.md"
+        claude_found = False
+        
+        if claude_path.exists():
             try:
-                with open(fd_path, 'r', encoding='utf-8') as f:
-                    lines = f.readlines()[:file_dir_lines]
-                    fd_txt = ''.join(lines)
-                    docs["file_directory.md"] = fd_txt
-                    print("\n📁 프로젝트 구조 (file_directory.md):")
+                with open(claude_path, 'r', encoding='utf-8') as f:
+                    lines = f.readlines()[:claude_lines]
+                    claude_txt = ''.join(lines)
+                    docs["CLAUDE.md"] = claude_txt
+                    print("\n🤖 CLAUDE.md 내용 (Claude Code 통합):")
                     print("=" * 70)
-                    print(fd_txt)
-            except Exception:
-                pass  # file 메서드 사용
-        readme_txt = project_ctx.read_file("readme.md")
-        if readme_txt:
-            # 줄 수 제한
-            lines = readme_txt.split('\n')[:readme_lines]
-            readme_txt = '\n'.join(lines)
-            docs["readme.md"] = readme_txt
-            print("\n📖 README.md 내용:")
-            print("=" * 70)
-            print(readme_txt)
-
-        fd_txt = project_ctx.read_file("file_directory.md")
-        if fd_txt:
-            # 줄 수 제한
-            lines = fd_txt.split('\n')[:file_dir_lines]
-            fd_txt = '\n'.join(lines)
-            docs["file_directory.md"] = fd_txt
-            print("\n📁 프로젝트 구조 (file_directory.md):")
-            print("=" * 70)
-            print(fd_txt)
+                    print(claude_txt)
+                    claude_found = True
+            except Exception as e:
+                print(f"⚠️ CLAUDE.md 읽기 실패: {e}")
+        
+        # CLAUDE.md가 없거나 실패한 경우 README.md 폴백
+        if not claude_found:
+            readme_txt = project_ctx.get_readme(readme_lines)
+            if readme_txt:
+                docs["readme.md"] = readme_txt
+                print("\n📖 README.md 내용:")
+                print("=" * 70)
+                print(readme_txt)
 
         # 5.5) 최신 플랜 표시 (v75.0)
     try:
@@ -357,14 +343,75 @@ def flow_project_with_workflow(
                 # 6) Git 상태 (프로젝트 경로 기준)
     print("\n🔍 Git 섹션 시작...")
     git_info = None
+    # 🛡️ Git 상태 확인 (6단계 안전장치 적용)
     try:
-        # git_status는 이미 ai_helpers_new에서 사용 가능
-        import ai_helpers_new as helpers
-        print("Helpers import 성공")
-        git_result = helpers.git_status()
-        print(f"Git status 결과: {git_result['ok']}")
+        git_info = None
+        git_result = {'ok': False, 'error': 'Git 상태 확인 실패', 'data': {}}
 
-        if git_result['ok']:
+        # 🏁 1단계: Git 저장소 존재 확인
+        if not os.path.exists('.git'):
+            print("⚠️ Git 저장소(.git)가 없습니다 - 건너뛰기")
+            git_result = {'ok': False, 'error': 'No git repository', 'data': {}}
+        else:
+            # 📦 2단계: 안전한 모듈 Import
+            try:
+                import ai_helpers_new as helpers
+                print("✅ Helpers import 성공")
+
+                # 🔍 3단계: 함수 검증 (hasattr + None + callable)
+                if (hasattr(helpers, 'git') and 
+                    hasattr(helpers.git, 'status') and 
+                    helpers.git.status is not None and 
+                    callable(helpers.git.status)):
+
+                    print("✅ git.status 함수 검증 완료")
+
+                    # 🛡️ 4단계: 안전한 호출 (try-except로 실제 호출 보호)
+                    try:
+                        git_result = helpers.git.status()
+                        print("✅ git.status 호출 성공")
+
+                        # 📊 5단계: 반환값 검증 (타입 및 구조 확인)
+                        if git_result is None:
+                            print("⚠️ git.status가 None 반환")
+                            git_result = {'ok': False, 'error': 'git.status returned None', 'data': {}}
+                        elif not isinstance(git_result, dict):
+                            print(f"⚠️ git.status가 예상치 못한 타입 반환: {type(git_result)}")
+                            git_result = {'ok': False, 'error': f'Invalid return type: {type(git_result)}', 'data': {}}
+                        elif 'ok' not in git_result:
+                            print("⚠️ git.status 반환값에 'ok' 키 없음")
+                            git_result = {'ok': False, 'error': 'Missing ok field', 'data': git_result}
+                        else:
+                            print(f"✅ git.status 반환값 검증 완료: ok={git_result.get('ok', False)}")
+
+                    except Exception as call_error:
+                        print(f"❌ git.status 호출 중 오류: {call_error}")
+                        git_result = {'ok': False, 'error': f'git.status call failed: {str(call_error)}', 'data': {}}
+
+                else:
+                    # 함수가 없거나 호출 불가능한 경우
+                    missing_reasons = []
+                    if not hasattr(helpers, 'git'):
+                        missing_reasons.append("git 네임스페이스 없음")
+                    elif not hasattr(helpers.git, 'status'):
+                        missing_reasons.append("status 함수 없음")
+                    elif helpers.git.status is None:
+                        missing_reasons.append("함수가 None")
+                    elif not callable(helpers.git.status):
+                        missing_reasons.append("호출 불가능")
+
+                    print(f"⚠️ git.status 함수 검증 실패: {', '.join(missing_reasons)}")
+                    git_result = {'ok': False, 'error': f'git.status validation failed: {missing_reasons}', 'data': {}}
+
+            except ImportError as import_error:
+                print(f"❌ Helpers import 실패: {import_error}")
+                git_result = {'ok': False, 'error': f'Import failed: {str(import_error)}', 'data': {}}
+            except Exception as module_error:
+                print(f"❌ 모듈 관련 오류: {module_error}")
+                git_result = {'ok': False, 'error': f'Module error: {str(module_error)}', 'data': {}}
+
+        # Git 상태 정보 처리 (성공한 경우)
+        if git_result.get('ok', False) and isinstance(git_result.get('data'), dict):
             git_data = git_result['data']
             files = git_data.get('files', [])
             branch = git_data.get('branch', 'unknown')
@@ -373,16 +420,28 @@ def flow_project_with_workflow(
             git_info = {
                 'branch': branch,
                 'files': files,
-                'count': len(files),
+                'count': len(files) if isinstance(files, list) else 0,
                 'clean': clean
             }
 
             print(f"\n🔀 Git 상태:")
             print("============================================================")
             print(f"브랜치: {branch}")
-            print(f"변경 파일: {len(files)}개")
+            print(f"변경 파일: {git_info['count']}개")
             print(f"상태: {'Clean' if clean else 'Modified'}")
+        else:
+            print(f"\n⚠️ Git 상태 확인 실패:")
+            print("============================================================")
+            print(f"오류: {git_result.get('error', 'Unknown error')}")
+
     except Exception as e:
+        # 📝 6단계: 상세 로깅 (모든 단계별 오류 정보 제공)
+        print(f"\n❌ Git 섹션 전체 오류:")
+        print("============================================================")
+        print(f"오류 타입: {type(e).__name__}")
+        print(f"오류 메시지: {str(e)}")
+        print(f"오류 위치: Git 상태 확인 섹션")
+        git_result = {'ok': False, 'error': f'Git section failed: {str(e)}', 'data': {}}
         # Git 상태 실패는 전체 함수 실패로 이어지지 않도록
         print(f"\n⚠️ Git 상태 오류: {type(e).__name__}: {e}")
         import traceback
@@ -703,7 +762,9 @@ def select_plan_and_show(plan_id_or_number: str):
         if not select_result['ok']:
             return select_result
 
-        plan_id = select_result['data']['id']
+        plan_id = safe_api_get(select_result, 'data.id')
+        if plan_id is None:
+            return {'ok': False, 'error': 'Failed to get plan ID from selection'}
 
         # 플랜 정보 가져오기
         plan_info = api.get_plan(plan_id)

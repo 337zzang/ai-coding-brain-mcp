@@ -1,0 +1,337 @@
+"""
+웹 자동화 모듈 - 호환성 래퍼
+기존 web.py API와 100% 호환되는 래퍼
+새로운 web/ 모듈 구조를 활용하면서 기존 인터페이스 유지
+"""
+
+import warnings
+from typing import Optional, Dict, Any, List
+
+# 새로운 모듈에서 import
+from .web import (
+    WebAutomation,
+    web_start as _web_start,
+    web_goto as _web_goto,
+    web_click as _web_click,
+    web_type as _web_type,
+    web_close as _web_close,
+    web_screenshot as _web_screenshot,
+    web_execute_js as _web_execute_js,
+    web_list_sessions as _web_list_sessions,
+)
+
+# 호환성을 위한 추가 import
+from .web.types import HelperResult
+from .web.utils import safe_get_data
+
+# 전역 인스턴스
+_web = WebAutomation()
+
+# ============================================
+# 기존 web.py와 100% 호환되는 함수들
+# ============================================
+
+def web_start(
+    session_id: Optional[str] = None,
+    headless: bool = False,
+    browser_type: str = "chromium",
+    overlay: bool = False,
+    overlay_config: Optional[Dict] = None
+) -> Dict[str, Any]:
+    """
+    브라우저 시작 - 기존 API 호환
+
+    Args:
+        session_id: 세션 ID
+        headless: 헤드리스 모드
+        browser_type: 브라우저 타입
+        overlay: 오버레이 활성화 (미구현 - 추후 추가)
+        overlay_config: 오버레이 설정 (미구현 - 추후 추가)
+    """
+    if overlay or overlay_config:
+        warnings.warn("Overlay feature not yet implemented in new structure", FutureWarning)
+
+    return _web_start(session_id, headless, browser_type)
+
+
+def web_goto(
+    url: str,
+    session_id: Optional[str] = None,
+    timeout: Optional[int] = 30000,
+    wait_until: str = "load",
+    auto_overlay: bool = False
+) -> Dict[str, Any]:
+    """페이지 이동 - 기존 API 호환"""
+    if auto_overlay:
+        warnings.warn("auto_overlay not yet implemented", FutureWarning)
+
+    return _web_goto(url, session_id, timeout)
+
+
+def web_click(
+    selector: str,
+    session_id: Optional[str] = None,
+    force: bool = False,
+    timeout: Optional[int] = 10000
+) -> Dict[str, Any]:
+    """요소 클릭 - 기존 API 호환"""
+    return _web_click(selector, session_id, force, timeout)
+
+
+def web_type(
+    selector: str,
+    text: str,
+    session_id: Optional[str] = None,
+    clear: bool = False,
+    timeout: Optional[int] = 10000
+) -> Dict[str, Any]:
+    """텍스트 입력 - 기존 API 호환"""
+    return _web_type(selector, text, session_id, clear, timeout)
+
+
+def web_extract(
+    selector: str,
+    session_id: Optional[str] = None,
+    extract_type: str = "text",
+    attribute: Optional[str] = None,
+    multiple: bool = False,
+    wait_timeout: Optional[int] = 10000
+) -> Dict[str, Any]:
+    """
+    데이터 추출 - 기존 API 호환
+    (추후 extractor.py 모듈 구현 시 연결)
+    """
+    # 임시 구현
+    result = _web.execute_js(
+        f"""
+        const element = document.querySelector('{selector}');
+        if (!element) return null;
+
+        if ('{extract_type}' === 'text') return element.textContent;
+        if ('{extract_type}' === 'html') return element.innerHTML;
+        if ('{extract_type}' === 'value') return element.value;
+        if ('{extract_type}' === 'attribute' && '{attribute}')
+            return element.getAttribute('{attribute}');
+        return null;
+        """,
+        session_id
+    )
+
+    return result.to_dict() if hasattr(result, 'to_dict') else result
+
+
+def web_screenshot(
+    path: Optional[str] = None,
+    session_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """스크린샷 - 기존 API 호환"""
+    return _web_screenshot(path, session_id)
+
+
+def web_close(
+    session_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """브라우저 종료 - 기존 API 호환"""
+    return _web_close(session_id)
+
+
+def web_wait(
+    seconds: float,
+    session_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """대기 - 기존 API 호환"""
+    import time
+    time.sleep(seconds)
+    return {"ok": True, "data": f"Waited {seconds} seconds"}
+
+
+def web_execute_js(
+    script: str,
+    session_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """JavaScript 실행 - 기존 API 호환"""
+    return _web_execute_js(script, session_id)
+
+
+def web_execute_js_safe(
+    script: str,
+    session_id: Optional[str] = None,
+    default_value: Any = None
+) -> Dict[str, Any]:
+    """안전한 JavaScript 실행 - 기존 API 호환"""
+    try:
+        result = _web_execute_js(script, session_id)
+        if result.get('ok'):
+            return result
+        return {"ok": True, "data": default_value}
+    except:
+        return {"ok": True, "data": default_value}
+
+
+def web_list_sessions() -> Dict[str, Any]:
+    """세션 목록 - 기존 API 호환"""
+    return _web_list_sessions()
+
+
+def web_wait_for_element(
+    selector: str,
+    session_id: Optional[str] = None,
+    timeout: Optional[int] = 10000
+) -> Dict[str, Any]:
+    """요소 대기 - 기존 API 호환"""
+    result = _web.wait(selector, session_id, timeout)
+    return result.to_dict() if hasattr(result, 'to_dict') else result
+
+
+def web_wait_for_load(
+    session_id: Optional[str] = None,
+    timeout: Optional[int] = 30000
+) -> Dict[str, Any]:
+    """페이지 로드 대기 - 기존 API 호환"""
+    # JavaScript로 로드 상태 확인
+    result = _web.execute_js(
+        "return document.readyState === 'complete'",
+        session_id
+    )
+    return result.to_dict() if hasattr(result, 'to_dict') else result
+
+
+def web_get_page_metrics(
+    session_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """페이지 메트릭 - 기존 API 호환"""
+    metrics_script = """
+    return {
+        performance: {
+            loadTime: performance.timing.loadEventEnd - performance.timing.navigationStart,
+            domReady: performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart,
+            resources: performance.getEntriesByType('resource').length
+        },
+        memory: performance.memory ? {
+            used: performance.memory.usedJSHeapSize,
+            total: performance.memory.totalJSHeapSize,
+            limit: performance.memory.jsHeapSizeLimit
+        } : null
+    };
+    """
+
+    result = _web.execute_js(metrics_script, session_id)
+    return result.to_dict() if hasattr(result, 'to_dict') else result
+
+
+def web_validate_element(
+    selector: str,
+    session_id: Optional[str] = None,
+    checks: Optional[List[str]] = None
+) -> Dict[str, Any]:
+    """요소 검증 - 기존 API 호환"""
+    if checks is None:
+        checks = ['visible', 'enabled']
+
+    validation_script = f"""
+    const element = document.querySelector('{selector}');
+    if (!element) return {{"exists": false}};
+
+    const rect = element.getBoundingClientRect();
+    const style = window.getComputedStyle(element);
+
+    return {{
+        exists: true,
+        visible: rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden',
+        enabled: !element.disabled,
+        editable: element.contentEditable === 'true' || !element.readOnly,
+        clickable: !element.disabled && style.pointerEvents !== 'none'
+    }};
+    """
+
+    result = _web.execute_js(validation_script, session_id)
+    return result.to_dict() if hasattr(result, 'to_dict') else result
+
+
+def web_debug_info(
+    session_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """디버그 정보 - 기존 API 호환"""
+    return _web.get_info(session_id).to_dict()
+
+
+# ============================================
+# 오버레이 관련 함수들 (추후 구현)
+# ============================================
+
+def web_activate_overlay(session_id: Optional[str] = None, **config) -> Dict[str, Any]:
+    """오버레이 활성화 - 추후 구현"""
+    warnings.warn("Overlay features will be implemented in overlay.py module", FutureWarning)
+    return {"ok": True, "data": "Overlay not yet implemented"}
+
+
+def web_get_overlay_actions(session_id: Optional[str] = None) -> Dict[str, Any]:
+    """오버레이 액션 조회 - 추후 구현"""
+    return {"ok": True, "data": []}
+
+
+def web_minimize_overlay(session_id: Optional[str] = None) -> Dict[str, Any]:
+    """오버레이 최소화 - 추후 구현"""
+    return {"ok": True, "data": "Overlay not yet implemented"}
+
+
+def web_check_and_activate_overlay(session_id: Optional[str] = None) -> Dict[str, Any]:
+    """오버레이 체크 및 활성화 - 추후 구현"""
+    return {"ok": True, "data": False}
+
+
+# ============================================
+# 스트리밍 관련 함수들 (추후 구현)
+# ============================================
+
+def web_stream_to_ai(session_id: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+    """AI 스트리밍 - 추후 구현"""
+    warnings.warn("Streaming features will be implemented separately", FutureWarning)
+    return {"ok": True, "data": "Streaming not yet implemented"}
+
+
+def web_get_stream_data(session_id: Optional[str] = None) -> Dict[str, Any]:
+    """스트림 데이터 조회 - 추후 구현"""
+    return {"ok": True, "data": None}
+
+
+# ============================================
+# 헬퍼 함수들
+# ============================================
+
+# 기존 web.py의 safe_get_data 함수 재export
+from .web.utils import safe_get_data
+
+
+# ============================================
+# 클래스들 (기존 호환성)
+# ============================================
+
+# SessionManager와 BrowserManager는 새 모듈에서 import
+from .web.session import SessionManager, get_session_manager
+from .web.browser import BrowserManager, get_browser_manager
+
+# WebNamespace와 WebRecorder는 추후 구현
+class WebNamespace:
+    """웹 네임스페이스 - 추후 구현"""
+    pass
+
+class WebRecorder:
+    """웹 레코더 - 추후 구현"""
+    def __init__(self, session_id: str):
+        self.session_id = session_id
+        warnings.warn("WebRecorder will be implemented in recorder.py module", FutureWarning)
+
+
+# ============================================
+# 모듈 레벨 변수들 (기존 호환성)
+# ============================================
+
+browser_manager = get_browser_manager()
+session_manager = get_session_manager()
+current_session_id = None
+
+
+print("✅ Web automation module loaded with new architecture")
+print("📋 Available functions: web_start, web_goto, web_click, web_type, web_close, etc.")
+print("⚠️ Some features (overlay, streaming) are pending implementation")

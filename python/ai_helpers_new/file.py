@@ -12,6 +12,7 @@ from typing import Any, Dict, Union, Optional, List
 from collections import deque
 from itertools import islice
 from .util import ok, err
+from .wrappers import safe_api_get
 
 
 def resolve_project_path(path: Union[str, Path]) -> Path:
@@ -289,8 +290,9 @@ def list_directory(path: Union[str, Path] = '.', debug: bool = False) -> Dict[st
         # Debug 모드일 때 구조 정보 출력
         if debug:
             print(f"✅ list_directory('{path}') 성공")
-            print(f"   경로: {result['data']['path']}")
-            print(f"   항목 수: {result['data']['count']}")
+            data = result.get('data', {})
+            print(f"   경로: {data.get('path', 'unknown')}")
+            print(f"   항목 수: {data.get('count', 0)}")
             print(f"   사용 가능한 키: {list(result['data'].keys())}")
             print(f"   💡 TIP: 'items' 또는 'entries' 둘 다 사용 가능")
 

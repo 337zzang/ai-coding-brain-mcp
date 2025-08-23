@@ -1,0 +1,440 @@
+"""
+웹 자동화 모듈 - Facade 인터페이스
+새로운 모듈 구조를 단순한 API로 제공
+"""
+
+import logging
+from typing import Optional, Any, Dict, List
+
+# 내부 모듈 import
+from .types import (
+    BrowserType, SessionStatus, ExtractType,
+    BrowserConfig, OverlayConfig, RecorderConfig,
+    HelperResult, SessionInfo
+)
+from .exceptions import *
+from .utils import setup_logging, create_session_id
+from .session import get_session_manager
+from .browser import get_browser_manager, browser_session
+from .actions import get_web_actions
+
+# 로깅 설정
+setup_logging()
+logger = logging.getLogger(__name__)
+
+# 버전 정보
+__version__ = "2.0.0"
+__author__ = "AI Coding Brain MCP"
+
+# 전역 인스턴스
+_current_session_id: Optional[str] = None
+
+
+class WebAutomation:
+    """
+    웹 자동화 Facade 클래스
+    모든 웹 자동화 기능에 대한 단일 진입점
+    """
+
+    def __init__(self):
+        self.session_manager = get_session_manager()
+        self.browser_manager = get_browser_manager()
+        self.actions = get_web_actions()
+
+    # ========== 세션 관리 ==========
+
+    def start(
+        self,
+        session_id: Optional[str] = None,
+        browser_type: str = "chromium",
+        headless: bool = False,
+        **kwargs
+    ) -> HelperResult:
+        """
+        브라우저 시작
+
+        Args:
+            session_id: 세션 ID (None이면 자동 생성)
+            browser_type: 브라우저 타입
+            headless: 헤드리스 모드
+            **kwargs: 추가 브라우저 설정
+
+        Returns:
+            HelperResult with session info
+        """
+        global _current_session_id
+
+        # 세션 ID 생성
+        if session_id is None:
+            session_id = create_session_id()
+
+        # BrowserType 변환
+        try:
+            browser_type_enum = BrowserType(browser_type)
+        except ValueError:
+            browser_type_enum = BrowserType.CHROMIUM
+
+        # 세션 생성
+        session_result = self.session_manager.create_session(
+            session_id, browser_type_enum
+        )
+        if not session_result.ok:
+            return session_result
+
+        # 브라우저 설정
+        config = BrowserConfig(headless=headless, **kwargs)
+
+        # 브라우저 시작
+        browser_result = self.browser_manager.start_browser(
+            session_id, config
+        )
+        if not browser_result.ok:
+            return browser_result
+
+        # 현재 세션 설정
+        _current_session_id = session_id
+
+        logger.info(f"Started web automation session: {session_id}")
+        return HelperResult.success({
+            "session_id": session_id,
+            "browser_type": browser_type,
+            "headless": headless
+        })
+
+    def close(self, session_id: Optional[str] = None) -> HelperResult:
+        """
+        브라우저 종료
+
+        Args:
+            session_id: 세션 ID (None이면 현재 세션)
+
+        Returns:
+            HelperResult
+        """
+        global _current_session_id
+        session_id = session_id or _current_session_id
+        if not session_id:
+            return HelperResult.failure("No active session")
+
+        # 브라우저 종료
+        result = self.browser_manager.close_browser(session_id)
+
+        # 세션 상태 업데이트
+        self.session_manager.update_session(
+            session_id, status=SessionStatus.CLOSED
+        )
+
+        if _current_session_id == session_id:
+            _current_session_id = None
+
+        return result
+
+    def list_sessions(self) -> HelperResult:
+        """모든 세션 목록 조회"""
+        return self.session_manager.list_sessions()
+
+    # ========== 브라우저 액션 ==========
+
+    def goto(
+        self,
+        url: str,
+        session_id: Optional[str] = None,
+        timeout: Optional[int] = None,
+        wait_until: str = "load"
+    ) -> HelperResult:
+        """페이지 이동"""
+        global _current_session_id
+        session_id = session_id or _current_session_id
+        if not session_id:
+            return HelperResult.failure("No active session")
+
+        return self.actions.goto(session_id, url, timeout, wait_until)
+
+    def click(
+        self,
+        selector: str,
+        session_id: Optional[str] = None,
+        timeout: Optional[int] = None,
+        force: bool = False
+    ) -> HelperResult:
+        """요소 클릭"""
+        global _current_session_id
+        session_id = session_id or _current_session_id
+        if not session_id:
+            return HelperResult.failure("No active session")
+
+        return self.actions.click(session_id, selector, timeout, force)
+
+    def type(
+        self,
+        selector: str,
+        text: str,
+        session_id: Optional[str] = None,
+        timeout: Optional[int] = None,
+        clear: bool = False
+    ) -> HelperResult:
+        """텍스트 입력"""
+        global _current_session_id
+        session_id = session_id or _current_session_id
+        if not session_id:
+            return HelperResult.failure("No active session")
+
+        return self.actions.type_text(
+            session_id, selector, text, timeout, clear
+        )
+
+    def wait(
+        self,
+        selector: str,
+        session_id: Optional[str] = None,
+        timeout: Optional[int] = None
+    ) -> HelperResult:
+        """요소 대기"""
+        global _current_session_id
+        session_id = session_id or _current_session_id
+        if not session_id:
+            return HelperResult.failure("No active session")
+
+        return self.actions.wait_for_selector(
+            session_id, selector, timeout
+        )
+
+    def screenshot(
+        self,
+        path: Optional[str] = None,
+        session_id: Optional[str] = None,
+        full_page: bool = False
+    ) -> HelperResult:
+        """스크린샷 캡처"""
+        global _current_session_id
+        session_id = session_id or _current_session_id
+        if not session_id:
+            return HelperResult.failure("No active session")
+
+        return self.actions.screenshot(session_id, path, full_page)
+
+    def execute_js(
+        self,
+        script: str,
+        session_id: Optional[str] = None,
+        args: Optional[List[Any]] = None
+    ) -> HelperResult:
+        """JavaScript 실행"""
+        global _current_session_id
+        session_id = session_id or _current_session_id
+        if not session_id:
+            return HelperResult.failure("No active session")
+
+        return self.actions.execute_script(session_id, script, args)
+
+    def get_info(
+        self,
+        session_id: Optional[str] = None
+    ) -> HelperResult:
+        """페이지 정보 조회"""
+        global _current_session_id
+        session_id = session_id or _current_session_id
+        if not session_id:
+            return HelperResult.failure("No active session")
+
+        return self.actions.get_page_info(session_id)
+
+    # ========== 유틸리티 메서드 ==========
+
+    def get_current_session(self) -> Optional[str]:
+        """현재 활성 세션 ID 반환"""
+        global _current_session_id
+        return _current_session_id
+
+    def set_current_session(self, session_id: str) -> None:
+        """현재 세션 설정"""
+        global _current_session_id
+        _current_session_id = session_id
+
+    def cleanup(self) -> HelperResult:
+        """모든 브라우저 종료 및 정리"""
+        self.browser_manager.close_all()
+        return HelperResult.success()
+
+
+# 전역 인스턴스 생성
+web = WebAutomation()
+
+# 편의 함수들 (기존 API 호환성)
+def web_start(
+    session_id: Optional[str] = None,
+    headless: bool = False,
+    browser_type: str = "chromium",
+    **kwargs
+) -> Dict[str, Any]:
+    """브라우저 시작 (호환성 API)"""
+    result = web.start(session_id, browser_type, headless, **kwargs)
+    return result.to_dict()
+
+def web_goto(
+    url: str,
+    session_id: Optional[str] = None,
+    timeout: Optional[int] = None
+) -> Dict[str, Any]:
+    """페이지 이동 (호환성 API)"""
+    result = web.goto(url, session_id, timeout)
+    return result.to_dict()
+
+def web_click(
+    selector: str,
+    session_id: Optional[str] = None,
+    force: bool = False,
+    timeout: Optional[int] = None
+) -> Dict[str, Any]:
+    """요소 클릭 (호환성 API)"""
+    result = web.click(selector, session_id, timeout, force)
+    return result.to_dict()
+
+def web_type(
+    selector: str,
+    text: str,
+    session_id: Optional[str] = None,
+    clear: bool = False,
+    timeout: Optional[int] = None
+) -> Dict[str, Any]:
+    """텍스트 입력 (호환성 API)"""
+    result = web.type(selector, text, session_id, timeout, clear)
+    return result.to_dict()
+
+def web_close(
+    session_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """브라우저 종료 (호환성 API)"""
+    result = web.close(session_id)
+    return result.to_dict()
+
+def web_screenshot(
+    path: Optional[str] = None,
+    session_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """스크린샷 (호환성 API)"""
+    result = web.screenshot(path, session_id)
+    return result.to_dict()
+
+def web_execute_js(
+    script: str,
+    session_id: Optional[str] = None
+) -> Dict[str, Any]:
+    """JavaScript 실행 (호환성 API)"""
+    result = web.execute_js(script, session_id)
+    return result.to_dict()
+
+def web_list_sessions() -> Dict[str, Any]:
+    """세션 목록 (호환성 API)"""
+    result = web.list_sessions()
+    return result.to_dict()
+
+# 모든 공개 API export
+__all__ = [
+    # 클래스
+    'WebAutomation',
+    'web',
+
+    # 타입
+    'BrowserType', 'SessionStatus', 'ExtractType',
+    'BrowserConfig', 'OverlayConfig', 'RecorderConfig',
+    'HelperResult', 'SessionInfo',
+
+    # 호환성 함수
+    'web_start', 'web_goto', 'web_click', 'web_type',
+    'web_close', 'web_screenshot', 'web_execute_js',
+    'web_list_sessions',
+
+    # 유틸리티
+    'browser_session', 'create_session_id'
+,
+    'web_wait_for_element'
+,
+    'web_get_stream_data'
+,
+    'web_stream_to_ai'
+,
+    'web_extract'
+,
+    'web_minimize_overlay'
+]
+
+# ========== Integrated from web_new.py ==========
+# Integration Date: 2025-08-23 10:11:11
+
+def web_wait_for_element(
+    selector: str,
+    session_id: Optional[str] = None,
+    timeout: Optional[int] = 10000
+) -> Dict[str, Any]:
+    """요소 대기 - 기존 API 호환"""
+    result = _web.wait(selector, session_id, timeout)
+    return result.to_dict() if hasattr(result, 'to_dict') else result
+
+
+
+def web_get_stream_data(session_id: Optional[str] = None) -> Dict[str, Any]:
+    """스트림 데이터 조회 - 추후 구현"""
+    return {"ok": True, "data": None}
+
+
+# ============================================
+# 헬퍼 함수들
+# ============================================
+
+# 기존 web.py의 safe_get_data 함수 재export
+from .web.utils import safe_get_data
+
+
+# ============================================
+# 클래스들 (기존 호환성)
+# ============================================
+
+# SessionManager와 BrowserManager는 새 모듈에서 import
+from .web.session import SessionManager, get_session_manager
+from .web.browser import BrowserManager, get_browser_manager
+
+# WebNamespace와 WebRecorder는 추후 구현
+
+def web_stream_to_ai(session_id: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+    """AI 스트리밍 - 추후 구현"""
+    warnings.warn("Streaming features will be implemented separately", FutureWarning)
+    return {"ok": True, "data": "Streaming not yet implemented"}
+
+
+
+def web_extract(
+    selector: str,
+    session_id: Optional[str] = None,
+    extract_type: str = "text",
+    attribute: Optional[str] = None,
+    multiple: bool = False,
+    wait_timeout: Optional[int] = 10000
+) -> Dict[str, Any]:
+    """
+    데이터 추출 - 기존 API 호환
+    (추후 extractor.py 모듈 구현 시 연결)
+    """
+    # 임시 구현
+    result = _web.execute_js(
+        f"""
+        const element = document.querySelector('{selector}');
+        if (!element) return null;
+
+        if ('{extract_type}' === 'text') return element.textContent;
+        if ('{extract_type}' === 'html') return element.innerHTML;
+        if ('{extract_type}' === 'value') return element.value;
+        if ('{extract_type}' === 'attribute' && '{attribute}')
+            return element.getAttribute('{attribute}');
+        return null;
+        """,
+        session_id
+    )
+
+    return result.to_dict() if hasattr(result, 'to_dict') else result
+
+
+
+def web_minimize_overlay(session_id: Optional[str] = None) -> Dict[str, Any]:
+    """오버레이 최소화 - 추후 구현"""
+    return {"ok": True, "data": "Overlay not yet implemented"}

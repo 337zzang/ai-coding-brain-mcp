@@ -134,28 +134,30 @@ def parse(filepath: str) -> Dict[str, Any]:
         'constants': constants
     }
 
-def functions(filepath: str) -> List[Dict[str, Any]]:
+@wrap_output
+def functions(filepath: str) -> Dict[str, Any]:
     """Get list of functions in a Python file.
     
     Args:
         filepath: Path to Python file
         
     Returns:
-        List of function information dictionaries
+        Dict with standard response format {'ok': bool, 'data': list}
     """
     parsed = parse(filepath)
     if parsed.get('ok'):
         return parsed['data'].get('functions', [])
     return parsed.get('data', {}).get('functions', [])
 
-def classes(filepath: str) -> List[Dict[str, Any]]:
+@wrap_output
+def classes(filepath: str) -> Dict[str, Any]:
     """Get list of classes in a Python file.
     
     Args:
         filepath: Path to Python file
         
     Returns:
-        List of class information dictionaries
+        Dict with standard response format {'ok': bool, 'data': list}
     """
     parsed = parse(filepath)
     if parsed.get('ok'):

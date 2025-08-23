@@ -1,0 +1,11 @@
+{
+  "analysis": "superplan vs 프리퍼런스 차이점",
+  "problems": [
+    "에이전트 미활용",
+    "승인 체크포인트 없음",
+    "O3 분석 부재",
+    "병렬 처리 미지원"
+  ],
+  "solution": "superplan-v2 with full integration",
+  "expected_improvement": "67-75% 효율성 향상"
+}

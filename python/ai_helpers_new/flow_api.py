@@ -13,6 +13,7 @@ from .domain.models import Plan, Task, TaskStatus
 from .ultra_simple_flow_manager import UltraSimpleFlowManager
 from .repository.ultra_simple_repository import UltraSimpleRepository
 from .task_logger import EnhancedTaskLogger
+from .wrappers import safe_api_get
 # Response helpers
 def ok_response(data=None, message=None):
     response = {'ok': True}
@@ -304,8 +305,10 @@ class FlowAPI:
         if not task_result['ok']:
             return task_result
 
-        # Task ID를 사용해서 상태 업데이트
-        task_id = task_result['data']['id']
+        # Task ID를 사용해서 상태 업데이트 (안전한 접근)
+        task_id = safe_api_get(task_result, 'data.id')
+        if task_id is None:
+            return error_response('Failed to get task ID from result')
         return self.update_task_status(plan_id, task_id, status)
 
     def search(self, query: str) -> Dict[str, Any]:

@@ -1,0 +1,1 @@
+{"timestamp": "2025-08-17T16:50:09.813256", "event": "mcp_integration_test", "hooks": ["session-start", "pre-tool-use", "post-tool-use", "pre-compact"], "status": "verified"}

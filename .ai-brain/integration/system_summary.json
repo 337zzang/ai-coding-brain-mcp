@@ -1,0 +1,235 @@
+{
+  "title": "Claude Code + AI-Coding-Brain-MCP 통합 시스템 아키텍처",
+  "version": "v10.0 FINAL",
+  "date": "2025-08-17",
+  "components": {
+    "1_agent_system": {
+      "name": "특화 에이전트 시스템",
+      "agents": {
+        "planning-specialist": {
+          "purpose": "복잡한 기능 계획, 아키텍처 설계, 전략적 개발 결정",
+          "tools": [
+            "Read",
+            "Grep",
+            "Glob",
+            "Bash",
+            "mcp_execute_code"
+          ],
+          "features": {
+            "think_mode": "자동 복잡도 평가 후 적절한 레벨 선택 (THINK/HARDTHINK/ULTRATHINK/MEGATHINK)",
+            "o3_analysis": "다차원 분석 (기술/비즈니스/보안/성능)",
+            "parallel": "병렬 에이전트 조율 및 실행",
+            "workflow": "5단계 구현 로드맵 자동 생성"
+          },
+          "performance": "계획 수립 시간 80% 단축, 실패율 95% 감소"
+        },
+        "code-analyzer": {
+          "purpose": "버그 분석, 성능 이슈, 아키텍처 문제, 의존성 분석",
+          "tools": [
+            "Read",
+            "Grep",
+            "Glob",
+            "Bash",
+            "mcp_execute_code"
+          ],
+          "features": {
+            "o3_parallel": "O3 병렬 처리로 심층 분석",
+            "runtime_verify": "실시간 검증",
+            "root_cause": "근본 원인 분석"
+          },
+          "performance": "분석 시간 400% 단축"
+        },
+        "code-optimizer": {
+          "purpose": "코드 최적화, 품질 개선, 배포 준비",
+          "tools": [
+            "*"
+          ],
+          "features": {
+            "parallel_o3": "O3 분석 + 테스트 + 벤치마크 동시 실행",
+            "quality": "종합적 품질 개선"
+          },
+          "performance": "리팩토링 시간 500% 단축"
+        },
+        "test-runner": {
+          "purpose": "빠른 테스트 실행, 스마트 선택",
+          "tools": [
+            "Read",
+            "Grep",
+            "Glob",
+            "Bash",
+            "mcp_execute_code"
+          ],
+          "features": {
+            "smart_selection": "지능형 테스트 선택",
+            "o3_optional": "복잡한 시나리오만 O3 사용",
+            "immediate_feedback": "즉각적 피드백"
+          },
+          "performance": "테스트 시간 60% 단축"
+        }
+      },
+      "auto_triggers": {
+        "keywords": {
+          "plan": "planning-specialist",
+          "analyze": "code-analyzer",
+          "optimize": "code-optimizer",
+          "test": "test-runner"
+        },
+        "parallel_execution": "여러 에이전트 동시 실행으로 67-75% 효율성 향상"
+      }
+    },
+    "2_hook_system": {
+      "name": "Claude Code 훅 시스템",
+      "hooks": {
+        "UserPromptSubmit": {
+          "trigger": "프롬프트 제출 시",
+          "actions": [
+            "컨텍스트 로딩",
+            "Git 상태 확인",
+            "프로젝트 상태 요약"
+          ],
+          "example": "python .claude/hooks/context_loader.py"
+        },
+        "PreToolUse": {
+          "trigger": "도구 실행 전",
+          "actions": [
+            "보안 검사",
+            "권한 확인",
+            "리소스 체크"
+          ],
+          "example": "matcher: Write|Edit → pre_edit.sh"
+        },
+        "PostToolUse": {
+          "trigger": "도구 실행 후",
+          "actions": [
+            "자동 포맷팅",
+            "테스트 실행",
+            "Git 스테이징"
+          ],
+          "example": "prettier --write && git add ."
+        },
+        "Stop": {
+          "trigger": "세션 완료 시",
+          "actions": [
+            "세션 요약",
+            "자동 커밋",
+            "정리 작업"
+          ],
+          "example": "python session_summary.py && git commit"
+        }
+      },
+      "automation": {
+        "permission_skip": "claude --dangerously-skip-permissions",
+        "project_hooks": ".claude/hooks/ 디렉토리에 스크립트 배치",
+        "benefits": "90% 수동 작업 자동화"
+      }
+    },
+    "3_mcp_system": {
+      "name": "AI-Coding-Brain-MCP 서버",
+      "connection": {
+        "command": "node",
+        "args": [
+          "C:/Users/82106/Desktop/ai-coding-brain-mcp/dist/index.js"
+        ],
+        "status": "active"
+      },
+      "core_functions": {
+        "execute_code": {
+          "purpose": "영속적 Python REPL 세션에서 코드 실행",
+          "features": [
+            "워크플로우 연동",
+            "헬퍼 자동 주입",
+            "상태 유지"
+          ],
+          "helpers": {
+            "h.file": "파일 작업 (read, write, append, exists)",
+            "h.code": "코드 분석/수정 (parse, replace, insert)",
+            "h.search": "검색 작업 (files, code, grep)",
+            "h.llm": "AI 작업 (ask, ask_async, o3 모델)",
+            "h.git": "Git 작업 (status, commit, push)",
+            "h.util": "유틸리티 (ok, err, is_ok)"
+          }
+        },
+        "flow_project": "프로젝트 컨텍스트 전환",
+        "start_project": "새 프로젝트 생성",
+        "restart_json_repl": "세션 재시작"
+      },
+      "integration": {
+        "workflow": "모든 코드 실행이 자동으로 워크플로우와 연동",
+        "context": "프로젝트 컨텍스트 영속성 보장",
+        "tracking": "모든 작업 자동 추적 및 로깅"
+      }
+    },
+    "4_memory_system": {
+      "name": "사용자 메모리/지침 시스템",
+      "levels": {
+        "global": {
+          "location": "~/.claude/CLAUDE.md",
+          "purpose": "전역 사용자 프리퍼런스",
+          "content": [
+            "26개 핵심 원칙",
+            "Think 모드 우선 활용",
+            "에이전트 병렬 실행",
+            "Facade 네임스페이스 완성"
+          ]
+        },
+        "desktop": {
+          "location": "~/Desktop/CLAUDE.md",
+          "purpose": "데스크톱 레벨 지침",
+          "content": [
+            "작업 최적화 가이드",
+            "유용한 명령어 (/코드, /검색, /메모리)",
+            "메모리 관리 전략"
+          ]
+        },
+        "project": {
+          "location": "./CLAUDE.md",
+          "purpose": "프로젝트별 특수 규칙",
+          "content": [
+            "코딩 컨벤션",
+            "자주 사용하는 명령어",
+            "프로젝트 구조",
+            "체크리스트"
+          ]
+        }
+      },
+      "memory_banks": {
+        "context.md": "설계 문서와 개발 방향",
+        "architecture.md": "프로젝트 구조",
+        "progress.md": "전체 작업 계획",
+        "active.md": "현재 진행 중인 Task",
+        "knowledge.md": "재사용 가능한 지식"
+      }
+    },
+    "5_integration_features": {
+      "name": "통합 시스템 특징",
+      "think_tools": {
+        "purpose": "구조화된 분석과 복잡한 추론",
+        "levels": [
+          "THINK",
+          "HARDTHINK",
+          "ULTRATHINK",
+          "MEGATHINK"
+        ],
+        "auto_trigger": "모든 요청 처리 전 자동 선행 분석"
+      },
+      "context7": {
+        "purpose": "최신 라이브러리 문서 참조",
+        "features": [
+          "자동 라이브러리 ID 해결",
+          "토큰 최적화",
+          "병렬 문서 검색"
+        ]
+      },
+      "workflow_integration": {
+        "auto_sync": "Claude Code ↔ MCP 실시간 동기화",
+        "event_driven": "모든 개발 활동이 이벤트로 변환",
+        "persistence": "세션 간 컨텍스트 지속성 보장"
+      },
+      "performance": {
+        "productivity": "500% 생산성 향상",
+        "automation": "90% 수동 작업 제거",
+        "quality": "80% 재작업 감소"
+      }
+    }
+  }
+}

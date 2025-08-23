@@ -10,6 +10,7 @@ import uuid
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 from .util import ok, err
+from .wrappers import safe_api_get
 from .flow_api import FlowAPI
 
 class UnifiedSync:
@@ -123,13 +124,13 @@ class UnifiedSync:
                     # Flow 플랜으로 생성
                     flow_result = self._create_flow_plan_from_todo(content)
                     if flow_result['ok']:
-                        session_data['flow_plan_id'] = flow_result['data']['plan_id']
+                        session_data['flow_plan_id'] = safe_api_get(flow_result, 'data.plan_id')
                 else:
                     # Flow 태스크로 생성
                     flow_result = self._create_flow_task_from_todo(content)
                     if flow_result['ok']:
-                        session_data['flow_task_id'] = flow_result['data']['task_id']
-                        session_data['flow_plan_id'] = flow_result['data']['plan_id']
+                        session_data['flow_task_id'] = safe_api_get(flow_result, 'data.task_id')
+                        session_data['flow_plan_id'] = safe_api_get(flow_result, 'data.plan_id')
             
             # 4. 매핑 저장
             self._save_todo_mapping(todo_id, session_data)

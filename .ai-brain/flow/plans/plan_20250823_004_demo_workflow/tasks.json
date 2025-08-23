@@ -1,0 +1,16 @@
+{
+  "task_20250823_110908_4d76cf": {
+    "id": "task_20250823_110908_4d76cf",
+    "title": "테스트 작업",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-23T11:09:08.787244",
+    "updated_at": "2025-08-23T11:09:08.787244",
+    "completed_at": null,
+    "assignee": null,
+    "number": 1,
+    "tags": [],
+    "metadata": {}
+  }
+}

@@ -296,11 +296,12 @@ def git_current_branch() -> Dict[str, Any]:
 # DEPRECATED: h.git_status() 함수가 이제 모든 기능을 포함합니다.
 # 이 함수는 하위 호환성을 위해 유지되지만 h.git_status()를 사용하세요.
 @safe_execution
-def git_log(limit: int = 10, cwd: Optional[str] = None, format_type: str = 'full') -> Dict[str, Any]:
+def git_log(max_count: Optional[int] = None, limit: Optional[int] = None, cwd: Optional[str] = None, format_type: str = 'full') -> Dict[str, Any]:
     """Git 로그 조회 (Phase 3: 구조화된 데이터 반환)
 
     Args:
-        limit: 조회할 커밋 수
+        max_count: 조회할 커밋 수 (하위 호환성)
+        limit: 조회할 커밋 수 (권장)
         cwd: 작업 디렉토리
         format_type: 'full', 'oneline', 'stats'
 
@@ -325,6 +326,12 @@ def git_log(limit: int = 10, cwd: Optional[str] = None, format_type: str = 'full
             ]
         }
     """
+    # 하위 호환성: limit과 max_count 둘 다 지원
+    if limit is None and max_count is not None:
+        limit = max_count
+    elif limit is None:
+        limit = 10  # 기본값
+    
     commits = []
 
     if format_type == 'full':

@@ -8,7 +8,7 @@ import threading
 from datetime import datetime
 from typing import Dict, Any, Optional, Union, List
 from .util import ok, err
-from .wrappers import safe_execution
+from .wrappers import safe_execution, safe_api_get
 from .file import read, read_json, write, exists
 
 
@@ -704,9 +704,10 @@ def ask_o3_practical(question: str, file_content: str = "", error_info: str = ""
         if not status_result['ok']:
             return status_result
 
-        if status_result['data']['status'] == 'completed':
+        status = safe_api_get(status_result, 'data.status')
+        if status == 'completed':
             return get_o3_result(task_id)
-        elif status_result['data']['status'] == 'failed':
+        elif status == 'failed':
             return {'ok': False, 'error': 'O3 작업 실패'}
 
         time.sleep(3)
@@ -782,9 +783,10 @@ def O3ContextBuilder():
                 if not status_result['ok']:
                     return status_result
 
-                if status_result['data']['status'] == 'completed':
+                status = safe_api_get(status_result, 'data.status')
+                if status == 'completed':
                     return get_o3_result(task_id)
-                elif status_result['data']['status'] == 'failed':
+                elif status == 'failed':
                     return {'ok': False, 'error': 'O3 작업 실패'}
 
                 time.sleep(3)

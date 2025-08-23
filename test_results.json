@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-08-22T07:31:46.928487",
+  "results": {
+    "browser_start": true,
+    "page_load": true,
+    "streaming_start": true,
+    "event_capture": true,
+    "data_retrieval": true,
+    "streaming_stop": true,
+    "browser_close": true
+  }
+}

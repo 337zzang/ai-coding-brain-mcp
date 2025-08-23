@@ -1,0 +1,17 @@
+{
+  "task_id": "o3_task_0002",
+  "created_at": "2025-08-23 11:15:34",
+  "complexity": "Medium",
+  "integration_phases": [
+    "phase1",
+    "phase2",
+    "phase3"
+  ],
+  "success_metrics": [
+    "자동화율",
+    "상태 일관성",
+    "성능 영향",
+    "오류 복구율",
+    "세션 연속성"
+  ]
+}

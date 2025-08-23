@@ -1,0 +1,50 @@
+{
+  "timestamp": "2025-08-22T18:25:32.530485",
+  "summary": {
+    "total_lines_analyzed": 1419,
+    "duplicate_lines_identified": 450,
+    "reduction_percentage": 31,
+    "modules_analyzed": 3
+  },
+  "duplications": {
+    "browser_management": {
+      "lines": 200,
+      "severity": "high"
+    },
+    "session_handling": {
+      "lines": 150,
+      "severity": "high"
+    },
+    "element_interaction": {
+      "lines": 100,
+      "severity": "medium"
+    }
+  },
+  "refactoring_plan": {
+    "phase1": {
+      "name": "Extract Common Components",
+      "tasks": [
+        "Create web/browser.py with unified BrowserManager",
+        "Create web/session.py with unified SessionManager",
+        "Create web/elements.py with shared element utilities"
+      ]
+    },
+    "phase2": {
+      "name": "Migrate Existing Code",
+      "tasks": [
+        "Update web.py to use new common components",
+        "Update web_overlay.py to use shared utilities",
+        "Remove duplicate code from both modules"
+      ]
+    },
+    "phase3": {
+      "name": "API Standardization",
+      "tasks": [
+        "Create consistent API in web/api.py",
+        "Standardize function naming conventions",
+        "Add comprehensive error handling",
+        "Write integration tests"
+      ]
+    }
+  }
+}

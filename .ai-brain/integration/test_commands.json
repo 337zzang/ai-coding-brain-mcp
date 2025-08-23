@@ -1,0 +1,47 @@
+{
+  "preparation": [
+    "# MCP 서버 시작",
+    "npm run build && node dist/index.js",
+    "",
+    "# 훅 설정 확인",
+    "cat ~/.claude/settings.json",
+    "",
+    "# 프로젝트 상태 확인",
+    "git status",
+    "ls -la .ai-brain/"
+  ],
+  "phase_1_commands": [
+    "# T1.1 - 에이전트 단독 테스트",
+    "claude \"plan a simple feature implementation\"",
+    "claude \"analyze code quality in @python/\"",
+    "claude \"optimize performance of file operations\"",
+    "claude \"run all tests with coverage\"",
+    "",
+    "# T1.2 - MCP 테스트",
+    "mcp__ai-coding-brain-mcp__execute_code(\"import ai_helpers_new as h; print(h.file.exists('test.txt'))\")",
+    "mcp__ai-coding-brain-mcp__flow_project(\"test-project\")",
+    "",
+    "# T1.3 - 훅 테스트",
+    "echo \"test\" > test.txt  # PostToolUse 훅 트리거"
+  ],
+  "phase_2_commands": [
+    "# T2.1 - 병렬 실행",
+    "claude \"analyze, test, and optimize the authentication module simultaneously\"",
+    "",
+    "# T2.2 - Think + Context7 + MCP",
+    "claude \"think harder about implementing React hooks with latest best practices\"",
+    "",
+    "# T2.3 - 훅 + MCP 연동",
+    "claude \"write a new API endpoint with automatic testing and formatting\""
+  ],
+  "phase_3_commands": [
+    "# T3.1 - 신규 기능 개발",
+    "claude \"implement a complete user registration API with validation, testing, and documentation\"",
+    "",
+    "# T3.2 - 버그 수정",
+    "claude \"find and fix the memory leak in the file processing module\"",
+    "",
+    "# T3.3 - 리팩토링",
+    "claude \"refactor the entire authentication system for better security and performance\""
+  ]
+}

@@ -3,9 +3,40 @@
     "allow": [
       "Bash(powershell:*)",
       "Bash(dir \"C:\\Users\\82106\\.claude\\hooks\" /b)",
-      "mcp__ai-coding-brain-mcp__execute_code"
+      "mcp__ai-coding-brain-mcp__execute_code",
+      "Bash(dir:*)",
+      "Bash(npm run build:*)",
+      "Bash(node:*)",
+      "mcp__ai-coding-brain-mcp__restart_json_repl",
+      "Bash(python test:*)",
+      "Bash(python:*)",
+      "Bash(mkdir:*)",
+      "Bash(jq:*)",
+      "mcp__perplexity-ask__perplexity_ask",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "WebSearch",
+      "Bash(grep:*)",
+      "Bash(git config:*)",
+      "Bash(chcp:*)",
+      "Bash(cmd.exe:*)",
+      "Read(/C:\\Users\\82106\\.claude\\hooks/**)",
+      "Read(/C:\\Users\\82106\\.claude\\hooks/**)",
+      "Read(/C:\\Users\\82106\\.claude\\hooks/**)",
+      "Read(/C:\\Users\\82106\\.claude\\hooks/**)",
+      "Read(/C:\\Users\\82106\\.claude\\commands/**)",
+      "Read(/C:\\Users\\82106\\.claude\\commands/**)",
+      "Read(/C:\\Users\\82106\\.claude\\commands/**)",
+      "Read(/C:\\Users\\82106\\.claude/**)",
+      "Bash(cmd /c:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
-    "ask": []
-  }
+    "ask": [],
+    "additionalDirectories": [
+      "C:\\Users\\82106\\.claude\\agents",
+      "C:\\Users\\82106\\.claude\\hooks"
+    ]
+  },
+  "outputStyle": "Explanatory"
 }

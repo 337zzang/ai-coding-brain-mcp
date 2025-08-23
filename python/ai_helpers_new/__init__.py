@@ -151,6 +151,26 @@ try:
 except ImportError:
     FlowAPI = None
 
+# Flow API 직접 호출 가능하게 함수 추가
+# 주의: flow_api는 아래에서 모듈로 덮어씌워질 수 있음
+def get_flow_api_instance():
+    """Get Flow API instance (callable interface)"""
+    if get_flow_api:
+        return get_flow_api()
+    # Fallback: 직접 import
+    try:
+        from .flow_api import get_flow_api as _get_flow_api
+        return _get_flow_api()
+    except ImportError:
+        try:
+            from .flow_api import FlowAPI
+            return FlowAPI()
+        except ImportError:
+            return None
+
+# flow_api를 함수로 정의 (모듈이 덮어쓰지 않도록)
+flow_api = get_flow_api_instance
+
 # 헬퍼 함수들 - 기존 코드 호환성
 def scan_directory(path, max_depth=None):
     """디렉토리 스캔 (하위 호환성)"""
@@ -174,7 +194,7 @@ __all__ = [
     'git_status', 'git_commit', 'git_add', 'git_diff', 'git_log',
     'ask_o3', 'ask_o3_async', 'get_o3_result', 'check_o3_status',
     'show_o3_progress', 'clear_completed_tasks',
-    'get_flow_api', 'create_task_logger',
+    'get_flow_api', 'flow_api', 'create_task_logger',
 'get_current_project', 'flow_project_with_workflow',
 'search_imports', 'get_statistics',
 # 유저 프리퍼런스 v3.0 누락 함수 추가 (2025-08-09)

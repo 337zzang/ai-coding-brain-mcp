@@ -1,1 +1,0 @@
-def simple(name="world"): return f"hello {name}"

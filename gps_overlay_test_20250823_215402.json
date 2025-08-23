@@ -1,0 +1,22 @@
+{
+  "timestamp": "2025-08-23T21:54:02.943774",
+  "tests": [
+    {
+      "name": "웹 모듈 import",
+      "status": "PASS",
+      "message": "웹 모듈 import 성공"
+    },
+    {
+      "name": "GPS 오버레이 가용성",
+      "status": "FAIL",
+      "error": "'WebNamespace' object has no attribute 'get_gps_status'"
+    },
+    {
+      "name": "웹 자동화 시작 (GPS 포함)",
+      "status": "FAIL",
+      "error": "start() got an unexpected keyword argument 'enable_gps'"
+    }
+  ],
+  "passed": 1,
+  "failed": 2
+}

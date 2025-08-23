@@ -343,6 +343,14 @@ class WebNamespace(SafeNamespace):
             self.create_recorder = self._safe_getattr('web_create_recorder')
             self.debug_info = self._safe_getattr('web_debug_info')
             self.get_page_metrics = self._safe_getattr('web_get_page_metrics')
+            
+            # GPS 오버레이 관련 (새로운 기능)
+            self.init_gps_overlay = self._safe_getattr('init_gps_overlay')
+            self.mark_gps_location = self._safe_getattr('mark_gps_location')
+            self.highlight_gps_element = self._safe_getattr('highlight_gps_element')
+            self.draw_gps_path = self._safe_getattr('draw_gps_path')
+            self.clear_gps_overlay = self._safe_getattr('clear_gps_overlay')
+            self.get_gps_status = self._safe_getattr('get_gps_status')
 
     def __repr__(self):
         module_type = "new" if getattr(self, '_using_new_module', False) else "legacy"

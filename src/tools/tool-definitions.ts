@@ -49,8 +49,12 @@ export const toolDefinitions: Tool[] = [
    영속적 세션: 모든 호출 간 변수와 상태 유지
 ✅ Project Isolation: Each project has independent execution environment  
    프로젝트 격리: 각 프로젝트는 독립적인 실행 환경 보유
-✅ AI Helpers v2.0: Comprehensive 6-module helper system
-   AI 헬퍼 v2.0: 6개 모듈로 구성된 종합 헬퍼 시스템
+✅ AI Helpers v2.5: Enhanced 12-module helper system (134+ methods)
+   AI 헬퍼 v2.5: 12개 모듈로 확장된 종합 헬퍼 시스템 (134개+ 메서드)
+✅ Jupyter Integration: Native notebook support for data science workflows
+   Jupyter 통합: 데이터 과학 워크플로우를 위한 네이티브 노트북 지원
+✅ UV Package Manager: 10-100x faster Python package management
+   UV 패키지 매니저: 10-100배 빠른 Python 패키지 관리
 ✅ Background Execution: Async AI consultation with o3 models
    백그라운드 실행: o3 모델을 통한 비동기 AI 상담
 ✅ Precision Code Editing: AST-based coordinate modification

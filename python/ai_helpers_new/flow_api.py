@@ -336,7 +336,7 @@ class FlowAPI:
 
     def get_stats_safe(self) -> Dict[str, Any]:
         """통계 정보 반환 - 타입 안전성 강화 버전"""
-        plans = self.flow_manager.list_plans()
+        plans = self._manager.list_plans()
 
         total_tasks = 0
         task_stats = {"todo": 0, "in_progress": 0, "done": 0, "unknown": 0}

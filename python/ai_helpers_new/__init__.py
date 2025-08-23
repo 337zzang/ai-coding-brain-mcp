@@ -6,6 +6,21 @@ Version: 2.7.0
 
 # 1. Facade 인스턴스 가져오기 (안전한 버전 사용)
 from .facade_safe import get_facade
+
+# Flow 시스템 간편 명령어
+try:
+    from .simple_flow_commands import (
+        flow_status,
+        flow_create,
+        flow_add_task,
+        flow_update_task,
+        flow_get_plan,
+        flow_list_plans,
+        flow_quick_task,
+        help_flow
+    )
+except ImportError:
+    pass  # Flow commands not available
 from .git import git_status, git_add, git_commit, git_push, git_pull, git_branch, git_checkout, git_checkout_b, git_merge, git_log, git_diff, git_stash, git_stash_pop, current_branch, git_status_normalized
 _facade = get_facade()
 
@@ -190,6 +205,10 @@ __all__ = [
     
     # 버전
     '__version__'
+    # Flow 간편 함수
+    "flow_status", "flow_create", "flow_add_task",
+    "flow_update_task", "flow_get_plan", "flow_list_plans",
+    "flow_quick_task", "help_flow",
 ]
 
 # 사용법 출력 (선택적)

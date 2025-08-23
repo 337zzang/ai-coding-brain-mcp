@@ -38,6 +38,30 @@ class UltraSimpleFlowManager:
     def list_plans(self) -> List[Dict[str, Any]]:
         """더미 plan 목록"""
         return list(self.plans.values())
+
+# 더미 Session 클래스
+class Session:
+    """더미 Session - 기본 기능만 제공"""
+    def __init__(self):
+        self.is_initialized = False
+        self.flow_manager = UltraSimpleFlowManager()
+    
+    def set_project(self, name: str, path: str):
+        """더미 프로젝트 설정"""
+        self.is_initialized = True
+
+# 더미 ManagerAdapter 클래스
+class ManagerAdapter:
+    """더미 ManagerAdapter - FlowManager 래핑"""
+    def __init__(self, flow_manager):
+        self.flow_manager = flow_manager
+
+# 전역 세션 인스턴스
+_global_session = Session()
+
+def get_current_session() -> Session:
+    """현재 세션 반환"""
+    return _global_session
 # Response helpers
 def ok_response(data=None, message=None):
     response = {'ok': True}

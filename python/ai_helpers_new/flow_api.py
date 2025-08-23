@@ -10,58 +10,10 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any, Union
 
 from .domain.models import Plan, Task, TaskStatus
+from .ultra_simple_flow_manager import UltraSimpleFlowManager
+from .repository.ultra_simple_repository import UltraSimpleRepository
+from .task_logger import EnhancedTaskLogger
 from .wrappers import safe_api_get
-
-# 삭제된 모듈들을 위한 더미 클래스
-class UltraSimpleFlowManager:
-    """더미 FlowManager - 기본 기능만 제공"""
-    def __init__(self):
-        self.plans = {}
-        self.current_plan_id = None
-    
-    def create_plan(self, name: str, description: str = "") -> Dict[str, Any]:
-        """더미 plan 생성"""
-        plan_id = f"plan_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        self.plans[plan_id] = {
-            'id': plan_id,
-            'name': name,
-            'description': description,
-            'tasks': {},
-            'created_at': datetime.now().isoformat()
-        }
-        return self.plans[plan_id]
-    
-    def get_plan(self, plan_id: str) -> Optional[Dict[str, Any]]:
-        """더미 plan 조회"""
-        return self.plans.get(plan_id)
-    
-    def list_plans(self) -> List[Dict[str, Any]]:
-        """더미 plan 목록"""
-        return list(self.plans.values())
-
-# 더미 Session 클래스
-class Session:
-    """더미 Session - 기본 기능만 제공"""
-    def __init__(self):
-        self.is_initialized = False
-        self.flow_manager = UltraSimpleFlowManager()
-    
-    def set_project(self, name: str, path: str):
-        """더미 프로젝트 설정"""
-        self.is_initialized = True
-
-# 더미 ManagerAdapter 클래스
-class ManagerAdapter:
-    """더미 ManagerAdapter - FlowManager 래핑"""
-    def __init__(self, flow_manager):
-        self.flow_manager = flow_manager
-
-# 전역 세션 인스턴스
-_global_session = Session()
-
-def get_current_session() -> Session:
-    """현재 세션 반환"""
-    return _global_session
 # Response helpers
 def ok_response(data=None, message=None):
     response = {'ok': True}
@@ -181,27 +133,9 @@ class FlowAPI:
         """새 Plan 생성"""
         plan = self._manager.create_plan(name)
         if description:
-            # plan이 dict인 경우와 객체인 경우 모두 처리
-            if isinstance(plan, dict):
-                if 'metadata' not in plan:
-                    plan['metadata'] = {}
-                plan['metadata']['description'] = description
-                plan_id = plan.get('id', name)
-            else:
-                if not hasattr(plan, 'metadata'):
-                    plan.metadata = {}
-                plan.metadata["description"] = description
-                plan_id = plan.id
-        else:
-            plan_id = plan.get('id', name) if isinstance(plan, dict) else plan.id
-        
-        self._current_plan_id = plan_id
-        
-        # plan이 이미 dict인 경우 그대로 반환
-        if isinstance(plan, dict):
-            return self._res(True, plan)
-        else:
-            return self._res(True, _plan_to_dict(plan))
+            plan.metadata["description"] = description
+        self._current_plan_id = plan.id
+        return self._res(True, _plan_to_dict(plan))
 
     def select_plan(self, plan_id: str) -> "FlowAPI":
         """Plan 선택 (체이닝 가능)"""

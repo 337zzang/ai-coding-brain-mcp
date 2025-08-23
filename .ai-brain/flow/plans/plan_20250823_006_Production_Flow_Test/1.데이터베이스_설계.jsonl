@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-23T17:31:31.846374", "event_type": "TASK_INFO", "ts": "2025-08-23T17:31:31.846374", "type": "TASK_INFO", "title": "데이터베이스 설계", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-23T17:31:31.846374", "event_type": "DESIGN", "ts": "2025-08-23T17:31:31.846374", "type": "DESIGN", "content": "Task가 생성되었습니다."}

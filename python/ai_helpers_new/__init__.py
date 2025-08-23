@@ -19,7 +19,7 @@ o3 = getattr(_facade, 'o3', None)
 web = getattr(_facade, 'web', None)
 project = getattr(_facade, 'project', None)
 memory = getattr(_facade, 'memory', None)
-unified = getattr(_facade, 'unified', None)
+# DEPRECATED: unified = getattr(_facade, 'unified', None)
 
 # util 모듈도 직접 export (안전 함수들 포함)
 from . import util
@@ -166,7 +166,7 @@ __author__ = "AI Coding Brain Team"
 # Public API 정의 (최소)
 __all__ = [
     # 네임스페이스 (새로운 방식)
-    'file', 'code', 'search', 'git', 'memory', 'unified',
+# DEPRECATED:     'file', 'code', 'search', 'git', 'memory', 'unified',
     
     # 주요 함수들 (하위 호환성)
     'read', 'write', 'append', 'exists', 'get_file_info',

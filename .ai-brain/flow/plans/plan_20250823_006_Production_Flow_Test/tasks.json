@@ -1,0 +1,72 @@
+{
+  "task_20250823_173131_c8942e": {
+    "id": "task_20250823_173131_c8942e",
+    "title": "데이터베이스 설계",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-23T17:31:31.830169",
+    "updated_at": "2025-08-23T17:31:31.830169",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250823_173131_3a8398": {
+    "id": "task_20250823_173131_3a8398",
+    "title": "API 엔드포인트 구현",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-23T17:31:31.858196",
+    "updated_at": "2025-08-23T17:31:31.858196",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250823_173131_946ea8": {
+    "id": "task_20250823_173131_946ea8",
+    "title": "프론트엔드 개발",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-23T17:31:31.873516",
+    "updated_at": "2025-08-23T17:31:31.873516",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250823_173131_3e9ca0": {
+    "id": "task_20250823_173131_3e9ca0",
+    "title": "테스트 작성",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-23T17:31:31.891521",
+    "updated_at": "2025-08-23T17:31:31.891521",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250823_173131_81ef87": {
+    "id": "task_20250823_173131_81ef87",
+    "title": "배포 준비",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-23T17:31:31.907600",
+    "updated_at": "2025-08-23T17:31:31.907600",
+    "completed_at": null,
+    "assignee": null,
+    "number": 1,
+    "tags": [],
+    "metadata": {}
+  }
+}

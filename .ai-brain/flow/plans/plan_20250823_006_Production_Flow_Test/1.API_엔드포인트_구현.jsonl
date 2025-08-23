@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-23T17:31:31.868233", "event_type": "TASK_INFO", "ts": "2025-08-23T17:31:31.868233", "type": "TASK_INFO", "title": "API 엔드포인트 구현", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-23T17:31:31.868233", "event_type": "DESIGN", "ts": "2025-08-23T17:31:31.868233", "type": "DESIGN", "content": "Task가 생성되었습니다."}

@@ -421,7 +421,7 @@ class UnifiedNamespace(SafeNamespace):
     """Flow + Claude Code 통합 관련 함수들"""
     def __init__(self):
         # unified_sync 모듈을 사용하되, 없으면 더미로 처리
-        super().__init__('unified_sync')
+# DEPRECATED:         super().__init__('unified_sync')
         
         # 모듈이 없으면 더미 함수들로 설정
         if self._get_module() is None:
@@ -432,11 +432,11 @@ class UnifiedNamespace(SafeNamespace):
             self.create_sync = lambda *args, **kwargs: {'ok': False, 'error': 'Unified sync module not available'}
         else:
             # 통합 동기화 함수들
-            self.create_todo = self._safe_getattr('unified_create_todo')
-            self.sync_status = self._safe_getattr('unified_sync_status')
-            self.migrate_session = self._safe_getattr('unified_migrate_session')
-            self.get_status = self._safe_getattr('get_unified_status')
-            self.create_sync = self._safe_getattr('create_unified_sync')
+# DEPRECATED:             self.create_todo = self._safe_getattr('unified_create_todo')
+# DEPRECATED:             self.sync_status = self._safe_getattr('unified_sync_status')
+# DEPRECATED:             self.migrate_session = self._safe_getattr('unified_migrate_session')
+# DEPRECATED:             self.get_status = self._safe_getattr('get_unified_status')
+# DEPRECATED:             self.create_sync = self._safe_getattr('create_unified_sync')
 
 
 class AiHelpersFacade:
@@ -469,7 +469,7 @@ class AiHelpersFacade:
         self.memory = MemoryNamespace()
         
         # Unified 네임스페이스 (Flow + Claude 통합)
-        self.unified = UnifiedNamespace()
+# DEPRECATED:         self.unified = UnifiedNamespace()
 
         # 기존 함수들 직접 import (하위 호환성)
         self._setup_legacy_functions()
@@ -549,9 +549,9 @@ class AiHelpersFacade:
         return (
             "<AiHelpersFacade - HelperResult Optimized v2.0>\n"
             "  Usage: h.<namespace>.<function>() or h.<function>()\n"
-            "  Namespaces: file, code, search, git, llm, o3, memory, unified\n"
+# DEPRECATED:             "  Namespaces: file, code, search, git, llm, o3, memory, unified\n"
             "  ✨ All functions return HelperResult for clean REPL output!\n"
-            "  🔄 NEW: unified.* for Flow + Claude Code integration!"
+# DEPRECATED:             "  🔄 NEW: unified.* for Flow + Claude Code integration!"
         )
 
 

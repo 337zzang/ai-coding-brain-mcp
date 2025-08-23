@@ -6,10 +6,15 @@
       "flow_task_id": "task_4ffb978c",
       "flow_plan_id": "plan_20250816_001_Claude_일반_작업",
       "last_synced": "2025-08-16T00:15:39.296334"
+    },
+    "todo_fde9af6a": {
+      "flow_task_id": "task_5244e8f9",
+      "flow_plan_id": "plan_20250823_008_Claude_일반_작업",
+      "last_synced": "2025-08-23T17:35:54.369332"
     }
   },
   "pending_migrations": [],
   "statistics": {
-    "total_todos_synced": 1
+    "total_todos_synced": 2
   }
 }

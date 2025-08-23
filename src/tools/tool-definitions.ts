@@ -68,6 +68,8 @@ export const toolDefinitions: Tool[] = [
 │ 🛠️ h.util   │ ok, err, is_ok, get_data, get_error                     │
 │ 📊 h.git    │ status, add, commit, diff, log, branch, push, pull      │
 │ 🌐 h.web    │ start, goto, click, close, screenshot                   │
+│ 📓 h.jupyter│ create_notebook, read_notebook, add_cell, execute_notebook, convert_to_python │
+│ ⚡ h.uv     │ install_uv, quick_setup, create_venv, pip_install, pip_sync │
 └─────────────┴──────────────────────────────────────────────────────────┘
 
 💡 Quick Start Examples / 빠른 시작 예시:

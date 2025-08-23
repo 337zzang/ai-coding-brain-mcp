@@ -124,6 +124,20 @@ status = h.llm.check_status(task_id)              # Check status
 h.llm.show_progress()                             # Show progress
 result = h.llm.get_result(task_id)                # Get result
 
+# 📓 Jupyter Notebook / 노트북 작업
+h.jupyter.create_notebook('analysis.ipynb')       # Create notebook / 노트북 생성
+h.jupyter.add_cell('analysis.ipynb', 'code', 'import pandas as pd') # Add cell / 셀 추가
+h.jupyter.execute_notebook('analysis.ipynb')      # Execute notebook / 노트북 실행
+h.jupyter.convert_to_python('analysis.ipynb')     # Convert to .py / Python 변환
+h.jupyter.install_kernel('myenv', 'My Kernel')    # Install kernel / 커널 설치
+
+# ⚡ UV Package Manager / UV 패키지 관리
+h.uv.install_uv()                                 # Install UV / UV 설치
+h.uv.quick_setup()                                # Quick project setup / 빠른 설정
+h.uv.create_venv('3.11')                         # Create venv / 가상환경 생성
+h.uv.pip_install(['pandas', 'numpy'])            # Install packages / 패키지 설치
+h.uv.pip_sync('requirements.txt')                # Sync requirements / 동기화
+
 # ⚠️ Error Handling Pattern / 에러 처리 패턴
 result = h.file.read('missing.txt')
 if not h.util.is_ok(result):

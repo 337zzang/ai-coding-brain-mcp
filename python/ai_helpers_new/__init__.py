@@ -71,28 +71,9 @@ git_checkout_b = getattr(_facade, 'git_checkout_b', None)
 git_merge = getattr(_facade, 'git_merge', None)
 
 
-# Excel 관련
-try:
-    from .excel import (
-        excel,
-        ExcelManager,
-        excel_connect,
-        excel_disconnect,
-        excel_read_range,
-        excel_read_table,
-        excel_write_range,
-        excel_list_sheets,
-        excel_add_sheet,
-        excel_delete_sheet,
-        excel_select_sheet,
-        excel_create_pivot,
-        excel_apply_formula,
-        get_excel_manager
-    )
-    print("[OK] Excel module loaded successfully")
-except ImportError as e:
-    print(f"⚠️ Excel module not available: {e}")
-    excel = None
+# Excel 관련 - 모듈이 제거되어 비활성화
+# Excel 기능은 현재 지원하지 않습니다
+excel = None
 
 # LLM/O3 관련
 # ask_o3는 없으므로 ask_o3_practical로 대체

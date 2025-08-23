@@ -29,7 +29,8 @@
       "Read(/C:\\Users\\82106\\.claude\\commands/**)",
       "Read(/C:\\Users\\82106\\.claude/**)",
       "Bash(cmd /c:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Read(/C:\\Users\\82106\\.claude/**)"
     ],
     "deny": [],
     "ask": [],

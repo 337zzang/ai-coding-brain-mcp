@@ -368,21 +368,21 @@ class FlowAPI:
                     if not status:
                         status = 'todo'
 
-                # 상태 분류 (안전한 방식)
-                if 'done' in status or 'completed' in status:
-                    task_stats['done'] += 1
-                elif 'progress' in status:
-                    task_stats['in_progress'] += 1
-                elif 'todo' in status or 'pending' in status:
-                    task_stats['todo'] += 1
-                else:
-                    task_stats['unknown'] += 1
+                    # 상태 분류 (안전한 방식)
+                    if 'done' in status or 'completed' in status:
+                        task_stats['done'] += 1
+                    elif 'progress' in status:
+                        task_stats['in_progress'] += 1
+                    elif 'todo' in status or 'pending' in status:
+                        task_stats['todo'] += 1
+                    else:
+                        task_stats['unknown'] += 1
 
-    stats = {
-        "total_plans": len(plans),
-        "total_tasks": total_tasks,
-        "tasks_by_status": task_stats,
-        "current_plan": self._current_plan_id,
+        stats = {
+            "total_plans": len(plans),
+            "total_tasks": total_tasks,
+            "tasks_by_status": task_stats,
+            "current_plan": self._current_plan_id,
         "type_safe": True  # 타입 안전성 버전 표시
     }
 

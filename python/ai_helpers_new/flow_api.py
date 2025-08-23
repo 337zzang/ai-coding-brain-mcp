@@ -383,10 +383,10 @@ class FlowAPI:
             "total_tasks": total_tasks,
             "tasks_by_status": task_stats,
             "current_plan": self._current_plan_id,
-        "type_safe": True  # 타입 안전성 버전 표시
-    }
+            "type_safe": True  # 타입 안전성 버전 표시
+        }
 
-    return self._res(True, stats)
+        return self._res(True, stats)
     def set_context(self, key: str, value: Any) -> "FlowAPI":
         """컨텍스트 설정 (체이닝 가능)"""
         self._context[key] = value

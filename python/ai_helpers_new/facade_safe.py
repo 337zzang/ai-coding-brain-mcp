@@ -362,57 +362,49 @@ class ProjectNamespace(SafeNamespace):
 
 
 class MemoryNamespace(SafeNamespace):
-    """Claude Code 메모리 연동 관련 함수들"""
+    """Claude Code 메모리 연동 관련 함수들 - 현재 비활성화"""
     def __init__(self):
-        super().__init__('memory_sync')
-        if self._get_module() is None: return
-
-        # 메모리 동기화 함수들
-        self.sync_with_flow = self._safe_getattr('sync_with_flow')
-        self.get_suggestions = self._safe_getattr('get_memory_suggestions')
-        self.save_context = self._safe_getattr('save_session_context')
-        
-        # 고급 기능
-        self.create_sync = self._safe_getattr('create_memory_sync')
+        # memory_sync 모듈이 제거되어 더미 네임스페이스로 유지
+        super().__init__('dummy_memory')
+        # 모든 메서드는 사용 불가 메시지 반환
+        self.sync_with_flow = lambda *args, **kwargs: {'ok': False, 'error': 'Memory sync module not available'}
+        self.get_suggestions = lambda *args, **kwargs: {'ok': False, 'error': 'Memory sync module not available'}
+        self.save_context = lambda *args, **kwargs: {'ok': False, 'error': 'Memory sync module not available'}
+        self.create_sync = lambda *args, **kwargs: {'ok': False, 'error': 'Memory sync module not available'}
 
 
 class ContextNamespace(SafeNamespace):
-    """컨텍스트 캡처 네임스페이스"""
+    """컨텍스트 캡처 네임스페이스 - 현재 비활성화"""
     def __init__(self):
-        super().__init__('context_capture')
-        if self._get_module() is None: return
-        
-        # 컨텍스트 캡처 함수들
-        self.BrowserContextCapture = self._safe_getattr('BrowserContextCapture')
-        self.start_capture = self._safe_getattr('start_context_capture')
-        self.capture_and_print = self._safe_getattr('capture_and_print')
-        
-        # 빠른 시작 함수
-        def quick_start(url=None):
-            """컨텍스트 캡처 빠른 시작"""
-            try:
-                from .context_capture import start_context_capture
-                return start_context_capture(url)
-            except Exception as e:
-                return {'ok': False, 'error': str(e)}
-        
-        self.quick_start = quick_start
+        # context_capture 모듈이 제거되어 더미 네임스페이스로 유지
+        super().__init__('dummy_context')
+        # 모든 메서드는 사용 불가 메시지 반환
+        self.BrowserContextCapture = lambda *args, **kwargs: {'ok': False, 'error': 'Context capture module not available'}
+        self.start_capture = lambda *args, **kwargs: {'ok': False, 'error': 'Context capture module not available'}
+        self.capture_and_print = lambda *args, **kwargs: {'ok': False, 'error': 'Context capture module not available'}
+        self.quick_start = lambda *args, **kwargs: {'ok': False, 'error': 'Context capture module not available'}
 
 
 class UnifiedNamespace(SafeNamespace):
     """Flow + Claude Code 통합 관련 함수들"""
     def __init__(self):
+        # unified_sync 모듈을 사용하되, 없으면 더미로 처리
         super().__init__('unified_sync')
-        if self._get_module() is None: return
-
-        # 통합 동기화 함수들
-        self.create_todo = self._safe_getattr('unified_create_todo')
-        self.sync_status = self._safe_getattr('unified_sync_status')
-        self.migrate_session = self._safe_getattr('unified_migrate_session')
-        self.get_status = self._safe_getattr('get_unified_status')
         
-        # UnifiedSync 클래스 생성
-        self.create_sync = self._safe_getattr('create_unified_sync')
+        # 모듈이 없으면 더미 함수들로 설정
+        if self._get_module() is None:
+            self.create_todo = lambda *args, **kwargs: {'ok': False, 'error': 'Unified sync module not available'}
+            self.sync_status = lambda *args, **kwargs: {'ok': False, 'error': 'Unified sync module not available'}
+            self.migrate_session = lambda *args, **kwargs: {'ok': False, 'error': 'Unified sync module not available'}
+            self.get_status = lambda *args, **kwargs: {'ok': False, 'error': 'Unified sync module not available'}
+            self.create_sync = lambda *args, **kwargs: {'ok': False, 'error': 'Unified sync module not available'}
+        else:
+            # 통합 동기화 함수들
+            self.create_todo = self._safe_getattr('unified_create_todo')
+            self.sync_status = self._safe_getattr('unified_sync_status')
+            self.migrate_session = self._safe_getattr('unified_migrate_session')
+            self.get_status = self._safe_getattr('get_unified_status')
+            self.create_sync = self._safe_getattr('create_unified_sync')
 
 
 class AiHelpersFacade:

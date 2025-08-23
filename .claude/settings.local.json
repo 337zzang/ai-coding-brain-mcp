@@ -34,7 +34,9 @@
       "Read(/C:\\Users\\82106\\.claude/**)",
       "Read(/C:\\Users\\82106\\.claude/**)",
       "Bash(del:*)",
-      "Read(/C:\\Users\\82106\\.claude/**)"
+      "Read(/C:\\Users\\82106\\.claude/**)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": [],

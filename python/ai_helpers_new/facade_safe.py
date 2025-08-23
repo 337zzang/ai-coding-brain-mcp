@@ -510,11 +510,8 @@ class AiHelpersFacade:
         except ImportError:
             self.get_flow_api = None
 
-        try:
-            from . import task_logger
-            self.create_task_logger = task_logger.create_task_logger
-        except ImportError:
-            self.create_task_logger = None
+        # task_logger 모듈 제거됨
+        self.create_task_logger = None
 
     def __repr__(self):
         return (

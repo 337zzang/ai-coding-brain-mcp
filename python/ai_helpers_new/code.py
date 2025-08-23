@@ -145,9 +145,9 @@ def functions(filepath: str) -> Dict[str, Any]:
         Dict with standard response format {'ok': bool, 'data': list}
     """
     parsed = parse(filepath)
-    # HelperResult 객체의 속성으로 접근
-    if hasattr(parsed, 'ok') and parsed.ok and hasattr(parsed, 'data') and parsed.data:
-        func_list = parsed.data.get('functions', [])
+    # HelperResult는 딕셔너리처럼 동작
+    if parsed.get('ok') and parsed.get('data'):
+        func_list = parsed['data'].get('functions', [])
         # 함수 이름만 추출하여 리스트로 반환
         return [f['name'] for f in func_list] if func_list else []
     return []

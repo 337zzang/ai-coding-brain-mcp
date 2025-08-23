@@ -500,6 +500,9 @@ class AiHelpersFacade:
         # Memory 네임스페이스 (NEW!)
         self.memory = MemoryNamespace()
         
+        # Excel 네임스페이스 (Windows COM automation)
+        self.excel = ExcelNamespace()
+        
         # Unified 네임스페이스 (Flow + Claude 통합)
 # DEPRECATED:         self.unified = UnifiedNamespace()
 

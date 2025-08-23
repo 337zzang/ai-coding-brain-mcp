@@ -594,3 +594,142 @@ def scan_directory(path='.', max_depth=None, format='tree'):
 
     except Exception as e:
         return err(f"Scan directory error: {str(e)}")
+
+
+def copy(src: Union[str, Path], dst: Union[str, Path]) -> Dict[str, Any]:
+    """
+    파일 또는 디렉토리 복사
+    
+    Args:
+        src: 원본 파일/디렉토리 경로
+        dst: 대상 경로
+        
+    Returns:
+        dict: {'ok': bool, 'data': str (대상 경로), 'error'?: str}
+    """
+    try:
+        src_path = resolve_project_path(src)
+        dst_path = resolve_project_path(dst)
+        
+        if not src_path.exists():
+            return err(f"Source not found: {src}")
+        
+        # 파일인지 디렉토리인지 확인
+        if src_path.is_file():
+            # 대상이 디렉토리면 그 안에 같은 이름으로 복사
+            if dst_path.is_dir():
+                dst_path = dst_path / src_path.name
+            
+            # 파일 복사 (메타데이터 포함)
+            shutil.copy2(src_path, dst_path)
+            return ok({
+                'path': str(dst_path),
+                'size': os.path.getsize(dst_path),
+                'type': 'file'
+            })
+            
+        elif src_path.is_dir():
+            # 디렉토리 전체 복사
+            if dst_path.exists():
+                # 대상이 이미 존재하면 그 안에 복사
+                dst_path = dst_path / src_path.name
+            
+            shutil.copytree(src_path, dst_path)
+            return ok({
+                'path': str(dst_path),
+                'type': 'directory',
+                'message': f"Directory copied to {dst_path}"
+            })
+            
+    except Exception as e:
+        return err(f"Copy failed: {e}")
+
+
+def move(src: Union[str, Path], dst: Union[str, Path]) -> Dict[str, Any]:
+    """
+    파일 또는 디렉토리 이동/이름 변경
+    
+    Args:
+        src: 원본 파일/디렉토리 경로
+        dst: 대상 경로
+        
+    Returns:
+        dict: {'ok': bool, 'data': str (새 경로), 'error'?: str}
+    """
+    try:
+        src_path = resolve_project_path(src)
+        dst_path = resolve_project_path(dst)
+        
+        if not src_path.exists():
+            return err(f"Source not found: {src}")
+        
+        # 대상이 디렉토리면 그 안으로 이동
+        if dst_path.is_dir():
+            dst_path = dst_path / src_path.name
+        
+        # 파일/디렉토리 이동
+        shutil.move(str(src_path), str(dst_path))
+        
+        return ok({
+            'path': str(dst_path),
+            'old_path': str(src_path),
+            'type': 'file' if dst_path.is_file() else 'directory',
+            'message': f"Moved from {src_path} to {dst_path}"
+        })
+        
+    except Exception as e:
+        return err(f"Move failed: {e}")
+
+
+def delete(path: Union[str, Path], force: bool = False) -> Dict[str, Any]:
+    """
+    파일 또는 디렉토리 삭제
+    
+    Args:
+        path: 삭제할 파일/디렉토리 경로
+        force: True면 디렉토리도 재귀적으로 삭제
+        
+    Returns:
+        dict: {'ok': bool, 'data': str (삭제된 경로), 'error'?: str}
+    """
+    try:
+        target_path = resolve_project_path(path)
+        
+        if not target_path.exists():
+            return err(f"Path not found: {path}")
+        
+        # 파일인 경우
+        if target_path.is_file():
+            os.remove(target_path)
+            return ok({
+                'path': str(target_path),
+                'type': 'file',
+                'message': f"File deleted: {target_path}"
+            })
+            
+        # 디렉토리인 경우
+        elif target_path.is_dir():
+            if not force:
+                # force가 False면 빈 디렉토리만 삭제
+                try:
+                    os.rmdir(target_path)
+                    return ok({
+                        'path': str(target_path),
+                        'type': 'directory',
+                        'message': f"Empty directory deleted: {target_path}"
+                    })
+                except OSError:
+                    return err(f"Directory not empty. Use force=True to delete: {path}")
+            else:
+                # force가 True면 재귀적으로 삭제
+                shutil.rmtree(target_path)
+                return ok({
+                    'path': str(target_path),
+                    'type': 'directory',
+                    'message': f"Directory deleted recursively: {target_path}"
+                })
+                
+    except PermissionError:
+        return err(f"Permission denied: {path}")
+    except Exception as e:
+        return err(f"Delete failed: {e}")

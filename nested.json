@@ -1,0 +1,17 @@
+{
+  "level1": {
+    "level2": {
+      "level3": {
+        "array": [
+          1,
+          2,
+          {
+            "nested": true
+          }
+        ],
+        "null": null,
+        "bool": false
+      }
+    }
+  }
+}

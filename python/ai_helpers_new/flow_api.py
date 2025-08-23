@@ -334,33 +334,59 @@ class FlowAPI:
 
         return self._res(True, {'plans': plans, 'tasks': tasks})
 
-    def get_stats(self) -> Dict[str, Any]:
-        """전체 통계 정보"""
-        plans = self._manager.list_plans()
-        total_tasks = 0
-        task_stats = {"todo": 0, "in_progress": 0, "done": 0}
+    def get_stats_safe(self) -> Dict[str, Any]:
+    """통계 정보 반환 - 타입 안전성 강화 버전"""
+    plans = self.flow_manager.list_plans()
 
-        for plan in plans:
-            if hasattr(plan, 'tasks'):
-                total_tasks += len(plan.tasks)
-                for task in plan.tasks.values():
-                    status = str(getattr(task, 'status', 'todo')).lower()
-                    if 'done' in status or 'completed' in status:
-                        task_stats['done'] += 1
-                    elif 'progress' in status:
-                        task_stats['in_progress'] += 1
+    total_tasks = 0
+    task_stats = {"todo": 0, "in_progress": 0, "done": 0, "unknown": 0}
+
+    for plan in plans:
+        if hasattr(plan, 'tasks'):
+            # tasks가 딕셔너리인지 확인
+            tasks = plan.tasks if isinstance(plan.tasks, dict) else {}
+            total_tasks += len(tasks)
+
+            for task in tasks.values():
+                # 안전한 status 추출
+                status = None
+
+                # 1. 객체 속성으로 시도
+                if hasattr(task, 'status'):
+                    status_val = getattr(task, 'status', None)
+                    # Enum이나 객체인 경우 value 속성 확인
+                    if hasattr(status_val, 'value'):
+                        status = str(status_val.value).lower()
                     else:
-                        task_stats['todo'] += 1
+                        status = str(status_val).lower()
 
-        stats = {
-            "total_plans": len(plans),
-            "total_tasks": total_tasks,
-            "tasks_by_status": task_stats,
-            "current_plan": self._current_plan_id
-        }
+                # 2. 딕셔너리 키로 시도
+                elif isinstance(task, dict):
+                    status = str(task.get('status', 'todo')).lower()
 
-        return self._res(True, stats)
+                # 3. 기본값
+                if not status:
+                    status = 'todo'
 
+                # 상태 분류 (안전한 방식)
+                if 'done' in status or 'completed' in status:
+                    task_stats['done'] += 1
+                elif 'progress' in status:
+                    task_stats['in_progress'] += 1
+                elif 'todo' in status or 'pending' in status:
+                    task_stats['todo'] += 1
+                else:
+                    task_stats['unknown'] += 1
+
+    stats = {
+        "total_plans": len(plans),
+        "total_tasks": total_tasks,
+        "tasks_by_status": task_stats,
+        "current_plan": self._current_plan_id,
+        "type_safe": True  # 타입 안전성 버전 표시
+    }
+
+    return self._res(True, stats)
     def set_context(self, key: str, value: Any) -> "FlowAPI":
         """컨텍스트 설정 (체이닝 가능)"""
         self._context[key] = value

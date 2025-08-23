@@ -1,0 +1,44 @@
+{
+  "task_20250823_183005_24eea5": {
+    "id": "task_20250823_183005_24eea5",
+    "title": "시스템 분석",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-23T18:30:05.388913",
+    "updated_at": "2025-08-23T18:30:05.388913",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250823_183005_859443": {
+    "id": "task_20250823_183005_859443",
+    "title": "문제 해결",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-23T18:30:05.412394",
+    "updated_at": "2025-08-23T18:30:05.412394",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250823_183005_892353": {
+    "id": "task_20250823_183005_892353",
+    "title": "검증",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-23T18:30:05.426278",
+    "updated_at": "2025-08-23T18:30:05.426278",
+    "completed_at": null,
+    "assignee": null,
+    "number": 1,
+    "tags": [],
+    "metadata": {}
+  }
+}

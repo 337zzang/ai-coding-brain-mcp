@@ -1,0 +1,44 @@
+{
+  "task_20250823_182444_4355ab": {
+    "id": "task_20250823_182444_4355ab",
+    "title": "데이터 수집",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-23T18:24:44.669078",
+    "updated_at": "2025-08-23T18:24:44.669078",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250823_182444_5f51ac": {
+    "id": "task_20250823_182444_5f51ac",
+    "title": "분석 수행",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-23T18:24:44.674037",
+    "updated_at": "2025-08-23T18:24:44.674037",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250823_182444_824884": {
+    "id": "task_20250823_182444_824884",
+    "title": "보고서 작성",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-23T18:24:44.689374",
+    "updated_at": "2025-08-23T18:24:44.689374",
+    "completed_at": null,
+    "assignee": null,
+    "number": 1,
+    "tags": [],
+    "metadata": {}
+  }
+}

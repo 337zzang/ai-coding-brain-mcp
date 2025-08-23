@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-23T18:29:05.484981", "event_type": "TASK_INFO", "ts": "2025-08-23T18:29:05.484981", "type": "TASK_INFO", "title": "에러 위치 파악", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-23T18:29:05.488767", "event_type": "DESIGN", "ts": "2025-08-23T18:29:05.488767", "type": "DESIGN", "content": "Task가 생성되었습니다."}

@@ -10,6 +10,7 @@ from .util import safe_read_file, safe_write_file
 
 # === AST 기반 코드 분석 ===
 
+@wrap_output
 def parse(filepath: str) -> Dict[str, Any]:
     """Parse Python file and extract structure using AST.
     

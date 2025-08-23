@@ -1,2 +1,1 @@
-def func1():
-    pass
+def foo(): pass

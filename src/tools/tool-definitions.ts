@@ -1,4 +1,4 @@
-import { Tool } from '@modelcontextprotocol/sdk/types';
+import { Tool } from '@modelcontextprotocol/sdk/types.js';
 
 /**
  * AI Coding Brain MCP - Tool Definitions

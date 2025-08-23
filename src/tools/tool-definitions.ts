@@ -85,6 +85,14 @@ result = h.file.exists('file.txt')            # Check existence / 존재 확인
 data = h.file.read_json('config.json')['data'] # Read JSON / JSON 읽기
 h.file.write_json('output.json', data)        # Write JSON / JSON 쓰기
 
+# 📂 File Management / 파일 관리 (NEW!)
+h.file.copy('source.py', 'backup.py')         # Copy file / 파일 복사
+h.file.copy('src_dir/', 'backup_dir/')        # Copy directory / 디렉토리 복사
+h.file.move('old_name.py', 'new_name.py')     # Rename file / 파일 이름 변경
+h.file.move('src/', 'dest/')                  # Move directory / 디렉토리 이동
+h.file.delete('temp.txt')                     # Delete file / 파일 삭제
+h.file.delete('temp_dir/', force=True)        # Delete directory / 디렉토리 삭제
+
 # 🔍 Code Analysis / 코드 분석
 info = h.code.parse('module.py')              # Parse Python file / 파일 파싱
 if info['ok']:

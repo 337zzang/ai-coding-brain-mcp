@@ -16,15 +16,8 @@ from .file import read, read_json, write, exists
 o3_tasks = {}
 
 # ============ O3 작업 관리 시스템 통합 ============
-try:
-    from .o3_task_manager import (
-        save_o3_task, load_o3_task, delete_o3_task,
-        cleanup_o3_tasks, get_o3_statistics, archive_o3_tasks
-    )
-    O3_MANAGER_AVAILABLE = True
-except ImportError:
-    O3_MANAGER_AVAILABLE = False
-    print("⚠️ O3 작업 관리 시스템 사용 불가")
+# o3_task_manager 모듈이 제거되어 비활성화
+O3_MANAGER_AVAILABLE = False
 
 def _save_task_with_manager(task_id: str, data: Dict[str, Any]):
     """작업 관리 시스템을 통한 저장"""

@@ -163,9 +163,9 @@ def classes(filepath: str) -> Dict[str, Any]:
         Dict with standard response format {'ok': bool, 'data': list}
     """
     parsed = parse(filepath)
-    # HelperResult 객체의 속성으로 접근
-    if hasattr(parsed, 'ok') and parsed.ok and hasattr(parsed, 'data') and parsed.data:
-        class_list = parsed.data.get('classes', [])
+    # HelperResult는 딕셔너리처럼 동작
+    if parsed.get('ok') and parsed.get('data'):
+        class_list = parsed['data'].get('classes', [])
         # 클래스 이름만 추출하여 리스트로 반환
         return [c['name'] for c in class_list] if class_list else []
     return []

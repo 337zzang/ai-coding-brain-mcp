@@ -324,7 +324,7 @@ def get_page_info(session_id: str = None) -> Dict[str, Any]:
 
 def close(session_id: str = None) -> Dict[str, Any]:
     """브라우저 종료 (오버레이 자동 정리)"""
-    global _current_session, _overlay_managers, _web_auto
+    global _current_session, _overlay_managers, _web_auto, _gps_overlays
 
     session_id = session_id or _current_session
 
@@ -339,6 +339,16 @@ def close(session_id: str = None) -> Dict[str, Any]:
                 logging.info(f"🧹 오버레이 정리 완료: {session_id}")
             except Exception as e:
                 logging.warning(f"오버레이 정리 실패: {e}")
+        
+        # GPS 오버레이 정리
+        gps_cleanup_success = False
+        if session_id in _gps_overlays:
+            try:
+                del _gps_overlays[session_id]
+                gps_cleanup_success = True
+                logging.info(f"🛰️ GPS 오버레이 정리 완료: {session_id}")
+            except Exception as e:
+                logging.warning(f"GPS 오버레이 정리 실패: {e}")
 
         # 세션 정리
         if session_id == _current_session:
@@ -349,6 +359,7 @@ def close(session_id: str = None) -> Dict[str, Any]:
             'success': True,
             'session_id': session_id,
             'overlay_cleaned': cleanup_success,
+            'gps_overlay_cleaned': gps_cleanup_success,
             'integration_mode': 'closed',
             'message': '통합 웹 자동화 종료 완료'
         }

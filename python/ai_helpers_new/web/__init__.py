@@ -20,6 +20,15 @@ except ImportError:
     logging.warning("브라우저 모듈 import 실패")
     BrowserManager = None
 
+# GPS 오버레이 import
+try:
+    from .web_overlay_gps import WebOverlayGPS
+    _gps_overlay_available = True
+except ImportError:
+    logging.warning("GPS 오버레이 모듈 import 실패")
+    WebOverlayGPS = None
+    _gps_overlay_available = False
+
 # 전역 변수들
 _current_session = None
 _overlay_managers = {}

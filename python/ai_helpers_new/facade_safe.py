@@ -363,6 +363,16 @@ class ProjectNamespace(SafeNamespace):
         
         # list() 메서드 추가 (list_projects의 별칭)
         self.list = self.list_projects if self.list_projects else lambda: {'ok': False, 'error': 'list_projects not available'}
+        
+        # get_context 메서드 추가
+        self.get_context = self._safe_getattr('get_project_context')
+        if not self.get_context:
+            # get_project_context가 없으면 get_current_project를 사용
+            get_current = self._safe_getattr('get_current_project')
+            if get_current:
+                self.get_context = lambda: {'ok': True, 'data': {'current_project': get_current().get('data', {}).get('name', 'Unknown')}}
+            else:
+                self.get_context = lambda: {'ok': False, 'error': 'Context not available'}
 
 
 class MemoryNamespace(SafeNamespace):

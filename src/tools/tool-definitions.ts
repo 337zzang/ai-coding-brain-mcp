@@ -51,6 +51,9 @@ export const toolDefinitions: Tool[] = [
    프로젝트 격리: 각 프로젝트는 독립적인 실행 환경 보유
 ✅ AI Helpers v2.5: Enhanced 12-module helper system (134+ methods)
    AI 헬퍼 v2.5: 12개 모듈로 확장된 종합 헬퍼 시스템 (134개+ 메서드)
+   • File operations with shutil integration / shutil 통합 파일 작업
+   • Jupyter notebook native support / Jupyter 노트북 네이티브 지원
+   • UV package manager (Rust-powered) / UV 패키지 매니저 (Rust 기반)
 ✅ Jupyter Integration: Native notebook support for data science workflows
    Jupyter 통합: 데이터 과학 워크플로우를 위한 네이티브 노트북 지원
 ✅ UV Package Manager: 10-100x faster Python package management
@@ -91,13 +94,14 @@ result = h.file.exists('file.txt')            # Check existence / 존재 확인
 data = h.file.read_json('config.json')['data'] # Read JSON / JSON 읽기
 h.file.write_json('output.json', data)        # Write JSON / JSON 쓰기
 
-# 📂 File Management / 파일 관리 (NEW!)
-h.file.copy('source.py', 'backup.py')         # Copy file / 파일 복사
-h.file.copy('src_dir/', 'backup_dir/')        # Copy directory / 디렉토리 복사
-h.file.move('old_name.py', 'new_name.py')     # Rename file / 파일 이름 변경
-h.file.move('src/', 'dest/')                  # Move directory / 디렉토리 이동
-h.file.delete('temp.txt')                     # Delete file / 파일 삭제
-h.file.delete('temp_dir/', force=True)        # Delete directory / 디렉토리 삭제
+# 📂 File Management / 파일 관리 (NEW v2.5!)
+h.file.copy('source.py', 'backup.py')         # Copy file with metadata / 메타데이터 포함 복사
+h.file.copy('src_dir/', 'backup_dir/')        # Copy directory recursively / 디렉토리 재귀 복사
+h.file.move('old_name.py', 'new_name.py')     # Rename/move file atomically / 원자적 이름변경/이동
+h.file.move('src/', 'dest/')                  # Move entire directory tree / 전체 디렉토리 트리 이동
+h.file.delete('temp.txt')                     # Safe delete single file / 안전한 단일 파일 삭제
+h.file.delete('temp_dir/', force=True)        # Force delete directory tree / 디렉토리 트리 강제 삭제
+# Note: All operations preserve timestamps & permissions / 모든 작업은 타임스탬프와 권한 보존
 
 # 🔍 Code Analysis / 코드 분석
 info = h.code.parse('module.py')              # Parse Python file / 파일 파싱
@@ -128,19 +132,23 @@ status = h.llm.check_status(task_id)              # Check status
 h.llm.show_progress()                             # Show progress
 result = h.llm.get_result(task_id)                # Get result
 
-# 📓 Jupyter Notebook / 노트북 작업
-h.jupyter.create_notebook('analysis.ipynb')       # Create notebook / 노트북 생성
-h.jupyter.add_cell('analysis.ipynb', 'code', 'import pandas as pd') # Add cell / 셀 추가
-h.jupyter.execute_notebook('analysis.ipynb')      # Execute notebook / 노트북 실행
-h.jupyter.convert_to_python('analysis.ipynb')     # Convert to .py / Python 변환
-h.jupyter.install_kernel('myenv', 'My Kernel')    # Install kernel / 커널 설치
+# 📓 Jupyter Notebook / 노트북 작업 (NEW v2.5!)
+h.jupyter.create_notebook('analysis.ipynb')       # Create nbformat 4 notebook / nbformat 4 노트북 생성
+h.jupyter.add_cell('analysis.ipynb', 'code', 'import pandas as pd') # Add code/markdown cell / 코드/마크다운 셀 추가
+h.jupyter.execute_notebook('analysis.ipynb')      # Execute all cells in order / 모든 셀 순차 실행
+h.jupyter.convert_to_python('analysis.ipynb')     # Export as executable .py / 실행가능한 .py로 내보내기
+h.jupyter.install_kernel('myenv', 'My Kernel')    # Register IPython kernel / IPython 커널 등록
+h.jupyter.clear_outputs('analysis.ipynb')         # Clear all cell outputs / 모든 셀 출력 제거
+h.jupyter.merge_notebooks(['nb1.ipynb', 'nb2.ipynb']) # Merge multiple notebooks / 여러 노트북 병합
 
-# ⚡ UV Package Manager / UV 패키지 관리
-h.uv.install_uv()                                 # Install UV / UV 설치
-h.uv.quick_setup()                                # Quick project setup / 빠른 설정
-h.uv.create_venv('3.11')                         # Create venv / 가상환경 생성
-h.uv.pip_install(['pandas', 'numpy'])            # Install packages / 패키지 설치
-h.uv.pip_sync('requirements.txt')                # Sync requirements / 동기화
+# ⚡ UV Package Manager / UV 패키지 관리 (10-100x faster than pip!)
+h.uv.install_uv()                                 # Install UV via pip / pip으로 UV 설치
+h.uv.quick_setup()                                # Auto venv + deps + git init / 자동 환경설정
+h.uv.create_venv('3.11')                         # Create Python 3.11 venv / Python 3.11 가상환경
+h.uv.pip_install(['pandas', 'numpy'])            # Lightning fast install / 초고속 설치 (Rust 기반)
+h.uv.pip_sync('requirements.txt')                # Sync & lock deps / 의존성 동기화 및 잠금
+h.uv.pip_compile('requirements.in')              # Generate locked requirements / 잠긴 요구사항 생성
+h.uv.run('python script.py')                     # Run in UV environment / UV 환경에서 실행
 
 # ⚠️ Error Handling Pattern / 에러 처리 패턴
 result = h.file.read('missing.txt')

@@ -13,5 +13,50 @@
       "code_lines": 5,
       "output_size": 51
     }
+  },
+  {
+    "timestamp": "2025-08-23T15:14:31.268408",
+    "analysis": {
+      "has_errors": false,
+      "error_type": null,
+      "patterns": {
+        "uses_helpers": true,
+        "uses_flow": false,
+        "is_test": true,
+        "is_complex": false
+      },
+      "code_lines": 4,
+      "output_size": 51
+    }
+  },
+  {
+    "timestamp": "2025-08-23T15:14:31.407746",
+    "analysis": {
+      "has_errors": false,
+      "error_type": null,
+      "patterns": {
+        "uses_helpers": true,
+        "uses_flow": false,
+        "is_test": false,
+        "is_complex": false
+      },
+      "code_lines": 5,
+      "output_size": 14
+    }
+  },
+  {
+    "timestamp": "2025-08-23T15:15:05.225531",
+    "analysis": {
+      "has_errors": true,
+      "error_type": "attribute",
+      "patterns": {
+        "uses_helpers": true,
+        "uses_flow": false,
+        "is_test": true,
+        "is_complex": false
+      },
+      "code_lines": 5,
+      "output_size": 67
+    }
   }
 ]

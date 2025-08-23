@@ -110,9 +110,9 @@ class SimpleWebAutomation:
 # 전역 인스턴스
 _web_auto = SimpleWebAutomation()
 
-def start(headless: bool = False, session_id: str = None) -> Dict[str, Any]:
+def start(headless: bool = False, session_id: str = None, enable_gps: bool = True) -> Dict[str, Any]:
     """브라우저 시작 (오버레이 자동 활성화)"""
-    global _current_session, _web_auto
+    global _current_session, _web_auto, _gps_overlays
 
     try:
         # 세션 ID 생성
@@ -124,13 +124,25 @@ def start(headless: bool = False, session_id: str = None) -> Dict[str, Any]:
 
         # 오버레이 자동 활성화
         overlay_activated = _web_auto._ensure_overlay(session_id)
+        
+        # GPS 오버레이 자동 초기화
+        gps_activated = False
+        if enable_gps and _gps_overlay_available:
+            try:
+                gps = WebOverlayGPS()
+                _gps_overlays[session_id] = gps
+                gps_activated = True
+                logging.info(f"🛰️ GPS 오버레이 활성화: {session_id}")
+            except Exception as e:
+                logging.warning(f"GPS 오버레이 초기화 실패: {e}")
 
         result = {
             'success': True,
             'session_id': session_id,
             'overlay_auto_activated': overlay_activated,
+            'gps_overlay_activated': gps_activated,
             'integration_mode': 'full_auto',
-            'message': ' 통합 웹 자동화 시작 - 오버레이 자동 활성화됨'
+            'message': '통합 웹 자동화 시작 - 오버레이 및 GPS 자동 활성화됨'
         }
 
         logging.info(f"🚀 통합 웹 자동화 시작: {session_id}")

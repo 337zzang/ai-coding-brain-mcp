@@ -440,6 +440,37 @@ class UnifiedNamespace(SafeNamespace):
 # DEPRECATED:             self.create_sync = self._safe_getattr('create_unified_sync')
 
 
+class ExcelNamespace(SafeNamespace):
+    """Excel 자동화 네임스페이스 (Windows COM 기반)
+    pywin32를 사용한 Excel 조작 기능을 제공합니다.
+    """
+    def __init__(self):
+        super().__init__('excel')
+        module = self._get_module()
+        if module is None:
+            # 모듈이 없을 때 기본 동작
+            self.connect = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+            self.read = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+            self.write = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+            self.close = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+            self.create_sheet = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+            self.delete_sheet = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+            self.list_sheets = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+            self.format_range = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+            self.execute_macro = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+        else:
+            # Excel 작업 함수들
+            self.connect = self._safe_getattr('connect')
+            self.read = self._safe_getattr('read')
+            self.write = self._safe_getattr('write')
+            self.close = self._safe_getattr('close')
+            self.create_sheet = self._safe_getattr('create_sheet')
+            self.delete_sheet = self._safe_getattr('delete_sheet')
+            self.list_sheets = self._safe_getattr('list_sheets')
+            self.format_range = self._safe_getattr('format_range')
+            self.execute_macro = self._safe_getattr('execute_macro')
+
+
 class AiHelpersFacade:
     """
     AI Helpers의 단일 진입점 (Facade Pattern) - HelperResult 버전

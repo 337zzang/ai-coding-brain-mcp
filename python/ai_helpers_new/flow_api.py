@@ -10,11 +10,34 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any, Union
 
 from .domain.models import Plan, Task, TaskStatus
-# ultra_simple_flow_manager 모듈이 제거됨 - FlowAPI만 사용
-# from .ultra_simple_flow_manager import UltraSimpleFlowManager
-# from .repository.ultra_simple_repository import UltraSimpleRepository
-# from .task_logger import EnhancedTaskLogger
 from .wrappers import safe_api_get
+
+# 삭제된 모듈들을 위한 더미 클래스
+class UltraSimpleFlowManager:
+    """더미 FlowManager - 기본 기능만 제공"""
+    def __init__(self):
+        self.plans = {}
+        self.current_plan_id = None
+    
+    def create_plan(self, name: str, description: str = "") -> Dict[str, Any]:
+        """더미 plan 생성"""
+        plan_id = f"plan_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        self.plans[plan_id] = {
+            'id': plan_id,
+            'name': name,
+            'description': description,
+            'tasks': {},
+            'created_at': datetime.now().isoformat()
+        }
+        return self.plans[plan_id]
+    
+    def get_plan(self, plan_id: str) -> Optional[Dict[str, Any]]:
+        """더미 plan 조회"""
+        return self.plans.get(plan_id)
+    
+    def list_plans(self) -> List[Dict[str, Any]]:
+        """더미 plan 목록"""
+        return list(self.plans.values())
 # Response helpers
 def ok_response(data=None, message=None):
     response = {'ok': True}

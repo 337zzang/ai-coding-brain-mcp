@@ -443,6 +443,16 @@ get_current_session = lambda: _current_session
 set_current_session = lambda sid: setattr(_web_auto, 'current_session', sid) or {'success': True}
 cleanup = close
 
+# 웹 관련 함수들 facade_safe.py에서 사용할 수 있도록 노출
+web_start = start
+web_goto = goto
+web_click = click
+web_type = type_text
+web_screenshot = screenshot
+web_close = close
+web_wait = wait
+web_execute_js = execute_js
+
 # GPS 오버레이 전용 함수들
 def init_gps_overlay(session_id: str = None, **config) -> Dict[str, Any]:
     """GPS 오버레이 초기화"""

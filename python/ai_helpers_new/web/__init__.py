@@ -33,6 +33,7 @@ except ImportError:
 _current_session = None
 _overlay_managers = {}
 _auto_overlay_enabled = True
+_gps_overlays = {}  # GPS 오버레이 인스턴스 관리
 
 class SimpleWebAutomation:
     """단순화된 웹 자동화 클래스 (오버레이 통합)"""

@@ -115,6 +115,11 @@ class FileNamespace(SafeNamespace):
 
         # 경로 작업
         self.resolve_project_path = self._safe_getattr('resolve_project_path')
+        
+        # 파일 조작 (새로 추가)
+        self.copy = self._safe_getattr('copy')
+        self.move = self._safe_getattr('move')
+        self.delete = self._safe_getattr('delete')
 
     def _create_flattened_list_directory(self):
         """list_directory를 평탄화된 형태로 래핑"""

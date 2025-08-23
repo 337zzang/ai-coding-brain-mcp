@@ -173,7 +173,13 @@ All helper functions return consistent dict format:
    
 5. Path errors / 경로 오류:
    ❌ "path\\to\\file" on Unix → Error
-   ✅ Use Path("path/to/file") or forward slashes`,
+   ✅ Use Path("path/to/file") or forward slashes
+   
+6. File operation errors / 파일 작업 오류:
+   ❌ h.file.copy('file.txt', 'existing_dir/') → May overwrite
+   ✅ h.file.copy('file.txt', 'existing_dir/file_backup.txt')
+   ❌ h.file.delete('important_dir/') → Fails without force
+   ✅ h.file.delete('important_dir/', force=True)`,
     inputSchema: executeCodeSchema
   },
   {

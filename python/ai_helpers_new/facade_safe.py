@@ -431,7 +431,8 @@ class UnifiedNamespace(SafeNamespace):
             self.get_status = lambda *args, **kwargs: {'ok': False, 'error': 'Unified sync module not available'}
             self.create_sync = lambda *args, **kwargs: {'ok': False, 'error': 'Unified sync module not available'}
         else:
-            # 통합 동기화 함수들
+            # 통합 동기화 함수들 (현재 비활성화)
+            pass
 # DEPRECATED:             self.create_todo = self._safe_getattr('unified_create_todo')
 # DEPRECATED:             self.sync_status = self._safe_getattr('unified_sync_status')
 # DEPRECATED:             self.migrate_session = self._safe_getattr('unified_migrate_session')

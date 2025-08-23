@@ -89,9 +89,8 @@ git_checkout_b = getattr(_facade, 'git_checkout_b', None)
 git_merge = getattr(_facade, 'git_merge', None)
 
 
-# Excel 관련 - 모듈이 제거되어 비활성화
-# Excel 기능은 현재 지원하지 않습니다
-excel = None
+# Excel 관련
+excel = getattr(_facade, 'excel', None)
 
 # LLM/O3 관련
 # ask_o3는 없으므로 ask_o3_practical로 대체

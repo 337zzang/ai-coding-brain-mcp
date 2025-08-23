@@ -45,6 +45,26 @@ def safe_write_file(filepath, content, encoding='utf-8'):
     except (PermissionError, IOError) as e:
         return False
 
+def resolve_project_path(path):
+    """
+    프로젝트 경로 해결 유틸리티
+    상대 경로를 절대 경로로 변환하고 Path 객체로 반환
+    
+    Args:
+        path: 파일 또는 디렉토리 경로 (str, Path)
+    
+    Returns:
+        Path: 절대 경로 Path 객체
+    """
+    if isinstance(path, str):
+        path = Path(path)
+    
+    # 절대 경로가 아니면 현재 작업 디렉토리 기준으로 변환
+    if not path.is_absolute():
+        path = Path.cwd() / path
+    
+    return path
+
 def safe_get_data(result, *fallback_keys):
     """
     KeyError 방지 안전한 데이터 추출

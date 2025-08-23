@@ -61,7 +61,7 @@ export const toolDefinitions: Tool[] = [
 ┌─────────────┬──────────────────────────────────────────────────────────┐
 │ Module      │ EXACT Method Names (대소문자 구분)                       │
 ├─────────────┼──────────────────────────────────────────────────────────┤
-│ 📁 h.file   │ read, write, append, exists, info, read_json, write_json│
+│ 📁 h.file   │ read, write, append, exists, info, copy, move, delete  │
 │ 🔧 h.code   │ parse, view, replace, insert, functions, classes        │
 │ 🔍 h.search │ files (NOT search_files), code, grep, imports          │
 │ 🤖 h.llm    │ ask, ask_async, ask_practical, check_status, get_result │

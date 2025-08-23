@@ -287,16 +287,15 @@ class WebNamespace(SafeNamespace):
             self.execute_js = web_execute_js
             self.list_sessions = web_list_sessions
 
-            # 새로운 메서드들
-            self.wait = lambda selector, session_id=None, timeout=None:                 self._web_instance.wait(selector, session_id, timeout).to_dict()
-
-            self.get_info = lambda session_id=None:                 self._web_instance.get_info(session_id).to_dict()
-
-            self.cleanup = lambda: self._web_instance.cleanup().to_dict()
+            # 새로운 메서드들 - SimpleWebAutomation과 호환
+            from .web import wait, get_page_info, get_current_session, set_current_session
+            self.wait = wait
+            self.get_info = get_page_info
+            self.cleanup = web_close
 
             # 세션 관리
-            self.get_current_session = self._web_instance.get_current_session
-            self.set_current_session = self._web_instance.set_current_session
+            self.get_current_session = get_current_session
+            self.set_current_session = set_current_session
 
             print("[WebNamespace] Using new web module structure")
 

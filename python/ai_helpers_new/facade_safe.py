@@ -273,8 +273,8 @@ class WebNamespace(SafeNamespace):
                 execute_js as web_execute_js, list_sessions as web_list_sessions
             )
 
-            # 전역 WebAutomation 인스턴스 사용
-            self._web_instance = web
+            # SimpleWebAutomation 인스턴스 생성
+            self._web_instance = SimpleWebAutomation()
             self._using_new_module = True
 
             # 기존 API와 호환되는 메서드들

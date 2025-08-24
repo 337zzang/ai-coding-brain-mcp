@@ -296,53 +296,74 @@ SESSION_POOL = SessionPool(max_sessions=10, session_timeout=3600)
 
 
 def get_enhanced_prompt(session_key: str = "shared") -> str:
-    """AI가 다음 작업을 이어서 수행하도록 구체적인 지침 제공"""
+    """AI가 다음 작업을 이어서 수행하도록 개별 변수를 명확하게 전달"""
     
     output = []
     output.append("\n" + "━" * 60)
-    output.append("\n🤖 AI 작업 연속성 지침")
+    output.append("\n📦 개별 변수 전달 시스템")
     output.append("━" * 60)
     
-    # 1. 가장 최근 작업 결과 확인
+    # 1. 모든 개별 변수를 각각 표시
     if SESSION_POOL.shared_variables:
-        recent_items = list(SESSION_POOL.shared_variables.items())[-3:]  # 최근 3개
+        output.append("\n🔤 사용 가능한 개별 변수들:\n")
         
-        if recent_items:
-            output.append("\n📝 이전 작업에서:")
+        # 각 변수를 개별적으로 상세히 표시
+        for key, value in SESSION_POOL.shared_variables.items():
+            # Flow 플랜은 특별 처리
+            if key == 'current_flow_plan':
+                output.append(f"  📋 {key}:")
+                output.append(f"     • 타입: Flow Plan")
+                output.append(f"     • 용도: 작업 플랜 관리")
+                output.append(f"     • 접근: plan = get_shared('{key}')")
+                output.append("")
+                continue
             
-            for key, value in recent_items:
-                # Flow 플랜은 따로 처리
-                if key == 'current_flow_plan':
-                    continue
-                    
-                # 구체적인 작업 설명 생성
-                if 'file' in key or 'content' in key:
-                    output.append(f"  ✓ 파일 내용을 '{key}' 변수에 저장했습니다")
-                    output.append(f"    → 이제 get_shared('{key}')로 내용을 가져와서 분석하세요")
-                    
-                elif 'analysis' in key:
-                    output.append(f"  ✓ 분석 결과를 '{key}' 변수에 저장했습니다")
-                    output.append(f"    → 이제 get_shared('{key}')로 결과를 확인하고 최적화하세요")
-                    
-                elif 'optimization' in key:
-                    output.append(f"  ✓ 최적화 결과를 '{key}' 변수에 저장했습니다")
-                    output.append(f"    → 이제 get_shared('{key}')로 결과를 가져와서 테스트하세요")
-                    
-                elif 'test' in key:
-                    output.append(f"  ✓ 테스트 결과를 '{key}' 변수에 저장했습니다")
-                    output.append(f"    → 결과를 확인하고 필요시 수정 작업을 진행하세요")
-                    
-                elif isinstance(value, dict):
-                    output.append(f"  ✓ 데이터를 '{key}' 변수에 딕셔너리로 저장했습니다")
-                    output.append(f"    → get_shared('{key}')로 가져와서 필요한 필드를 활용하세요")
-                    
-                elif isinstance(value, list):
-                    output.append(f"  ✓ {len(value)}개 항목을 '{key}' 변수에 리스트로 저장했습니다")
-                    output.append(f"    → get_shared('{key}')로 가져와서 반복 처리하세요")
-                    
+            # 각 변수별 상세 정보
+            output.append(f"  📌 {key}:")
+            
+            # 타입 정보
+            if isinstance(value, dict):
+                output.append(f"     • 타입: Dictionary ({len(value)} 필드)")
+                if len(value) <= 5:
+                    output.append(f"     • 키: {list(value.keys())}")
                 else:
-                    output.append(f"  ✓ 결과를 '{key}' 변수에 저장했습니다")
-                    output.append(f"    → get_shared('{key}')로 가져와서 다음 작업에 활용하세요")
+                    output.append(f"     • 주요 키: {list(value.keys())[:5]} ...")
+                    
+            elif isinstance(value, list):
+                output.append(f"     • 타입: List ({len(value)} 항목)")
+                if len(value) > 0:
+                    output.append(f"     • 첫 항목 타입: {type(value[0]).__name__}")
+                    
+            elif isinstance(value, str):
+                output.append(f"     • 타입: String")
+                if len(value) < 50:
+                    output.append(f"     • 값: '{value}'")
+                else:
+                    output.append(f"     • 길이: {len(value)}자")
+                    
+            elif isinstance(value, (int, float)):
+                output.append(f"     • 타입: {type(value).__name__}")
+                output.append(f"     • 값: {value}")
+                
+            else:
+                output.append(f"     • 타입: {type(value).__name__}")
+            
+            # 변수별 개별 접근 방법
+            output.append(f"     • 접근: {key}_data = get_shared('{key}')")
+            
+            # 용도 추정 (키 이름 기반)
+            if 'analysis' in key:
+                output.append(f"     • 용도: 분석 결과 데이터")
+            elif 'test' in key:
+                output.append(f"     • 용도: 테스트 결과 데이터")
+            elif 'optimization' in key:
+                output.append(f"     • 용도: 최적화 결과 데이터")
+            elif 'file' in key or 'content' in key:
+                output.append(f"     • 용도: 파일/콘텐츠 데이터")
+            elif 'data' in key:
+                output.append(f"     • 용도: 일반 데이터 저장")
+                
+            output.append("")  # 빈 줄로 구분
     
     # 2. Flow 플랜 기반 다음 작업 지시
     flow_plan = SESSION_POOL.shared_variables.get('current_flow_plan')

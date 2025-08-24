@@ -419,9 +419,9 @@ def execute_code(code: str,
     # Add cache statistics if available
     _add_cache_statistics(response, session)
     
-    # Add Think prompt for successful executions
-    if response.get("success", False) and response.get("stdout", ""):
-        response["stdout"] += get_think_prompt()
+    # Add enhanced prompt with context for successful executions
+    if response.get("success", False):
+        response["stdout"] += get_enhanced_prompt(session_key)
     
     return response
 

@@ -164,11 +164,37 @@ class SessionPool:
         
         session = EnhancedREPLSession(**config)
         
-        # Add agent-specific helpers
+        # 🔥 공유 변수 접근 함수 추가 - REPL의 핵심!
         session.namespace.update({
             'agent_id': agent_id,
             'session_info': lambda: self.get_session_info(agent_id),
-            'clear_agent_cache': lambda: self._clear_agent_cache(agent_id)
+            
+            # 공유 변수 관리 - 모든 에이전트 접근 가능
+            'shared': self.shared_variables,  # 직접 접근
+            'workflow': self.workflow_data,    # 워크플로우 데이터
+            'cache': self.cache_data,          # 캐시 데이터
+            
+            # 헬퍼 함수들
+            'set_shared': lambda k, v: self.shared_variables.update({k: v}),
+            'get_shared': lambda k, default=None: self.shared_variables.get(k, default),
+            'list_shared': lambda: list(self.shared_variables.keys()),
+            'clear_shared': lambda: self.shared_variables.clear(),
+            
+            # 워크플로우 데이터 관리
+            'set_workflow': lambda k, v: self.workflow_data.update({k: v}),
+            'get_workflow': lambda k, default=None: self.workflow_data.get(k, default),
+            
+            # 캐시 관리
+            'set_cache': lambda k, v: self.cache_data.update({k: v}),
+            'get_cache': lambda k, default=None: self.cache_data.get(k, default),
+            
+            # 변수 지속성 통계
+            'var_stats': lambda: {
+                'shared_count': len(self.shared_variables),
+                'workflow_count': len(self.workflow_data),
+                'cache_count': len(self.cache_data),
+                'total_vars': len(self.shared_variables) + len(self.workflow_data) + len(self.cache_data)
+            }
         })
         
         return session

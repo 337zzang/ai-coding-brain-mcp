@@ -62,6 +62,13 @@ except ImportError:
     bg = background_manager  # fallback
     background = background_manager
 
+# LLM + Background 통합 Facade 추가
+try:
+    from .llm_background_facade import llm_background_facade
+    ai = llm_background_facade  # AI 작업 통합 facade
+except ImportError:
+    ai = None  # LLM facade 사용 불가
+
 # 3. 주요 함수들 하위 호환성 - 모두 안전하게 가져오기
 # 파일 관련
 read = getattr(_facade, 'read', None)

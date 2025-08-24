@@ -147,24 +147,20 @@ class SessionPool:
             return key, new_session
     
     def _create_new_session(self, agent_id: Optional[str] = None) -> EnhancedREPLSession:
-        """Create a new isolated session with agent-specific configuration"""
+        """Create a shared session with increased memory and persistent variables"""
         
         config = {
-            'memory_limit_mb': 500,  # Lower limit per session
-            'cache_dir': f'.repl_cache/{agent_id or "shared"}',
+            'memory_limit_mb': 2048,  # 🔥 2GB for better performance
+            'cache_dir': '.repl_cache/shared',  # Shared cache
             'enable_streaming': True,
             'enable_caching': True,
-            'chunk_size': 10000
+            'chunk_size': 50000  # Larger chunks for efficiency
         }
         
-        # Agent-specific configurations
+        # 모든 에이전트가 같은 높은 메모리 사용
+        # 세션 격리 제거 - 공유 세션 사용
         if agent_id:
-            if 'analyzer' in agent_id.lower():
-                config['memory_limit_mb'] = 1000  # More memory for analysis
-            elif 'test' in agent_id.lower():
-                config['memory_limit_mb'] = 750  # Medium memory for tests
-            elif 'optimizer' in agent_id.lower():
-                config['memory_limit_mb'] = 1500  # High memory for optimization
+            print(f"[SharedSession] Agent '{agent_id}' using shared session", file=sys.stderr)
         
         session = EnhancedREPLSession(**config)
         

@@ -231,7 +231,8 @@ class LLMBackgroundFacade(BackgroundFacade):
         
         context = f"=== {file_path} ===\n{code[:2000]}"  # 처음 2000자만
         
-        return self.ask(question, context, reasoning="high")
+        # 분석 작업은 기본적으로 auto(자동 판단)
+        return self.ask(question, context, reasoning="auto")
     
     def fix_error(self, error_msg: str, file_path: Optional[str] = None, 
                   line_num: Optional[int] = None) -> Dict[str, Any]:

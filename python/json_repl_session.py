@@ -444,52 +444,23 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
             task_name = next_task.get('title') or next_task.get('name', 'Unknown')
             output.append(f"\n🎯 다음 태스크: '{task_name}'")
             
-            # 태스크별 구체적 지침
-            if '분석' in task_name:
-                output.append("  1. 저장된 데이터를 가져오세요:")
-                output.append("     data = get_shared('이전_결과_키')")
-                output.append("  2. 분석을 수행하세요")
-                output.append("  3. 결과를 저장하세요:")
-                output.append("     set_shared('analysis_result', 분석결과)")
-                
-            elif '최적화' in task_name:
-                output.append("  1. 분석 결과를 가져오세요:")
-                output.append("     analysis = get_shared('analysis_result')")
-                output.append("  2. 최적화를 수행하세요")
-                output.append("  3. 결과를 저장하세요:")
-                output.append("     set_shared('optimization_result', 최적화결과)")
-                
-            elif '테스트' in task_name:
-                output.append("  1. 이전 결과를 가져오세요:")
-                output.append("     data = get_shared('optimization_result')")
-                output.append("  2. 테스트를 실행하세요")
-                output.append("  3. 결과를 저장하세요:")
-                output.append("     set_shared('test_result', 테스트결과)")
-                
-            else:
-                output.append(f"  → {task_name}을(를) 수행하고 결과를 set_shared()로 저장하세요")
+            # 간단한 작업 가이드만
+            output.append(f"  → {task_name} 진행 중...")
     
-    else:
-        # Flow 플랜이 없을 때 일반 지침
-        output.append("\n💡 작업 지침:")
-        
-        # 저장된 변수 기반 추천
-        if 'analysis_result' in SESSION_POOL.shared_variables:
-            if 'optimization_result' not in SESSION_POOL.shared_variables:
-                output.append("  → 분석이 완료되었으니 최적화를 진행하세요:")
-                output.append("    1. analysis = get_shared('analysis_result')")
-                output.append("    2. # 최적화 로직 수행")
-                output.append("    3. set_shared('optimization_result', 결과)")
-        else:
-            output.append("  → 초기 데이터를 설정하고 작업을 시작하세요:")
-            output.append("    1. # 데이터 준비 또는 파일 읽기")
-            output.append("    2. set_shared('data', 준비된_데이터)")
-            output.append("    3. # 다음 작업 진행")
+    # 3. 간단한 도움말
+    output.append("\n📌 빠른 참조:")
     
-    # 3. 유용한 명령 안내
-    output.append("\n📌 유용한 명령:")
-    output.append(f"  • list_shared() - 저장된 모든 변수 키 확인")
-    output.append(f"  • var_count() - 현재 {len(SESSION_POOL.shared_variables)}개 변수 저장됨")
+    # 메시지 관련
+    if unread_messages:
+        output.append("  • mark_messages_read() - 메시지 읽음 처리")
+    
+    # 주요 변수만 간단히
+    important_vars = [k for k in SESSION_POOL.shared_variables.keys() 
+                     if 'result' in k or 'output' in k or 'data' in k][-3:]
+    if important_vars:
+        output.append(f"  • 주요 변수: {', '.join(important_vars)}")
+    
+    output.append(f"  • 총 {len(SESSION_POOL.shared_variables)}개 항목 저장됨")
     
     output.append("━" * 60)
     

@@ -36,15 +36,19 @@ from repl_core.streaming import DataStream
 
 # Windows UTF-8 configuration
 if sys.platform == 'win32':
-    # reconfigure() is only available in Python 3.7+
-    if hasattr(sys.stdout, 'reconfigure'):
-        sys.stdout.reconfigure(encoding='utf-8')
-        sys.stderr.reconfigure(encoding='utf-8')
-    else:
-        # For older Python versions, just set the environment variable
-        import codecs
-        sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
-        sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+    try:
+        # Try reconfigure() for Python 3.7+
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8')
+            sys.stderr.reconfigure(encoding='utf-8')
+        elif hasattr(sys.stdout, 'buffer'):
+            # For older Python versions with buffer support
+            import codecs
+            sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+            sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+    except (AttributeError, TypeError):
+        # In REPL or StringIO environment, just set the environment variable
+        pass
     os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 

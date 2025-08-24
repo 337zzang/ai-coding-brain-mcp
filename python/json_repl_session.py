@@ -365,7 +365,55 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
                 
             output.append("")  # 빈 줄로 구분
     
-    # 2. Flow 플랜 기반 다음 작업 지시
+    # 2. 함수와 클래스 추적 (개별 표시)
+    output.append("\n🔧 사용 가능한 함수/클래스:\n")
+    
+    # 네임스페이스에서 함수와 클래스 찾기
+    for name, obj in SESSION_POOL.shared_variables.items():
+        if callable(obj) and not name.startswith('_'):
+            if hasattr(obj, '__call__'):
+                # 함수인 경우
+                output.append(f"  🎯 {name}():")
+                output.append(f"     • 타입: Function")
+                if hasattr(obj, '__doc__') and obj.__doc__:
+                    doc_first_line = obj.__doc__.strip().split('\n')[0][:50]
+                    output.append(f"     • 설명: {doc_first_line}")
+                output.append(f"     • 호출: result = {name}()")
+                output.append("")
+                
+        elif isinstance(obj, type):
+            # 클래스인 경우
+            output.append(f"  🏗️ {name}:")
+            output.append(f"     • 타입: Class")
+            if hasattr(obj, '__doc__') and obj.__doc__:
+                doc_first_line = obj.__doc__.strip().split('\n')[0][:50]
+                output.append(f"     • 설명: {doc_first_line}")
+            output.append(f"     • 생성: instance = {name}()")
+            output.append("")
+    
+    # 3. 단계별 작업 가이드
+    output.append("\n📝 단계별 작업 연속성:")
+    
+    # 이전 단계에서 생성된 중요한 것들 확인
+    important_items = []
+    for key in SESSION_POOL.shared_variables.keys():
+        if any(keyword in key for keyword in ['result', 'data', 'analysis', 'optimization', 'test', 'output']):
+            important_items.append(key)
+    
+    if important_items:
+        output.append(f"\n  이전 단계 산출물 ({len(important_items)}개):")
+        for item in important_items[-5:]:  # 최근 5개만
+            value = SESSION_POOL.shared_variables[item]
+            if isinstance(value, dict):
+                output.append(f"    • {item} → Dictionary")
+            elif isinstance(value, list):
+                output.append(f"    • {item} → List[{len(value)}]")
+            elif callable(value):
+                output.append(f"    • {item} → Function")
+            else:
+                output.append(f"    • {item} → {type(value).__name__}")
+    
+    # 4. Flow 플랜 기반 다음 작업 지시
     flow_plan = SESSION_POOL.shared_variables.get('current_flow_plan')
     if flow_plan:
         tasks = flow_plan.get('tasks', {})

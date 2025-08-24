@@ -1,32 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-def get_think_prompt():
-    """Get Think tool prompt for successful executions"""
-    return """
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🤔 코드 실행 완료 - Think 도구로 분석 권장
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Think 도구를 사용하여 다음을 수행하세요:
-• 실행 결과의 정확성 및 완전성 검증
-• 코드 패턴과 잠재적 개선점 분석
-• 다음 단계 작업 계획 수립
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
-
 """
-🚀 Enhanced JSON REPL Session - Notebook-style Large-scale Data Processing
-Version: 2.0.0
+🚀 Enhanced JSON REPL Session with Session Isolation
+Version: 3.0.0
 
-Major improvements over v1.0:
-- Streaming data processing for TB-scale datasets
-- Multi-tier caching (Memory → SQLite → Parquet → Compressed)
-- Lazy evaluation with DataStream API
-- Progressive output rendering
-- Automatic memory management with spill-to-disk
-- 90% memory reduction, 5-10x performance improvement
+New Features:
+- Session pooling for subagent isolation
+- Thread-safe session management
+- Automatic session cleanup
+- Agent-specific namespaces
+- Session metrics and monitoring
 """
 
 import sys
@@ -36,8 +20,12 @@ import time
 import gc
 import io
 import traceback
-from typing import Dict, Any, Optional
+import threading
+import uuid
+from typing import Dict, Any, Optional, Tuple
 from pathlib import Path
+from datetime import datetime, timedelta
+import hashlib
 
 # Add repl_core to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -52,329 +40,281 @@ if sys.platform == 'win32':
     sys.stderr.reconfigure(encoding='utf-8')
     os.environ['PYTHONIOENCODING'] = 'utf-8'
 
-# Global session instance
-REPL_SESSION = None
-EXECUTION_COUNT = 0
+
+class SessionPool:
+    """Thread-safe session pool manager"""
+    
+    def __init__(self, max_sessions: int = 10, session_timeout: int = 3600):
+        self.max_sessions = max_sessions
+        self.session_timeout = session_timeout  # seconds
+        self.sessions: Dict[str, Dict[str, Any]] = {}
+        self.lock = threading.RLock()
+        self.metrics = {
+            'total_created': 0,
+            'total_reused': 0,
+            'total_expired': 0,
+            'current_active': 0
+        }
+    
+    def get_or_create_session(self, 
+                            agent_id: Optional[str] = None,
+                            session_id: Optional[str] = None) -> Tuple[str, EnhancedREPLSession]:
+        """Get existing or create new isolated session"""
+        
+        with self.lock:
+            # Generate session key
+            if session_id:
+                key = session_id
+            elif agent_id:
+                # Agent-specific persistent session
+                key = f"agent_{agent_id}"
+            else:
+                # Anonymous session
+                key = f"anon_{uuid.uuid4().hex[:8]}"
+            
+            current_time = time.time()
+            
+            # Check if session exists and is valid
+            if key in self.sessions:
+                session_data = self.sessions[key]
+                
+                # Check if session expired
+                if current_time - session_data['last_accessed'] > self.session_timeout:
+                    # Clean up expired session
+                    self._cleanup_session(key)
+                    self.metrics['total_expired'] += 1
+                else:
+                    # Reuse existing session
+                    session_data['last_accessed'] = current_time
+                    session_data['access_count'] += 1
+                    self.metrics['total_reused'] += 1
+                    
+                    return key, session_data['session']
+            
+            # Check pool capacity
+            if len(self.sessions) >= self.max_sessions:
+                # Remove least recently used session
+                self._evict_lru_session()
+            
+            # Create new session
+            new_session = self._create_new_session(agent_id)
+            
+            self.sessions[key] = {
+                'session': new_session,
+                'agent_id': agent_id,
+                'created_at': current_time,
+                'last_accessed': current_time,
+                'access_count': 1,
+                'execution_count': 0
+            }
+            
+            self.metrics['total_created'] += 1
+            self.metrics['current_active'] = len(self.sessions)
+            
+            print(f"[SessionPool] Created new session: {key} for agent: {agent_id or 'anonymous'}", 
+                  file=sys.stderr)
+            
+            return key, new_session
+    
+    def _create_new_session(self, agent_id: Optional[str] = None) -> EnhancedREPLSession:
+        """Create a new isolated session with agent-specific configuration"""
+        
+        config = {
+            'memory_limit_mb': 500,  # Lower limit per session
+            'cache_dir': f'.repl_cache/{agent_id or "shared"}',
+            'enable_streaming': True,
+            'enable_caching': True,
+            'chunk_size': 10000
+        }
+        
+        # Agent-specific configurations
+        if agent_id:
+            if 'analyzer' in agent_id.lower():
+                config['memory_limit_mb'] = 1000  # More memory for analysis
+            elif 'test' in agent_id.lower():
+                config['memory_limit_mb'] = 750  # Medium memory for tests
+            elif 'optimizer' in agent_id.lower():
+                config['memory_limit_mb'] = 1500  # High memory for optimization
+        
+        session = EnhancedREPLSession(**config)
+        
+        # Add agent-specific helpers
+        session.namespace.update({
+            'agent_id': agent_id,
+            'session_info': lambda: self.get_session_info(agent_id),
+            'clear_agent_cache': lambda: self._clear_agent_cache(agent_id)
+        })
+        
+        return session
+    
+    def _evict_lru_session(self):
+        """Evict least recently used session"""
+        
+        if not self.sessions:
+            return
+        
+        # Find LRU session
+        lru_key = min(self.sessions.keys(), 
+                     key=lambda k: self.sessions[k]['last_accessed'])
+        
+        self._cleanup_session(lru_key)
+        print(f"[SessionPool] Evicted LRU session: {lru_key}", file=sys.stderr)
+    
+    def _cleanup_session(self, key: str):
+        """Clean up a session and free resources"""
+        
+        if key not in self.sessions:
+            return
+        
+        session_data = self.sessions[key]
+        session = session_data['session']
+        
+        # Clear session resources
+        try:
+            session.clear_session()
+            if hasattr(session, 'memory_manager'):
+                session.memory_manager.cleanup()
+            if hasattr(session, 'cache'):
+                session.cache.clear()
+        except Exception as e:
+            print(f"[SessionPool] Error cleaning up session {key}: {e}", file=sys.stderr)
+        
+        del self.sessions[key]
+        self.metrics['current_active'] = len(self.sessions)
+    
+    def _clear_agent_cache(self, agent_id: str):
+        """Clear cache for specific agent"""
+        
+        cache_dir = Path(f'.repl_cache/{agent_id or "shared"}')
+        if cache_dir.exists():
+            import shutil
+            shutil.rmtree(cache_dir, ignore_errors=True)
+            print(f"[SessionPool] Cleared cache for agent: {agent_id}", file=sys.stderr)
+    
+    def get_session_info(self, session_key: str) -> Dict[str, Any]:
+        """Get information about a specific session"""
+        
+        with self.lock:
+            if session_key not in self.sessions:
+                return {'error': 'Session not found'}
+            
+            session_data = self.sessions[session_key]
+            
+            return {
+                'session_id': session_key,
+                'agent_id': session_data['agent_id'],
+                'created_at': datetime.fromtimestamp(session_data['created_at']).isoformat(),
+                'last_accessed': datetime.fromtimestamp(session_data['last_accessed']).isoformat(),
+                'access_count': session_data['access_count'],
+                'execution_count': session_data['execution_count'],
+                'age_seconds': int(time.time() - session_data['created_at'])
+            }
+    
+    def get_pool_metrics(self) -> Dict[str, Any]:
+        """Get pool-wide metrics"""
+        
+        with self.lock:
+            return {
+                **self.metrics,
+                'sessions': {
+                    key: self.get_session_info(key) 
+                    for key in self.sessions.keys()
+                }
+            }
+    
+    def cleanup_expired_sessions(self):
+        """Clean up all expired sessions"""
+        
+        with self.lock:
+            current_time = time.time()
+            expired_keys = [
+                key for key, data in self.sessions.items()
+                if current_time - data['last_accessed'] > self.session_timeout
+            ]
+            
+            for key in expired_keys:
+                self._cleanup_session(key)
+                self.metrics['total_expired'] += 1
+            
+            if expired_keys:
+                print(f"[SessionPool] Cleaned up {len(expired_keys)} expired sessions", 
+                      file=sys.stderr)
+    
+    def shutdown(self):
+        """Shutdown pool and cleanup all sessions"""
+        
+        with self.lock:
+            print(f"[SessionPool] Shutting down with {len(self.sessions)} active sessions", 
+                  file=sys.stderr)
+            
+            for key in list(self.sessions.keys()):
+                self._cleanup_session(key)
+            
+            self.sessions.clear()
+            self.metrics['current_active'] = 0
 
 
-def initialize_session(config: Optional[Dict[str, Any]] = None) -> EnhancedREPLSession:
-    """Initialize enhanced REPL session with configuration."""
-    config = config or {}
-    
-    # Default configuration
-    default_config = {
-        'memory_limit_mb': 1000,
-        'cache_dir': '.repl_cache',
-        'enable_streaming': True,
-        'enable_caching': True,
-        'chunk_size': 10000
-    }
-    
-    # Merge with provided config
-    final_config = {**default_config, **config}
-    
-    # Create session
-    session = EnhancedREPLSession(**final_config)
-    
-    # Add helper functions to namespace
-    session.namespace.update({
-        'help': show_help,
-        'streaming_demo': streaming_demo,
-        'benchmark': run_benchmark,
-        # 자동 최적화 헬퍼
-        'auto_optimize': auto_optimize_code,
-        'enable_auto_optimize': lambda: setattr(session, 'auto_optimize', True),
-        'disable_auto_optimize': lambda: setattr(session, 'auto_optimize', False)
-    })
-    
-    # 자동 최적화 기본 활성화
-    session.auto_optimize = True
-    
-    return session
+# Global session pool instance
+SESSION_POOL = SessionPool(max_sessions=10, session_timeout=3600)
 
 
-def show_help():
-    """Show help for enhanced REPL features."""
-    help_text = """
-    ================================================================================
-    Enhanced REPL - Notebook-style Large-scale Data Processing
-    ================================================================================
-    
-    NEW FEATURES:
-    -------------
-    • DataStream API for TB-scale processing
-    • Multi-tier caching with automatic migration
-    • Memory-mapped variables with spill-to-disk
-    • Progressive output rendering
-    • Lazy evaluation for DataFrames
-    
-    BUILT-IN FUNCTIONS:
-    -------------------
-    load_csv(file, streaming=True)     - Load CSV with optional streaming
-    load_json(file, streaming=False)   - Load JSON data
-    load_parquet(file, streaming=True) - Load Parquet files
-    process_large(data, operation)     - Process large data automatically
-    memory_info()                       - Show memory statistics
-    cache_info()                        - Show cache statistics
-    clear_cache()                       - Clear all cached data
-    
-    STREAMING API:
-    --------------
-    stream = DataStream.from_csv('large.csv')
-    stream.filter(lambda x: x['value'] > 100)
-          .map(lambda x: transform(x))
-          .batch(1000)
-          .collect()
-    
-    EXAMPLES:
-    ---------
-    # Process 100GB CSV with 100MB memory
-    stream = load_csv('huge_dataset.csv', streaming=True)
-    results = stream.filter(lambda row: row['status'] == 'active')
-                   .map(lambda row: row['value'] * 2)
-                   .take(1000)
-                   .collect()
-    
-    # Automatic memory management
-    large_df = load_csv('big_file.csv')  # Automatically cached if too large
-    processed = process_large(large_df, 'filter', predicate=lambda x: x > 0)
-    
-    PERFORMANCE:
-    ------------
-    • Memory usage: 90% reduction
-    • Processing speed: 5-10x faster
-    • Dataset size: MB → TB capability
-    • Concurrent operations: 10x improvement
-    
-    For more examples, run: streaming_demo()
-    For performance test, run: benchmark()
-    ================================================================================
-    """
-    print(help_text)
+def get_think_prompt():
+    """Get Think tool prompt for successful executions"""
+    return """
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🤔 코드 실행 완료 - Think 도구로 분석 권장
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Think 도구를 사용하여 다음을 수행하세요:
+• 실행 결과의 정확성 및 완전성 검증
+• 코드 패턴과 잠재적 개선점 분석
+• 다음 단계 작업 계획 수립
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
 
 
-def streaming_demo():
-    """Demonstrate streaming capabilities."""
-    print("\nStreaming Demo:")
-    print("-" * 40)
+def execute_code(code: str, 
+                agent_id: Optional[str] = None,
+                session_id: Optional[str] = None) -> Dict[str, Any]:
+    """Execute code in an isolated session"""
     
-    # Create sample data
-    sample_data = [
-        {'id': i, 'value': i * 10, 'category': chr(65 + (i % 5))}
-        for i in range(100)
-    ]
+    # Get or create isolated session
+    session_key, session = SESSION_POOL.get_or_create_session(agent_id, session_id)
     
-    # Create stream
-    stream = DataStream.from_iterable(sample_data, chunk_size=10)
-    
-    # Process with chaining
-    result = (stream
-        .filter(lambda x: x['value'] > 200)
-        .map(lambda x: {**x, 'doubled': x['value'] * 2})
-        .take(5)
-        .collect())
-    
-    print(f"Filtered and transformed {len(result)} items:")
-    for item in result:
-        print(f"  ID: {item['id']}, Value: {item['value']}, Doubled: {item['doubled']}")
-    
-    print("\nStreaming features demonstrated:")
-    print("✓ Lazy evaluation")
-    print("✓ Method chaining")
-    print("✓ Memory-efficient processing")
-    print("✓ Progressive data handling")
-
-
-def auto_optimize_code(code: str) -> str:
-    """
-    자동으로 대용량 데이터 처리를 최적화하는 코드 변환기
-    
-    변환 규칙:
-    1. pd.read_csv() → load_csv(streaming=True) for large files
-    2. list(range(큰수)) → DataStream 사용
-    3. 큰 리스트 처리 → 청크 단위 처리
-    4. for 루프 → 스트리밍 처리
-    """
-    import re
-    import os
-    
-    # 원본 코드 백업
-    original_code = code
-    
-    # 1. pandas read_csv 자동 최적화
-    # 파일 크기 체크하여 자동 스트리밍 전환
-    csv_pattern = r'pd\.read_csv\([\'"]([^\'\"]+)[\'\"]([^)]*)\)'
-    csv_matches = re.findall(csv_pattern, code)
-    
-    for filepath, args in csv_matches:
-        if os.path.exists(filepath):
-            size_mb = os.path.getsize(filepath) / (1024 * 1024)
-            if size_mb > 100:  # 100MB 이상이면 자동 스트리밍
-                # pandas 대신 load_csv 사용
-                old = f'pd.read_csv("{filepath}"{args})'
-                new = f'load_csv("{filepath}", streaming=True)'
-                code = code.replace(old, new)
-                print(f"[Auto-Optimize] Large CSV detected ({size_mb:.1f}MB), using streaming", file=sys.stderr)
-    
-    # 2. 대용량 range 자동 최적화
-    range_pattern = r'list\(range\((\d+)\)\)'
-    range_matches = re.findall(range_pattern, code)
-    
-    for size_str in range_matches:
-        size = int(size_str)
-        if size > 1000000:  # 100만 이상이면 제너레이터 사용
-            old = f'list(range({size}))'
-            new = f'(i for i in range({size}))'  # 제너레이터로 변환
-            code = code.replace(old, new)
-            print(f"[Auto-Optimize] Large range ({size:,}) converted to generator", file=sys.stderr)
-    
-    # 3. 대용량 리스트 컴프리헨션 최적화
-    # [식 for x in 큰리스트] → DataStream 처리
-    comp_pattern = r'\[([^\]]+) for (\w+) in ([^\]]+) if ([^\]]+)\]'
-    comp_matches = re.findall(comp_pattern, code)
-    
-    for expr, var, iterable, condition in comp_matches:
-        # iterable이 큰 경우 DataStream으로 변환
-        if 'range(1000000' in iterable or 'range(10000000' in iterable:
-            old = f'[{expr} for {var} in {iterable} if {condition}]'
-            new = f'''DataStream.from_iterable({iterable}).filter(lambda {var}: {condition}).map(lambda {var}: {expr}).collect()'''
-            code = code.replace(old, new)
-            print(f"[Auto-Optimize] List comprehension converted to DataStream", file=sys.stderr)
-    
-    # 4. 대용량 파일 읽기 최적화
-    # open().readlines() → 스트리밍 읽기
-    file_pattern = r'open\([\'"]([^\'\"]+)[\'\"]\)\.readlines\(\)'
-    file_matches = re.findall(file_pattern, code)
-    
-    for filepath in file_matches:
-        if os.path.exists(filepath):
-            size_mb = os.path.getsize(filepath) / (1024 * 1024)
-            if size_mb > 50:  # 50MB 이상
-                old = f'open("{filepath}").readlines()'
-                new = f'DataStream.from_file("{filepath}", mode="r")'
-                code = code.replace(old, new)
-                print(f"[Auto-Optimize] Large file ({size_mb:.1f}MB) using streaming", file=sys.stderr)
-    
-    # 5. numpy 대용량 배열 최적화
-    numpy_pattern = r'np\.(random\.rand|zeros|ones)\((\d+)[,\)]'
-    numpy_matches = re.findall(numpy_pattern, code)
-    
-    for func, size_str in numpy_matches:
-        size = int(size_str)
-        if size > 10000000:  # 천만 이상
-            # 메모리 매핑 사용 권장 메시지 추가
-            code = f"# [Auto-Optimize] Large array detected ({size:,} elements)\n" + code
-            print(f"[Auto-Optimize] Large numpy array ({size:,}) - consider memory mapping", file=sys.stderr)
-    
-    # 6. 자동 청크 처리 래퍼 추가
-    if 'for ' in code and any(x in code for x in ['range(1000000', 'range(10000000', 'range(100000000']):
-        # 큰 루프를 청크 단위로 처리
-        code = f"""# [Auto-Optimize] Large loop detected - using chunked processing
-from itertools import islice
-
-def process_in_chunks(iterable, chunk_size=10000):
-    iterator = iter(iterable)
-    while True:
-        chunk = list(islice(iterator, chunk_size))
-        if not chunk:
-            break
-        yield chunk
-
-{code}"""
-        print("[Auto-Optimize] Added chunked processing helper", file=sys.stderr)
-    
-    return code
-
-
-def run_benchmark():
-    """Run performance benchmark."""
-    import time
-    import random
-    
-    print("\nPerformance Benchmark:")
-    print("-" * 40)
-    
-    # Generate test data
-    size = 100000
-    print(f"Generating {size:,} test records...")
-    
-    data = [
-        {'id': i, 'value': random.randint(1, 1000), 'timestamp': time.time() + i}
-        for i in range(size)
-    ]
-    
-    # Test 1: Traditional processing
-    print("\n1. Traditional processing (all in memory):")
-    start = time.perf_counter()
-    filtered = [d for d in data if d['value'] > 500]
-    mapped = [{'id': d['id'], 'doubled': d['value'] * 2} for d in filtered]
-    traditional_time = time.perf_counter() - start
-    print(f"   Time: {traditional_time:.3f}s")
-    print(f"   Results: {len(mapped)} items")
-    
-    # Test 2: Streaming processing
-    print("\n2. Streaming processing:")
-    start = time.perf_counter()
-    stream = DataStream.from_iterable(data, chunk_size=1000)
-    results = (stream
-        .filter(lambda d: d['value'] > 500)
-        .map(lambda d: {'id': d['id'], 'doubled': d['value'] * 2})
-        .collect())
-    streaming_time = time.perf_counter() - start
-    print(f"   Time: {streaming_time:.3f}s")
-    print(f"   Results: {len(results)} items")
-    
-    # Comparison
-    print("\nResults:")
-    print(f"   Speed improvement: {traditional_time / streaming_time:.2f}x")
-    print(f"   Memory efficiency: Constant memory usage vs O(n)")
-    print(f"   Scalability: Can handle TB-scale data")
-
-
-def execute_code(code: str) -> Dict[str, Any]:
-    """Execute code in enhanced REPL session with automatic optimization."""
-    global REPL_SESSION, EXECUTION_COUNT
-    
-    if REPL_SESSION is None:
-        REPL_SESSION = initialize_session()
-    
-    EXECUTION_COUNT += 1
-    
-    # 자동 대용량 데이터 처리 최적화
-    code = auto_optimize_code(code)
+    # Track execution
+    if session_key in SESSION_POOL.sessions:
+        SESSION_POOL.sessions[session_key]['execution_count'] += 1
     
     # Execute with enhanced session
-    result = REPL_SESSION.execute(code)
+    result = session.execute(code)
     
     # Convert to JSON-compatible format
     response = {
         'success': result.success,
         'language': 'python',
-        'session_mode': 'ENHANCED_JSON_REPL',
+        'session_mode': 'ISOLATED_JSON_REPL',
+        'session_id': session_key,  # Return session ID for client reuse
+        'agent_id': agent_id,
         'stdout': result.stdout,
         'stderr': result.stderr,
-        'execution_count': EXECUTION_COUNT,
+        'execution_count': SESSION_POOL.sessions[session_key]['execution_count'],
         'memory_mb': result.memory_usage_mb,
         'execution_time_ms': result.execution_time_ms,
         'execution_mode': result.execution_mode.value,
         'chunks_processed': result.chunks_processed,
         'cached': result.cached,
-        'note': 'Enhanced REPL with automatic optimization',
+        'note': f'Isolated session for agent: {agent_id or "anonymous"}',
         'debug_info': {
-            'repl_process_active': True,
-            'repl_ready': True,
-            'execution': 'success' if result.success else 'error',
-            'streaming_enabled': REPL_SESSION.enable_streaming,
-            'caching_enabled': REPL_SESSION.enable_caching,
-            'memory_limit_mb': REPL_SESSION.memory_limit_mb,
-            'auto_optimized': True
+            'session_active': True,
+            'session_age': int(time.time() - SESSION_POOL.sessions[session_key]['created_at']),
+            'pool_size': len(SESSION_POOL.sessions),
+            'pool_metrics': SESSION_POOL.get_pool_metrics()
         },
         'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
     }
     
     # Add cache statistics if available
-    if REPL_SESSION.enable_caching:
-        cache_stats = REPL_SESSION.get_cache_stats()
+    if session.enable_caching:
+        cache_stats = session.get_cache_stats()
         response['cache_stats'] = {
             'entries': cache_stats.get('entries', 0),
             'hit_rate': cache_stats.get('hit_rate', 0)
@@ -388,7 +328,7 @@ def execute_code(code: str) -> Dict[str, Any]:
 
 
 def read_json_input():
-    """Read JSON input from stdin."""
+    """Read JSON input from stdin"""
     try:
         line = sys.stdin.readline()
         if not line:
@@ -399,36 +339,39 @@ def read_json_input():
 
 
 def write_json_output(response):
-    """Write JSON output to stdout."""
+    """Write JSON output to stdout"""
     json_str = json.dumps(response, ensure_ascii=False)
     sys.stdout.write(json_str + '\n')
     sys.stdout.flush()
 
 
+def periodic_cleanup():
+    """Periodic cleanup task for expired sessions"""
+    import threading
+    
+    def cleanup_task():
+        while True:
+            time.sleep(300)  # Every 5 minutes
+            SESSION_POOL.cleanup_expired_sessions()
+    
+    cleanup_thread = threading.Thread(target=cleanup_task, daemon=True)
+    cleanup_thread.start()
+
+
 def main():
-    """Main execution loop."""
-    global REPL_SESSION
+    """Main execution loop with session isolation"""
     
-    # Initialize session with config from environment
-    config = {}
-    if os.environ.get('REPL_MEMORY_LIMIT'):
-        config['memory_limit_mb'] = float(os.environ['REPL_MEMORY_LIMIT'])
-    if os.environ.get('REPL_CACHE_DIR'):
-        config['cache_dir'] = os.environ['REPL_CACHE_DIR']
-    if os.environ.get('REPL_CHUNK_SIZE'):
-        config['chunk_size'] = int(os.environ['REPL_CHUNK_SIZE'])
-    
-    REPL_SESSION = initialize_session(config)
+    # Start periodic cleanup
+    periodic_cleanup()
     
     # Startup message
     print("=" * 60, file=sys.stderr)
-    print("Enhanced JSON REPL Session v2.0", file=sys.stderr)
-    print("Notebook-style Large-scale Data Processing", file=sys.stderr)
+    print("Isolated JSON REPL Session v3.0", file=sys.stderr)
+    print("Session Pooling for Subagent Isolation", file=sys.stderr)
     print("-" * 60, file=sys.stderr)
-    print(f"Memory limit: {REPL_SESSION.memory_limit_mb}MB", file=sys.stderr)
-    print(f"Streaming: {'Enabled' if REPL_SESSION.enable_streaming else 'Disabled'}", file=sys.stderr)
-    print(f"Caching: {'Enabled' if REPL_SESSION.enable_caching else 'Disabled'}", file=sys.stderr)
-    print(f"Chunk size: {REPL_SESSION.chunk_size:,} records", file=sys.stderr)
+    print(f"Max sessions: {SESSION_POOL.max_sessions}", file=sys.stderr)
+    print(f"Session timeout: {SESSION_POOL.session_timeout}s", file=sys.stderr)
+    print(f"Isolation: Enabled", file=sys.stderr)
     print("=" * 60, file=sys.stderr)
     
     # Ready signal
@@ -452,8 +395,22 @@ def main():
                 params = request.get('params', {})
                 code = params.get('code', '')
                 
-                # Execute code
-                result = execute_code(code)
+                # Extract agent information from request
+                agent_id = params.get('agent_id')  # New parameter
+                session_id = params.get('session_id')  # For session reuse
+                
+                # If not provided, try to detect from code
+                if not agent_id and 'import ai_helpers_new' in code:
+                    # Try to detect agent from code patterns
+                    if 'test' in code.lower():
+                        agent_id = 'test-runner'
+                    elif 'analyze' in code.lower() or 'analysis' in code.lower():
+                        agent_id = 'code-analyzer'
+                    elif 'optimize' in code.lower():
+                        agent_id = 'code-optimizer'
+                
+                # Execute code in isolated session
+                result = execute_code(code, agent_id, session_id)
                 
                 # Create response
                 response = {
@@ -463,6 +420,15 @@ def main():
                 }
                 
                 # Send response
+                write_json_output(response)
+            
+            elif request_type == 'get_pool_metrics':
+                # New method to get pool metrics
+                response = {
+                    'jsonrpc': '2.0',
+                    'id': request_id,
+                    'result': SESSION_POOL.get_pool_metrics()
+                }
                 write_json_output(response)
             
             else:
@@ -505,18 +471,8 @@ def main():
             write_json_output(error_response)
     
     # Cleanup
-    print("\nShutting down enhanced REPL...", file=sys.stderr)
-    if REPL_SESSION:
-        memory_report = REPL_SESSION.get_memory_report()
-        cache_stats = REPL_SESSION.get_cache_stats() if REPL_SESSION.enable_caching else {}
-        
-        print(f"Final memory: {memory_report['current']['rss_mb']:.1f}MB", file=sys.stderr)
-        if cache_stats:
-            print(f"Cache hit rate: {cache_stats.get('hit_rate', 0):.2%}", file=sys.stderr)
-        
-        # Clear session
-        REPL_SESSION.clear_session()
-    
+    print("\nShutting down isolated REPL...", file=sys.stderr)
+    SESSION_POOL.shutdown()
     gc.collect()
     print("Goodbye!", file=sys.stderr)
 

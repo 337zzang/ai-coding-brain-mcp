@@ -393,9 +393,10 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
     output = []
     output.append("\n" + "━" * 60)
     
-    # 1. Flow 시스템 상태 (최우선 표시)
-    if SESSION_POOL.current_flow_plan:
-        plan = SESSION_POOL.current_flow_plan
+    # 1. Flow 시스템 상태 (최우선 표시) - 공유 변수에서 직접 읽기
+    flow_plan = SESSION_POOL.shared_variables.get('current_flow_plan') or SESSION_POOL.current_flow_plan
+    if flow_plan:
+        plan = flow_plan
         tasks = plan.get('tasks', [])
         completed = sum(1 for t in tasks if t.get('status') == 'completed')
         in_progress = sum(1 for t in tasks if t.get('status') == 'in_progress')
@@ -407,7 +408,10 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
         # 태스크 상태 표시
         if tasks:
             output.append("  태스크:")
-            for task in tasks[:5]:  # 최대 5개만 표시
+            # 슬라이스 대신 enumerate 사용
+            for i, task in enumerate(tasks):
+                if i >= 5:  # 최대 5개만
+                    break
                 status_icon = "✅" if task.get('status') == 'completed' else "⏳" if task.get('status') == 'in_progress' else "⬜"
                 output.append(f"    {status_icon} {task.get('name', 'Unknown')}")
     

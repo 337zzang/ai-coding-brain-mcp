@@ -1,0 +1,30 @@
+{
+  "task_20250824_151537_a1f68e": {
+    "id": "task_20250824_151537_a1f68e",
+    "title": "분석 태스크",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-24T15:15:37.079728",
+    "updated_at": "2025-08-24T15:15:37.079728",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250824_151537_40904c": {
+    "id": "task_20250824_151537_40904c",
+    "title": "최적화 태스크",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-24T15:15:37.116840",
+    "updated_at": "2025-08-24T15:15:37.116840",
+    "completed_at": null,
+    "assignee": null,
+    "number": 1,
+    "tags": [],
+    "metadata": {}
+  }
+}

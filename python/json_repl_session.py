@@ -429,7 +429,16 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
                     break
                 # title 또는 name 필드 확인
                 task_name = task.get('title') or task.get('name', 'Unknown')
-                status_icon = "✅" if task.get('status') == 'completed' else "⏳" if task.get('status') == 'in_progress' else "⬜"
+                # 상태별 아이콘 매핑 (todo 포함)
+                status = task.get('status', 'unknown')
+                if status in ['completed', 'done']:
+                    status_icon = "✅"
+                elif status in ['in_progress', 'doing', 'active']:
+                    status_icon = "⏳"
+                elif status in ['todo', 'pending']:
+                    status_icon = "⬜"
+                else:
+                    status_icon = "❓"
                 output.append(f"    {status_icon} {task_name}")
     
     # 2. 저장된 변수 정보 표시

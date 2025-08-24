@@ -397,23 +397,35 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
     flow_plan = SESSION_POOL.shared_variables.get('current_flow_plan') or SESSION_POOL.current_flow_plan
     if flow_plan:
         plan = flow_plan
-        tasks = plan.get('tasks', [])
-        completed = sum(1 for t in tasks if t.get('status') == 'completed')
-        in_progress = sum(1 for t in tasks if t.get('status') == 'in_progress')
-        total = len(tasks)
+        tasks = plan.get('tasks', {})
+        
+        # tasks가 딕셔너리인 경우 처리
+        if isinstance(tasks, dict):
+            task_list = list(tasks.values())
+            completed = sum(1 for t in task_list if t.get('status') == 'completed')
+            in_progress = sum(1 for t in task_list if t.get('status') == 'in_progress')
+            total = len(task_list)
+        else:
+            # tasks가 리스트인 경우 (기존 코드)
+            task_list = tasks
+            completed = sum(1 for t in task_list if t.get('status') == 'completed')
+            in_progress = sum(1 for t in task_list if t.get('status') == 'in_progress')
+            total = len(task_list)
         
         output.append(f"📋 Flow 플랜: {plan.get('name', 'Unknown')}")
         output.append(f"  진행률: {completed}/{total} 완료 | {in_progress} 진행중")
         
         # 태스크 상태 표시
-        if tasks:
+        if task_list:
             output.append("  태스크:")
             # 슬라이스 대신 enumerate 사용
-            for i, task in enumerate(tasks):
+            for i, task in enumerate(task_list):
                 if i >= 5:  # 최대 5개만
                     break
+                # title 또는 name 필드 확인
+                task_name = task.get('title') or task.get('name', 'Unknown')
                 status_icon = "✅" if task.get('status') == 'completed' else "⏳" if task.get('status') == 'in_progress' else "⬜"
-                output.append(f"    {status_icon} {task.get('name', 'Unknown')}")
+                output.append(f"    {status_icon} {task_name}")
     
     # 2. 저장된 변수 정보 표시
     if SESSION_POOL.shared_variables:

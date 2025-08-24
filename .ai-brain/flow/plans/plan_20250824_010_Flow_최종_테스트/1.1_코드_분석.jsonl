@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-24T15:19:08.684430", "event_type": "TASK_INFO", "ts": "2025-08-24T15:19:08.684430", "type": "TASK_INFO", "title": "1. 코드 분석", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-24T15:19:08.696679", "event_type": "DESIGN", "ts": "2025-08-24T15:19:08.696679", "type": "DESIGN", "content": "Task가 생성되었습니다."}

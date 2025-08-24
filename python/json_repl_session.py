@@ -462,10 +462,19 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
     # Flow 태스크 기반 가이드 - 공유 변수에서 직접 읽기
     flow_plan_for_guide = SESSION_POOL.shared_variables.get('current_flow_plan') or SESSION_POOL.current_flow_plan
     if flow_plan_for_guide:
+        tasks_data = flow_plan_for_guide.get('tasks', {})
+        
+        # tasks가 딕셔너리인지 리스트인지 확인
+        if isinstance(tasks_data, dict):
+            task_list = list(tasks_data.values())
+        else:
+            task_list = tasks_data
+        
         next_task = None
-        for task in flow_plan_for_guide.get('tasks', []):
+        for task in task_list:
             if task.get('status') != 'completed':
-                next_task = task.get('name', 'Unknown')
+                # title 또는 name 필드 확인
+                next_task = task.get('title') or task.get('name', 'Unknown')
                 break
         
         if next_task:

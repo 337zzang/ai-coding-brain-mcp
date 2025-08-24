@@ -42,20 +42,25 @@ class LLMBackgroundFacade(BackgroundFacade):
     # ========== LLM 병렬 처리 ==========
     
     def ask(self, question: str, context: Optional[str] = None, 
-            reasoning: str = "medium", wait: bool = False) -> Dict[str, Any]:
+            reasoning: str = "auto", wait: bool = False) -> Dict[str, Any]:
         """
         LLM에 질문 (비동기 또는 동기)
         
         Args:
             question: 질문 내용
             context: 추가 컨텍스트
-            reasoning: 추론 강도 (low/medium/high)
+            reasoning: 추론 강도 (low/medium/high/auto) - auto는 자동 결정
             wait: True면 결과 대기, False면 즉시 반환
         
         Examples:
             >>> h.ai.ask("코드 분석해줘", context=code, wait=True)
-            >>> h.ai.ask("버그 찾아줘", reasoning="high")
+            >>> h.ai.ask("버그 찾아줘")  # 자동으로 적절한 레벨 선택
+            >>> h.ai.ask("보안 취약점 분석", reasoning="high")  # 명시적 high
         """
+        # reasoning이 auto면 자동 결정
+        if reasoning == "auto":
+            from .llm import determine_reasoning_effort
+            reasoning = determine_reasoning_effort(question, context)
         # 비동기 시작
         result = ask_o3_async(question, context, reasoning)
         if not result['ok']:

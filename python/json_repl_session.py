@@ -53,18 +53,25 @@ if sys.platform == 'win32':
 
 
 class SessionPool:
-    """Thread-safe session pool manager"""
+    """Shared session manager with persistent variables"""
     
-    def __init__(self, max_sessions: int = 10, session_timeout: int = 3600):
-        self.max_sessions = max_sessions
-        self.session_timeout = session_timeout  # seconds
+    def __init__(self, max_sessions: int = 1, session_timeout: int = 7200):
+        self.max_sessions = max_sessions  # 1 shared session
+        self.session_timeout = session_timeout  # 2 hours
         self.sessions: Dict[str, Dict[str, Any]] = {}
         self.lock = threading.RLock()
+        
+        # 🔥 공유 변수 스토리지 - REPL 핵심 기능
+        self.shared_variables = {}  # 모든 에이전트가 공유
+        self.workflow_data = {}     # 워크플로우 데이터
+        self.cache_data = {}        # 자주 사용하는 데이터 캐시
+        
         self.metrics = {
             'total_created': 0,
             'total_reused': 0,
             'total_expired': 0,
-            'current_active': 0
+            'current_active': 0,
+            'shared_vars_count': 0
         }
     
     def _generate_session_key(self, agent_id: Optional[str], session_id: Optional[str]) -> str:

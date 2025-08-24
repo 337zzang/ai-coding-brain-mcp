@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-24T12:23:35.056090", "event_type": "TASK_INFO", "ts": "2025-08-24T12:23:35.056090", "type": "TASK_INFO", "title": "브라우저 제어 방식 검증", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-24T12:23:35.056090", "event_type": "DESIGN", "ts": "2025-08-24T12:23:35.056090", "type": "DESIGN", "content": "Task가 생성되었습니다."}

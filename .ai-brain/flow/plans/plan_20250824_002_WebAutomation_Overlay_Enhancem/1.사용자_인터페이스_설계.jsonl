@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-24T12:23:35.080616", "event_type": "TASK_INFO", "ts": "2025-08-24T12:23:35.080616", "type": "TASK_INFO", "title": "사용자 인터페이스 설계", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-24T12:23:35.080616", "event_type": "DESIGN", "ts": "2025-08-24T12:23:35.080616", "type": "DESIGN", "content": "Task가 생성되었습니다."}

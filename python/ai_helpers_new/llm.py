@@ -217,6 +217,53 @@ def _generate_task_id() -> str:
         return f"o3_task_{_task_counter:04d}"
 
 
+def determine_reasoning_effort(question: str, context: Optional[str] = None) -> str:
+    """질문의 복잡도를 분석하여 적절한 reasoning_effort 레벨 결정
+    
+    Args:
+        question: 질문 내용
+        context: 추가 컨텍스트
+    
+    Returns:
+        "low", "medium", "high" 중 하나
+    """
+    # High effort가 필요한 키워드들
+    high_keywords = [
+        "아키텍처", "architecture", "설계", "design",
+        "리팩토링", "refactor", "최적화", "optimize",
+        "보안", "security", "취약점", "vulnerability",
+        "성능", "performance", "알고리즘", "algorithm",
+        "복잡", "complex", "심층", "deep", "전체", "entire",
+        "분석", "analyze", "디버깅", "debug", "문제 해결"
+    ]
+    
+    # Low effort로 충분한 키워드들
+    low_keywords = [
+        "간단", "simple", "설명", "explain",
+        "뭐야", "what is", "어떻게", "how to",
+        "예제", "example", "샘플", "sample",
+        "확인", "check", "테스트", "test"
+    ]
+    
+    # 질문과 컨텍스트를 소문자로 변환
+    text = question.lower()
+    if context:
+        text += " " + context.lower()
+    
+    # High effort 키워드 체크
+    high_count = sum(1 for keyword in high_keywords if keyword in text)
+    if high_count >= 2 or any(k in text for k in ["아키텍처", "보안", "성능", "리팩토링"]):
+        return "high"
+    
+    # Low effort 키워드 체크
+    low_count = sum(1 for keyword in low_keywords if keyword in text)
+    if low_count >= 2 or len(question) < 50:
+        return "low"
+    
+    # 기본값은 medium
+    return "medium"
+
+
 def _call_o3_api(question: str, context: Optional[str] = None, 
                  api_key: Optional[str] = None, reasoning_effort: str = "medium") -> Dict[str, Any]:
     """실제 o3 API 호출 (내부 함수)"""

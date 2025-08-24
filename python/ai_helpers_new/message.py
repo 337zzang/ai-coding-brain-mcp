@@ -34,26 +34,48 @@ class MessageFacade:
     - "작업 흐름이 바뀌나?" → YES면 task()
     """
     
-    def task(self, msg: str) -> Dict[str, Any]:
+    def task(self, msg: str, level: str = "INFO") -> Dict[str, Any]:
         """
-        업무지시 메시지
+        작업 흐름 추적 메시지
         
         Args:
-            msg: 업무지시 내용 (예: "analyzer | 코드 분석 시작")
+            msg: 작업 내용 (예: "분석 완료 → 최적화 시작")
+            level: 중요도 (INFO/SUCCESS/WARNING/ERROR)
             
         Returns:
-            {'ok': True, 'data': msg} or {'ok': False, 'error': str}
+            {'ok': True, 'data': {'msg': msg, 'level': level, 'time': time}}
         
         Examples:
-            >>> h.message.task("analyzer | 코드 분석 시작")
-            📋 [17:30:00] [TASK] analyzer | 코드 분석 시작
+            >>> h.message.task("분석 시작")
+            >>> h.message.task("분석 완료 → 최적화 시작")
+            >>> h.message.task("최적화 완료", "SUCCESS")
+            >>> h.message.task("메모리 부족", "ERROR")
         """
         try:
             time = datetime.now().strftime('%H:%M:%S')
-            print(f"📋 [{time}] [TASK] {msg}")
-            return ok(msg)
+            
+            # 레벨별 이모지
+            icons = {
+                "INFO": "📋",
+                "SUCCESS": "✅", 
+                "WARNING": "⚠️",
+                "ERROR": "❌"
+            }
+            icon = icons.get(level.upper(), "📋")
+            
+            # 화살표 패턴 감지 (작업 전환)
+            if "→" in msg or "->" in msg:
+                icon = "🔄"  # 전환 표시
+            
+            print(f"{icon} [{time}] [TASK] {msg}")
+            
+            return ok({
+                'msg': msg,
+                'level': level,
+                'time': time
+            })
         except Exception as e:
-            return err(f"업무지시 실패: {str(e)}")
+            return err(f"작업 추적 실패: {str(e)}")
     
     def share(self, msg: str) -> Dict[str, Any]:
         """

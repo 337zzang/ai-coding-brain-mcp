@@ -163,7 +163,7 @@ class MessageFacade:
         msg = f"진행률: {current}/{total} ({percent:.0f}%)"
         if desc:
             msg += f" - {desc}"
-        return self.task(msg, "INFO")
+        return self.task(msg, level="INFO")
 
 # Facade 인스턴스 생성
 message_facade = MessageFacade()

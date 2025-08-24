@@ -168,8 +168,8 @@ class MessageFacade:
         try:
             import builtins
             
-            builtins.__repl_notes = []
-            builtins.__repl_tasks = []
+            builtins.repl_message_notes = []
+            builtins.repl_message_tasks = []
             
             print("🗑️ 모든 메시지가 초기화되었습니다.")
             

@@ -284,19 +284,10 @@ SESSION_POOL = SessionPool(max_sessions=10, session_timeout=3600)
 
 
 def get_enhanced_prompt(session_key: str = "shared") -> str:
-    """REPL 세션 상태 간단 요약"""
+    """REPL 세션 활성 상태만 표시"""
     
-    if not SESSION_POOL.shared_variables:
-        return "\n💡 세션이 비어있습니다. 작업을 시작하세요."
-    
-    # 아주 간단한 요약만
-    output = []
-    output.append("\n" + "─" * 40)
-    output.append(f"📦 REPL: {len(SESSION_POOL.shared_variables)}개 항목 저장됨")
-    output.append(f"   → list_shared()로 확인 가능")
-    output.append("─" * 40)
-    
-    return "\n".join(output)
+    # 최소한의 정보만
+    return "\n💡 REPL 세션 활성. show_vars()로 변수 확인 가능."
 
 
 def _track_execution(session_key: str) -> None:

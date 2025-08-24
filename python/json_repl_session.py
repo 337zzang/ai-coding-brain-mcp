@@ -312,7 +312,6 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
         # 다음 단계에 필요한 패턴 식별
         priority_patterns = ['result', 'output', 'processed', 'final', 'completed']
         data_patterns = ['data', 'content', 'analysis', 'optimization', 'test']
-        function_patterns = ['process', 'analyze', 'validate', 'transform', 'compute']
         
         # 우선순위별로 필터링
         for key in recent_keys:
@@ -357,103 +356,8 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
                     output.append(f"     • 처리할 데이터")
                     output.append(f"     • 접근: data = get_shared('{key}')")
                     output.append("")
-            
-            # 각 변수별 상세 정보
-            output.append(f"  📌 {key}:")
-            
-            # 타입 정보
-            if isinstance(value, dict):
-                output.append(f"     • 타입: Dictionary ({len(value)} 필드)")
-                if len(value) <= 5:
-                    output.append(f"     • 키: {list(value.keys())}")
-                else:
-                    output.append(f"     • 주요 키: {list(value.keys())[:5]} ...")
-                    
-            elif isinstance(value, list):
-                output.append(f"     • 타입: List ({len(value)} 항목)")
-                if len(value) > 0:
-                    output.append(f"     • 첫 항목 타입: {type(value[0]).__name__}")
-                    
-            elif isinstance(value, str):
-                output.append(f"     • 타입: String")
-                if len(value) < 50:
-                    output.append(f"     • 값: '{value}'")
-                else:
-                    output.append(f"     • 길이: {len(value)}자")
-                    
-            elif isinstance(value, (int, float)):
-                output.append(f"     • 타입: {type(value).__name__}")
-                output.append(f"     • 값: {value}")
-                
-            else:
-                output.append(f"     • 타입: {type(value).__name__}")
-            
-            # 변수별 개별 접근 방법
-            output.append(f"     • 접근: {key}_data = get_shared('{key}')")
-            
-            # 용도 추정 (키 이름 기반)
-            if 'analysis' in key:
-                output.append(f"     • 용도: 분석 결과 데이터")
-            elif 'test' in key:
-                output.append(f"     • 용도: 테스트 결과 데이터")
-            elif 'optimization' in key:
-                output.append(f"     • 용도: 최적화 결과 데이터")
-            elif 'file' in key or 'content' in key:
-                output.append(f"     • 용도: 파일/콘텐츠 데이터")
-            elif 'data' in key:
-                output.append(f"     • 용도: 일반 데이터 저장")
-                
-            output.append("")  # 빈 줄로 구분
     
-    # 2. 함수와 클래스 추적 (개별 표시)
-    output.append("\n🔧 사용 가능한 함수/클래스:\n")
-    
-    # 네임스페이스에서 함수와 클래스 찾기
-    for name, obj in SESSION_POOL.shared_variables.items():
-        if callable(obj) and not name.startswith('_'):
-            if hasattr(obj, '__call__'):
-                # 함수인 경우
-                output.append(f"  🎯 {name}():")
-                output.append(f"     • 타입: Function")
-                if hasattr(obj, '__doc__') and obj.__doc__:
-                    doc_first_line = obj.__doc__.strip().split('\n')[0][:50]
-                    output.append(f"     • 설명: {doc_first_line}")
-                output.append(f"     • 호출: result = {name}()")
-                output.append("")
-                
-        elif isinstance(obj, type):
-            # 클래스인 경우
-            output.append(f"  🏗️ {name}:")
-            output.append(f"     • 타입: Class")
-            if hasattr(obj, '__doc__') and obj.__doc__:
-                doc_first_line = obj.__doc__.strip().split('\n')[0][:50]
-                output.append(f"     • 설명: {doc_first_line}")
-            output.append(f"     • 생성: instance = {name}()")
-            output.append("")
-    
-    # 3. 단계별 작업 가이드
-    output.append("\n📝 단계별 작업 연속성:")
-    
-    # 이전 단계에서 생성된 중요한 것들 확인
-    important_items = []
-    for key in SESSION_POOL.shared_variables.keys():
-        if any(keyword in key for keyword in ['result', 'data', 'analysis', 'optimization', 'test', 'output']):
-            important_items.append(key)
-    
-    if important_items:
-        output.append(f"\n  이전 단계 산출물 ({len(important_items)}개):")
-        for item in important_items[-5:]:  # 최근 5개만
-            value = SESSION_POOL.shared_variables[item]
-            if isinstance(value, dict):
-                output.append(f"    • {item} → Dictionary")
-            elif isinstance(value, list):
-                output.append(f"    • {item} → List[{len(value)}]")
-            elif callable(value):
-                output.append(f"    • {item} → Function")
-            else:
-                output.append(f"    • {item} → {type(value).__name__}")
-    
-    # 4. Flow 플랜 기반 다음 작업 지시
+    # 2. Flow 플랜 기반 다음 작업 지시
     flow_plan = SESSION_POOL.shared_variables.get('current_flow_plan')
     if flow_plan:
         tasks = flow_plan.get('tasks', {})

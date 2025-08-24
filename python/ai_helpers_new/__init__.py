@@ -39,6 +39,10 @@ project = getattr(_facade, 'project', None)
 memory = getattr(_facade, 'memory', None)
 # DEPRECATED: unified = getattr(_facade, 'unified', None)
 
+# Message facade 추가
+from .message import message_facade
+message = message_facade
+
 # util 모듈도 직접 export (안전 함수들 포함)
 from . import util
 

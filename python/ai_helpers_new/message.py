@@ -1,35 +1,37 @@
 """
-Message System for Task Orchestration
-태스크 오케스트레이션 메시지 시스템
+Message System for REPL-Claude Communication
+REPL과 Claude Code 간 통신 시스템
 
-Version: 3.0.0 (Simplified Orchestration)
+Version: 4.0.0 (Simplified & Practical)
 Author: Claude Code
 Created: 2025-08-24
 Updated: 2025-08-24
 
-4가지 핵심 메시지:
-- task: 업무지시 [TASK]
-- share: 변수공유 [SHARE]
-- call: 에이전트호출 [CALL]
-- stop: 중단요청 [STOP]
+핵심 메시지 (2종):
+- task: 작업 흐름 추적 [TASK]
+- share: 영속적 자원 공유 [SHARE]
+
+용도:
+- REPL 내부 상태를 stdout으로 Claude에게 전달
+- 재사용 가능한 함수/변수/상태 알림
+- Think 도구를 위한 컨텍스트 제공
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 from .api_response import ok, err
 
 class MessageFacade:
     """
-    오케스트레이션 메시지 시스템 (4종)
+    REPL-Claude 통신 시스템 (심플 버전)
     
-    메시지 방향성:
-    - task(): 모든 방향 (메인↔메인, 메인↔서브, 서브↔서브)
-    - share(): 메인→메인 (영속적 상태 기록 전용)
-    - call(): 메인→서브 (서브에이전트 호출)
-    - stop(): 서브→메인 (중단/문제 보고)
+    핵심 기능:
+    - task(): 작업 흐름 추적 (시작/전환/완료)
+    - share(): 영속적 자원 공유 (함수/변수/상태)
     
-    모든 메서드는 메시지 문자열 하나만 받음
-    형식: "agent | content" 또는 "agent → target | content"
+    사용 원칙:
+    - "Claude가 나중에 이걸 쓸까?" → YES면 share()
+    - "작업 흐름이 바뀌나?" → YES면 task()
     """
     
     def task(self, msg: str) -> Dict[str, Any]:

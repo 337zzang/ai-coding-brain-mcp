@@ -1,0 +1,16 @@
+{
+  "messages": [
+    {
+      "id": 1,
+      "from": "main",
+      "to": "analyzer",
+      "data": "start"
+    },
+    {
+      "id": 2,
+      "from": "analyzer",
+      "to": "main",
+      "data": "complete"
+    }
+  ]
+}

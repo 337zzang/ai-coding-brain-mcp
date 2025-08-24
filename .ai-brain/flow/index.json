@@ -332,5 +332,11 @@
     "created_at": "2025-08-24T15:19:08.617412",
     "updated_at": "2025-08-24T15:19:08.737190",
     "task_count": 3
+  },
+  "plan_20250824_011_REPL-Agents_Integration_16_15": {
+    "name": "REPL-Agents Integration 16:15",
+    "created_at": "2025-08-24T16:15:46.026848",
+    "updated_at": "2025-08-24T16:15:46.133959",
+    "task_count": 6
   }
 }

@@ -1,0 +1,2 @@
+{"timestamp": "2025-08-24T16:15:46.100582", "event_type": "TASK_INFO", "ts": "2025-08-24T16:15:46.100582", "type": "TASK_INFO", "title": "Test Strategy", "priority": "medium", "estimate": null, "description": ""}
+{"timestamp": "2025-08-24T16:15:46.100582", "event_type": "DESIGN", "ts": "2025-08-24T16:15:46.100582", "type": "DESIGN", "content": "Task가 생성되었습니다."}

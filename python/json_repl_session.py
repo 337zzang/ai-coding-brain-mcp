@@ -481,10 +481,6 @@ def execute_code(code: str,
     # Add cache statistics if available
     _add_cache_statistics(response, session)
     
-    # Update Flow task if agent_id provided
-    if agent_id and SESSION_POOL.flow_api:
-        SESSION_POOL._update_flow_task(agent_id, response.get("success", False))
-    
     # Add enhanced prompt with context for successful executions
     if response.get("success", False):
         response["stdout"] += get_enhanced_prompt(session_key)

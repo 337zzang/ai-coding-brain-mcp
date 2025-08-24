@@ -369,13 +369,8 @@ def periodic_cleanup():
     cleanup_thread.start()
 
 
-def main():
-    """Main execution loop with session isolation"""
-    
-    # Start periodic cleanup
-    periodic_cleanup()
-    
-    # Startup message
+def print_startup_message() -> None:
+    """Print startup message to stderr"""
     print("=" * 60, file=sys.stderr)
     print("Isolated JSON REPL Session v3.0", file=sys.stderr)
     print("Session Pooling for Subagent Isolation", file=sys.stderr)
@@ -384,11 +379,98 @@ def main():
     print(f"Session timeout: {SESSION_POOL.session_timeout}s", file=sys.stderr)
     print(f"Isolation: Enabled", file=sys.stderr)
     print("=" * 60, file=sys.stderr)
+
+
+def handle_execute_request(request_id: Optional[str], params: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle execute request and return response"""
+    code = params.get('code', '')
+    agent_id = params.get('agent_id')
+    session_id = params.get('session_id')
+    
+    # Auto-detect agent if not provided
+    if not agent_id and 'import ai_helpers_new' in code:
+        if 'test' in code.lower():
+            agent_id = 'test-runner'
+        elif 'analyze' in code.lower() or 'analysis' in code.lower():
+            agent_id = 'code-analyzer'
+        elif 'optimize' in code.lower():
+            agent_id = 'code-optimizer'
+    
+    # Execute code in isolated session
+    result = execute_code(code, agent_id, session_id)
+    
+    return {
+        'jsonrpc': '2.0',
+        'id': request_id,
+        'result': result
+    }
+
+
+def handle_metrics_request(request_id: Optional[str]) -> Dict[str, Any]:
+    """Handle pool metrics request"""
+    return {
+        'jsonrpc': '2.0',
+        'id': request_id,
+        'result': SESSION_POOL.get_pool_metrics()
+    }
+
+
+def create_error_response(request_id: Optional[str], code: int, message: str) -> Dict[str, Any]:
+    """Create error response in JSON-RPC format"""
+    return {
+        'jsonrpc': '2.0',
+        'id': request_id,
+        'error': {
+            'code': code,
+            'message': message
+        }
+    }
+
+
+def main():
+    """Main execution loop with session isolation"""
+    # Start periodic cleanup
+    periodic_cleanup()
+    
+    # Print startup message
+    print_startup_message()
     
     # Ready signal
     print("__READY__", flush=True)
     
-    # Main loop
+    # Run main loop
+    run_main_loop()
+    
+    # Cleanup
+    shutdown_repl()
+
+
+def process_single_request(code_input: str) -> Optional[Dict[str, Any]]:
+    """Process a single JSON-RPC request"""
+    try:
+        request = json.loads(code_input)
+        request_id = request.get('id')
+        request_type = request.get('method', '').split('/')[-1]
+        
+        if request_type == 'execute':
+            params = request.get('params', {})
+            return handle_execute_request(request_id, params)
+        elif request_type == 'get_pool_metrics':
+            return handle_metrics_request(request_id)
+        else:
+            return create_error_response(
+                request_id, -32601, 
+                f'Method not found: {request_type}'
+            )
+    
+    except json.JSONDecodeError as e:
+        return create_error_response(None, -32700, f'Parse error: {str(e)}')
+    except Exception as e:
+        return create_error_response(None, -32603, f'Internal error: {str(e)}')
+
+
+def run_main_loop() -> None:
+    """Run the main request processing loop"""
     while True:
         try:
             # Read JSON request
@@ -396,92 +478,22 @@ def main():
             if code_input is None:
                 break
             
-            # Parse request
-            request = json.loads(code_input)
-            request_id = request.get('id')
-            request_type = request.get('method', '').split('/')[-1]
-            
-            # Handle execute request
-            if request_type == 'execute':
-                params = request.get('params', {})
-                code = params.get('code', '')
-                
-                # Extract agent information from request
-                agent_id = params.get('agent_id')  # New parameter
-                session_id = params.get('session_id')  # For session reuse
-                
-                # If not provided, try to detect from code
-                if not agent_id and 'import ai_helpers_new' in code:
-                    # Try to detect agent from code patterns
-                    if 'test' in code.lower():
-                        agent_id = 'test-runner'
-                    elif 'analyze' in code.lower() or 'analysis' in code.lower():
-                        agent_id = 'code-analyzer'
-                    elif 'optimize' in code.lower():
-                        agent_id = 'code-optimizer'
-                
-                # Execute code in isolated session
-                result = execute_code(code, agent_id, session_id)
-                
-                # Create response
-                response = {
-                    'jsonrpc': '2.0',
-                    'id': request_id,
-                    'result': result
-                }
-                
-                # Send response
+            # Process request
+            response = process_single_request(code_input)
+            if response:
                 write_json_output(response)
-            
-            elif request_type == 'get_pool_metrics':
-                # New method to get pool metrics
-                response = {
-                    'jsonrpc': '2.0',
-                    'id': request_id,
-                    'result': SESSION_POOL.get_pool_metrics()
-                }
-                write_json_output(response)
-            
-            else:
-                # Unsupported method
-                error_response = {
-                    'jsonrpc': '2.0',
-                    'id': request_id,
-                    'error': {
-                        'code': -32601,
-                        'message': f'Method not found: {request_type}'
-                    }
-                }
-                write_json_output(error_response)
-        
-        except json.JSONDecodeError as e:
-            # JSON parse error
-            error_response = {
-                'jsonrpc': '2.0',
-                'id': None,
-                'error': {
-                    'code': -32700,
-                    'message': f'Parse error: {str(e)}'
-                }
-            }
-            write_json_output(error_response)
         
         except KeyboardInterrupt:
             break
-        
         except Exception as e:
-            # General error
-            error_response = {
-                'jsonrpc': '2.0',
-                'id': request_id if 'request_id' in locals() else None,
-                'error': {
-                    'code': -32603,
-                    'message': f'Internal error: {str(e)}'
-                }
-            }
-            write_json_output(error_response)
+            # Log unexpected errors but continue
+            print(f"Unexpected error in main loop: {e}", file=sys.stderr)
+            continue
+
+
+def shutdown_repl() -> None:
+    """Clean shutdown of the REPL"""
     
-    # Cleanup
     print("\nShutting down isolated REPL...", file=sys.stderr)
     SESSION_POOL.shutdown()
     gc.collect()

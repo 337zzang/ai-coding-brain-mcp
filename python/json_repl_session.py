@@ -296,12 +296,17 @@ SESSION_POOL = SessionPool(max_sessions=10, session_timeout=3600)
 
 
 def get_enhanced_prompt(session_key: str = "shared") -> str:
-    """Get enhanced prompt with context, Flow info and next steps"""
+    """AI가 다음 단계를 안내하는 지침 메시지 생성"""
     output = []
     output.append("\n" + "━" * 60)
+    output.append("\n💬 AI 작업 가이드:")
+    output.append("━" * 60)
     
-    # 1. Flow 시스템 상태 (최우선 표시) - 공유 변수에서 직접 읽기
-    flow_plan = SESSION_POOL.shared_variables.get('current_flow_plan') or SESSION_POOL.current_flow_plan
+    # 1. 현재 상황 요약
+    output.append("\n📍 현재 상황:")
+    
+    # Flow 플랜 확인
+    flow_plan = SESSION_POOL.shared_variables.get('current_flow_plan')
     if flow_plan:
         plan = flow_plan
         tasks = plan.get('tasks', {})

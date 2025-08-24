@@ -460,7 +460,11 @@ def _add_cache_statistics(response: Dict[str, Any], session: Any) -> None:
 def execute_code(code: str, 
                 agent_id: Optional[str] = None,
                 session_id: Optional[str] = None) -> Dict[str, Any]:
-    """Execute code in an isolated session"""
+    """Execute code in an isolated session with Flow integration"""
+    
+    # Initialize Flow API if not done
+    if SESSION_POOL.flow_api is None:
+        SESSION_POOL._init_flow_api()
     
     # Get or create isolated session
     session_key, session = SESSION_POOL.get_or_create_session(agent_id, session_id)
@@ -476,6 +480,10 @@ def execute_code(code: str,
     
     # Add cache statistics if available
     _add_cache_statistics(response, session)
+    
+    # Update Flow task if agent_id provided
+    if agent_id and SESSION_POOL.flow_api:
+        SESSION_POOL._update_flow_task(agent_id, response.get("success", False))
     
     # Add enhanced prompt with context for successful executions
     if response.get("success", False):

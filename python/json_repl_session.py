@@ -158,7 +158,7 @@ class SessionPool:
         
         return session
     
-    def _evict_lru_session(self):
+    def _evict_lru_session(self) -> None:
         """Evict least recently used session"""
         
         if not self.sessions:
@@ -233,7 +233,7 @@ class SessionPool:
                 }
             }
     
-    def cleanup_expired_sessions(self):
+    def cleanup_expired_sessions(self) -> None:
         """Clean up all expired sessions"""
         
         with self.lock:
@@ -251,7 +251,7 @@ class SessionPool:
                 print(f"[SessionPool] Cleaned up {len(expired_keys)} expired sessions", 
                       file=sys.stderr)
     
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown pool and cleanup all sessions"""
         
         with self.lock:
@@ -269,7 +269,7 @@ class SessionPool:
 SESSION_POOL = SessionPool(max_sessions=10, session_timeout=3600)
 
 
-def get_think_prompt():
+def get_think_prompt() -> str:
     """Get Think tool prompt for successful executions"""
     return """
 
@@ -338,7 +338,7 @@ def execute_code(code: str,
     return response
 
 
-def read_json_input():
+def read_json_input() -> Optional[str]:
     """Read JSON input from stdin"""
     try:
         line = sys.stdin.readline()
@@ -349,14 +349,14 @@ def read_json_input():
         return None
 
 
-def write_json_output(response):
+def write_json_output(response: Dict[str, Any]) -> None:
     """Write JSON output to stdout"""
     json_str = json.dumps(response, ensure_ascii=False)
     sys.stdout.write(json_str + '\n')
     sys.stdout.flush()
 
 
-def periodic_cleanup():
+def periodic_cleanup() -> None:
     """Periodic cleanup task for expired sessions"""
     import threading
     
@@ -427,7 +427,7 @@ def create_error_response(request_id: Optional[str], code: int, message: str) ->
     }
 
 
-def main():
+def main() -> None:
     """Main execution loop with session isolation"""
     # Start periodic cleanup
     periodic_cleanup()

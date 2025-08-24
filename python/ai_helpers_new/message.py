@@ -148,7 +148,7 @@ class MessageFacade:
         try:
             import builtins
             
-            tasks = getattr(builtins, '__repl_tasks', [])
+            tasks = getattr(builtins, 'repl_message_tasks', [])
             
             if pending_only:
                 tasks = [t for t in tasks if not t.get('completed', False)]
@@ -189,7 +189,7 @@ class MessageFacade:
             import builtins
             
             notes = getattr(builtins, 'repl_message_notes', [])
-            tasks = getattr(builtins, '__repl_tasks', [])
+            tasks = getattr(builtins, 'repl_message_tasks', [])
             pending = [t for t in tasks if not t.get('completed', False)]
             
             stats_data = {

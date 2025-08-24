@@ -129,7 +129,7 @@ class MessageFacade:
         try:
             import builtins
             
-            notes = getattr(builtins, '__repl_notes', [])
+            notes = getattr(builtins, 'repl_message_notes', [])
             return ok(notes[-last:] if notes else [])
             
         except Exception as e:
@@ -188,7 +188,7 @@ class MessageFacade:
         try:
             import builtins
             
-            notes = getattr(builtins, '__repl_notes', [])
+            notes = getattr(builtins, 'repl_message_notes', [])
             tasks = getattr(builtins, '__repl_tasks', [])
             pending = [t for t in tasks if not t.get('completed', False)]
             

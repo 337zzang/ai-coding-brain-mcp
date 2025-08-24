@@ -29,10 +29,11 @@ class MessageFacade:
         import builtins
         
         # globals() 대신 builtins를 통해 안전하게 접근
-        if not hasattr(builtins, '__repl_notes'):
-            builtins.__repl_notes = []
-        if not hasattr(builtins, '__repl_tasks'):
-            builtins.__repl_tasks = []
+        # name mangling 방지를 위해 __ 대신 명확한 이름 사용
+        if not hasattr(builtins, 'repl_message_notes'):
+            builtins.repl_message_notes = []
+        if not hasattr(builtins, 'repl_message_tasks'):
+            builtins.repl_message_tasks = []
     
     def note(self, msg: str) -> Dict[str, Any]:
         """

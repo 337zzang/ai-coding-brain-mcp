@@ -94,7 +94,7 @@ class MessageFacade:
             import builtins
             
             # 저장소 확인
-            if not hasattr(builtins, '__repl_tasks'):
+            if not hasattr(builtins, 'repl_message_tasks'):
                 self._init_storage()
             
             # 지시사항 저장
@@ -106,7 +106,7 @@ class MessageFacade:
                 'completed': False
             }
             
-            builtins.__repl_tasks.append(task_data)
+            builtins.repl_message_tasks.append(task_data)
             
             # stdout 출력
             print(f"📋 [{time}] → {instruction}")

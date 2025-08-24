@@ -77,26 +77,66 @@ class MessageFacade:
         except Exception as e:
             return err(f"작업 추적 실패: {str(e)}")
     
-    def share(self, msg: str) -> Dict[str, Any]:
+    def share(self, msg: str, obj: Optional[Any] = None) -> Dict[str, Any]:
         """
-        변수공유 메시지
+        영속적 자원 공유 메시지
         
         Args:
-            msg: 공유 내용 (예: "analyzer | files=142,bugs=3")
+            msg: 공유 내용 (예: "함수: analyze() - 코드 분석")
+            obj: 선택적 객체 (자동 타입 감지)
             
         Returns:
-            {'ok': True, 'data': msg} or {'ok': False, 'error': str}
+            {'ok': True, 'data': {'msg': msg, 'type': type, 'time': time}}
         
         Examples:
-            >>> h.message.share("analyzer | files=142,bugs=3")
-            📦 [17:30:00] [SHARE] analyzer | files=142,bugs=3
+            >>> h.message.share("함수: analyze() - 코드 분석")
+            >>> h.message.share("변수: config", {"mode": "production"})
+            >>> h.message.share("클래스: Manager - save(), load()")
         """
         try:
             time = datetime.now().strftime('%H:%M:%S')
-            print(f"📦 [{time}] [SHARE] {msg}")
-            return ok(msg)
+            
+            # 자동 타입 감지 및 아이콘 선택
+            if obj is not None:
+                obj_type = type(obj).__name__
+                if callable(obj):
+                    icon = "🔧"  # 함수
+                elif isinstance(obj, type):
+                    icon = "🏗️"  # 클래스
+                elif isinstance(obj, dict):
+                    icon = "📂"  # 딕셔너리
+                elif isinstance(obj, (list, tuple)):
+                    icon = "📚"  # 리스트/튜플
+                else:
+                    icon = "📦"  # 기타
+                    
+                # 값 포맷팅 (너무 길면 요약)
+                if isinstance(obj, (dict, list)) and len(str(obj)) > 50:
+                    value_str = f" ({obj_type}, {len(obj)} items)"
+                else:
+                    value_str = f" = {obj}"
+                    
+                msg = f"{msg}{value_str}"
+            else:
+                # msg에서 패턴 감지
+                if "함수:" in msg or "function:" in msg.lower():
+                    icon = "🔧"
+                elif "클래스:" in msg or "class:" in msg.lower():
+                    icon = "🏗️"
+                elif "변수:" in msg or "variable:" in msg.lower():
+                    icon = "📂"
+                else:
+                    icon = "📦"
+            
+            print(f"{icon} [{time}] [SHARE] {msg}")
+            
+            return ok({
+                'msg': msg,
+                'type': type(obj).__name__ if obj else 'str',
+                'time': time
+            })
         except Exception as e:
-            return err(f"변수공유 실패: {str(e)}")
+            return err(f"자원 공유 실패: {str(e)}")
     
     def call(self, msg: str) -> Dict[str, Any]:
         """

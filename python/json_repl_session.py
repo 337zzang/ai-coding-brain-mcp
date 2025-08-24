@@ -447,10 +447,11 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
     # 5. 다음 작업 가이드 (Flow 기반)
     output.append("\n🎯 다음 작업:")
     
-    # Flow 태스크 기반 가이드
-    if SESSION_POOL.current_flow_plan:
+    # Flow 태스크 기반 가이드 - 공유 변수에서 직접 읽기
+    flow_plan_for_guide = SESSION_POOL.shared_variables.get('current_flow_plan') or SESSION_POOL.current_flow_plan
+    if flow_plan_for_guide:
         next_task = None
-        for task in SESSION_POOL.current_flow_plan.get('tasks', []):
+        for task in flow_plan_for_guide.get('tasks', []):
             if task.get('status') != 'completed':
                 next_task = task.get('name', 'Unknown')
                 break

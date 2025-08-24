@@ -333,42 +333,12 @@ SESSION_POOL = SessionPool(max_sessions=10, session_timeout=3600)
 
 
 def get_enhanced_prompt(session_key: str = "shared") -> str:
-    """AI 메시지와 필요한 변수를 전달"""
+    """REPL 환경에 남은 것들을 최대한 활용하도록 안내"""
     
     output = []
     output.append("\n" + "━" * 60)
-    output.append("\n💬 AI 메시지 & 작업 지시")
+    output.append("\n🔄 REPL 세션 현황")
     output.append("━" * 60)
-    
-    # 🔥 AI 메시지 우선 표시
-    messages = SESSION_POOL.shared_variables.get('ai_messages', [])
-    unread_messages = [m for m in messages if not m.get('read', True)]
-    
-    if unread_messages:
-        output.append("\n📬 새로운 메시지:\n")
-        
-        for msg in unread_messages[-3:]:  # 최근 3개만
-            priority_icon = {'high': '🔴', 'normal': '🔵', 'low': '⚪'}.get(msg.get('priority', 'normal'), '🔵')
-            from_agent = msg.get('from', 'Unknown')
-            message_text = msg.get('message', '')
-            
-            output.append(f"  {priority_icon} [{from_agent}]:")
-            output.append(f"     {message_text}")
-            
-            # 태그가 있으면 표시
-            if msg.get('tags'):
-                output.append(f"     태그: {', '.join(msg['tags'])}")
-            output.append("")
-    
-    # 메시지가 없을 때 기본 안내
-    elif not messages:
-        output.append("\n💡 AI 메시지 사용법:\n")
-        output.append("  • message('작업 완료했습니다')")
-        output.append("  • next_step('최적화를 진행해주세요')")
-        output.append("  • todo('테스트 케이스 추가 필요')")
-        output.append("  • urgent_message('버그 발견! 즉시 수정 필요')")
-        output.append("  • fix_this('line 42에서 에러 발생')")
-        output.append("")
     
     # 1. 가장 최근 작업 결과물만 전달 (다음 단계에 필요한 것)
     if SESSION_POOL.shared_variables:

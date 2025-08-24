@@ -66,6 +66,10 @@ class SessionPool:
         self.workflow_data = {}     # 워크플로우 데이터
         self.cache_data = {}        # 자주 사용하는 데이터 캐시
         
+        # 🔗 Flow 시스템 연동
+        self.flow_api = None        # Flow API 인스턴스
+        self.current_flow_plan = None  # 현재 활성 플랜
+        
         self.metrics = {
             'total_created': 0,
             'total_reused': 0,

@@ -159,36 +159,26 @@ class SessionPool:
         
         session = EnhancedREPLSession(**config)
         
-        # 🔥 공유 변수 접근 함수 추가 - REPL의 핵심!
+        # 🔥 단순화된 공유 변수 시스템 - 하나로 통합!
         session.namespace.update({
             'agent_id': agent_id,
             'session_info': lambda: self.get_session_info(agent_id),
             
-            # 공유 변수 관리 - 모든 에이전트 접근 가능
-            'shared': self.shared_variables,  # 직접 접근
-            'workflow': self.workflow_data,    # 워크플로우 데이터
-            'cache': self.cache_data,          # 캐시 데이터
+            # 단일 공유 변수 스토리지
+            'shared': self.shared_variables,  # 모든 데이터를 여기에
             
-            # 헬퍼 함수들
+            # 간단한 헬퍼 함수들
             'set_shared': lambda k, v: self.shared_variables.update({k: v}),
             'get_shared': lambda k, default=None: self.shared_variables.get(k, default),
             'list_shared': lambda: list(self.shared_variables.keys()),
             'clear_shared': lambda: self.shared_variables.clear(),
+            'del_shared': lambda k: self.shared_variables.pop(k, None),
             
-            # 워크플로우 데이터 관리
-            'set_workflow': lambda k, v: self.workflow_data.update({k: v}),
-            'get_workflow': lambda k, default=None: self.workflow_data.get(k, default),
-            
-            # 캐시 관리
-            'set_cache': lambda k, v: self.cache_data.update({k: v}),
-            'get_cache': lambda k, default=None: self.cache_data.get(k, default),
-            
-            # 변수 지속성 통계
-            'var_stats': lambda: {
-                'shared_count': len(self.shared_variables),
-                'workflow_count': len(self.workflow_data),
-                'cache_count': len(self.cache_data),
-                'total_vars': len(self.shared_variables) + len(self.workflow_data) + len(self.cache_data)
+            # 변수 통계
+            'var_count': lambda: len(self.shared_variables),
+            'var_info': lambda: {
+                'total': len(self.shared_variables),
+                'keys': list(self.shared_variables.keys())[:10]  # 최대 10개 키만
             }
         })
         

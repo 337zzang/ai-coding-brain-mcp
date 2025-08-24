@@ -61,14 +61,8 @@ class SessionPool:
         self.sessions: Dict[str, Dict[str, Any]] = {}
         self.lock = threading.RLock()
         
-        # 🔥 공유 변수 스토리지 - REPL 핵심 기능
-        self.shared_variables = {}  # 모든 에이전트가 공유
-        self.workflow_data = {}     # 워크플로우 데이터
-        self.cache_data = {}        # 자주 사용하는 데이터 캐시
-        
-        # 🔗 Flow 시스템 연동
-        self.flow_api = None        # Flow API 인스턴스
-        self.current_flow_plan = None  # 현재 활성 플랜
+        # 🔥 단일 공유 변수 스토리지 - 모든 데이터 통합 관리
+        self.shared_variables = {}  # 모든 데이터를 하나로 관리
         
         self.metrics = {
             'total_created': 0,

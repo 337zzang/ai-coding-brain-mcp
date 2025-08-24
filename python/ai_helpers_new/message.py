@@ -207,10 +207,10 @@ class MessageFacade:
 
 # 모듈 로드 시 자동 초기화
 import builtins
-if not hasattr(builtins, '__repl_notes'):
-    builtins.__repl_notes = []
-if not hasattr(builtins, '__repl_tasks'):
-    builtins.__repl_tasks = []
+if not hasattr(builtins, 'repl_message_notes'):
+    builtins.repl_message_notes = []
+if not hasattr(builtins, 'repl_message_tasks'):
+    builtins.repl_message_tasks = []
 
 # Facade 인스턴스 생성
 message_facade = MessageFacade()

@@ -1,83 +1,53 @@
 """
-Message System for REPL Environment
-메시지 전달 시스템 - Task 간 협업을 위한 간소화된 통신 시스템
+Message System for REPL Environment - Lightweight Version
+메시지 출력 시스템 - 순수 stdout 출력만 제공
 
-Version: 1.0.0
+Version: 2.0.0 (Simplified)
 Author: Claude Code
 Created: 2025-08-24
+Updated: 2025-08-24
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from datetime import datetime
 from .api_response import ok, err
 
 class MessageFacade:
     """
-    REPL 메시지 전달 시스템 Facade
+    경량화된 메시지 출력 시스템
     
-    Task 간 협업을 위한 최소화된 메시지 시스템
-    - note: 메시지 남기기
-    - task: 다음 작업 지시
+    순수 stdout 출력만 제공:
+    - note: 상태 메시지 출력
+    - task: 작업 지시 출력
+    - warn: 경고 메시지 출력
+    - error: 에러 메시지 출력
+    - success: 성공 메시지 출력
     """
-    
-    def __init__(self):
-        """메시지 시스템 초기화"""
-        self._init_storage()
-    
-    def _init_storage(self):
-        """전역 저장소 초기화"""
-        import builtins
-        
-        # globals() 대신 builtins를 통해 안전하게 접근
-        # name mangling 방지를 위해 __ 대신 명확한 이름 사용
-        if not hasattr(builtins, 'repl_message_notes'):
-            builtins.repl_message_notes = []
-        if not hasattr(builtins, 'repl_message_tasks'):
-            builtins.repl_message_tasks = []
     
     def note(self, msg: str) -> Dict[str, Any]:
         """
-        메시지 남기기
+        일반 메시지 출력
         
         Args:
-            msg: 남길 메시지
+            msg: 출력할 메시지
             
         Returns:
             {'ok': True, 'data': msg} or {'ok': False, 'error': str}
         
         Examples:
-            >>> h.message.note("데이터 처리 완료")
-            📝 [17:30:00] 데이터 처리 완료
-            {'ok': True, 'data': '데이터 처리 완료'}
+            >>> h.message.note("데이터 처리 중...")
+            📝 [17:30:00] 데이터 처리 중...
         """
         try:
-            import builtins
-            
-            # 저장소 확인
-            if not hasattr(builtins, 'repl_message_notes'):
-                self._init_storage()
-            
-            # 메시지 저장
             time = datetime.now().strftime('%H:%M:%S')
-            note_data = {
-                'msg': msg,
-                'time': time,
-                'timestamp': datetime.now().isoformat()
-            }
-            
-            builtins.repl_message_notes.append(note_data)
-            
-            # stdout 출력
             print(f"📝 [{time}] {msg}")
-            
             return ok(msg)
-            
         except Exception as e:
-            return err(f"메시지 남기기 실패: {str(e)}")
+            return err(f"메시지 출력 실패: {str(e)}")
     
     def task(self, instruction: str) -> Dict[str, Any]:
         """
-        다음 작업 지시
+        작업 지시 출력
         
         Args:
             instruction: 지시 내용
@@ -86,131 +56,165 @@ class MessageFacade:
             {'ok': True, 'data': instruction} or {'ok': False, 'error': str}
         
         Examples:
-            >>> h.message.task("테스트 코드 작성 필요")
-            📋 [17:30:00] → 테스트 코드 작성 필요
-            {'ok': True, 'data': '테스트 코드 작성 필요'}
+            >>> h.message.task("다음 단계 진행 필요")
+            📋 [17:30:00] → 다음 단계 진행 필요
         """
         try:
-            import builtins
-            
-            # 저장소 확인
-            if not hasattr(builtins, 'repl_message_tasks'):
-                self._init_storage()
-            
-            # 지시사항 저장
             time = datetime.now().strftime('%H:%M:%S')
-            task_data = {
-                'instruction': instruction,
-                'time': time,
-                'timestamp': datetime.now().isoformat(),
-                'completed': False
-            }
-            
-            builtins.repl_message_tasks.append(task_data)
-            
-            # stdout 출력
             print(f"📋 [{time}] → {instruction}")
-            
             return ok(instruction)
-            
         except Exception as e:
-            return err(f"작업 지시 실패: {str(e)}")
+            return err(f"작업 지시 출력 실패: {str(e)}")
     
-    def get_notes(self, last: int = 10) -> Dict[str, Any]:
+    def warn(self, msg: str) -> Dict[str, Any]:
         """
-        최근 메시지 조회 (프로그래밍 용도)
+        경고 메시지 출력
         
         Args:
-            last: 조회할 메시지 개수
+            msg: 경고 메시지
             
         Returns:
-            {'ok': True, 'data': [...]} or {'ok': False, 'error': str}
+            {'ok': True, 'data': msg} or {'ok': False, 'error': str}
+        
+        Examples:
+            >>> h.message.warn("메모리 사용량 80% 초과")
+            ⚠️ [17:30:00] 메모리 사용량 80% 초과
         """
         try:
-            import builtins
-            
-            notes = getattr(builtins, 'repl_message_notes', [])
-            return ok(notes[-last:] if notes else [])
-            
+            time = datetime.now().strftime('%H:%M:%S')
+            print(f"⚠️ [{time}] {msg}")
+            return ok(msg)
         except Exception as e:
-            return err(f"메시지 조회 실패: {str(e)}")
+            return err(f"경고 출력 실패: {str(e)}")
     
-    def get_tasks(self, pending_only: bool = True) -> Dict[str, Any]:
+    def error(self, msg: str) -> Dict[str, Any]:
         """
-        작업 지시사항 조회 (프로그래밍 용도)
+        에러 메시지 출력
         
         Args:
-            pending_only: True면 미완료 작업만 조회
+            msg: 에러 메시지
             
         Returns:
-            {'ok': True, 'data': [...]} or {'ok': False, 'error': str}
-        """
-        try:
-            import builtins
-            
-            tasks = getattr(builtins, 'repl_message_tasks', [])
-            
-            if pending_only:
-                tasks = [t for t in tasks if not t.get('completed', False)]
-            
-            return ok(tasks)
-            
-        except Exception as e:
-            return err(f"작업 조회 실패: {str(e)}")
-    
-    def clear(self) -> Dict[str, Any]:
-        """
-        모든 메시지 초기화
+            {'ok': True, 'data': msg} or {'ok': False, 'error': str}
         
-        Returns:
-            {'ok': True, 'data': 'cleared'} or {'ok': False, 'error': str}
+        Examples:
+            >>> h.message.error("파일을 찾을 수 없음")
+            ❌ [17:30:00] 파일을 찾을 수 없음
         """
         try:
-            import builtins
-            
-            builtins.repl_message_notes = []
-            builtins.repl_message_tasks = []
-            
-            print("🗑️ 모든 메시지가 초기화되었습니다.")
-            
-            return ok('cleared')
-            
+            time = datetime.now().strftime('%H:%M:%S')
+            print(f"❌ [{time}] {msg}")
+            return ok(msg)
         except Exception as e:
-            return err(f"초기화 실패: {str(e)}")
+            return err(f"에러 출력 실패: {str(e)}")
     
-    def stats(self) -> Dict[str, Any]:
+    def success(self, msg: str) -> Dict[str, Any]:
         """
-        메시지 통계 조회
+        성공 메시지 출력
         
+        Args:
+            msg: 성공 메시지
+            
         Returns:
-            {'ok': True, 'data': {'notes': int, 'tasks': int, 'pending': int}}
+            {'ok': True, 'data': msg} or {'ok': False, 'error': str}
+        
+        Examples:
+            >>> h.message.success("모든 테스트 통과!")
+            ✅ [17:30:00] 모든 테스트 통과!
         """
         try:
-            import builtins
-            
-            notes = getattr(builtins, 'repl_message_notes', [])
-            tasks = getattr(builtins, 'repl_message_tasks', [])
-            pending = [t for t in tasks if not t.get('completed', False)]
-            
-            stats_data = {
-                'notes': len(notes),
-                'tasks': len(tasks),
-                'pending': len(pending)
-            }
-            
-            print(f"📊 메시지 통계: 메시지 {stats_data['notes']}개, 작업 {stats_data['tasks']}개 (대기 {stats_data['pending']}개)")
-            
-            return ok(stats_data)
-            
+            time = datetime.now().strftime('%H:%M:%S')
+            print(f"✅ [{time}] {msg}")
+            return ok(msg)
         except Exception as e:
-            return err(f"통계 조회 실패: {str(e)}")
-
-# 모듈 로드 시 자동 초기화
-import builtins
-if not hasattr(builtins, 'repl_message_notes'):
-    builtins.repl_message_notes = []
-if not hasattr(builtins, 'repl_message_tasks'):
-    builtins.repl_message_tasks = []
+            return err(f"성공 메시지 출력 실패: {str(e)}")
+    
+    def info(self, msg: str) -> Dict[str, Any]:
+        """
+        정보 메시지 출력 (아이콘 없는 버전)
+        
+        Args:
+            msg: 정보 메시지
+            
+        Returns:
+            {'ok': True, 'data': msg} or {'ok': False, 'error': str}
+        
+        Examples:
+            >>> h.message.info("현재 진행률: 50%")
+            ℹ️ [17:30:00] 현재 진행률: 50%
+        """
+        try:
+            time = datetime.now().strftime('%H:%M:%S')
+            print(f"ℹ️ [{time}] {msg}")
+            return ok(msg)
+        except Exception as e:
+            return err(f"정보 출력 실패: {str(e)}")
+    
+    def debug(self, msg: str) -> Dict[str, Any]:
+        """
+        디버그 메시지 출력
+        
+        Args:
+            msg: 디버그 메시지
+            
+        Returns:
+            {'ok': True, 'data': msg} or {'ok': False, 'error': str}
+        
+        Examples:
+            >>> h.message.debug("변수 x = 10")
+            🔍 [17:30:00] 변수 x = 10
+        """
+        try:
+            time = datetime.now().strftime('%H:%M:%S')
+            print(f"🔍 [{time}] {msg}")
+            return ok(msg)
+        except Exception as e:
+            return err(f"디버그 출력 실패: {str(e)}")
+    
+    def header(self, title: str, width: int = 60) -> Dict[str, Any]:
+        """
+        섹션 헤더 출력
+        
+        Args:
+            title: 헤더 제목
+            width: 구분선 너비 (기본값: 60)
+            
+        Returns:
+            {'ok': True, 'data': title} or {'ok': False, 'error': str}
+        
+        Examples:
+            >>> h.message.header("테스트 시작")
+            ============================================================
+            🎯 테스트 시작
+            ============================================================
+        """
+        try:
+            print("=" * width)
+            print(f"🎯 {title}")
+            print("=" * width)
+            return ok(title)
+        except Exception as e:
+            return err(f"헤더 출력 실패: {str(e)}")
+    
+    def divider(self, width: int = 60) -> Dict[str, Any]:
+        """
+        구분선 출력
+        
+        Args:
+            width: 구분선 너비 (기본값: 60)
+            
+        Returns:
+            {'ok': True, 'data': 'divider'} or {'ok': False, 'error': str}
+        
+        Examples:
+            >>> h.message.divider()
+            ------------------------------------------------------------
+        """
+        try:
+            print("-" * width)
+            return ok('divider')
+        except Exception as e:
+            return err(f"구분선 출력 실패: {str(e)}")
 
 # Facade 인스턴스 생성
 message_facade = MessageFacade()

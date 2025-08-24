@@ -1,19 +1,19 @@
 {
   "id": "o3_task_0006",
   "status": "completed",
-  "question": "Calculate 3 * 3",
-  "start_time": "2025-08-17T21:18:49.180193",
-  "reasoning_effort": "high",
-  "last_update": "2025-08-17T21:18:52.935682",
+  "question": "Playwright 통합과 에러 처리 전략의 적절성",
+  "start_time": "2025-08-25T01:18:04.447428",
+  "reasoning_effort": "medium",
+  "last_update": "2025-08-25T01:18:55.453174",
   "result": {
-    "answer": "9",
-    "reasoning_effort": "high",
+    "answer": "아래는 제공된 구조와 이슈를 기반으로 한 Playwright 통합 적절성 평가와 에러 처리 전략 개선 제안입니다.\n\n핵심 평가\n- 구조는 Browser/Session, Actions, Recorder, Overlay로 모듈화가 잘 되어 있어 Playwright 통합에 적합합니다.\n- 다만 try-except가 58회로 분산되어 있고, overlay.py 내부가 비대해 액션·세션 경계에서 일관된 오류 처리와 재시도/증거 수집이 어렵게 보입니다.\n- Overlay 주입/유지 로직이 길고 복잡해 Playwright의 init script/style과 auto-wait/locator 철학을 충분히 활용하지 못했을 가능성이 큽니다.\n\nPlaywright 통합 베스트 프랙티스\n- 브라우저/컨텍스트 수명주기\n  - 프로세스당 Browser 1개 재사용, 세션당 BrowserContext 1개 생성/종료. Page는 액션 흐름에 맞게 생성/닫기.\n  - page.set_default_timeout, page.set_default_navigation_timeout을 Session 레벨에서 통일 관리(예: 10s/30s), 액션별 오버라이드 허용.\n  - 브라우저 연결/페이지 크래시 감지 후 복구: browser.is_connected(), page.on('crash'|'close') 핸들러에서 컨텍스트/페이지 재생성.\n\n- 대기/탐색 패턴\n  - CSS/XPath 대신 Locator 중심(strict 모드) 사용: page.get_by_role, get_by_label, locator(':has-text(\"…\")') 등.\n  - navigation은 단일 헬퍼로 일원화: click + expect(page).to_have_url(...) 또는 wait_for_url 패턴. networkidle은 필요한 경우에만.\n  - 임의 sleep/시간 지연 제거, Playwright auto-wait 최대 활용.\n  - 대화상자/다운로드/권한: dialog, download 이벤트를 Session에서 표준 처리. 권한은 context.grant_permissions로 사전 허용.\n\n- Overlay/Recorder 통합\n  - overlay.js/css는 context.add_init_script/add_init_style(스타일은 page.add_style_tag content)로 등록해 모든 네비게이션에 자동 주입.\n  - 페이지 전환/프레임 이동 시 재주입 로직을 제거하거나 최소화. init script가 idempotent하게 동작하도록 설계.\n  - 프레임/iframe에도 적용 필요 시 frame.page.context.add_init_script 사용 또는 frameNavigated 이벤트로 최소한의 보강.\n\n- 동시성/성능\n  - 가능하면 Python async API 사용으로 세션 병렬 처리. sync/async 혼용 금지.\n  - 세션마다 큐/락으로 액션 직렬화 제어. 네트워크 라우팅(route)으로 3rd-party 리소스 차단 시 안정성과 속도 개선.\n\n에러 처리 전략 개선\n- 예외 계층 표준화\n  - Domain 예외 정의: AutomationError(Base) 아래에 NavigationError, ElementNotFoundError, AssertionError, TransientTimeoutError, BrowserCrashedError 등.\n  - Playwright 예외 매핑: TimeoutError, Error(\"Execution context was destroyed\"), \"Target closed\"/\"Page crashed\" → 각각 Transient/ Fatal로 분류.\n\n- 중앙화된 에러 핸들러\n  - Actions 실행 엔트리포인트에서 단일 데코레이터/컨텍스트매니저로 예외 포착→도메인 예외 변환→아티팩트 수집→정책적 재시도→로그.\n  - 개별 try-except를 제거/축소하고 공통 핸들러에 위임. 현재 58회 사용을 액션 경계 1곳(+세션 경계 1곳)으로 수렴.\n\n- 재시도 정책\n  - 재시도는 idempotent 액션에 한정(메타데이터로 표시). 클릭으로 제출/결제 등 부작용 큰 작업은 재시도 금지.\n  - Transient 계열만 지수백오프+지터(예: 0.5s, 1s, 2s 최대 3회). Fatal 계열은 즉시 중단 및 세션 복구로 전환.\n  - 타임아웃은 “짧은 대기 실패→한 번 더 충분한 대기” 패턴이 현장에서 안정적.\n\n- 타임아웃/취소\n  - 글로벌 기본 타임아웃 + 액션별 상한(예: action.timeout_ms). 사용자가 상위 레벨에서 전체 작업 타임박스 제공 시 하향 전파.\n  - 취소 토큰/async timeout을 지원해 긴 네비게이션/다운로드 중단 가능.\n\n- 증거/관찰성\n  - 실패 시 항상 캡처: screenshot(full page), console logs, network errors, HTML snapshot(innerHTML/outerHTML 일부), last response status/url.\n  - Playwright tracing.start/stop을 액션 단위로 사용(실패 시만 보존). 비디오/스크린샷은 on-failure로.\n  - 구조적 로깅: session_id, context_id, page_id, action_id, selector, url, retry_count, error_code 포함. 상관관계 ID로 묶기.\n  - 메트릭: 액션 성공률, 평균 대기/네비게이션 시간, 상위 예외 Top N 대시보드.\n\n- 정리/복구\n  - finally에서 페이지/컨텍스트/임시 파일 정리. 브라우저 크래시 감지 시 재기동 루틴.\n  - Overlay 주입 실패는 소프트 실패로 취급(핵심 액션은 계속). 실패 카운트가 임계치 넘으면 Overlay 기능 비활성화하고 경고만.\n\n구현 제안 요약\n- Session 레벨\n  - set_default_timeout, set_default_navigation_timeout 적용\n  - context 생성 옵션 일원화(userAgent, viewport, permissions, recordVideo on-failure)\n  - tracing 관리: start(name=action_id, screenshots=true, snapshots=true) → stop(path=trace.zip)\n\n- Actions 레벨\n  - run_action(action) 공통 래퍼: pre-check(페이지 활성), 실행, 예외 매핑, 재시도, 아티팩트, 로깅.\n  - Locator 우선, expect assertions로 후검증(to_be_visible, to_have_value 등)\n\n- Overlay 리팩토링\n  - _get_overlay_javascript/_css는 정적 리소스로 분리(파일 또는 템플릿). 해시 기반 버전 관리.\n  - context.add_init_script로 1회 등록. 페이지별 add_style_tag는 작은 헬퍼로 캡슐화.\n  - 프레임/리로드에 안전한 idempotent 초기화 가드(window.__overlayReady 플래그)\n\n리스크 체크리스트\n- 브라우저당 컨텍스트 격리 보장 여부\n- 타임아웃 값의 일관성과 오버라이드 경로\n- broad except 사용 여부와 원인 유실 여부\n- 액션 재시도 시 부작용 여부 검증(메타데이터/스냅샷)\n- 실패 아티팩트 저장소 경로/보존정책\n- 크래시/닫힘 이벤트 대응과 자동 복구 흐름\n\n이렇게 정리하면 Playwright의 자동 대기/로케이터/트레이싱을 최대 활용하면서, 예외를 중앙에서 일관되게 다루고 재시도·증거 수집을 표준화할 수 있습니다. try-except 난립을 줄이고, 액션/세션 경계에서 “정책”으로 제어하는 것이 핵심입니다.",
+    "reasoning_effort": "medium",
     "usage": {
-      "prompt_tokens": 12,
-      "completion_tokens": 10,
-      "total_tokens": 22,
+      "prompt_tokens": 206,
+      "completion_tokens": 3546,
+      "total_tokens": 3752,
       "reasoning_tokens": 0
     }
   },
-  "end_time": "2025-08-17T21:18:52.935682"
+  "end_time": "2025-08-25T01:18:55.453174"
 }

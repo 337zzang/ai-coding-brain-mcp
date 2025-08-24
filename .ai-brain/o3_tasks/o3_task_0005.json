@@ -1,19 +1,19 @@
 {
   "id": "o3_task_0005",
   "status": "completed",
-  "question": "Calculate 2 * 2",
-  "start_time": "2025-08-17T21:18:49.178194",
-  "reasoning_effort": "high",
-  "last_update": "2025-08-17T21:18:54.440427",
+  "question": "overlay.py의 긴 템플릿 함수를 리팩토링하는 최선의 방법",
+  "start_time": "2025-08-25T01:18:04.446413",
+  "reasoning_effort": "medium",
+  "last_update": "2025-08-25T01:18:56.910882",
   "result": {
-    "answer": "4",
-    "reasoning_effort": "high",
+    "answer": "다음 순서로 “긴 템플릿 함수”를 제거하고, 유지보수·테스트·성능을 모두 개선하는 것이 가장 안전하고 효과적입니다.\n\n권장 방향: 템플릿 자체를 없애고 “정적 자산 + 런타임 설정” 구조로 전환\n- 목표: _get_overlay_javascript(), _get_overlay_css()가 거대한 문자열을 조립하지 않도록 하고, 동적 값은 최소한의 설정 객체로 전달.\n- 이점: 가독성, 캐싱/압축, CSP 친화성(인라인 스크립트/스타일 최소화), 테스트 용이성.\n\n1) 동적 vs 정적 구분\n- 정적(대부분): DOM 생성/업데이트 로직, 헬퍼, 이벤트 바인딩, UI 렌더링, 애니메이션 등 JS/CSS 본문.\n- 동적(소수): z-index, 색상/테마, prefix/id 네이밍, 기능 on/off, 디버그 플래그, 국제화 문자열 등.\n- 전략: 동적값은 window.__overlay_config 같은 전역 설정 객체로 전달하고 정적 코드에서는 이를 참조하도록 설계.\n\n2) 자산 분리 및 패키징\n- overlay/assets/overlay.js\n- overlay/assets/overlay.css\n- 선택: overlay/assets/overlay.d.ts 또는 TS/SASS 사용 시 빌드 아티팩트 포함.\n- Python 패키지에 포함: importlib.resources 사용. (PEP 561/PEP 562 계열)\n  - setup.cfg 또는 pyproject.toml에 package_data로 *.js, *.css 포함.\n  - MANIFEST.in에도 포함.\n\n3) 로더/인젝터 유틸 정리\n- overlay/assets.py\n  - read-only 로더. 캐싱 필수.\n  - 예시:\n    - from importlib.resources import files\n    - @lru_cache() def get_js(minified=True) -> str\n    - @lru_cache() def get_css(minified=True) -> str\n- overlay/config.py\n  - from dataclasses import dataclass\n  - @dataclass class OverlayConfig: z_index:int=..., prefix:str=\"__wo_\", theme:str=\"light\", enable_gps:bool=True, debug:bool=False, ...\n  - def to_json(self) -> str\n- overlay/injector.py\n  - def inject_overlay(driver, cfg: OverlayConfig):\n    - idempotent: 이미 삽입된 경우 skip\n    - window.__overlay_config 주입\n    - CSS 먼저, JS 다음 순서로 삽입\n    - CSP 고려: 가능하면 <link>/<script src> 경로 사용. 아니면 Blob URL/data: URL 대체. 최후에 inline.\n\n4) _get_overlay_javascript/_get_overlay_css 대체\n- 기존 긴 함수는 아래처럼 단순화:\n  - def _get_overlay_javascript(cfg: OverlayConfig) -> str:\n    - return f\"(function(){{window.__overlay_config={cfg.to_json()};}})();\\n\" + get_js(minified=True)\n  - def _get_overlay_css(cfg: OverlayConfig) -> str:\n    - 동적으로 꼭 필요한 부분만 CSS 변수로 주입하거나, 별도 작은 style 블록으로만 주입.\n    - 권장: 정적 CSS에 :root 또는 .wo-root에 --overlay-z-index 등 CSS 변수 정의를 두고, Python에서는 변수 값만 주입.\n- 즉, “코드 본문 템플릿팅”이 아니라 “설정 객체/변수 주입”으로 축소.\n\n5) 템플릿이 꼭 필요하다면 Jinja2로 “부분 템플릿” 분할\n- overlay/templates/js/\n  - helpers.js.j2\n  - dom.js.j2\n  - events.js.j2\n  - gps.js.j2\n  - init.js.j2\n- overlay/templates/css/\n  - base.css.j2\n  - theme_light.css.j2\n  - theme_dark.css.j2\n- renderer.py\n  - Jinja2 Environment + PackageLoader\n  - @lru_cache()로 컴파일 결과 캐시\n  - render_js(context), render_css(context)로 구성\n- 큰 하나의 템플릿 대신 섹션별 렌더 후 \"\\n\".join으로 합성.\n- 템플릿 변수는 최소화(가능하면 대부분 runtime config에서 읽도록).\n\n6) 빌드/최적화\n- 미니파이: 배포 전 미리 수행 권장\n  - Node 기반(rollup/webpack/esbuild/terser, sass) 또는 Python 기반(rjsmin/rcssmin)\n  - 결과물을 overlay.min.js, overlay.min.css로 패키징\n- 버전/무결성:\n  - 내부 버전 문자열과 SHA-256 해시를 계산해 JS에 주석으로 삽입\n  - Session/Browser 레벨 캐싱 키로 활용\n\n7) 주입 코드 예시 스켈레톤\n- CSS\n  - if (!document.getElementById('__wo_css')) { const s=document.createElement('style'); s.id='__wo_css'; s.textContent=cssText; document.head.appendChild(s); }\n- JS\n  - if (!window.__wo_loaded) { window.__overlay_config = cfg; /* append script text or create blob url */ window.__wo_loaded=true; }\n- CSP 대응\n  - 우선순위: link/script src(패키지에서 file://은 브라우저 제한. 권장: data: URL 또는 blob:)\n  - blob 예시: const blob=new Blob([jsText],{type:'text/javascript'}); const url=URL.createObjectURL(blob); const s=document.createElement('script'); s.src=url; document.head.appendChild(s);\n\n8) overlay.js 내부 구조화(핵심)\n- IIFE 혹은 UMD 형태로 글로벌 오염 최소화\n- init(config), destroy(), update(config) 메서드 제공\n- idempotent: 이미 root 노드가 있으면 재사용\n- CSS는 클래스/변수 기반으로 동작하도록 작성\n- JS에서 document.body에 shadowRoot를 사용하면 스타일 격리 개선(필요시)\n\n9) 점진적 마이그레이션 플랜\n- 1단계: 기존 _get_overlay_*를 유지하되 내부 구현만 “설정 + 정적 자산” 방식으로 교체(외부 인터페이스 동일)\n- 2단계: 호출부에서 _get_overlay_*를 직접 쓰지 않고 injector API로 통일\n- 3단계: overlay.py를 모듈 분할(assets.py, config.py, injector.py)하여 파일 길이 및 책임 분리\n- 4단계: 스냅샷 테스트 추가(생성된 JS/CSS에 대한 회귀 테스트), 설정 플래그별 분기 테스트\n- 5단계: 필요 시 Node 빌드 도입(크기/성능 최적화)\n\n10) 템플릿을 완전히 없애는 간단 대안\n- 동적 값은 전부 window.__overlay_config로 전달\n- CSS 동적 값은 root 엘리먼트에 style=\"--wo-z-index: 9999; --wo-color: ...\" 형태로만 주입\n- 긴 템플릿 함수는 불필요해지고 overlay.js/overlay.css는 순수 정적 파일이 됨\n\n부가 개선\n- try-except 남용 감소: 자산 로딩/주입 경로에서 실패를 좁은 범위로만 캐치하고, 구체 예외만 처리(FileNotFoundError, WebDriverException 등). 로더는 실패 시 예외 전파, 인젝터에서 한 번만 핸들링.\n- 성능: lru_cache로 자산 읽기/렌더 결과 캐싱. 세션별 최초 1회만 읽고 재사용.\n\n결론\n- “거대한 문자열 템플릿”을 유지하는 대신, 정적 자산 + 런타임 설정 주입으로 전환하는 것이 최선입니다. 템플릿이 필요하면 섹션별 Jinja2 분리로 관리하고, 가능한 로직은 모두 overlay.js 내부의 init(config)로 옮겨 템플릿 변수 수를 최소화하세요. 이렇게 하면 overlay.py의 라인 수를 크게 줄이고, 테스트/빌드/배포 파이프라인이 단순해지며, 향후 기능 추가와 디버깅이 수월해집니다.",
+    "reasoning_effort": "medium",
     "usage": {
-      "prompt_tokens": 12,
-      "completion_tokens": 138,
-      "total_tokens": 150,
+      "prompt_tokens": 212,
+      "completion_tokens": 3571,
+      "total_tokens": 3783,
       "reasoning_tokens": 0
     }
   },
-  "end_time": "2025-08-17T21:18:54.440427"
+  "end_time": "2025-08-25T01:18:56.908883"
 }

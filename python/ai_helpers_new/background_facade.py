@@ -231,10 +231,21 @@ class BackgroundFacade:
             
             return ok(details)
         else:
-            # 간단 요약
-            summary = f"활성: {len(active)}, 완료: {len(status.get('completed', []))}"
-            self.message.info("bg_status", summary)
-            return ok(summary)
+            # 구조화된 요약 데이터 반환
+            summary_data = {
+                'active': len(active),
+                'completed': len(status.get('completed', [])),
+                'failed': len(status.get('failed', [])),
+                'pending': len(status.get('pending', [])),
+                'running': len(status.get('running', []))
+            }
+            
+            # 메시지 출력
+            summary_text = f"활성: {summary_data['active']}, 완료: {summary_data['completed']}"
+            self.message.info("bg_status", summary_text)
+            
+            # 구조화된 데이터 반환
+            return ok(summary_data)
     
     def progress(self) -> Dict[str, Any]:
         """

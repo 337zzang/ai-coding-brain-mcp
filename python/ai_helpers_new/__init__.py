@@ -187,7 +187,8 @@ __author__ = "AI Coding Brain Team"
 # Public API 정의 (최소)
 __all__ = [
     # 네임스페이스 (새로운 방식)
-# DEPRECATED:     'file', 'code', 'search', 'git', 'memory', 'unified',
+    'file', 'code', 'search', 'git', 'memory', 'message',
+# DEPRECATED: 'unified',
     
     # 주요 함수들 (하위 호환성)
     'read', 'write', 'append', 'exists', 'get_file_info',

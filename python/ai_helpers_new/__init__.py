@@ -203,7 +203,7 @@ __author__ = "AI Coding Brain Team"
 # Public API 정의 (최소)
 __all__ = [
     # 네임스페이스 (새로운 방식)
-    'file', 'code', 'search', 'git', 'memory', 'message', 'background',
+    'file', 'code', 'search', 'git', 'memory', 'message', 'background', 'bg',
     'run_in_background', 'get_background_results',
     'get_background_status', 'wait_for_all',
 # DEPRECATED: 'unified',

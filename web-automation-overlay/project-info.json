@@ -1,0 +1,19 @@
+{
+  "name": "Web Automation Overlay System",
+  "version": "1.0.0",
+  "description": "AI-driven web automation with visual overlay guidance",
+  "architecture": {
+    "frontend": "Chrome Extension (Manifest V3)",
+    "backend": "Python WebSocket Server",
+    "protocol": "JSON-based Action Protocol",
+    "communication": "WebSocket + Native Messaging"
+  },
+  "features": [
+    "Visual element highlighting",
+    "Structured action sequences",
+    "Token-optimized communication",
+    "Cross-site compatibility",
+    "Error recovery mechanisms"
+  ],
+  "status": "Phase 1 - Foundation"
+}

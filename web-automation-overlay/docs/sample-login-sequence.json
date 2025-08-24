@@ -1,0 +1,71 @@
+{
+  "version": "1.0.0",
+  "session_id": "demo-001",
+  "actions": [
+    {
+      "type": "wait",
+      "target": {
+        "selector": "#login-form"
+      },
+      "options": {
+        "delay": 500
+      }
+    },
+    {
+      "type": "click",
+      "target": {
+        "selector": "#username"
+      },
+      "overlay": {
+        "color": "blue",
+        "label": "Step 1: Click username field",
+        "duration": 2000
+      }
+    },
+    {
+      "type": "type",
+      "value": "demo_user",
+      "target": {
+        "selector": "#username"
+      },
+      "options": {
+        "delay": 100
+      }
+    },
+    {
+      "type": "click",
+      "target": {
+        "selector": "#password"
+      },
+      "overlay": {
+        "color": "green",
+        "label": "Step 2: Click password field",
+        "duration": 2000
+      }
+    },
+    {
+      "type": "type",
+      "value": "secure_password",
+      "target": {
+        "selector": "#password"
+      },
+      "options": {
+        "delay": 100
+      }
+    },
+    {
+      "type": "click",
+      "target": {
+        "selector": "button[type='submit']"
+      },
+      "overlay": {
+        "color": "red",
+        "label": "Step 3: Submit form",
+        "duration": 3000
+      },
+      "options": {
+        "wait_for": "navigation"
+      }
+    }
+  ]
+}

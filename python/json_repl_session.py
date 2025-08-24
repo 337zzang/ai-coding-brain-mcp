@@ -158,34 +158,16 @@ class SessionPool:
         
         session = EnhancedREPLSession(**config)
         
-        # 🔥 단순화된 공유 변수 시스템 - 하나로 통합!
+        # 🔥 최소한의 헬퍼만 제공
         session.namespace.update({
-            'agent_id': agent_id,
-            'session_info': lambda: self.get_session_info(agent_id),
-            
-            # 단일 공유 변수 스토리지
-            'shared': self.shared_variables,  # 모든 데이터를 여기에
-            
-            # 간단한 헬퍼 함수들
-            'set_shared': lambda k, v: self.shared_variables.update({k: v}),
-            'get_shared': lambda k, default=None: self.shared_variables.get(k, default),
-            'list_shared': lambda: list(self.shared_variables.keys()),
-            'clear_shared': lambda: self.shared_variables.clear(),
-            'del_shared': lambda k: self.shared_variables.pop(k, None),
-            
-            # 변수 통계
-            'var_count': lambda: len(self.shared_variables),
-            'var_info': lambda: {
-                'total': len(self.shared_variables),
-                'keys': list(self.shared_variables.keys())[:10]  # 최대 10개 키만
-            },
-            
-            # 🔥 간단한 메시지 헬퍼 (AI가 다음 작업자에게 전달)
+            # 메시지 헬퍼 (다음 작업자에게 전달)
             'leave_note': lambda msg: print(f"\n💬 다음 작업자에게: {msg}"),
             'next_step': lambda msg: print(f"\n➡️ 다음 단계: {msg}"),
             'todo': lambda msg: print(f"\n📝 TODO: {msg}"),
             'done': lambda msg: print(f"\n✅ 완료: {msg}"),
             
+            # 디버깅용
+            'show_vars': lambda: print(f"\n📦 현재 변수: {', '.join([k for k in session.namespace.keys() if not k.startswith('_')][:10])}")
         })
         
         return session

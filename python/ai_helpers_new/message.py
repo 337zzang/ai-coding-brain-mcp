@@ -34,7 +34,7 @@ class MessageFacade:
     - "작업 흐름이 바뀌나?" → YES면 task()
     """
     
-    def task(self, msg: str, level: str = "INFO") -> Dict[str, Any]:
+    def task(self, msg: str, *, level: str = "INFO") -> Dict[str, Any]:
         """
         작업 흐름 추적 메시지
         

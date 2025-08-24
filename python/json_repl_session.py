@@ -296,19 +296,42 @@ SESSION_POOL = SessionPool(max_sessions=10, session_timeout=3600)
 
 
 def get_enhanced_prompt(session_key: str = "shared") -> str:
-    """AI가 다음 작업을 이어서 수행하도록 개별 변수를 명확하게 전달"""
+    """다음 단계에 필요한 내용만 선별적으로 전달"""
     
     output = []
     output.append("\n" + "━" * 60)
-    output.append("\n📦 개별 변수 전달 시스템")
+    output.append("\n📎 다음 단계 필수 전달 사항")
     output.append("━" * 60)
     
-    # 1. 모든 개별 변수를 각각 표시
+    # 1. 가장 최근 작업 결과물만 전달 (다음 단계에 필요한 것)
     if SESSION_POOL.shared_variables:
-        output.append("\n🔤 사용 가능한 개별 변수들:\n")
+        # 최근 추가된 항목들 (마지막 3-5개)
+        recent_keys = list(SESSION_POOL.shared_variables.keys())[-5:]
+        relevant_items = []
         
-        # 각 변수를 개별적으로 상세히 표시
-        for key, value in SESSION_POOL.shared_variables.items():
+        # 다음 단계에 필요한 패턴 식별
+        priority_patterns = ['result', 'output', 'processed', 'final', 'completed']
+        data_patterns = ['data', 'content', 'analysis', 'optimization', 'test']
+        function_patterns = ['process', 'analyze', 'validate', 'transform', 'compute']
+        
+        # 우선순위별로 필터링
+        for key in recent_keys:
+            value = SESSION_POOL.shared_variables[key]
+            
+            # 결과물인지 확인
+            if any(pattern in key.lower() for pattern in priority_patterns):
+                relevant_items.append((key, value, 'result'))
+            # 데이터인지 확인
+            elif any(pattern in key.lower() for pattern in data_patterns):
+                relevant_items.append((key, value, 'data'))
+            # 함수인지 확인
+            elif callable(value):
+                relevant_items.append((key, value, 'function'))
+        
+        if relevant_items:
+            output.append("\n🎯 다음 단계에 필요한 항목:\n")
+            
+            for key, value, item_type in relevant_items:
             # Flow 플랜은 특별 처리
             if key == 'current_flow_plan':
                 output.append(f"  📋 {key}:")

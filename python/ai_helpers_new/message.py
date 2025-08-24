@@ -22,8 +22,14 @@ class MessageFacade:
     """
     오케스트레이션 메시지 시스템 (4종)
     
+    메시지 방향성:
+    - task(): 모든 방향 (메인↔메인, 메인↔서브, 서브↔서브)
+    - share(): 메인→메인 (영속적 상태 기록 전용)
+    - call(): 메인→서브 (서브에이전트 호출)
+    - stop(): 서브→메인 (중단/문제 보고)
+    
     모든 메서드는 메시지 문자열 하나만 받음
-    형식: "[TYPE] agent | content"
+    형식: "agent | content" 또는 "agent → target | content"
     """
     
     def task(self, msg: str) -> Dict[str, Any]:

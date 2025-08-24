@@ -54,7 +54,7 @@ class MessageFacade:
             import builtins
             
             # 저장소 확인
-            if not hasattr(builtins, '__repl_notes'):
+            if not hasattr(builtins, 'repl_message_notes'):
                 self._init_storage()
             
             # 메시지 저장
@@ -65,7 +65,7 @@ class MessageFacade:
                 'timestamp': datetime.now().isoformat()
             }
             
-            builtins.__repl_notes.append(note_data)
+            builtins.repl_message_notes.append(note_data)
             
             # stdout 출력
             print(f"📝 [{time}] {msg}")

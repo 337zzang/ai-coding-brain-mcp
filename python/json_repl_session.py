@@ -67,6 +67,53 @@ class SessionPool:
             'current_active': 0
         }
     
+    def _generate_session_key(self, agent_id: Optional[str], session_id: Optional[str]) -> str:
+        """Generate session key based on agent_id or session_id"""
+        if session_id:
+            return session_id
+        elif agent_id:
+            return f"agent_{agent_id}"
+        else:
+            return f"anon_{uuid.uuid4().hex[:8]}"
+    
+    def _try_reuse_session(self, key: str, current_time: float) -> Optional[Tuple[str, EnhancedREPLSession]]:
+        """Try to reuse existing session if valid"""
+        if key not in self.sessions:
+            return None
+            
+        session_data = self.sessions[key]
+        
+        # Check if session expired
+        if current_time - session_data['last_accessed'] > self.session_timeout:
+            self._cleanup_session(key)
+            self.metrics['total_expired'] += 1
+            return None
+        
+        # Reuse existing session
+        session_data['last_accessed'] = current_time
+        session_data['access_count'] += 1
+        self.metrics['total_reused'] += 1
+        
+        return key, session_data['session']
+    
+    def _register_new_session(self, key: str, session: EnhancedREPLSession, 
+                            agent_id: Optional[str], current_time: float) -> None:
+        """Register a new session in the pool"""
+        self.sessions[key] = {
+            'session': session,
+            'agent_id': agent_id,
+            'created_at': current_time,
+            'last_accessed': current_time,
+            'access_count': 1,
+            'execution_count': 0
+        }
+        
+        self.metrics['total_created'] += 1
+        self.metrics['current_active'] = len(self.sessions)
+        
+        print(f"[SessionPool] Created new session: {key} for agent: {agent_id or 'anonymous'}", 
+              file=sys.stderr)
+    
     def get_or_create_session(self, 
                             agent_id: Optional[str] = None,
                             session_id: Optional[str] = None) -> Tuple[str, EnhancedREPLSession]:
@@ -74,56 +121,21 @@ class SessionPool:
         
         with self.lock:
             # Generate session key
-            if session_id:
-                key = session_id
-            elif agent_id:
-                # Agent-specific persistent session
-                key = f"agent_{agent_id}"
-            else:
-                # Anonymous session
-                key = f"anon_{uuid.uuid4().hex[:8]}"
-            
+            key = self._generate_session_key(agent_id, session_id)
             current_time = time.time()
             
-            # Check if session exists and is valid
-            if key in self.sessions:
-                session_data = self.sessions[key]
-                
-                # Check if session expired
-                if current_time - session_data['last_accessed'] > self.session_timeout:
-                    # Clean up expired session
-                    self._cleanup_session(key)
-                    self.metrics['total_expired'] += 1
-                else:
-                    # Reuse existing session
-                    session_data['last_accessed'] = current_time
-                    session_data['access_count'] += 1
-                    self.metrics['total_reused'] += 1
-                    
-                    return key, session_data['session']
+            # Try to reuse existing session
+            existing = self._try_reuse_session(key, current_time)
+            if existing:
+                return existing
             
             # Check pool capacity
             if len(self.sessions) >= self.max_sessions:
-                # Remove least recently used session
                 self._evict_lru_session()
             
-            # Create new session
+            # Create and register new session
             new_session = self._create_new_session(agent_id)
-            
-            self.sessions[key] = {
-                'session': new_session,
-                'agent_id': agent_id,
-                'created_at': current_time,
-                'last_accessed': current_time,
-                'access_count': 1,
-                'execution_count': 0
-            }
-            
-            self.metrics['total_created'] += 1
-            self.metrics['current_active'] = len(self.sessions)
-            
-            print(f"[SessionPool] Created new session: {key} for agent: {agent_id or 'anonymous'}", 
-                  file=sys.stderr)
+            self._register_new_session(key, new_session, agent_id, current_time)
             
             return key, new_session
     

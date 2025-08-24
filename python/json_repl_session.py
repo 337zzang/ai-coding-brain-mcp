@@ -295,6 +295,51 @@ Think 도구를 사용하여 다음을 수행하세요:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
 
 
+def _track_execution(session_key: str) -> None:
+    """Track execution count for a session"""
+    if session_key in SESSION_POOL.sessions:
+        SESSION_POOL.sessions[session_key]['execution_count'] += 1
+
+
+def _build_response_metadata(result: Any, session_key: str, agent_id: Optional[str]) -> Dict[str, Any]:
+    """Build response metadata from execution result"""
+    session_data = SESSION_POOL.sessions.get(session_key, {})
+    
+    return {
+        'success': result.success,
+        'language': 'python',
+        'session_mode': 'ISOLATED_JSON_REPL',
+        'session_id': session_key,
+        'agent_id': agent_id,
+        'stdout': result.stdout,
+        'stderr': result.stderr,
+        'execution_count': session_data.get('execution_count', 0),
+        'memory_mb': result.memory_usage_mb,
+        'execution_time_ms': result.execution_time_ms,
+        'execution_mode': result.execution_mode.value,
+        'chunks_processed': result.chunks_processed,
+        'cached': result.cached,
+        'note': f'Isolated session for agent: {agent_id or "anonymous"}',
+        'debug_info': {
+            'session_active': True,
+            'session_age': int(time.time() - session_data.get('created_at', time.time())),
+            'pool_size': len(SESSION_POOL.sessions),
+            'pool_metrics': SESSION_POOL.get_pool_metrics()
+        },
+        'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+    }
+
+
+def _add_cache_statistics(response: Dict[str, Any], session: Any) -> None:
+    """Add cache statistics to response if caching is enabled"""
+    if session.enable_caching:
+        cache_stats = session.get_cache_stats()
+        response['cache_stats'] = {
+            'entries': cache_stats.get('entries', 0),
+            'hit_rate': cache_stats.get('hit_rate', 0)
+        }
+
+
 def execute_code(code: str, 
                 agent_id: Optional[str] = None,
                 session_id: Optional[str] = None) -> Dict[str, Any]:
@@ -304,44 +349,16 @@ def execute_code(code: str,
     session_key, session = SESSION_POOL.get_or_create_session(agent_id, session_id)
     
     # Track execution
-    if session_key in SESSION_POOL.sessions:
-        SESSION_POOL.sessions[session_key]['execution_count'] += 1
+    _track_execution(session_key)
     
     # Execute with enhanced session
     result = session.execute(code)
     
-    # Convert to JSON-compatible format
-    response = {
-        'success': result.success,
-        'language': 'python',
-        'session_mode': 'ISOLATED_JSON_REPL',
-        'session_id': session_key,  # Return session ID for client reuse
-        'agent_id': agent_id,
-        'stdout': result.stdout,
-        'stderr': result.stderr,
-        'execution_count': SESSION_POOL.sessions[session_key]['execution_count'],
-        'memory_mb': result.memory_usage_mb,
-        'execution_time_ms': result.execution_time_ms,
-        'execution_mode': result.execution_mode.value,
-        'chunks_processed': result.chunks_processed,
-        'cached': result.cached,
-        'note': f'Isolated session for agent: {agent_id or "anonymous"}',
-        'debug_info': {
-            'session_active': True,
-            'session_age': int(time.time() - SESSION_POOL.sessions[session_key]['created_at']),
-            'pool_size': len(SESSION_POOL.sessions),
-            'pool_metrics': SESSION_POOL.get_pool_metrics()
-        },
-        'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-    }
+    # Build response
+    response = _build_response_metadata(result, session_key, agent_id)
     
     # Add cache statistics if available
-    if session.enable_caching:
-        cache_stats = session.get_cache_stats()
-        response['cache_stats'] = {
-            'entries': cache_stats.get('entries', 0),
-            'hit_rate': cache_stats.get('hit_rate', 0)
-        }
+    _add_cache_statistics(response, session)
     
     # Add Think prompt for successful executions
     if response.get("success", False) and response.get("stdout", ""):

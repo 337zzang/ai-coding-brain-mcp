@@ -218,7 +218,7 @@ def _generate_task_id() -> str:
 
 
 def _call_o3_api(question: str, context: Optional[str] = None, 
-                 api_key: Optional[str] = None, reasoning_effort: str = "high") -> Dict[str, Any]:
+                 api_key: Optional[str] = None, reasoning_effort: str = "medium") -> Dict[str, Any]:
     """실제 o3 API 호출 (내부 함수)"""
     if not OPENAI_AVAILABLE:
         return {"error": "OpenAI package not installed"}
@@ -267,7 +267,7 @@ def _call_o3_api(question: str, context: Optional[str] = None,
 
 
 def _run_o3_task(task_id: str, question: str, context: Optional[str] = None,
-                 api_key: Optional[str] = None, reasoning_effort: str = "high"):
+                 api_key: Optional[str] = None, reasoning_effort: str = "medium"):
     """백그라운드에서 o3 작업 실행 (개선 버전)"""
 
     # 초기 상태를 파일과 메모리에 저장
@@ -305,14 +305,14 @@ def _run_o3_task(task_id: str, question: str, context: Optional[str] = None,
                          error=str(e),
                          end_time=datetime.now())
 def ask_o3_async(question: str, context: Optional[str] = None, 
-                 reasoning_effort: Union[str, None] = "high", 
+                 reasoning_effort: Union[str, None] = "medium", 
                  _api_key: Optional[str] = None) -> Dict[str, Any]:
-    """o3 모델에 비동기로 질문 (백그라운드 실행)
+    """o3 모델에 비동기로 질문 (백그라운듍 실행)
 
     Args:
         question: 질문 내용
         context: 추가 컨텍스트 (선택)
-        reasoning_effort: 추론 수준 - "high", "medium", "low" (기본: "high")
+        reasoning_effort: 추론 수준 - "high", "medium", "low" (기본: "medium")
         _api_key: API 키 (선택, 환경변수 사용 권장) - deprecated
 
     Returns:
@@ -324,11 +324,11 @@ def ask_o3_async(question: str, context: Optional[str] = None,
         # API 키의 특징: sk-로 시작하거나 길이가 40자 이상
         if reasoning_effort.startswith('sk-') or len(reasoning_effort) > 40:
             _api_key = reasoning_effort
-            reasoning_effort = "high"
+            reasoning_effort = "medium"
         # "low", "medium", "high"가 아닌 경우도 API 키로 간주
         elif reasoning_effort not in ["low", "medium", "high"]:
             _api_key = reasoning_effort
-            reasoning_effort = "high"
+            reasoning_effort = "medium"
 
     # 작업 생성
     task_id = _generate_task_id()

@@ -75,13 +75,9 @@ class SessionPool:
         }
     
     def _generate_session_key(self, agent_id: Optional[str], session_id: Optional[str]) -> str:
-        """Generate session key based on agent_id or session_id"""
-        if session_id:
-            return session_id
-        elif agent_id:
-            return f"agent_{agent_id}"
-        else:
-            return f"anon_{uuid.uuid4().hex[:8]}"
+        """Always return 'shared' for shared session mode"""
+        # 🔥 모든 에이전트가 'shared' 세션 사용
+        return "shared"  # 단일 공유 세션!
     
     def _try_reuse_session(self, key: str, current_time: float) -> Optional[Tuple[str, EnhancedREPLSession]]:
         """Try to reuse existing session if valid"""

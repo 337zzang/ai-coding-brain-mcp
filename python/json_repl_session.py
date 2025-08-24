@@ -306,18 +306,52 @@ class SessionPool:
 SESSION_POOL = SessionPool(max_sessions=10, session_timeout=3600)
 
 
-def get_think_prompt() -> str:
-    """Get Think tool prompt for successful executions"""
-    return """
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🤔 코드 실행 완료 - Think 도구로 분석 권장
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Think 도구를 사용하여 다음을 수행하세요:
-• 실행 결과의 정확성 및 완전성 검증
-• 코드 패턴과 잠재적 개선점 분석
-• 다음 단계 작업 계획 수립
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
+def get_enhanced_prompt(session_key: str = "shared") -> str:
+    """Get enhanced prompt with context and next steps"""
+    output = []
+    output.append("\n" + "━" * 60)
+    
+    # 1. 저장된 변수 정보 표시
+    if SESSION_POOL.shared_variables:
+        output.append("💾 저장된 주요 변수:")
+        for key in list(SESSION_POOL.shared_variables.keys())[-5:]:  # 최근 5개
+            value = SESSION_POOL.shared_variables[key]
+            if isinstance(value, dict):
+                output.append(f"  • {key}: {list(value.keys())[:3]}...")
+            elif isinstance(value, list):
+                output.append(f"  • {key}: [{len(value)} items]")
+            else:
+                value_str = str(value)[:50] + "..." if len(str(value)) > 50 else str(value)
+                output.append(f"  • {key}: {value_str}")
+    
+    # 2. 워크플로우 상태
+    if SESSION_POOL.workflow_data:
+        output.append("\n🔄 워크플로우 상태:")
+        for key, value in list(SESSION_POOL.workflow_data.items())[-3:]:
+            output.append(f"  • {key}: {value}")
+    
+    # 3. 변수 통계
+    total_vars = len(SESSION_POOL.shared_variables)
+    total_workflow = len(SESSION_POOL.workflow_data)
+    total_cache = len(SESSION_POOL.cache_data)
+    if total_vars + total_workflow + total_cache > 0:
+        output.append(f"\n📊 데이터 현황: 공유({total_vars}) | 워크플로우({total_workflow}) | 캐시({total_cache})")
+    
+    # 4. 다음 작업 가이드
+    output.append("\n🎯 다음 작업:")
+    if 'analysis' in SESSION_POOL.shared_variables or 'analysis_result' in SESSION_POOL.shared_variables:
+        if 'optimization' not in SESSION_POOL.shared_variables and 'optimization_result' not in SESSION_POOL.shared_variables:
+            output.append("  → optimizer 실행: get_shared('analysis_result')")
+        elif 'test' not in SESSION_POOL.shared_variables and 'test_result' not in SESSION_POOL.shared_variables:
+            output.append("  → test 실행: get_shared('optimization_result')")
+        else:
+            output.append("  → 결과 확인: list_shared()")
+    else:
+        output.append("  → 데이터 활용: get_shared('key_name')")
+        output.append("  → 저장: set_shared('key', value)")
+    
+    output.append("━" * 60)
+    return "\n".join(output)
 
 
 def _track_execution(session_key: str) -> None:

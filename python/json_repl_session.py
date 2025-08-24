@@ -337,102 +337,44 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
     
     output = []
     output.append("\n" + "━" * 60)
-    output.append("\n🔄 REPL 세션 현황")
+    output.append("\n🔄 REPL 환경 활용 가이드")
     output.append("━" * 60)
     
-    # 1. 가장 최근 작업 결과물만 전달 (다음 단계에 필요한 것)
+    # 현재 저장된 것들 간단히 정리
     if SESSION_POOL.shared_variables:
-        # 최근 추가된 항목들 (마지막 3-5개)
-        recent_keys = list(SESSION_POOL.shared_variables.keys())[-5:]
-        relevant_items = []
+        output.append("\n📦 사용 가능한 것들:")
         
-        # 다음 단계에 필요한 패턴 식별
-        priority_patterns = ['result', 'output', 'processed', 'final', 'completed']
-        data_patterns = ['data', 'content', 'analysis', 'optimization', 'test']
+        # 함수들
+        functions = [k for k, v in SESSION_POOL.shared_variables.items() if callable(v)]
+        if functions:
+            output.append(f"\n  🔧 함수: {', '.join(functions[:3])}")
+            output.append(f"     → 예: result = {functions[0]}(data)")
         
-        # 우선순위별로 필터링
-        for key in recent_keys:
-            value = SESSION_POOL.shared_variables[key]
-            
-            # 결과물인지 확인
-            if any(pattern in key.lower() for pattern in priority_patterns):
-                relevant_items.append((key, value, 'result'))
-            # 데이터인지 확인
-            elif any(pattern in key.lower() for pattern in data_patterns):
-                relevant_items.append((key, value, 'data'))
-            # 함수인지 확인
-            elif callable(value):
-                relevant_items.append((key, value, 'function'))
+        # 최근 결과물들
+        results = [k for k in SESSION_POOL.shared_variables.keys() if 'result' in k or 'output' in k]
+        if results:
+            output.append(f"\n  ✅ 결과: {', '.join(results[-3:])}")
+            output.append(f"     → 예: data = get_shared('{results[-1]}')")
         
-        if relevant_items:
-            output.append("\n🎯 다음 단계에 필요한 항목:\n")
-            
-            for key, value, item_type in relevant_items:
-                # 타입별 간단 표시
-                if item_type == 'result':
-                    output.append(f"  ✅ {key}:")
-                    if isinstance(value, dict):
-                        output.append(f"     • 결과 데이터 (Dict[{len(value)}])")
-                        output.append(f"     • 사용: data = get_shared('{key}')")
-                    elif isinstance(value, list):
-                        output.append(f"     • 결과 리스트 ({len(value)}개)")
-                        output.append(f"     • 사용: items = get_shared('{key}')")
-                    else:
-                        output.append(f"     • 결과값")
-                        output.append(f"     • 사용: val = get_shared('{key}')")
-                    output.append("")
-                    
-                elif item_type == 'function':
-                    output.append(f"  🔧 {key}():")
-                    output.append(f"     • 재사용 가능 함수")
-                    output.append(f"     • 호출: result = {key}(args)")
-                    output.append("")
-                    
-                elif item_type == 'data':
-                    output.append(f"  📦 {key}:")
-                    output.append(f"     • 처리할 데이터")
-                    output.append(f"     • 접근: data = get_shared('{key}')")
-                    output.append("")
-    
-    # 2. Flow 플랜 기반 다음 작업 지시
-    flow_plan = SESSION_POOL.shared_variables.get('current_flow_plan')
-    if flow_plan:
-        tasks = flow_plan.get('tasks', {})
-        if isinstance(tasks, dict):
-            task_list = list(tasks.values())
-        else:
-            task_list = tasks if tasks else []
+        # 데이터들
+        data_items = [k for k in SESSION_POOL.shared_variables.keys() if 'data' in k]
+        if data_items:
+            output.append(f"\n  📊 데이터: {', '.join(data_items[-3:])}")
+            output.append(f"     → 예: items = get_shared('{data_items[-1]}')")
         
-        # 다음 태스크 찾기
-        next_task = None
-        for task in task_list:
-            if task.get('status') not in ['completed', 'done']:
-                next_task = task
-                break
-        
-        if next_task:
-            task_name = next_task.get('title') or next_task.get('name', 'Unknown')
-            output.append(f"\n🎯 다음 태스크: '{task_name}'")
-            
-            # 간단한 작업 가이드만
-            output.append(f"  → {task_name} 진행 중...")
+        output.append(f"\n  총 {len(SESSION_POOL.shared_variables)}개 저장됨")
     
-    # 3. 간단한 도움말
-    output.append("\n📌 빠른 참조:")
+    # 간단한 다음 단계 제안
+    output.append("\n💡 다음 작업:")
     
-    # 메시지 관련
-    if unread_messages:
-        output.append("  • mark_messages_read() - 메시지 읽음 처리")
+    # 가장 최근 변수 기반으로 제안
+    recent_vars = list(SESSION_POOL.shared_variables.keys())[-2:]
+    if recent_vars:
+        output.append(f"  • 최근 작업물({recent_vars[-1]})을 활용해서 계속 진행")
+    else:
+        output.append("  • 데이터를 준비하고 작업 시작")
     
-    # 주요 변수만 간단히
-    important_vars = [k for k in SESSION_POOL.shared_variables.keys() 
-                     if 'result' in k or 'output' in k or 'data' in k][-3:]
-    if important_vars:
-        output.append(f"  • 주요 변수: {', '.join(important_vars)}")
-    
-    output.append(f"  • 총 {len(SESSION_POOL.shared_variables)}개 항목 저장됨")
-    
-    output.append("━" * 60)
+    output.append("\n━" * 60)
     
     return "\n".join(output)
 

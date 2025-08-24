@@ -201,22 +201,6 @@ class SessionPool:
                 'keys': list(self.shared_variables.keys())[:10]  # 최대 10개 키만
             },
             
-            # 🔥 AI 메시지 시스템 (새로 추가!)
-            'leave_message': lambda msg, priority='normal': self.add_message(msg, agent_id, priority),
-            'message': lambda msg: self.add_message(msg, agent_id, 'normal'),  # 간단 버전
-            'urgent_message': lambda msg: self.add_message(msg, agent_id, 'high'),  # 긴급 메시지
-            'note': lambda msg: self.add_message(msg, agent_id, 'low'),  # 일반 노트
-            
-            # 메시지 조회
-            'get_messages': lambda: self.shared_variables.get('ai_messages', []),
-            'get_unread_messages': lambda: [m for m in self.shared_variables.get('ai_messages', []) if not m['read']],
-            'mark_messages_read': lambda: [m.update({'read': True}) for m in self.shared_variables.get('ai_messages', [])],
-            
-            # 작업 지시 헬퍼
-            'next_step': lambda msg: self.add_message(f"다음 단계: {msg}", agent_id, 'normal', ['next_step']),
-            'todo': lambda msg: self.add_message(f"TODO: {msg}", agent_id, 'normal', ['todo']),
-            'fix_this': lambda msg: self.add_message(f"수정 필요: {msg}", agent_id, 'high', ['fix']),
-            'review': lambda msg: self.add_message(f"검토 요청: {msg}", agent_id, 'normal', ['review'])
         })
         
         return session

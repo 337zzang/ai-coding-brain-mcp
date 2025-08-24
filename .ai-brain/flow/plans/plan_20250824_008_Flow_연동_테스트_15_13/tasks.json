@@ -1,0 +1,44 @@
+{
+  "task_20250824_151308_239ec2": {
+    "id": "task_20250824_151308_239ec2",
+    "title": "코드 분석",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-24T15:13:08.282486",
+    "updated_at": "2025-08-24T15:13:08.282486",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250824_151308_5d1acc": {
+    "id": "task_20250824_151308_5d1acc",
+    "title": "최적화 실행",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-24T15:13:08.323417",
+    "updated_at": "2025-08-24T15:13:08.323417",
+    "completed_at": null,
+    "assignee": null,
+    "number": null,
+    "tags": [],
+    "metadata": {}
+  },
+  "task_20250824_151308_7d88ed": {
+    "id": "task_20250824_151308_7d88ed",
+    "title": "테스트 실행",
+    "description": "",
+    "status": "todo",
+    "priority": 0,
+    "created_at": "2025-08-24T15:13:08.343240",
+    "updated_at": "2025-08-24T15:13:08.343240",
+    "completed_at": null,
+    "assignee": null,
+    "number": 1,
+    "tags": [],
+    "metadata": {}
+  }
+}

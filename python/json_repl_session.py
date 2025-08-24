@@ -154,17 +154,41 @@ class SessionPool:
                 import ai_helpers_new as h
                 self.flow_api = h.flow_api()
                 
-                # 현재 활성 플랜 확인
-                if self.workflow_data.get('flow_plan_id'):
-                    plan_id = self.workflow_data['flow_plan_id']
+                # 현재 활성 플랜 확인 - 여러 방법 시도
+                plan_id = self.workflow_data.get('flow_plan_id')
+                
+                if plan_id:
+                    # 방법 1: get_plan 시도
                     try:
-                        status = self.flow_api.get_plan_status(plan_id)
-                        if status.get('ok'):
-                            self.current_flow_plan = status.get('data')
+                        plan = self.flow_api.get_plan(plan_id)
+                        if plan and plan.get('ok'):
+                            self.current_flow_plan = plan.get('data')
                             print(f"[Flow] 플랜 연결: {self.current_flow_plan.get('name', plan_id)}", 
                                   file=sys.stderr)
+                            return
                     except:
                         pass
+                
+                # 방법 2: 공유 변수에서 가져오기
+                if self.shared_variables.get('current_flow_plan'):
+                    self.current_flow_plan = self.shared_variables['current_flow_plan']
+                    print(f"[Flow] 공유 변수에서 플랜 로드: {self.current_flow_plan.get('name', 'Unknown')}", 
+                          file=sys.stderr)
+                    return
+                
+                # 방법 3: list_plans에서 마지막 플랜 가져오기
+                try:
+                    plans = self.flow_api.list_plans()
+                    if plans and plans.get('ok'):
+                        plan_list = plans.get('data', [])
+                        if plan_list:
+                            self.current_flow_plan = plan_list[-1]
+                            self.workflow_data['flow_plan_id'] = self.current_flow_plan.get('id')
+                            print(f"[Flow] 마지막 플랜 자동 로드: {self.current_flow_plan.get('name')}", 
+                                  file=sys.stderr)
+                except:
+                    pass
+                    
         except Exception as e:
             print(f"[Flow] API 초기화 실패: {e}", file=sys.stderr)
     

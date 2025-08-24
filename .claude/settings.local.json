@@ -43,7 +43,8 @@
       "Read(/C:\\Users\\82106\\.claude/**)",
       "Bash(wsl:*)",
       "Bash(copy json_repl_session.py json_repl_session.backup.py)",
-      "Bash(copy:*)"
+      "Bash(copy:*)",
+      "Read(/C:\\Users\\82106\\.claude/**)"
     ],
     "deny": [],
     "ask": [],

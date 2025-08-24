@@ -299,7 +299,7 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
     """AI가 다음 단계를 안내하는 지침 메시지 생성"""
     output = []
     output.append("\n" + "━" * 60)
-    output.append("\n💬 AI 작업 가이드:")
+    output.append("💬 AI 지침 메시지")
     output.append("━" * 60)
     
     # 1. 현재 상황 요약

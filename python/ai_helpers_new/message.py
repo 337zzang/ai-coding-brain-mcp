@@ -138,47 +138,32 @@ class MessageFacade:
         except Exception as e:
             return err(f"자원 공유 실패: {str(e)}")
     
-    def call(self, msg: str) -> Dict[str, Any]:
+    # 유틸리티 메서드 추가
+    def info(self, name: str, value: Any = None) -> Dict[str, Any]:
         """
-        에이전트호출 메시지
-        
-        Args:
-            msg: 호출 내용 (예: "analyzer -> test-runner | 테스트 필요")
-            
-        Returns:
-            {'ok': True, 'data': msg} or {'ok': False, 'error': str}
+        간편한 정보 공유 (share의 단축 버전)
         
         Examples:
-            >>> h.message.call("analyzer -> test-runner | 테스트 필요")
-            🔔 [17:30:00] [CALL] analyzer -> test-runner | 테스트 필요
+            >>> h.message.info("current_step", "analyzing")
+            >>> h.message.info("files_processed", 42)
         """
-        try:
-            time = datetime.now().strftime('%H:%M:%S')
-            print(f"🔔 [{time}] [CALL] {msg}")
-            return ok(msg)
-        except Exception as e:
-            return err(f"에이전트호출 실패: {str(e)}")
+        if value is not None:
+            return self.share(f"{name}: {value}", value)
+        return self.share(name)
     
-    def stop(self, msg: str) -> Dict[str, Any]:
+    def progress(self, current: int, total: int, desc: str = "") -> Dict[str, Any]:
         """
-        중단요청 메시지
-        
-        Args:
-            msg: 중단 내용 (예: "o3 | 메모리 부족")
-            
-        Returns:
-            {'ok': True, 'data': msg} or {'ok': False, 'error': str}
+        진행률 표시 (task의 특수 버전)
         
         Examples:
-            >>> h.message.stop("o3 | 메모리 부족")
-            🛑 [17:30:00] [STOP] o3 | 메모리 부족
+            >>> h.message.progress(50, 100, "파일 처리")
+            🔄 [22:45:00] [TASK] 진행률: 50/100 (50%) - 파일 처리
         """
-        try:
-            time = datetime.now().strftime('%H:%M:%S')
-            print(f"🛑 [{time}] [STOP] {msg}")
-            return ok(msg)
-        except Exception as e:
-            return err(f"중단요청 실패: {str(e)}")
+        percent = (current / total * 100) if total > 0 else 0
+        msg = f"진행률: {current}/{total} ({percent:.0f}%)"
+        if desc:
+            msg += f" - {desc}"
+        return self.task(msg, "INFO")
 
 # Facade 인스턴스 생성
 message_facade = MessageFacade()

@@ -691,7 +691,7 @@ def prepare_o3_context(topic: str, files: Optional[List[str]] = None) -> Dict[st
 
 @safe_execution
 def ask_o3_practical(question: str, file_content: str = "", error_info: str = "", 
-                    max_lines: int = 10, reasoning_effort: str = "medium") -> Dict[str, Any]:
+                    max_lines: int = 10, reasoning_effort: str = "auto") -> Dict[str, Any]:
     """
     O3에게 실용적인 답변을 요청하는 헬퍼 함수
 
@@ -700,11 +700,15 @@ def ask_o3_practical(question: str, file_content: str = "", error_info: str = ""
         file_content: 관련 파일 내용 (선택)
         error_info: 에러 정보 (선택)
         max_lines: 최대 코드 수정 라인 수 (기본 10)
-        reasoning_effort: 추론 강도 (low/medium/high)
+        reasoning_effort: 추론 강도 (low/medium/high/auto) - auto는 자동 결정
 
     Returns:
         O3의 답변을 포함한 딕셔너리
     """
+    # reasoning_effort가 auto면 자동 결정
+    if reasoning_effort == "auto":
+        context = file_content + " " + error_info if file_content or error_info else ""
+        reasoning_effort = determine_reasoning_effort(question, context)
     # 실용적 가이드라인을 포함한 컨텍스트 구성
     context_parts = []
 

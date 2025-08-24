@@ -140,27 +140,6 @@ class SessionPool:
             
             return key, new_session
     
-    def add_message(self, message: str, from_agent: Optional[str] = None, 
-                   priority: str = 'normal', tags: Optional[list] = None) -> None:
-        """AI가 다음 작업자를 위한 메시지를 남김"""
-        if 'ai_messages' not in self.shared_variables:
-            self.shared_variables['ai_messages'] = []
-        
-        message_data = {
-            'message': message,
-            'from': from_agent or 'previous_agent',
-            'timestamp': datetime.now().isoformat(),
-            'priority': priority,  # 'high', 'normal', 'low'
-            'tags': tags or [],
-            'read': False
-        }
-        
-        self.shared_variables['ai_messages'].append(message_data)
-        
-        # 최근 10개 메시지만 유지
-        if len(self.shared_variables['ai_messages']) > 10:
-            self.shared_variables['ai_messages'] = self.shared_variables['ai_messages'][-10:]
-    
     def _create_new_session(self, agent_id: Optional[str] = None) -> EnhancedREPLSession:
         """Create a shared session with increased memory and persistent variables"""
         

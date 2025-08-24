@@ -53,7 +53,14 @@ from .background import (
     get_background_status,
     wait_for_all
 )
-background = background_manager
+# 강화된 Background Facade 추가
+try:
+    from .background_facade import background_facade
+    bg = background_facade  # 더 강력한 facade
+    background = background_facade  # 기존 이름도 새 facade로 대체
+except ImportError:
+    bg = background_manager  # fallback
+    background = background_manager
 
 # 3. 주요 함수들 하위 호환성 - 모두 안전하게 가져오기
 # 파일 관련

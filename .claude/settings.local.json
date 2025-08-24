@@ -45,7 +45,11 @@
       "Bash(copy json_repl_session.py json_repl_session.backup.py)",
       "Bash(copy:*)",
       "Read(/C:\\Users\\82106\\.claude/**)",
-      "Read(/C:\\Users\\82106\\.claude\\commands/**)"
+      "Read(/C:\\Users\\82106\\.claude\\commands/**)",
+      "Read(/C:\\Users\\82106\\.claude/**)",
+      "Read(/C:\\Users\\82106\\.claude/**)",
+      "Read(/C:\\Users\\82106\\.claude/**)",
+      "Read(/C:\\Users\\82106\\.claude/**)"
     ],
     "deny": [],
     "ask": [],

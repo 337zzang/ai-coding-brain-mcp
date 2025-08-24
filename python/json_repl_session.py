@@ -201,6 +201,12 @@ class SessionPool:
                 'keys': list(self.shared_variables.keys())[:10]  # 최대 10개 키만
             },
             
+            # 🔥 간단한 메시지 헬퍼 (AI가 다음 작업자에게 전달)
+            'leave_note': lambda msg: print(f"\n💬 다음 작업자에게: {msg}"),
+            'next_step': lambda msg: print(f"\n➡️ 다음 단계: {msg}"),
+            'todo': lambda msg: print(f"\n📝 TODO: {msg}"),
+            'done': lambda msg: print(f"\n✅ 완료: {msg}"),
+            
         })
         
         return session

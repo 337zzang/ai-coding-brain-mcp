@@ -402,14 +402,19 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
         # tasks가 딕셔너리인 경우 처리
         if isinstance(tasks, dict):
             task_list = list(tasks.values())
-            completed = sum(1 for t in task_list if t.get('status') == 'completed')
-            in_progress = sum(1 for t in task_list if t.get('status') == 'in_progress')
+            # 'done' 또는 'completed' 상태 모두 완료로 처리
+            completed = sum(1 for t in task_list if t.get('status') in ['completed', 'done'])
+            # 'in_progress', 'doing', 'active' 모두 진행중으로 처리
+            in_progress = sum(1 for t in task_list if t.get('status') in ['in_progress', 'doing', 'active'])
+            # 'todo', 'pending' 등은 대기중
+            pending = sum(1 for t in task_list if t.get('status') in ['todo', 'pending'])
             total = len(task_list)
         else:
             # tasks가 리스트인 경우 (기존 코드)
             task_list = tasks
-            completed = sum(1 for t in task_list if t.get('status') == 'completed')
-            in_progress = sum(1 for t in task_list if t.get('status') == 'in_progress')
+            completed = sum(1 for t in task_list if t.get('status') in ['completed', 'done'])
+            in_progress = sum(1 for t in task_list if t.get('status') in ['in_progress', 'doing', 'active'])
+            pending = sum(1 for t in task_list if t.get('status') in ['todo', 'pending'])
             total = len(task_list)
         
         output.append(f"📋 Flow 플랜: {plan.get('name', 'Unknown')}")

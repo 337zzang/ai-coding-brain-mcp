@@ -365,13 +365,31 @@ SESSION_POOL = SessionPool(max_sessions=10, session_timeout=3600)
 
 
 def get_enhanced_prompt(session_key: str = "shared") -> str:
-    """Get enhanced prompt with context and next steps"""
+    """Get enhanced prompt with context, Flow info and next steps"""
     output = []
     output.append("\n" + "━" * 60)
     
-    # 1. 저장된 변수 정보 표시
+    # 1. Flow 시스템 상태 (최우선 표시)
+    if SESSION_POOL.current_flow_plan:
+        plan = SESSION_POOL.current_flow_plan
+        tasks = plan.get('tasks', [])
+        completed = sum(1 for t in tasks if t.get('status') == 'completed')
+        in_progress = sum(1 for t in tasks if t.get('status') == 'in_progress')
+        total = len(tasks)
+        
+        output.append(f"📋 Flow 플랜: {plan.get('name', 'Unknown')}")
+        output.append(f"  진행률: {completed}/{total} 완료 | {in_progress} 진행중")
+        
+        # 태스크 상태 표시
+        if tasks:
+            output.append("  태스크:")
+            for task in tasks[:5]:  # 최대 5개만 표시
+                status_icon = "✅" if task.get('status') == 'completed' else "⏳" if task.get('status') == 'in_progress' else "⬜"
+                output.append(f"    {status_icon} {task.get('name', 'Unknown')}")
+    
+    # 2. 저장된 변수 정보 표시
     if SESSION_POOL.shared_variables:
-        output.append("💾 저장된 주요 변수:")
+        output.append("\n💾 저장된 주요 변수:")
         for key in list(SESSION_POOL.shared_variables.keys())[-5:]:  # 최근 5개
             value = SESSION_POOL.shared_variables[key]
             if isinstance(value, dict):
@@ -382,31 +400,55 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
                 value_str = str(value)[:50] + "..." if len(str(value)) > 50 else str(value)
                 output.append(f"  • {key}: {value_str}")
     
-    # 2. 워크플로우 상태
+    # 3. 워크플로우 상태 (Flow 관련 제외)
     if SESSION_POOL.workflow_data:
-        output.append("\n🔄 워크플로우 상태:")
-        for key, value in list(SESSION_POOL.workflow_data.items())[-3:]:
-            output.append(f"  • {key}: {value}")
+        non_flow_keys = [k for k in SESSION_POOL.workflow_data.keys() if not k.startswith('flow_')]
+        if non_flow_keys:
+            output.append("\n🔄 워크플로우 상태:")
+            for key in non_flow_keys[-3:]:
+                value = SESSION_POOL.workflow_data[key]
+                output.append(f"  • {key}: {value}")
     
-    # 3. 변수 통계
+    # 4. 변수 통계
     total_vars = len(SESSION_POOL.shared_variables)
     total_workflow = len(SESSION_POOL.workflow_data)
     total_cache = len(SESSION_POOL.cache_data)
     if total_vars + total_workflow + total_cache > 0:
         output.append(f"\n📊 데이터 현황: 공유({total_vars}) | 워크플로우({total_workflow}) | 캐시({total_cache})")
     
-    # 4. 다음 작업 가이드
+    # 5. 다음 작업 가이드 (Flow 기반)
     output.append("\n🎯 다음 작업:")
-    if 'analysis' in SESSION_POOL.shared_variables or 'analysis_result' in SESSION_POOL.shared_variables:
-        if 'optimization' not in SESSION_POOL.shared_variables and 'optimization_result' not in SESSION_POOL.shared_variables:
-            output.append("  → optimizer 실행: get_shared('analysis_result')")
-        elif 'test' not in SESSION_POOL.shared_variables and 'test_result' not in SESSION_POOL.shared_variables:
-            output.append("  → test 실행: get_shared('optimization_result')")
-        else:
-            output.append("  → 결과 확인: list_shared()")
+    
+    # Flow 태스크 기반 가이드
+    if SESSION_POOL.current_flow_plan:
+        next_task = None
+        for task in SESSION_POOL.current_flow_plan.get('tasks', []):
+            if task.get('status') != 'completed':
+                next_task = task.get('name', 'Unknown')
+                break
+        
+        if next_task:
+            # 태스크명으로 에이전트 매핑
+            if '분석' in next_task:
+                output.append(f"  → code-analyzer 실행: {next_task}")
+            elif '최적화' in next_task:
+                output.append(f"  → code-optimizer 실행: {next_task}")
+            elif '테스트' in next_task:
+                output.append(f"  → test-runner 실행: {next_task}")
+            else:
+                output.append(f"  → {next_task} 실행")
     else:
-        output.append("  → 데이터 활용: get_shared('key_name')")
-        output.append("  → 저장: set_shared('key', value)")
+        # Flow 없을 때 기존 로직
+        if 'analysis' in SESSION_POOL.shared_variables or 'analysis_result' in SESSION_POOL.shared_variables:
+            if 'optimization' not in SESSION_POOL.shared_variables and 'optimization_result' not in SESSION_POOL.shared_variables:
+                output.append("  → optimizer 실행: get_shared('analysis_result')")
+            elif 'test' not in SESSION_POOL.shared_variables and 'test_result' not in SESSION_POOL.shared_variables:
+                output.append("  → test 실행: get_shared('optimization_result')")
+            else:
+                output.append("  → 결과 확인: list_shared()")
+        else:
+            output.append("  → 데이터 활용: get_shared('key_name')")
+            output.append("  → 저장: set_shared('key', value)")
     
     output.append("━" * 60)
     return "\n".join(output)

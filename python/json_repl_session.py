@@ -332,14 +332,31 @@ def get_enhanced_prompt(session_key: str = "shared") -> str:
             output.append("\n🎯 다음 단계에 필요한 항목:\n")
             
             for key, value, item_type in relevant_items:
-            # Flow 플랜은 특별 처리
-            if key == 'current_flow_plan':
-                output.append(f"  📋 {key}:")
-                output.append(f"     • 타입: Flow Plan")
-                output.append(f"     • 용도: 작업 플랜 관리")
-                output.append(f"     • 접근: plan = get_shared('{key}')")
-                output.append("")
-                continue
+                # 타입별 간단 표시
+                if item_type == 'result':
+                    output.append(f"  ✅ {key}:")
+                    if isinstance(value, dict):
+                        output.append(f"     • 결과 데이터 (Dict[{len(value)}])")
+                        output.append(f"     • 사용: data = get_shared('{key}')")
+                    elif isinstance(value, list):
+                        output.append(f"     • 결과 리스트 ({len(value)}개)")
+                        output.append(f"     • 사용: items = get_shared('{key}')")
+                    else:
+                        output.append(f"     • 결과값")
+                        output.append(f"     • 사용: val = get_shared('{key}')")
+                    output.append("")
+                    
+                elif item_type == 'function':
+                    output.append(f"  🔧 {key}():")
+                    output.append(f"     • 재사용 가능 함수")
+                    output.append(f"     • 호출: result = {key}(args)")
+                    output.append("")
+                    
+                elif item_type == 'data':
+                    output.append(f"  📦 {key}:")
+                    output.append(f"     • 처리할 데이터")
+                    output.append(f"     • 접근: data = get_shared('{key}')")
+                    output.append("")
             
             # 각 변수별 상세 정보
             output.append(f"  📌 {key}:")

@@ -45,6 +45,15 @@ message = message_facade
 
 # util 모듈도 직접 export (안전 함수들 포함)
 from . import util
+# Background task manager 추가
+from .background import (
+    background_manager,
+    run_in_background,
+    get_background_results,
+    get_background_status,
+    wait_for_all
+)
+background = background_manager
 
 # 3. 주요 함수들 하위 호환성 - 모두 안전하게 가져오기
 # 파일 관련
@@ -187,7 +196,9 @@ __author__ = "AI Coding Brain Team"
 # Public API 정의 (최소)
 __all__ = [
     # 네임스페이스 (새로운 방식)
-    'file', 'code', 'search', 'git', 'memory', 'message',
+    'file', 'code', 'search', 'git', 'memory', 'message', 'background',
+    'run_in_background', 'get_background_results',
+    'get_background_status', 'wait_for_all',
 # DEPRECATED: 'unified',
     
     # 주요 함수들 (하위 호환성)

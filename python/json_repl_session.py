@@ -333,48 +333,17 @@ SESSION_POOL = SessionPool(max_sessions=10, session_timeout=3600)
 
 
 def get_enhanced_prompt(session_key: str = "shared") -> str:
-    """REPL 환경에 남은 것들을 최대한 활용하도록 안내"""
+    """REPL 세션 상태 간단 요약"""
     
+    if not SESSION_POOL.shared_variables:
+        return "\n💡 세션이 비어있습니다. 작업을 시작하세요."
+    
+    # 아주 간단한 요약만
     output = []
-    output.append("\n" + "━" * 60)
-    output.append("\n🔄 REPL 환경 활용 가이드")
-    output.append("━" * 60)
-    
-    # 현재 저장된 것들 간단히 정리
-    if SESSION_POOL.shared_variables:
-        output.append("\n📦 사용 가능한 것들:")
-        
-        # 함수들
-        functions = [k for k, v in SESSION_POOL.shared_variables.items() if callable(v)]
-        if functions:
-            output.append(f"\n  🔧 함수: {', '.join(functions[:3])}")
-            output.append(f"     → 예: result = {functions[0]}(data)")
-        
-        # 최근 결과물들
-        results = [k for k in SESSION_POOL.shared_variables.keys() if 'result' in k or 'output' in k]
-        if results:
-            output.append(f"\n  ✅ 결과: {', '.join(results[-3:])}")
-            output.append(f"     → 예: data = get_shared('{results[-1]}')")
-        
-        # 데이터들
-        data_items = [k for k in SESSION_POOL.shared_variables.keys() if 'data' in k]
-        if data_items:
-            output.append(f"\n  📊 데이터: {', '.join(data_items[-3:])}")
-            output.append(f"     → 예: items = get_shared('{data_items[-1]}')")
-        
-        output.append(f"\n  총 {len(SESSION_POOL.shared_variables)}개 저장됨")
-    
-    # 간단한 다음 단계 제안
-    output.append("\n💡 다음 작업:")
-    
-    # 가장 최근 변수 기반으로 제안
-    recent_vars = list(SESSION_POOL.shared_variables.keys())[-2:]
-    if recent_vars:
-        output.append(f"  • 최근 작업물({recent_vars[-1]})을 활용해서 계속 진행")
-    else:
-        output.append("  • 데이터를 준비하고 작업 시작")
-    
-    output.append("\n━" * 60)
+    output.append("\n" + "─" * 40)
+    output.append(f"📦 REPL: {len(SESSION_POOL.shared_variables)}개 항목 저장됨")
+    output.append(f"   → list_shared()로 확인 가능")
+    output.append("─" * 40)
     
     return "\n".join(output)
 

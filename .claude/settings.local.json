@@ -90,7 +90,8 @@
     "ask": [],
     "additionalDirectories": [
       "C:\\Users\\82106\\.claude\\agents",
-      "C:\\Users\\82106\\.claude\\hooks"
+      "C:\\Users\\82106\\.claude\\hooks",
+      "C:\\Users\\Administrator\\.claude\\logs"
     ]
   },
   "outputStyle": "Explanatory"

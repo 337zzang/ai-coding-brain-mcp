@@ -221,7 +221,8 @@ def process_json_request(request: Dict[str, Any]) -> Dict[str, Any]:
                 'jsonrpc': '2.0',
                 'id': request.get('id', 1),
                 'result': {
-                    'output': result['output'],
+                    'stdout': result['stdout'],  # Changed to match the updated property name
+                    'stderr': result.get('stderr', ''),
                     'memory': result['memory'],
                     'stats': result['stats']
                 }

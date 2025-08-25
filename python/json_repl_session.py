@@ -295,6 +295,18 @@ def execute_code(code: str, agent_id: Optional[str] = None,
 def process_json_request(request: Dict[str, Any]) -> Dict[str, Any]:
     """JSON-RPC 요청 처리"""
     try:
+        # method 체크
+        method = request.get('method', '')
+        if method != 'execute':
+            return {
+                'jsonrpc': '2.0',
+                'id': request.get('id', 1),
+                'error': {
+                    'code': -32601,
+                    'message': f'Method not found: {method}'
+                }
+            }
+        
         # 코드 추출
         params = request.get('params', {})
         code = params.get('code', '')

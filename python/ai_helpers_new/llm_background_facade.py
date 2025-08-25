@@ -383,6 +383,134 @@ class LLMBackgroundFacade(BackgroundFacade):
         except Exception as e:
             return err(f"저장 실패: {e}")
     
+    # ========== GPT 웹 검색 통합 ==========
+    
+    def web_search(self, query: str, wait: bool = False,
+                   use_cache: bool = True, cache_ttl: Optional[int] = None) -> Dict[str, Any]:
+        """
+        GPT 웹 검색 (실시간 정보)
+        
+        Args:
+            query: 검색 질의
+            wait: 결과 대기 여부
+            use_cache: 캐시 사용 여부
+            cache_ttl: 캐시 유효 시간
+            
+        Examples:
+            >>> h.ai.web_search("latest Python 3.12 features", wait=True)
+            >>> h.ai.web_search("React Server Components")  # 비동기
+        """
+        return self.web_search.web_search(query, wait, use_cache, cache_ttl)
+    
+    def web_search_many(self, queries: List[str], use_cache: bool = True) -> Dict[str, Any]:
+        """
+        여러 웹 검색을 병렬로 실행
+        
+        Args:
+            queries: 검색 질의 리스트
+            use_cache: 캐시 사용 여부
+            
+        Examples:
+            >>> h.ai.web_search_many([
+            ...     "TypeScript 5.4 features",
+            ...     "Next.js 14 best practices",
+            ...     "Tailwind CSS v4"
+            ... ])
+        """
+        return self.web_search.web_search_many(queries, use_cache)
+    
+    def web_search_chain(self, steps: List[Union[str, Tuple[str, str]]]) -> Dict[str, Any]:
+        """
+        연속 웹 검색 체인 (이전 결과를 다음 검색에 활용)
+        
+        Args:
+            steps: 검색 단계 리스트
+            
+        Examples:
+            >>> h.ai.web_search_chain([
+            ...     "AI coding assistants 2025",
+            ...     ("analyze above", "use_previous"),
+            ...     ("implementation guide", "combine_all")
+            ... ])
+        """
+        return self.web_search.web_search_chain(steps)
+    
+    def gather_web(self, task_ids: Optional[List[str]] = None,
+                   timeout: float = 60.0) -> Dict[str, Any]:
+        """
+        웹 검색 결과 수집
+        
+        Args:
+            task_ids: 수집할 task_id 리스트
+            timeout: 최대 대기 시간
+            
+        Returns:
+            모든 웹 검색 결과
+        """
+        return self.web_search.gather_web_results(task_ids, timeout)
+    
+    def get_web_cache(self, query: str) -> Optional[Dict[str, Any]]:
+        """
+        캐시된 웹 검색 결과 조회
+        
+        Args:
+            query: 검색 질의
+            
+        Returns:
+            캐시된 결과 또는 None
+        """
+        return self.web_search._get_from_cache(query)
+    
+    def clear_web_cache(self):
+        """웹 검색 캐시 초기화"""
+        self.web_search.clear_cache()
+        self.message.task("웹 검색 캐시 초기화됨", level="SUCCESS")
+    
+    def web_search_status(self) -> Dict[str, Any]:
+        """
+        웹 검색 상태 확인
+        
+        Returns:
+            웹 검색 통계 및 상태
+        """
+        return self.web_search.get_status()
+    
+    # ========== 통합 AI 검색 ==========
+    
+    def smart_search(self, query: str, mode: str = "auto") -> Dict[str, Any]:
+        """
+        스마트 검색 (O3 또는 웹 검색 자동 선택)
+        
+        Args:
+            query: 검색 질의
+            mode: "auto", "web", "o3"
+            
+        Examples:
+            >>> h.ai.smart_search("코드 분석")  # O3 선택
+            >>> h.ai.smart_search("latest news")  # 웹 선택
+            >>> h.ai.smart_search("complex reasoning", mode="o3")
+        """
+        if mode == "auto":
+            # 자동 판단 로직
+            web_keywords = ["latest", "news", "recent", "update", "2025", "2024", 
+                          "current", "today", "now", "실시간", "최신", "오늘"]
+            
+            query_lower = query.lower()
+            use_web = any(keyword in query_lower for keyword in web_keywords)
+            
+            if use_web:
+                self.message.info("스마트 검색: 웹 검색 선택")
+                return self.web_search(query, wait=True)
+            else:
+                self.message.info("스마트 검색: O3 추론 선택")
+                return self.ask(query, wait=True)
+        elif mode == "web":
+            return self.web_search(query, wait=True)
+        elif mode == "o3":
+            return self.ask(query, wait=True)
+        else:
+            return err(f"잘못된 모드: {mode}")
+    
     # ========== 상태 모니터링 ==========
     
     def llm_status(self) -> Dict[str, Any]:

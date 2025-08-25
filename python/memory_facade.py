@@ -21,11 +21,11 @@ class MemoryManager:
         # 메모리 임계값 설정 (GB 단위)
         self.MEMORY_WARNING_THRESHOLD = 70  # 70% 사용 시 경고
         self.MEMORY_CRITICAL_THRESHOLD = 85  # 85% 사용 시 강제 정리
-        self.MEMORY_LIMIT_GB = 4  # 최대 4GB 사용
+        self.MEMORY_LIMIT_GB = 16  # 최대 16GB 사용 (대폭 증가)
         
-        # 변수 관리 설정
-        self.MAX_VARIABLES = 500  # 변수 500개까지 허용 (기존 100개에서 증가)
-        self.MAX_VAR_SIZE_MB = 50  # 변수당 50MB까지 (기존 10MB에서 증가)
+        # 변수 관리 설정 - 대용량 처리 가능하도록 대폭 증가
+        self.MAX_VARIABLES = 1000  # 변수 1000개까지 허용 (기존 500개에서 증가)
+        self.MAX_VAR_SIZE_MB = 1024  # 변수당 1GB까지 (기존 50MB에서 대폭 증가)
         
         # 통계
         self.stats = {

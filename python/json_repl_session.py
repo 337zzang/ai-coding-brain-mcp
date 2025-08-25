@@ -42,7 +42,7 @@ if sys.platform == 'win32':
     os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 class SmartSessionPool:
-    """메모리 관리가 강화된 세션 풀"""
+    """메모리 관리가 강화된 세션 풀 - 백그라운드 작업 지원"""
     
     def __init__(self):
         self.session = None
@@ -52,11 +52,17 @@ class SmartSessionPool:
         # 메모리 매니저 연결
         self.memory_manager = MEMORY_MANAGER
         
+        # 백그라운드 작업 관리
+        self.background_tasks = {}
+        self.task_counter = 0
+        self.executor = None
+        
         # 통계
         self.stats = {
             'total_executions': 0,
             'memory_cleanups': 0,
-            'peak_memory_mb': 0
+            'peak_memory_mb': 0,
+            'background_tasks': 0
         }
     
     def get_or_create_session(self) -> EnhancedREPLSession:

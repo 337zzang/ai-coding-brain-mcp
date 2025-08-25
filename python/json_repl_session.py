@@ -100,43 +100,42 @@ class SmartSessionPool:
         }
     
     def execute_with_memory_management(self, code: str) -> Dict[str, Any]:
-        """메모리 관리가 포함된 코드 실행"""
+        """메모리 관리가 포함된 코드 실행 - MCP 호환 개선"""
         
         # 실행 전 메모리 체크
         before_status = self.memory_manager.get_memory_status()
         
-        # stdout에 메모리 정보 출력
-        print(f"\n{'='*50}", file=sys.stderr)
-        print(f"[MEM] 실행 시작", file=sys.stderr)
-        print(f"[MEM] 메모리: {before_status['used_mb']:.1f}MB / "
-              f"{before_status['percent_used']:.1f}%", file=sys.stderr)
-        print(f"[MEM] 변수: {before_status['variables_count']}개 / "
-              f"{self.memory_manager.MAX_VARIABLES}개", file=sys.stderr)
+        # 메모리 정보는 stderr로만 출력 (디버그용)
+        print(f"\n[MEM] 실행 시작 - {before_status['used_mb']:.1f}MB ({before_status['percent_used']:.1f}%)", file=sys.stderr)
         
         # 메모리 임계값 체크
         if before_status['critical']:
             print(f"[MEM] ⚠️ 메모리 위험! 자동 정리 시작...", file=sys.stderr)
             clean_result = self.memory_manager.clean_memory(force=True)
-            print(f"[MEM] ✅ {clean_result['memory_freed_mb']:.1f}MB 해제, "
-                  f"{clean_result['cleaned_variables']}개 변수 정리", file=sys.stderr)
+            print(f"[MEM] ✅ {clean_result['memory_freed_mb']:.1f}MB 해제", file=sys.stderr)
             self.stats['memory_cleanups'] += 1
-        elif before_status['warning']:
-            print(f"[MEM] 🟡 메모리 주의 수준", file=sys.stderr)
         
-        print(f"{'='*50}", file=sys.stderr)
-        
-        # 실제 코드 실행
+        # 실제 코드 실행 - MCP 호환 방식
         try:
-            # 출력 캡처
-            old_stdout = sys.stdout
-            sys.stdout = io.StringIO()
+            # MCP 환경에서는 직접 출력하도록 변경
+            is_mcp = os.environ.get('MCP_MODE') == 'claude' or not sys.stdin.isatty()
             
-            # 네임스페이스에서 실행
-            exec(code, self.namespace)
-            
-            # 출력 가져오기
-            output = sys.stdout.getvalue()
-            sys.stdout = old_stdout
+            if is_mcp:
+                # MCP 환경: stdout 직접 사용
+                # 네임스페이스에서 실행
+                exec(code, self.namespace)
+                
+                # MCP는 stdout을 자동으로 캡처하므로 빈 문자열 반환
+                output = ""
+            else:
+                # 일반 환경: StringIO로 캡처
+                old_stdout = sys.stdout
+                sys.stdout = io.StringIO()
+                
+                exec(code, self.namespace)
+                
+                output = sys.stdout.getvalue()
+                sys.stdout = old_stdout
             
             # 실행 후 메모리 상태
             after_status = self.memory_manager.get_memory_status()
@@ -147,20 +146,12 @@ class SmartSessionPool:
             if after_status['used_mb'] > self.stats['peak_memory_mb']:
                 self.stats['peak_memory_mb'] = after_status['used_mb']
             
-            # 메모리 변화 출력
-            print(f"\n[MEM] 실행 완료", file=sys.stderr)
-            print(f"[MEM] 메모리 변화: {memory_delta:+.1f}MB", file=sys.stderr)
-            print(f"[MEM] 현재: {after_status['used_mb']:.1f}MB / "
-                  f"{after_status['percent_used']:.1f}%", file=sys.stderr)
-            
-            # 메모리 급증 경고
-            if memory_delta > 100:
-                print(f"[MEM] ⚠️ 메모리 급증 감지!", file=sys.stderr)
+            print(f"[MEM] 실행 완료 - 메모리 변화: {memory_delta:+.1f}MB", file=sys.stderr)
             
             return {
                 'status': 'success',
-                'stdout': output,  # Changed from 'output' to 'stdout' for MCP compatibility
-                'stderr': '',  # Add stderr for compatibility
+                'stdout': output,
+                'stderr': '',
                 'memory': {
                     'before_mb': before_status['used_mb'],
                     'after_mb': after_status['used_mb'],

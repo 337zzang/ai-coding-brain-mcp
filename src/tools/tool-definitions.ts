@@ -88,6 +88,25 @@ export const toolDefinitions: Tool[] = [
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 import ai_helpers_new as h
 
+# 🚀 Background Parallel Processing / 백그라운드 병렬 처리 (NEW!)
+task_id = h.bg.run(process_func, arg1, arg2)  # Run in background / 백그라운드 실행
+results = h.bg.map(analyze_file, file_list)   # Parallel map / 병렬 맵
+h.bg.chain(step1, step2, step3)               # Sequential chain / 순차 체인
+h.bg.store("cache_key", result)               # Store persistent / 영속 저장
+cached = h.bg.get("cache_key")                # Retrieve stored / 저장값 조회
+
+# 🤖 AI Integration System / AI 통합 시스템 (NEW!)
+h.ai.ask("분석해주세요", context)              # Single AI query / 단일 질의
+h.ai.ask_many([q1, q2, q3])                   # Parallel queries / 병렬 질의
+results = h.ai.gather_llm()                   # Gather all results / 결과 수집
+h.ai.analyze_code("file.py")                  # Code analysis / 코드 분석
+
+# 💬 Message Tracking / 메시지 추적 (NEW!)
+h.message.task("작업 시작")                    # Track task / 작업 추적
+h.message.progress(50, 100, "처리 중")         # Show progress / 진행률 표시
+h.message.share("result", data)               # Share data / 데이터 공유
+h.message.info("완료", "상세 정보")            # Info message / 정보 메시지
+
 # 📁 File Operations / 파일 작업 (Facade Pattern)
 content = h.file.read('file.py')['data']      # Read file / 파일 읽기
 h.file.write('output.py', content)            # Write file / 파일 쓰기  

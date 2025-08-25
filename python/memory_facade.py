@@ -85,7 +85,7 @@ class MemoryManager:
         
         cleaned_vars = 0
         
-        # 1. 큰 변수 정리 (50MB 초과)
+        # 1. 큰 변수 정리 (1GB 초과)
         for key in list(self.shared_variables.keys()):
             try:
                 size_mb = sys.getsizeof(self.shared_variables[key]) / 1024 / 1024

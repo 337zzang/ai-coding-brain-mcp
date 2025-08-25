@@ -415,11 +415,11 @@ class GPTWebSearchFacade:
             failed_count = sum(1 for t in self.background_tasks.values() 
                              if t.get('status') == 'failed')
         
-        return {
+        return ok({
             'client_available': self.client.is_available(),
             'active_searches': active_count,
             'completed_searches': completed_count,
             'failed_searches': failed_count,
             'cache_stats': self.get_cache_stats(),
             'client_stats': self.client.get_stats() if self.client.is_available() else None
-        }
+        })

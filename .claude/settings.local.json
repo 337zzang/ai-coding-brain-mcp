@@ -78,7 +78,9 @@
       "Read(/C:\\Users\\Administrator\\.claude/**)",
       "Read(/C:\\Users\\Administrator\\.claude/**)",
       "Read(/C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp2\\python/**)",
-      "Read(/C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp2\\python/**)"
+      "Read(/C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp2\\python/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\commands/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\commands/**)"
     ],
     "deny": [],
     "ask": [],

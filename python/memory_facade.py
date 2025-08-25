@@ -73,7 +73,7 @@ class MemoryManager:
         if status['variables_count'] > self.MAX_VARIABLES * 0.9:
             return True
         
-        # 사용량이 제한 초과 시
+        # 사용량이 제한 초과 시 (16GB)
         if status['used_mb'] > self.MEMORY_LIMIT_GB * 1024:
             return True
         

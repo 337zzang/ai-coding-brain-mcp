@@ -74,45 +74,166 @@ def track_excel_access(func):
     return wrapper
 
 class ExcelManager:
-    """Excel COM 객체 생명주기 관리"""
+    """Excel COM 객체 생명주기 관리 - 안정성 강화 버전"""
 
     def __init__(self):
             self.excel = None
             self.workbook = None
-            self.file_path = None  # 파일 경로 추가
+            self.file_path = None
             self._is_new_instance = False
+            self._connection_attempts = 0
+            self._max_reconnect_attempts = 3
+            self._last_error = None
+            self._com_initialized = False
+            self._health_check_count = 0
 
     def __del__(self):
-        """소멸자: COM 객체 정리"""
+        """소멸자: COM 객체 안전한 정리"""
+        self.safe_cleanup()
+
+    def safe_cleanup(self):
+        """안전한 COM 객체 정리"""
         try:
+            # 워크북 닫기
             if self.workbook:
                 try:
+                    # 저장되지 않은 변경사항 확인
+                    if hasattr(self.workbook, 'Saved') and not self.workbook.Saved:
+                        try:
+                            self.workbook.Save()
+                        except:
+                            pass  # 저장 실패 시 무시
                     self.workbook.Close(SaveChanges=False)
                 except:
                     pass
+            
+            # Excel 애플리케이션 종료
             if self.excel and self._is_new_instance:
                 try:
-                    self.excel.Quit()
+                    # 열려있는 다른 워크북 확인
+                    if self.excel.Workbooks.Count == 0:
+                        self.excel.Quit()
                 except:
                     pass
-        except:
-            pass
+            
+            # COM 해제
+            if self._com_initialized:
+                try:
+                    pythoncom.CoUninitialize()
+                    self._com_initialized = False
+                except:
+                    pass
+                    
+        except Exception as e:
+            self._last_error = str(e)
         finally:
             self.excel = None
             self.workbook = None
+            self._connection_attempts = 0
 
     def ensure_com_connection(self) -> bool:
-        """COM 연결 상태 확인 및 복구"""
+        """COM 연결 상태 확인 및 자동 복구"""
         try:
             if self.excel:
-                # 간단한 작업으로 연결 테스트
+                # 연결 상태 체크 (헬스 체크)
+                self._health_check_count += 1
+                
+                # 기본 속성 접근으로 연결 테스트
                 _ = self.excel.Visible
+                _ = self.excel.Name
+                
+                # 워크북이 있으면 워크북도 체크
+                if self.workbook:
+                    _ = self.workbook.Name
+                
+                # 주기적인 상세 체크 (10번마다)
+                if self._health_check_count % 10 == 0:
+                    _ = self.excel.Version
+                    _ = self.excel.Workbooks.Count
+                
                 return True
-        except:
-            self.excel = None
-            self.workbook = None
+                
+        except Exception as e:
+            # 연결 실패 시 자동 복구 시도
+            self._last_error = str(e)
+            
+            if self._connection_attempts < self._max_reconnect_attempts:
+                self._connection_attempts += 1
+                
+                # 기존 연결 정리
+                self.excel = None
+                self.workbook = None
+                
+                # 잠시 대기 후 재연결 시도
+                time.sleep(0.5 * self._connection_attempts)
+                
+                # 파일이 있었다면 재연결 시도
+                if self.file_path:
+                    reconnect_result = self.reconnect_to_file()
+                    if reconnect_result:
+                        self._connection_attempts = 0  # 성공 시 초기화
+                        return True
+            
             return False
+        
         return False
+    
+    def reconnect_to_file(self) -> bool:
+        """파일에 재연결 시도"""
+        if not self.file_path:
+            return False
+        
+        try:
+            # COM 재초기화
+            if not self._com_initialized:
+                pythoncom.CoInitialize()
+                self._com_initialized = True
+            
+            # Excel 재연결
+            self.excel = win32.DispatchEx('Excel.Application')
+            self.excel.Visible = True
+            
+            # 파일 다시 열기
+            if os.path.exists(self.file_path):
+                self.workbook = self.excel.Workbooks.Open(self.file_path)
+                return True
+            
+        except Exception as e:
+            self._last_error = f"재연결 실패: {str(e)}"
+            return False
+        
+        return False
+    
+    def get_health_status(self) -> Dict:
+        """COM 연결 상태 정보 반환"""
+        status = {
+            'connected': False,
+            'excel_running': False,
+            'workbook_open': False,
+            'file_path': self.file_path,
+            'health_checks': self._health_check_count,
+            'reconnect_attempts': self._connection_attempts,
+            'last_error': self._last_error
+        }
+        
+        try:
+            if self.excel:
+                status['excel_running'] = True
+                status['excel_version'] = self.excel.Version
+                status['workbook_count'] = self.excel.Workbooks.Count
+                
+                if self.workbook:
+                    status['workbook_open'] = True
+                    status['workbook_name'] = self.workbook.Name
+                    status['sheets_count'] = self.workbook.Sheets.Count
+                    status['saved'] = self.workbook.Saved
+                
+                status['connected'] = True
+                
+        except:
+            pass
+        
+        return status
 
     def connect_or_create(self, file_path: Optional[str] = None) -> dict:
         """

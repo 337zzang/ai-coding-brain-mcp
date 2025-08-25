@@ -9,6 +9,7 @@ Created: 2025-08-25
 GPT-4o-search-preview를 활용한 실시간 웹 검색 시스템
 """
 
+import os  # os를 파일 상단으로 이동
 import json
 import hashlib
 from typing import Dict, Any, Optional, List, Union, Tuple

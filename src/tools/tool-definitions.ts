@@ -6,8 +6,9 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
  * 영속적 Python REPL 세션과 프로젝트 관리를 위한 MCP 도구 모음
  * TodoWrite + 병렬 처리 극한 효율화 통합
  * 
- * @version 5.0.0
+ * @version 5.1.0
  * @updated 2025-08-25
+ * @feature Excel Automation with pywin32 COM
  * @author AI Coding Brain Team
  */
 

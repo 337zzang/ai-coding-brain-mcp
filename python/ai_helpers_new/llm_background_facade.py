@@ -400,7 +400,7 @@ class LLMBackgroundFacade(BackgroundFacade):
             >>> h.ai.web_search("latest Python 3.12 features", wait=True)
             >>> h.ai.web_search("React Server Components")  # 비동기
         """
-        return self.web_search.web_search(query, wait, use_cache, cache_ttl)
+        return self.web_search_facade.web_search(query, wait, use_cache, cache_ttl)
     
     def web_search_many(self, queries: List[str], use_cache: bool = True) -> Dict[str, Any]:
         """

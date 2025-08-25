@@ -357,34 +357,50 @@ class ExcelManager:
             return error_response(f"워크북 닫기 실패: {str(e)}")
 
     def quit_excel(self, force: bool = False) -> dict:
-        """Excel 종료"""
+        """독립 Excel 인스턴스만 안전하게 종료 (다른 Excel에 영향 없음)"""
         try:
             if not self.excel:
                 return success_response("Excel이 실행중이지 않습니다")
 
-            # 열려있는 모든 워크북 확인
-            if self.excel.Workbooks.Count > 0:
+            # 독립 인스턴스인지 확인
+            if not self._is_new_instance:
+                return error_response("독립 인스턴스가 아니므로 종료할 수 없습니다")
+
+            # 열려있는 워크북 확인 (이 인스턴스의 워크북만)
+            try:
+                workbook_count = self.excel.Workbooks.Count
+            except:
+                workbook_count = 0
+                
+            if workbook_count > 0:
                 if not force:
                     return error_response(
-                        f"열려있는 워크북이 {self.excel.Workbooks.Count}개 있습니다. "
+                        f"이 Excel 인스턴스에 열려있는 워크북이 {workbook_count}개 있습니다. "
                         "force=True로 강제 종료하거나 먼저 워크북을 닫으세요."
                     )
                 else:
-                    # 강제 종료 시 모든 워크북 저장 후 닫기
+                    # 강제 종료 시 이 인스턴스의 워크북만 저장 후 닫기
                     for wb in self.excel.Workbooks:
                         try:
-                            wb.Save()
-                            wb.Close()
+                            if not wb.ReadOnly and wb.Path:  # 저장 가능한 경우만
+                                wb.Save()
+                            wb.Close(SaveChanges=False)
                         except:
                             pass
 
-            # Excel 종료
-            self.excel.Quit()
+            # 독립 Excel 인스턴스만 종료 (다른 Excel에 영향 없음)
+            try:
+                self.excel.Quit()
+            except:
+                pass  # 이미 종료된 경우 무시
+                
             self.excel = None
             self.workbook = None
             self._is_new_instance = False
+            self._health_check_count = 0
+            self._connection_attempts = 0
 
-            return success_response("Excel이 성공적으로 종료되었습니다")
+            return success_response("독립 Excel 인스턴스가 안전하게 종료되었습니다")
 
         except Exception as e:
             return error_response(f"Excel 종료 실패: {str(e)}")

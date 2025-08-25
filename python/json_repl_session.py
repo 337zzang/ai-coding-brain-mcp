@@ -115,27 +115,27 @@ class SmartSessionPool:
             print(f"[MEM] ✅ {clean_result['memory_freed_mb']:.1f}MB 해제", file=sys.stderr)
             self.stats['memory_cleanups'] += 1
         
-        # 실제 코드 실행 - MCP 호환 방식
+        # 실제 코드 실행 - 모든 환경에서 StringIO 캡처
         try:
-            # MCP 환경에서는 직접 출력하도록 변경
-            is_mcp = os.environ.get('MCP_MODE') == 'claude' or not sys.stdin.isatty()
+            # stdout 캡처를 위한 StringIO 설정
+            old_stdout = sys.stdout
+            old_stderr = sys.stderr
+            stdout_buffer = io.StringIO()
+            stderr_buffer = io.StringIO()
             
-            if is_mcp:
-                # MCP 환경: stdout 직접 사용
-                # 네임스페이스에서 실행
-                exec(code, self.namespace)
-                
-                # MCP는 stdout을 자동으로 캡처하므로 빈 문자열 반환
-                output = ""
-            else:
-                # 일반 환경: StringIO로 캡처
-                old_stdout = sys.stdout
-                sys.stdout = io.StringIO()
-                
-                exec(code, self.namespace)
-                
-                output = sys.stdout.getvalue()
-                sys.stdout = old_stdout
+            sys.stdout = stdout_buffer
+            sys.stderr = stderr_buffer
+            
+            # 네임스페이스에서 코드 실행
+            exec(code, self.namespace)
+            
+            # 출력 가져오기
+            output = stdout_buffer.getvalue()
+            error_output = stderr_buffer.getvalue()
+            
+            # stdout/stderr 복원
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
             
             # 실행 후 메모리 상태
             after_status = self.memory_manager.get_memory_status()

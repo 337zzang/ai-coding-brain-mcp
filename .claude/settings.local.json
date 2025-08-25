@@ -57,7 +57,13 @@
       "Read(/C:\\Users\\82106\\.claude/**)",
       "Read(/C:\\Users\\82106\\.claude/**)",
       "Read(/C:\\mnt\\c\\Users\\82106\\.claude/**)",
-      "Read(/C:\\Users\\82106\\.claude/**)"
+      "Read(/C:\\Users\\82106\\.claude/**)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)"
     ],
     "deny": [],
     "ask": [],

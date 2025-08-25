@@ -245,6 +245,30 @@ h.bg.store("analysis_result", h.bg.result(analysis['data']['task_id']))
 # • Parallel: ~1 second / 병렬: ~1초
 # • Improvement: 500% / 향상: 500%
 
+📊 Excel ↔ DataFrame Integration / 엑셀 ↔ 데이터프레임 통합:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Excel to DataFrame / 엑셀 → 데이터프레임
+h.excel.connect('sales_data.xlsx', visible=True)
+data = h.excel.read_range('A1:E100')['data']     # Read Excel range / 엑셀 범위 읽기
+import pandas as pd
+df = pd.DataFrame(data[1:], columns=data[0])     # Convert to DataFrame / 데이터프레임 변환
+df['Total'] = df['Quantity'] * df['Price']        # Process data / 데이터 처리
+summary = df.groupby('Category').sum()            # Analysis / 분석
+
+# DataFrame to Excel / 데이터프레임 → 엑셀
+h.excel.create_sheet('Analysis')                  # New sheet for results / 결과용 새 시트
+headers = summary.columns.tolist()                
+h.excel.write_range('A1:D1', [headers])          # Write headers / 헤더 쓰기
+h.excel.write_range('A2:D20', summary.values)    # Write data / 데이터 쓰기
+h.excel.format_range('A1:D1', bold=True, color='#4472C4')  # Format / 서식
+h.excel.auto_fit('A:D')                          # Auto-fit columns / 열 자동 조정
+h.excel.save()                                    # Save with analysis / 분석 결과 저장
+
+# Session Persistence / 세션 지속성
+# Excel window stays open for interactive work / 엑셀 창은 대화형 작업을 위해 열린 상태 유지
+# All changes are immediately visible / 모든 변경사항이 즉시 표시됨
+# Independent instance - doesn't affect other Excel windows / 독립 인스턴스 - 다른 엑셀 창에 영향 없음
+
 📊 Standard Return Format / 표준 반환 형식:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 All helper functions return consistent dict format:

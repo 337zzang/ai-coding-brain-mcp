@@ -71,7 +71,10 @@
       "Bash(cat:*)",
       "mcp__perplexity-ask__perplexity_research",
       "Bash(echo $SHELL)",
-      "WebFetch(domain:platform.openai.com)"
+      "WebFetch(domain:platform.openai.com)",
+      "Read(/C:\\Users\\Administrator\\.claude\\logs/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\logs/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\logs/**)"
     ],
     "deny": [],
     "ask": [],

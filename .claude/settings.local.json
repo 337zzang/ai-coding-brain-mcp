@@ -68,7 +68,8 @@
       "Read(/C:\\Users\\Administrator\\.claude\\logs/**)",
       "Read(/C:\\Users\\Administrator\\.claude/**)",
       "Bash(where python)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "mcp__perplexity-ask__perplexity_research"
     ],
     "deny": [],
     "ask": [],

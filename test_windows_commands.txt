@@ -1,0 +1,18 @@
+Windows 명령어 테스트 파일
+=====================
+작성 시간: 2025-08-25
+테스트 목적: Windows 환경에서 명령어 작동 확인
+
+Unix 명령어: ✅ 완벽 작동
+- ls, cat, grep, pwd 모두 정상
+- 파이프(|) 연산자 작동
+
+Windows CMD: ⚠️ 제한적
+- cmd.exe /c 필요
+- 인코딩 문제 발생 가능
+
+PowerShell: ✅ 작동
+- powershell.exe -Command 사용
+- 한글 인코딩 문제 있음
+
+권장사항: Unix 명령어 우선 사용!

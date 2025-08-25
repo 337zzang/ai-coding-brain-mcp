@@ -67,7 +67,8 @@
       "Read(/C:\\Users\\Administrator\\.claude\\logs/**)",
       "Read(/C:\\Users\\Administrator\\.claude\\logs/**)",
       "Read(/C:\\Users\\Administrator\\.claude/**)",
-      "Bash(where python)"
+      "Bash(where python)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": [],

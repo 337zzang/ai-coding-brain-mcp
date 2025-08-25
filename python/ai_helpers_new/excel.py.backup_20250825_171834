@@ -1,49 +1,29 @@
 """
-Excel 자동화 모듈 v2.0 - 완벽한 Excel 제어
-=========================================
-pywin32를 사용한 고급 Excel 자동화 기능
-- 차트, 피벗 테이블, 고급 서식
-- CSV/JSON 가져오기/내보내기
-- 수식 관리 및 데이터 검증
-- 스레드 안전성 보장
-
-작성자: AI Coding Brain MCP
-날짜: 2025-08-25
+Excel 실시간 작업 헬퍼 모듈
+pywin32를 사용하여 Excel COM 객체를 통한 실시간 작업 지원
 """
 
 import win32com.client as win32
 import pythoncom
 import threading
 from contextlib import contextmanager
-from typing import Optional, List, Any, Union, Tuple, Dict
+from typing import Optional, List, Any, Union, Tuple
 import os
 import time
-import json
-import csv
-from datetime import datetime
-from pathlib import Path
-import traceback
+from typing import Dict, Any, TypedDict
 
 # Response 타입 정의
 Response = Dict[str, Any]
 
-def success_response(data: Any, message: str = None) -> Response:
+def success_response(data: Any) -> Response:
     """성공 응답 생성"""
-    response = {'ok': True}
-    if message:
-        response['message'] = message
     if isinstance(data, str):
-        response['message'] = data
-    else:
-        response['data'] = data
-    return response
+        return {'ok': True, 'message': data}
+    return {'ok': True, 'data': data}
 
-def error_response(error: str, traceback_info: str = None) -> Response:
+def error_response(error: str) -> Response:
     """에러 응답 생성"""
-    response = {'ok': False, 'error': error}
-    if traceback_info:
-        response['traceback'] = traceback_info
-    return response
+    return {'ok': False, 'error': error}
 
 # 스레드 안전성을 위한 Lock
 excel_lock = threading.Lock()

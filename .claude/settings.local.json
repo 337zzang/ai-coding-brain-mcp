@@ -70,7 +70,8 @@
       "Bash(where python)",
       "Bash(cat:*)",
       "mcp__perplexity-ask__perplexity_research",
-      "Bash(echo $SHELL)"
+      "Bash(echo $SHELL)",
+      "WebFetch(domain:platform.openai.com)"
     ],
     "deny": [],
     "ask": [],

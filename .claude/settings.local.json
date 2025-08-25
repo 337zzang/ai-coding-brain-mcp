@@ -74,7 +74,9 @@
       "WebFetch(domain:platform.openai.com)",
       "Read(/C:\\Users\\Administrator\\.claude\\logs/**)",
       "Read(/C:\\Users\\Administrator\\.claude\\logs/**)",
-      "Read(/C:\\Users\\Administrator\\.claude\\logs/**)"
+      "Read(/C:\\Users\\Administrator\\.claude\\logs/**)",
+      "Read(/C:\\Users\\Administrator\\.claude/**)",
+      "Read(/C:\\Users\\Administrator\\.claude/**)"
     ],
     "deny": [],
     "ask": [],

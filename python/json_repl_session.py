@@ -358,11 +358,10 @@ def main():
     
     if is_claude_code:
         print("Claude Code/MCP 환경 감지됨 - 세션 초기화", file=sys.stderr)
-        # 세션 풀 초기화만 하고 반환
-        # MCP는 execute_code를 직접 호출하므로 무한 루프 불필요
+        # 세션 풀 초기화
         SESSION_POOL.get_or_create_session()
-        print("세션 풀 초기화 완료 - MCP 직접 호출 대기", file=sys.stderr)
-        return  # MCP는 execute_code를 직접 호출함
+        print("세션 풀 초기화 완료 - 요청 대기 중", file=sys.stderr)
+        # return 제거 - while 루프로 진입하여 요청 처리
     
     # 일반 환경에서의 기존 처리
     while True:

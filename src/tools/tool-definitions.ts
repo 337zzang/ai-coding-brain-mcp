@@ -64,11 +64,14 @@ export const toolDefinitions: Tool[] = [
 ✅ Precision Code Editing: AST-based coordinate modification
    정밀 코드 수정: AST 기반 좌표로 정확한 수정
 
-📦 AI Helpers v2.5 API (USE EXACTLY AS SHOWN) / 정확한 API 이름:
+📦 AI Helpers v3.0 API (USE EXACTLY AS SHOWN) / 정확한 API 이름:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ┌─────────────┬──────────────────────────────────────────────────────────┐
 │ Module      │ EXACT Method Names (대소문자 구분)                       │
 ├─────────────┼──────────────────────────────────────────────────────────┤
+│ 🚀 h.bg     │ run, map, chain, gather_map, store, get, result, wait, status │
+│ 🤖 h.ai     │ ask, ask_many, gather_llm, analyze_code, store, get     │
+│ 💬 h.message│ task, info, share, progress                             │
 │ 📁 h.file   │ read, write, append, exists, info, read_json, write_json, copy, move, delete │
 │ 🔧 h.code   │ parse, view, replace, insert, functions, classes        │
 │ 🔍 h.search │ files (NOT search_files), code, grep, imports          │
@@ -78,6 +81,7 @@ export const toolDefinitions: Tool[] = [
 │ 🌐 h.web    │ start, goto, click, close, screenshot                   │
 │ 📓 h.jupyter│ create_notebook, read_notebook, add_cell, execute_notebook, convert_to_python │
 │ ⚡ h.uv     │ install_uv, quick_setup, create_venv, pip_install, pip_sync │
+│ 🌊 h.flow   │ flow_api, flow_project, Plan, Task                      │
 └─────────────┴──────────────────────────────────────────────────────────┘
 
 💡 Quick Start Examples / 빠른 시작 예시:

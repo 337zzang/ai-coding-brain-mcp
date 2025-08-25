@@ -371,6 +371,9 @@ def main():
             if not line:
                 break
             
+            # 디버그: 받은 요청 출력
+            print(f"[DEBUG] Received request: {line.strip()}", file=sys.stderr)
+            
             # JSON 파싱
             request = json.loads(line.strip())
             

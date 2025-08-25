@@ -416,10 +416,10 @@ class GPTWebSearchFacade:
                              if t.get('status') == 'failed')
         
         return ok({
-            'client_available': self.client.is_available(),
+            'client_available': self.client.enabled if hasattr(self.client, 'enabled') else False,
             'active_searches': active_count,
             'completed_searches': completed_count,
             'failed_searches': failed_count,
             'cache_stats': self.get_cache_stats(),
-            'client_stats': self.client.get_stats() if self.client.is_available() else None
+            'client_stats': self.client.stats if hasattr(self.client, 'stats') else None
         })

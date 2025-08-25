@@ -83,6 +83,7 @@ export const toolDefinitions: Tool[] = [
 │ 📓 h.jupyter│ create_notebook, read_notebook, add_cell, execute_notebook, convert_to_python │
 │ ⚡ h.uv     │ install_uv, quick_setup, create_venv, pip_install, pip_sync │
 │ 🌊 h.flow   │ flow_api, flow_project, Plan, Task                      │
+│ 📊 h.excel  │ connect, check_session, write_cell, read_cell, save, quit │
 └─────────────┴──────────────────────────────────────────────────────────┘
 
 💡 Quick Start Examples / 빠른 시작 예시:

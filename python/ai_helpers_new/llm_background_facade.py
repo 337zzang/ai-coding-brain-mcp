@@ -417,7 +417,7 @@ class LLMBackgroundFacade(BackgroundFacade):
             ...     "Tailwind CSS v4"
             ... ])
         """
-        return self.web_search.web_search_many(queries, use_cache)
+        return self.web_search_facade.web_search_many(queries, use_cache)
     
     def web_search_chain(self, steps: List[Union[str, Tuple[str, str]]]) -> Dict[str, Any]:
         """
@@ -433,7 +433,7 @@ class LLMBackgroundFacade(BackgroundFacade):
             ...     ("implementation guide", "combine_all")
             ... ])
         """
-        return self.web_search.web_search_chain(steps)
+        return self.web_search_facade.web_search_chain(steps)
     
     def gather_web(self, task_ids: Optional[List[str]] = None,
                    timeout: float = 60.0) -> Dict[str, Any]:
@@ -447,7 +447,7 @@ class LLMBackgroundFacade(BackgroundFacade):
         Returns:
             모든 웹 검색 결과
         """
-        return self.web_search.gather_web_results(task_ids, timeout)
+        return self.web_search_facade.gather_web_results(task_ids, timeout)
     
     def get_web_cache(self, query: str) -> Optional[Dict[str, Any]]:
         """
@@ -459,7 +459,7 @@ class LLMBackgroundFacade(BackgroundFacade):
         Returns:
             캐시된 결과 또는 None
         """
-        return self.web_search._get_from_cache(query)
+        return self.web_search_facade._get_from_cache(query)
     
     def clear_web_cache(self):
         """웹 검색 캐시 초기화"""
@@ -473,7 +473,7 @@ class LLMBackgroundFacade(BackgroundFacade):
         Returns:
             웹 검색 통계 및 상태
         """
-        return self.web_search.get_status()
+        return self.web_search_facade.get_status()
     
     # ========== 통합 AI 검색 ==========
     

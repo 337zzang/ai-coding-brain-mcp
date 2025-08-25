@@ -70,7 +70,7 @@ class SmartSessionPool:
         with self.lock:
             if self.session is None:
                 self.session = EnhancedREPLSession(
-                    mode=ExecutionMode.MEMORY_OPTIMIZED,
+                    mode=ExecutionMode.IMMEDIATE,  # 수정: MEMORY_OPTIMIZED → IMMEDIATE
                     enable_caching=True
                 )
                 self._init_namespace()

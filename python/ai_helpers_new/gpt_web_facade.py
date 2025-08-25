@@ -423,6 +423,3 @@ class GPTWebSearchFacade:
             'cache_stats': self.get_cache_stats(),
             'client_stats': self.client.get_stats() if self.client.is_available() else None
         }
-
-# os import 추가
-import os

@@ -57,6 +57,7 @@ export const toolDefinitions: Tool[] = [
    • AI integration system (h.ai) / AI 통합 시스템
    • Message tracking system (h.message) / 메시지 추적 시스템
    • TodoWrite integration / TodoWrite 통합
+   • Excel automation with COM (h.excel) / COM 기반 엑셀 자동화
 ✅ Jupyter Integration: Native notebook support for data science workflows
    Jupyter 통합: 데이터 과학 워크플로우를 위한 네이티브 노트북 지원
 ✅ UV Package Manager: 10-100x faster Python package management

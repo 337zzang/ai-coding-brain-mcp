@@ -51,8 +51,8 @@ export const toolDefinitions: Tool[] = [
    영속적 세션: 모든 호출 간 변수와 상태 유지
 ✅ Project Isolation: Each project has independent execution environment  
    프로젝트 격리: 각 프로젝트는 독립적인 실행 환경 보유
-✅ AI Helpers v3.0: Enhanced 15-module helper system (200+ methods)
-   AI 헬퍼 v3.0: 15개 모듈로 확장된 종합 헬퍼 시스템 (200개+ 메서드)
+✅ AI Helpers v3.1: Enhanced 16-module helper system (220+ methods)
+   AI 헬퍼 v3.1: 16개 모듈로 확장된 종합 헬퍼 시스템 (220개+ 메서드)
    • Background parallel processing (h.bg) / 백그라운드 병렬 처리
    • AI integration system (h.ai) / AI 통합 시스템
    • Message tracking system (h.message) / 메시지 추적 시스템

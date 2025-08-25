@@ -176,6 +176,25 @@ h.uv.pip_sync('requirements.txt')                # Sync & lock deps / 의존성 
 h.uv.pip_compile('requirements.in')              # Generate locked requirements / 잠긴 요구사항 생성
 h.uv.run('python script.py')                     # Run in UV environment / UV 환경에서 실행
 
+# 📊 Excel Automation / 엑셀 자동화 (Windows COM - pywin32)
+h.excel.connect('data.xlsx', visible=True)        # Connect to Excel / 엑셀 연결 (창 표시)
+session = h.excel.check_session()                 # Check session status / 세션 상태 확인
+h.excel.write_cell('A1', 'Header')               # Write to cell / 셀에 쓰기
+data = h.excel.read_cell('A1')                   # Read from cell / 셀에서 읽기
+h.excel.write_range('A1:C10', data_array)        # Write range / 범위에 쓰기
+table = h.excel.read_range('A1:C10')             # Read range / 범위에서 읽기
+h.excel.format_range('A1:C1', bold=True)         # Format cells / 셀 서식
+h.excel.auto_fit('A:C')                          # Auto-fit columns / 열 너비 자동 조정
+h.excel.create_sheet('NewSheet')                 # Create sheet / 시트 생성
+h.excel.get_sheets()                              # List all sheets / 모든 시트 목록
+h.excel.sort('A:C', key_column='A')              # Sort data / 데이터 정렬
+h.excel.filter('A:C', column='B', value='>100')  # Apply filter / 필터 적용
+h.excel.save()                                    # Save workbook / 저장
+h.excel.save_as('output.xlsx')                   # Save as new file / 다른 이름으로 저장
+h.excel.close()                                   # Close workbook / 통합 문서 닫기
+h.excel.quit()                                    # Quit Excel / 엑셀 종료
+# Note: Excel stays open for session-like work / 엑셀은 세션처럼 열린 채로 작업 가능
+
 # ⚠️ Error Handling Pattern / 에러 처리 패턴
 result = h.file.read('missing.txt')
 if not h.util.is_ok(result):

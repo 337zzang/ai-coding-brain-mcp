@@ -2,15 +2,14 @@
 # -*- coding: utf-8 -*-
 
 """
-🚀 Enhanced JSON REPL Session with Session Isolation
-Version: 3.0.0
+🚀 Enhanced JSON REPL Session with Smart Memory Management
+Version: 4.0.0
 
-New Features:
-- Session pooling for subagent isolation
-- Thread-safe session management
-- Automatic session cleanup
-- Agent-specific namespaces
-- Session metrics and monitoring
+Features:
+- Real-time memory monitoring
+- Automatic garbage collection
+- Variable limit management  
+- Memory usage reporting in stdout
 """
 
 import sys
@@ -21,508 +20,279 @@ import gc
 import io
 import traceback
 import threading
-import uuid
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional
 from pathlib import Path
-from datetime import datetime, timedelta
-import hashlib
+from datetime import datetime
 
-# Add repl_core to path
+# Import memory facade
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from memory_facade import MEMORY_MANAGER, execute_code_with_memory_check, get_memory_report
 
-# Import enhanced components
+# Import original components
 from repl_core import EnhancedREPLSession, ExecutionMode
-from repl_core.streaming import DataStream
 
 # Windows UTF-8 configuration
 if sys.platform == 'win32':
     try:
-        # Try reconfigure() for Python 3.7+
         if hasattr(sys.stdout, 'reconfigure'):
             sys.stdout.reconfigure(encoding='utf-8')
             sys.stderr.reconfigure(encoding='utf-8')
-        elif hasattr(sys.stdout, 'buffer'):
-            # For older Python versions with buffer support
-            import codecs
-            sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
-            sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
-    except (AttributeError, TypeError):
-        # In REPL or StringIO environment, just set the environment variable
+    except:
         pass
     os.environ['PYTHONIOENCODING'] = 'utf-8'
 
-
-class SessionPool:
-    """Shared session manager with persistent variables"""
+class SmartSessionPool:
+    """메모리 관리가 강화된 세션 풀"""
     
-    def __init__(self, max_sessions: int = 1, session_timeout: int = 7200):
-        self.max_sessions = max_sessions  # 1 shared session
-        self.session_timeout = session_timeout  # 2 hours
-        self.sessions: Dict[str, Dict[str, Any]] = {}
+    def __init__(self):
+        self.session = None
+        self.namespace = {}
         self.lock = threading.RLock()
         
-        # 🔥 단일 공유 변수 스토리지 - 모든 데이터 통합 관리
-        self.shared_variables = {}  # 모든 데이터를 하나로 관리
+        # 메모리 매니저 연결
+        self.memory_manager = MEMORY_MANAGER
         
-        self.metrics = {
-            'total_created': 0,
-            'total_reused': 0,
-            'total_expired': 0,
-            'current_active': 0,
-            'shared_vars_count': 0
+        # 통계
+        self.stats = {
+            'total_executions': 0,
+            'memory_cleanups': 0,
+            'peak_memory_mb': 0
         }
     
-    def _generate_session_key(self, agent_id: Optional[str], session_id: Optional[str]) -> str:
-        """Always return 'shared' for shared session mode"""
-        # 🔥 모든 에이전트가 'shared' 세션 사용
-        return "shared"  # 단일 공유 세션!
-    
-    def _try_reuse_session(self, key: str, current_time: float) -> Optional[Tuple[str, EnhancedREPLSession]]:
-        """Try to reuse existing session if valid"""
-        if key not in self.sessions:
-            return None
-            
-        session_data = self.sessions[key]
-        
-        # Check if session expired
-        if current_time - session_data['last_accessed'] > self.session_timeout:
-            self._cleanup_session(key)
-            self.metrics['total_expired'] += 1
-            return None
-        
-        # Reuse existing session
-        session_data['last_accessed'] = current_time
-        session_data['access_count'] += 1
-        self.metrics['total_reused'] += 1
-        
-        return key, session_data['session']
-    
-    def _register_new_session(self, key: str, session: EnhancedREPLSession, 
-                            agent_id: Optional[str], current_time: float) -> None:
-        """Register a new session in the pool"""
-        self.sessions[key] = {
-            'session': session,
-            'agent_id': agent_id,
-            'created_at': current_time,
-            'last_accessed': current_time,
-            'access_count': 1,
-            'execution_count': 0
-        }
-        
-        self.metrics['total_created'] += 1
-        self.metrics['current_active'] = len(self.sessions)
-        
-        print(f"[SessionPool] Created new session: {key} for agent: {agent_id or 'anonymous'}", 
-              file=sys.stderr)
-    
-    def get_or_create_session(self, 
-                            agent_id: Optional[str] = None,
-                            session_id: Optional[str] = None) -> Tuple[str, EnhancedREPLSession]:
-        """Get existing or create new isolated session"""
-        
+    def get_or_create_session(self) -> EnhancedREPLSession:
+        """세션 가져오기 또는 생성"""
         with self.lock:
-            # Generate session key
-            key = self._generate_session_key(agent_id, session_id)
-            current_time = time.time()
-            
-            # Try to reuse existing session
-            existing = self._try_reuse_session(key, current_time)
-            if existing:
-                return existing
-            
-            # Check pool capacity
-            if len(self.sessions) >= self.max_sessions:
-                self._evict_lru_session()
-            
-            # Create and register new session
-            new_session = self._create_new_session(agent_id)
-            self._register_new_session(key, new_session, agent_id, current_time)
-            
-            return key, new_session
+            if self.session is None:
+                self.session = EnhancedREPLSession(
+                    mode=ExecutionMode.MEMORY_OPTIMIZED,
+                    enable_caching=True
+                )
+                self._init_namespace()
+            return self.session
     
-    def _create_new_session(self, agent_id: Optional[str] = None) -> EnhancedREPLSession:
-        """Create a shared session with increased memory and persistent variables"""
-        
-        config = {
-            'memory_limit_mb': 2048,  # 🔥 2GB for better performance
-            'cache_dir': '.repl_cache/shared',  # Shared cache
-            'enable_streaming': True,
-            'enable_caching': True,
-            'chunk_size': 50000  # Larger chunks for efficiency
+    def _init_namespace(self):
+        """네임스페이스 초기화"""
+        self.namespace = {
+            '__builtins__': __builtins__,
+            '__name__': '__main__',
+            'sys': sys,
+            'os': os,
+            'Path': Path,
+            'datetime': datetime,
+            'gc': gc,
+            # 메모리 관리 함수 추가
+            'mem_status': self.memory_manager.get_memory_status,
+            'mem_clean': self.memory_manager.clean_memory,
+            'mem_report': lambda: print(get_memory_report()),
+            'set_var': self.memory_manager.set_variable,
+            'get_var': self.memory_manager.get_variable,
         }
-        
-        # 모든 에이전트가 같은 높은 메모리 사용
-        # 세션 격리 제거 - 공유 세션 사용
-        if agent_id:
-            print(f"[SharedSession] Agent '{agent_id}' using shared session", file=sys.stderr)
-        
-        session = EnhancedREPLSession(**config)
-        
-        # 🔥 최소한의 헬퍼만 제공
-        session.namespace.update({
-            # 메시지 헬퍼 (다음 작업자에게 전달)
-            'leave_note': lambda msg: print(f"\n💬 다음 작업자에게: {msg}"),
-            'next_step': lambda msg: print(f"\n➡️ 다음 단계: {msg}"),
-            'todo': lambda msg: print(f"\n📝 TODO: {msg}"),
-            'done': lambda msg: print(f"\n✅ 완료: {msg}"),
-            
-            # 디버깅용
-            'show_vars': lambda: print(f"\n📦 현재 변수: {', '.join([k for k in session.namespace.keys() if not k.startswith('_')][:10])}")
-        })
-        
-        return session
     
-    def _evict_lru_session(self) -> None:
-        """Evict least recently used session"""
+    def execute_with_memory_management(self, code: str) -> Dict[str, Any]:
+        """메모리 관리가 포함된 코드 실행"""
         
-        if not self.sessions:
-            return
+        # 실행 전 메모리 체크
+        before_status = self.memory_manager.get_memory_status()
         
-        # Find LRU session
-        lru_key = min(self.sessions.keys(), 
-                     key=lambda k: self.sessions[k]['last_accessed'])
+        # stdout에 메모리 정보 출력
+        print(f"\n{'='*50}", file=sys.stderr)
+        print(f"[MEM] 실행 시작", file=sys.stderr)
+        print(f"[MEM] 메모리: {before_status['used_mb']:.1f}MB / "
+              f"{before_status['percent_used']:.1f}%", file=sys.stderr)
+        print(f"[MEM] 변수: {before_status['variables_count']}개 / "
+              f"{self.memory_manager.MAX_VARIABLES}개", file=sys.stderr)
         
-        self._cleanup_session(lru_key)
-        print(f"[SessionPool] Evicted LRU session: {lru_key}", file=sys.stderr)
-    
-    def _cleanup_session(self, key: str):
-        """Clean up a session and free resources"""
+        # 메모리 임계값 체크
+        if before_status['critical']:
+            print(f"[MEM] ⚠️ 메모리 위험! 자동 정리 시작...", file=sys.stderr)
+            clean_result = self.memory_manager.clean_memory(force=True)
+            print(f"[MEM] ✅ {clean_result['memory_freed_mb']:.1f}MB 해제, "
+                  f"{clean_result['cleaned_variables']}개 변수 정리", file=sys.stderr)
+            self.stats['memory_cleanups'] += 1
+        elif before_status['warning']:
+            print(f"[MEM] 🟡 메모리 주의 수준", file=sys.stderr)
         
-        if key not in self.sessions:
-            return
+        print(f"{'='*50}", file=sys.stderr)
         
-        session_data = self.sessions[key]
-        session = session_data['session']
-        
-        # Clear session resources
+        # 실제 코드 실행
         try:
-            session.clear_session()
-            if hasattr(session, 'memory_manager'):
-                session.memory_manager.cleanup()
-            if hasattr(session, 'cache'):
-                session.cache.clear()
-        except Exception as e:
-            print(f"[SessionPool] Error cleaning up session {key}: {e}", file=sys.stderr)
-        
-        del self.sessions[key]
-        self.metrics['current_active'] = len(self.sessions)
-    
-    def _clear_agent_cache(self, agent_id: str):
-        """Clear cache for specific agent"""
-        
-        cache_dir = Path(f'.repl_cache/{agent_id or "shared"}')
-        if cache_dir.exists():
-            import shutil
-            shutil.rmtree(cache_dir, ignore_errors=True)
-            print(f"[SessionPool] Cleared cache for agent: {agent_id}", file=sys.stderr)
-    
-    def get_session_info(self, session_key: str) -> Dict[str, Any]:
-        """Get information about a specific session"""
-        
-        with self.lock:
-            if session_key not in self.sessions:
-                return {'error': 'Session not found'}
+            # 출력 캡처
+            old_stdout = sys.stdout
+            sys.stdout = io.StringIO()
             
-            session_data = self.sessions[session_key]
+            # 네임스페이스에서 실행
+            exec(code, self.namespace)
+            
+            # 출력 가져오기
+            output = sys.stdout.getvalue()
+            sys.stdout = old_stdout
+            
+            # 실행 후 메모리 상태
+            after_status = self.memory_manager.get_memory_status()
+            memory_delta = after_status['used_mb'] - before_status['used_mb']
+            
+            # 통계 업데이트
+            self.stats['total_executions'] += 1
+            if after_status['used_mb'] > self.stats['peak_memory_mb']:
+                self.stats['peak_memory_mb'] = after_status['used_mb']
+            
+            # 메모리 변화 출력
+            print(f"\n[MEM] 실행 완료", file=sys.stderr)
+            print(f"[MEM] 메모리 변화: {memory_delta:+.1f}MB", file=sys.stderr)
+            print(f"[MEM] 현재: {after_status['used_mb']:.1f}MB / "
+                  f"{after_status['percent_used']:.1f}%", file=sys.stderr)
+            
+            # 메모리 급증 경고
+            if memory_delta > 100:
+                print(f"[MEM] ⚠️ 메모리 급증 감지!", file=sys.stderr)
             
             return {
-                'session_id': session_key,
-                'agent_id': session_data['agent_id'],
-                'created_at': datetime.fromtimestamp(session_data['created_at']).isoformat(),
-                'last_accessed': datetime.fromtimestamp(session_data['last_accessed']).isoformat(),
-                'access_count': session_data['access_count'],
-                'execution_count': session_data['execution_count'],
-                'age_seconds': int(time.time() - session_data['created_at'])
+                'status': 'success',
+                'stdout': output,  # Changed from 'output' to 'stdout' for MCP compatibility
+                'stderr': '',  # Add stderr for compatibility
+                'memory': {
+                    'before_mb': before_status['used_mb'],
+                    'after_mb': after_status['used_mb'],
+                    'delta_mb': round(memory_delta, 2),
+                    'percent': after_status['percent_used'],
+                    'variables': after_status['variables_count']
+                },
+                'stats': self.stats
             }
-    
-    def get_pool_metrics(self) -> Dict[str, Any]:
-        """Get pool-wide metrics"""
-        
-        with self.lock:
+            
+        except Exception as e:
+            sys.stdout = old_stdout if 'old_stdout' in locals() else sys.stdout
+            
+            # 에러 시에도 메모리 상태 확인
+            error_status = self.memory_manager.get_memory_status()
+            
             return {
-                **self.metrics,
-                'sessions': {
-                    key: self.get_session_info(key) 
-                    for key in self.sessions.keys()
+                'status': 'error',
+                'error': str(e),
+                'traceback': traceback.format_exc(),
+                'memory': {
+                    'current_mb': error_status['used_mb'],
+                    'percent': error_status['percent_used'],
+                    'variables': error_status['variables_count']
                 }
             }
     
-    def cleanup_expired_sessions(self) -> None:
-        """Clean up all expired sessions"""
-        
-        with self.lock:
-            current_time = time.time()
-            expired_keys = [
-                key for key, data in self.sessions.items()
-                if current_time - data['last_accessed'] > self.session_timeout
-            ]
-            
-            for key in expired_keys:
-                self._cleanup_session(key)
-                self.metrics['total_expired'] += 1
-            
-            if expired_keys:
-                print(f"[SessionPool] Cleaned up {len(expired_keys)} expired sessions", 
-                      file=sys.stderr)
-    
-    def shutdown(self) -> None:
-        """Shutdown pool and cleanup all sessions"""
-        
-        with self.lock:
-            print(f"[SessionPool] Shutting down with {len(self.sessions)} active sessions", 
-                  file=sys.stderr)
-            
-            for key in list(self.sessions.keys()):
-                self._cleanup_session(key)
-            
-            self.sessions.clear()
-            self.metrics['current_active'] = 0
+    def get_stats_report(self) -> str:
+        """통계 리포트 생성"""
+        return f"""
+📊 세션 통계
+- 총 실행: {self.stats['total_executions']}회
+- 메모리 정리: {self.stats['memory_cleanups']}회
+- 최대 메모리: {self.stats['peak_memory_mb']:.1f}MB
+"""
 
+# 전역 세션 풀
+SESSION_POOL = SmartSessionPool()
 
-# Global session pool instance
-SESSION_POOL = SessionPool(max_sessions=10, session_timeout=3600)
-
-
-def get_enhanced_prompt(session_key: str = "shared") -> str:
-    """REPL 세션 활성 상태만 표시"""
-    
-    # 최소한의 정보만
-    return "\n💡 REPL 세션 활성. show_vars()로 변수 확인 가능."
-
-
-def _track_execution(session_key: str) -> None:
-    """Track execution count for a session"""
-    if session_key in SESSION_POOL.sessions:
-        SESSION_POOL.sessions[session_key]['execution_count'] += 1
-
-
-def _build_response_metadata(result: Any, session_key: str, agent_id: Optional[str]) -> Dict[str, Any]:
-    """Build response metadata from execution result"""
-    session_data = SESSION_POOL.sessions.get(session_key, {})
-    
-    return {
-        'success': result.success,
-        'language': 'python',
-        'session_mode': 'ISOLATED_JSON_REPL',
-        'session_id': session_key,
-        'agent_id': agent_id,
-        'stdout': result.stdout,
-        'stderr': result.stderr,
-        'execution_count': session_data.get('execution_count', 0),
-        'memory_mb': result.memory_usage_mb,
-        'execution_time_ms': result.execution_time_ms,
-        'execution_mode': result.execution_mode.value,
-        'chunks_processed': result.chunks_processed,
-        'cached': result.cached,
-        'note': f'Isolated session for agent: {agent_id or "anonymous"}',
-        'debug_info': {
-            'session_active': True,
-            'session_age': int(time.time() - session_data.get('created_at', time.time())),
-            'pool_size': len(SESSION_POOL.sessions),
-            'pool_metrics': SESSION_POOL.get_pool_metrics()
-        },
-        'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-    }
-
-
-def _add_cache_statistics(response: Dict[str, Any], session: Any) -> None:
-    """Add cache statistics to response if caching is enabled"""
-    if session.enable_caching:
-        cache_stats = session.get_cache_stats()
-        response['cache_stats'] = {
-            'entries': cache_stats.get('entries', 0),
-            'hit_rate': cache_stats.get('hit_rate', 0)
-        }
-
-
-def execute_code(code: str, 
-                agent_id: Optional[str] = None,
+def execute_code(code: str, agent_id: Optional[str] = None, 
                 session_id: Optional[str] = None) -> Dict[str, Any]:
-    """Execute code in a shared session with enhanced guidance"""
+    """메모리 관리가 강화된 코드 실행"""
     
-    # Get or create shared session
-    session_key, session = SESSION_POOL.get_or_create_session(agent_id, session_id)
+    # 세션 풀에서 실행
+    result = SESSION_POOL.execute_with_memory_management(code)
     
-    # Track execution
-    _track_execution(session_key)
+    # 주기적으로 통계 출력 (10회마다)
+    if SESSION_POOL.stats['total_executions'] % 10 == 0:
+        print(SESSION_POOL.get_stats_report(), file=sys.stderr)
+        print(get_memory_report(), file=sys.stderr)
     
-    # Execute with enhanced session
-    result = session.execute(code)
-    
-    # Build response
-    response = _build_response_metadata(result, session_key, agent_id)
-    
-    # Add cache statistics if available
-    _add_cache_statistics(response, session)
-    
-    # Add enhanced prompt with context for successful executions
-    if response.get("success", False):
-        response["stdout"] += get_enhanced_prompt(session_key)
-    
-    return response
+    return result
 
-
-def read_json_input() -> Optional[str]:
-    """Read JSON input from stdin"""
+def process_json_request(request: Dict[str, Any]) -> Dict[str, Any]:
+    """JSON-RPC 요청 처리"""
     try:
-        line = sys.stdin.readline()
-        if not line:
-            return None
-        return line.strip()
-    except:
-        return None
-
-
-def write_json_output(response: Dict[str, Any]) -> None:
-    """Write JSON output to stdout"""
-    json_str = json.dumps(response, ensure_ascii=False)
-    sys.stdout.write(json_str + '\n')
-    sys.stdout.flush()
-
-
-def periodic_cleanup() -> None:
-    """Periodic cleanup task for expired sessions"""
-    import threading
-    
-    def cleanup_task():
-        while True:
-            time.sleep(300)  # Every 5 minutes
-            SESSION_POOL.cleanup_expired_sessions()
-    
-    cleanup_thread = threading.Thread(target=cleanup_task, daemon=True)
-    cleanup_thread.start()
-
-
-def print_startup_message() -> None:
-    """Print startup message to stderr"""
-    print("=" * 60, file=sys.stderr)
-    print("Isolated JSON REPL Session v3.0", file=sys.stderr)
-    print("Session Pooling for Subagent Isolation", file=sys.stderr)
-    print("-" * 60, file=sys.stderr)
-    print(f"Max sessions: {SESSION_POOL.max_sessions}", file=sys.stderr)
-    print(f"Session timeout: {SESSION_POOL.session_timeout}s", file=sys.stderr)
-    print(f"Isolation: Enabled", file=sys.stderr)
-    print("=" * 60, file=sys.stderr)
-
-
-def handle_execute_request(request_id: Optional[str], params: Dict[str, Any]) -> Dict[str, Any]:
-    """Handle execute request and return response"""
-    code = params.get('code', '')
-    agent_id = params.get('agent_id')
-    session_id = params.get('session_id')
-    
-    # Auto-detect agent if not provided
-    if not agent_id and 'import ai_helpers_new' in code:
-        if 'test' in code.lower():
-            agent_id = 'test-runner'
-        elif 'analyze' in code.lower() or 'analysis' in code.lower():
-            agent_id = 'code-analyzer'
-        elif 'optimize' in code.lower():
-            agent_id = 'code-optimizer'
-    
-    # Execute code in isolated session
-    result = execute_code(code, agent_id, session_id)
-    
-    return {
-        'jsonrpc': '2.0',
-        'id': request_id,
-        'result': result
-    }
-
-
-def handle_metrics_request(request_id: Optional[str]) -> Dict[str, Any]:
-    """Handle pool metrics request"""
-    return {
-        'jsonrpc': '2.0',
-        'id': request_id,
-        'result': SESSION_POOL.get_pool_metrics()
-    }
-
-
-def create_error_response(request_id: Optional[str], code: int, message: str) -> Dict[str, Any]:
-    """Create error response in JSON-RPC format"""
-    return {
-        'jsonrpc': '2.0',
-        'id': request_id,
-        'error': {
-            'code': code,
-            'message': message
-        }
-    }
-
-
-def main() -> None:
-    """Main execution loop with session isolation"""
-    # Start periodic cleanup
-    periodic_cleanup()
-    
-    # Print startup message
-    print_startup_message()
-    
-    # Ready signal
-    print("__READY__", flush=True)
-    
-    # Run main loop
-    run_main_loop()
-    
-    # Cleanup
-    shutdown_repl()
-
-
-def process_single_request(code_input: str) -> Optional[Dict[str, Any]]:
-    """Process a single JSON-RPC request"""
-    try:
-        request = json.loads(code_input)
-        request_id = request.get('id')
-        request_type = request.get('method', '').split('/')[-1]
+        # 코드 추출
+        params = request.get('params', {})
+        code = params.get('code', '')
+        agent_id = params.get('agent_id')
+        session_id = params.get('session_id')
         
-        if request_type == 'execute':
-            params = request.get('params', {})
-            return handle_execute_request(request_id, params)
-        elif request_type == 'get_pool_metrics':
-            return handle_metrics_request(request_id)
+        # 코드 실행
+        result = execute_code(code, agent_id, session_id)
+        
+        # 응답 생성
+        if result['status'] == 'success':
+            return {
+                'jsonrpc': '2.0',
+                'id': request.get('id', 1),
+                'result': {
+                    'output': result['output'],
+                    'memory': result['memory'],
+                    'stats': result['stats']
+                }
+            }
         else:
-            return create_error_response(
-                request_id, -32601, 
-                f'Method not found: {request_type}'
-            )
-    
-    except json.JSONDecodeError as e:
-        return create_error_response(None, -32700, f'Parse error: {str(e)}')
+            return {
+                'jsonrpc': '2.0',
+                'id': request.get('id', 1),
+                'error': {
+                    'code': -32603,
+                    'message': result['error'],
+                    'data': {
+                        'traceback': result.get('traceback'),
+                        'memory': result['memory']
+                    }
+                }
+            }
     except Exception as e:
-        return create_error_response(None, -32603, f'Internal error: {str(e)}')
+        return {
+            'jsonrpc': '2.0',
+            'id': request.get('id', 1),
+            'error': {
+                'code': -32603,
+                'message': str(e)
+            }
+        }
 
-
-def run_main_loop() -> None:
-    """Run the main request processing loop"""
+def main():
+    """메인 실행 루프"""
+    print("Enhanced JSON REPL with Memory Management", file=sys.stderr)
+    print(f"Memory Limits: {MEMORY_MANAGER.MAX_VARIABLES} vars, "
+          f"{MEMORY_MANAGER.MAX_VAR_SIZE_MB}MB/var", file=sys.stderr)
+    print(f"Thresholds: Warning {MEMORY_MANAGER.MEMORY_WARNING_THRESHOLD}%, "
+          f"Critical {MEMORY_MANAGER.MEMORY_CRITICAL_THRESHOLD}%", file=sys.stderr)
+    print("Ready for requests...", file=sys.stderr)
+    
     while True:
         try:
-            # Read JSON request
-            code_input = read_json_input()
-            if code_input is None:
+            # 입력 읽기
+            line = sys.stdin.readline()
+            if not line:
                 break
             
-            # Process request
-            response = process_single_request(code_input)
-            if response:
-                write_json_output(response)
-        
+            # JSON 파싱
+            request = json.loads(line.strip())
+            
+            # 요청 처리
+            response = process_json_request(request)
+            
+            # 응답 전송
+            print(json.dumps(response, ensure_ascii=False))
+            sys.stdout.flush()
+            
         except KeyboardInterrupt:
             break
+        except json.JSONDecodeError as e:
+            error_response = {
+                'jsonrpc': '2.0',
+                'error': {
+                    'code': -32700,
+                    'message': f'Parse error: {str(e)}'
+                }
+            }
+            print(json.dumps(error_response))
+            sys.stdout.flush()
         except Exception as e:
-            # Log unexpected errors but continue
-            print(f"Unexpected error in main loop: {e}", file=sys.stderr)
-            continue
-
-
-def shutdown_repl() -> None:
-    """Clean shutdown of the REPL"""
+            print(f"Unexpected error: {e}", file=sys.stderr)
     
-    print("\nShutting down isolated REPL...", file=sys.stderr)
-    SESSION_POOL.shutdown()
-    gc.collect()
-    print("Goodbye!", file=sys.stderr)
+    print("\nSession ended", file=sys.stderr)
+    print(SESSION_POOL.get_stats_report(), file=sys.stderr)
+    print(get_memory_report(), file=sys.stderr)
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

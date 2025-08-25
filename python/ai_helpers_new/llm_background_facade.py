@@ -463,7 +463,7 @@ class LLMBackgroundFacade(BackgroundFacade):
     
     def clear_web_cache(self):
         """웹 검색 캐시 초기화"""
-        self.web_search.clear_cache()
+        self.web_search_facade.clear_cache()
         self.message.task("웹 검색 캐시 초기화됨", level="SUCCESS")
     
     def web_search_status(self) -> Dict[str, Any]:

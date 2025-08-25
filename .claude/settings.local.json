@@ -63,7 +63,10 @@
       "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
       "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
       "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
-      "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)"
+      "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\logs/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\logs/**)",
+      "Read(/C:\\Users\\Administrator\\.claude/**)"
     ],
     "deny": [],
     "ask": [],

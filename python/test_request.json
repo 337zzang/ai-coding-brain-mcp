@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":"test_1","method":"execute","params":{"code":"print('Hello World!')\nresult = 2 + 2\nprint(f'2 + 2 = {result}')"}}

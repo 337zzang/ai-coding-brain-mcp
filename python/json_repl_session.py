@@ -392,9 +392,16 @@ def main():
             # 요청 처리
             response = process_json_request(request)
             
+            # 디버그: 응답 전송 전
+            print(f"[DEBUG] Sending response: {json.dumps(response)[:200]}...", file=sys.stderr)
+            
             # 응답 전송
-            print(json.dumps(response, ensure_ascii=False))
+            response_json = json.dumps(response, ensure_ascii=False)
+            print(response_json)
             sys.stdout.flush()
+            
+            # 디버그: 응답 전송 완료
+            print(f"[DEBUG] Response sent, flushed stdout", file=sys.stderr)
             
         except KeyboardInterrupt:
             break

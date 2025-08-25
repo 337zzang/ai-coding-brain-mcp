@@ -242,13 +242,13 @@ class GPTWebSearchFacade:
             'final_result': results[-1] if results else None
         })
     
-    def wait_for_search(self, task_id: str, timeout: float = 30.0) -> Dict[str, Any]:
+    def wait_for_search(self, task_id: str, timeout: float = 90.0) -> Dict[str, Any]:
         """
         검색 결과 대기
         
         Args:
             task_id: 작업 ID
-            timeout: 최대 대기 시간
+            timeout: 최대 대기 시간 (기본 90초로 증가)
             
         Returns:
             검색 결과

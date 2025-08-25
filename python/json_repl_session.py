@@ -251,7 +251,7 @@ def process_json_request(request: Dict[str, Any]) -> Dict[str, Any]:
         }
 
 def main():
-    """메인 실행 루프"""
+    """메인 실행 루프 - 세션 영속성 보장"""
     print("Enhanced JSON REPL with Memory Management", file=sys.stderr)
     print(f"Memory Limits: {MEMORY_MANAGER.MAX_VARIABLES} vars, "
           f"{MEMORY_MANAGER.MAX_VAR_SIZE_MB}MB/var", file=sys.stderr)
@@ -268,10 +268,100 @@ def main():
                      not sys.stdin.isatty()
     
     if is_claude_code:
-        print("Claude Code 환경 감지됨 - stdin 대기 건너뜀", file=sys.stderr)
-        # Claude Code에서는 직접 함수 호출 방식 사용
-        return
+        print("Claude Code/MCP 환경 감지됨 - 세션 유지 모드", file=sys.stderr)
+        # 세션 풀 초기화 보장
+        SESSION_POOL.get_or_create_session()
+        print("세션 풀 초기화 완료", file=sys.stderr)
+        
+        # MCP 환경에서는 이벤트 루프 대신 대기 상태 유지
+        # 이렇게 하면 세션이 종료되지 않고 유지됨
+        try:
+            import select
+            import time
+            
+            print("Non-blocking 입력 대기 모드 시작", file=sys.stderr)
+            while True:
+                # Non-blocking stdin check
+                if sys.stdin in select.select([sys.stdin], [], [], 0.1)[0]:
+                    line = sys.stdin.readline()
+                    if not line:
+                        break
+                    
+                    try:
+                        request = json.loads(line.strip())
+                        response = process_json_request(request)
+                        print(json.dumps(response, ensure_ascii=False))
+                        sys.stdout.flush()
+                    except json.JSONDecodeError as e:
+                        error_response = {
+                            'jsonrpc': '2.0',
+                            'error': {
+                                'code': -32700,
+                                'message': f'Parse error: {str(e)}'
+                            }
+                        }
+                        print(json.dumps(error_response))
+                        sys.stdout.flush()
+                    except Exception as e:
+                        print(f"Request processing error: {e}", file=sys.stderr)
+                else:
+                    # 입력이 없을 때도 세션 유지
+                    time.sleep(0.1)
+                    
+        except ImportError:
+            # Windows에서 select가 파일에 대해 작동하지 않을 수 있음
+            print("Fallback to threading mode", file=sys.stderr)
+            import queue
+            
+            input_queue = queue.Queue()
+            
+            def input_reader():
+                """백그라운드 입력 리더"""
+                while True:
+                    try:
+                        line = sys.stdin.readline()
+                        if not line:
+                            break
+                        input_queue.put(line)
+                    except Exception as e:
+                        print(f"Input reader error: {e}", file=sys.stderr)
+                        break
+            
+            # 백그라운드 스레드로 입력 처리
+            import threading
+            reader_thread = threading.Thread(target=input_reader, daemon=True)
+            reader_thread.start()
+            
+            print("Thread-based 입력 처리 모드", file=sys.stderr)
+            while True:
+                try:
+                    # Non-blocking queue get
+                    line = input_queue.get(timeout=0.1)
+                    request = json.loads(line.strip())
+                    response = process_json_request(request)
+                    print(json.dumps(response, ensure_ascii=False))
+                    sys.stdout.flush()
+                except queue.Empty:
+                    # 큐가 비어있어도 계속 실행
+                    continue
+                except json.JSONDecodeError as e:
+                    error_response = {
+                        'jsonrpc': '2.0',
+                        'error': {
+                            'code': -32700,
+                            'message': f'Parse error: {str(e)}'
+                        }
+                    }
+                    print(json.dumps(error_response))
+                    sys.stdout.flush()
+                except KeyboardInterrupt:
+                    break
+                except Exception as e:
+                    print(f"Processing error: {e}", file=sys.stderr)
+        
+        return  # MCP 환경에서는 여기까지만 실행
     
+    # 일반 환경에서의 기존 처리
     while True:
         try:
             # 입력 읽기

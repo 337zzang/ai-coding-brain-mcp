@@ -235,68 +235,79 @@ class ExcelManager:
         
         return status
 
-    def connect_or_create(self, file_path: Optional[str] = None) -> dict:
+    def connect_or_create(self, file_path: Optional[str] = None, visible: bool = True) -> dict:
         """
-        기존 Excel에 연결하거나 새로 생성
+        독립적인 Excel 인스턴스 생성 (기존 Excel에 영향 없음)
 
         Args:
             file_path: 연결할 Excel 파일 경로 (None이면 빈 Excel)
+            visible: Excel을 화면에 표시할지 여부 (기본: True)
 
         Returns:
             Response dict with excel instance
         """
         try:
-            # 1. 먼저 파일 경로가 주어졌고 파일이 존재하면 GetObject 시도
-            if file_path and os.path.exists(file_path):
+            # COM 초기화 확인
+            if not self._com_initialized:
                 try:
-                    # GetObject로 이미 열려있는 파일에 연결 시도
-                    self.workbook = win32.GetObject(os.path.abspath(file_path))
-                    self.excel = self.workbook.Application
-                    self.excel.Visible = True
-                    self._is_new_instance = False
-                    self.file_path = os.path.abspath(file_path)  # file_path 저장
-                    return success_response({
-                        'excel': self.excel,
-                        'workbook': self.workbook,
-                        'connected_to_existing': True,
-                        'file_path': self.file_path
-                    })
-                except Exception:
-                    # GetObject 실패 시 아래에서 새로 열기
-                    pass
-
-            # 2. GetObject 실패하거나 파일 경로가 없으면 새 인스턴스 생성
+                    pythoncom.CoInitialize()
+                    self._com_initialized = True
+                except:
+                    pass  # 이미 초기화된 경우 무시
+            
+            # 항상 새로운 독립 Excel 인스턴스 생성 (기존 Excel과 완전 분리)
             try:
-                # DispatchEx로 완전히 새로운 Excel 인스턴스 생성
+                # DispatchEx로 완전히 새로운 독립 Excel 프로세스 생성
+                # 이렇게 하면 기존에 열려있는 Excel에 전혀 영향을 주지 않음
                 self.excel = win32.DispatchEx('Excel.Application')
-                self.excel.Visible = True
+                
+                # Excel을 화면에 표시 (사용자가 볼 수 있도록)
+                self.excel.Visible = visible
+                
+                # 경고 메시지 비활성화 (저장 확인 등)
+                self.excel.DisplayAlerts = False
+                
+                # 화면 업데이트 활성화 (실시간으로 변경사항 확인)
+                self.excel.ScreenUpdating = True
+                
                 self._is_new_instance = True
 
                 if file_path:
                     # 파일 경로가 주어졌으면 파일 열기
-                    if os.path.exists(file_path):
-                        self.workbook = self.excel.Workbooks.Open(os.path.abspath(file_path))
+                    abs_path = os.path.abspath(file_path)
+                    if os.path.exists(abs_path):
+                        # 읽기 전용으로 열지 않고 편집 가능하게 열기
+                        self.workbook = self.excel.Workbooks.Open(
+                            abs_path,
+                            UpdateLinks=0,  # 링크 업데이트 안함
+                            ReadOnly=False  # 편집 가능
+                        )
                     else:
                         # 파일이 없으면 새로 생성
                         self.workbook = self.excel.Workbooks.Add()
-                        self.workbook.SaveAs(os.path.abspath(file_path))
+                        # 경로에 디렉토리가 없으면 생성
+                        os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+                        self.workbook.SaveAs(abs_path)
                 else:
                     # 파일 경로가 없으면 빈 워크북 생성
                     self.workbook = self.excel.Workbooks.Add()
 
-                self.file_path = os.path.abspath(file_path) if file_path else None  # file_path 저장
+                self.file_path = os.path.abspath(file_path) if file_path else None
+                
+                # 성공 메시지
                 return success_response({
                     'excel': self.excel,
                     'workbook': self.workbook,
-                    'connected_to_existing': False,
+                    'independent_instance': True,  # 독립 인스턴스임을 명시
+                    'visible': visible,
                     'file_path': self.file_path
-                })
+                }, f"독립 Excel 인스턴스가 생성되었습니다 (화면 표시: {visible})")
 
             except Exception as e:
-                return error_response(f"Excel 인스턴스 생성 실패: {str(e)}")
+                return error_response(f"Excel 인스턴스 생성 실패: {str(e)}", traceback.format_exc())
 
         except Exception as e:
-            return error_response(f"Excel 연결 실패: {str(e)}")
+            return error_response(f"Excel 연결 실패: {str(e)}", traceback.format_exc())
 
     def get_workbook(self, path: str) -> dict:
         """특정 파일 열기/연결"""

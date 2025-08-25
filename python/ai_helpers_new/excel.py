@@ -553,9 +553,625 @@ class ExcelFacade:
     def get_manager(self):
         """ExcelManager 인스턴스 반환"""
         return get_excel_manager()
+    
+    # ==================== 고급 기능 추가 ====================
+    
+    def add_sheet(self, name: str, position: int = None) -> Response:
+        """새 시트 추가"""
+        return excel_add_sheet(name, position)
+    
+    def delete_sheet(self, name: str) -> Response:
+        """시트 삭제"""
+        return excel_delete_sheet(name)
+    
+    def set_formula(self, sheet: str, cell: str, formula: str) -> Response:
+        """수식 설정"""
+        return excel_set_formula(sheet, cell, formula)
+    
+    def format_cells(self, sheet: str, range_addr: str, format_options: Dict) -> Response:
+        """셀 서식 지정"""
+        return excel_format_cells(sheet, range_addr, format_options)
+    
+    def autofit(self, sheet: str, columns: bool = True, rows: bool = False) -> Response:
+        """자동 맞춤"""
+        return excel_autofit(sheet, columns, rows)
+    
+    def create_pivot_table(self, source_sheet: str, source_range: str, 
+                          target_sheet: str, target_cell: str,
+                          rows: List[str], columns: List[str] = None,
+                          values: List[Dict] = None) -> Response:
+        """피벗 테이블 생성"""
+        return excel_create_pivot_table(
+            source_sheet, source_range, target_sheet, target_cell,
+            rows, columns, values
+        )
+    
+    def sort_data(self, sheet: str, range_addr: str, key_column: str, ascending: bool = True) -> Response:
+        """데이터 정렬"""
+        return excel_sort_data(sheet, range_addr, key_column, ascending)
+    
+    def filter_data(self, sheet: str, range_addr: str, column: int, criteria: Any) -> Response:
+        """데이터 필터링"""
+        return excel_filter_data(sheet, range_addr, column, criteria)
+    
+    def import_csv(self, csv_path: str, sheet: str = None, start_cell: str = "A1") -> Response:
+        """CSV 가져오기"""
+        return excel_import_csv(csv_path, sheet, start_cell)
+    
+    def export_csv(self, csv_path: str, sheet: str = None, range_addr: str = None) -> Response:
+        """CSV 내보내기"""
+        return excel_export_csv(csv_path, sheet, range_addr)
+    
+    def find_replace(self, sheet: str, find_text: str, replace_text: str, range_addr: str = None) -> Response:
+        """찾기 및 바꾸기"""
+        return excel_find_replace(sheet, find_text, replace_text, range_addr)
+    
+    def save_as(self, file_path: str, file_format: str = 'xlsx') -> Response:
+        """다른 이름으로 저장"""
+        return excel_save_as(file_path, file_format)
 
 # Facade 인스턴스 생성
 excel = ExcelFacade()
+
+# ==================== 고급 기능 추가 ====================
+
+@thread_safe_excel
+def excel_add_sheet(name: str, position: int = None) -> Response:
+    """새 시트 추가"""
+    try:
+        manager = get_excel_manager()
+        
+        if not manager.ensure_com_connection():
+            return error_response("Excel 연결이 끊어졌습니다")
+        
+        if not manager.workbook:
+            return error_response("열려있는 워크북이 없습니다")
+        
+        # 시트 추가
+        if position is None:
+            sheet = manager.workbook.Sheets.Add(After=manager.workbook.Sheets(manager.workbook.Sheets.Count))
+        else:
+            sheet = manager.workbook.Sheets.Add(Before=manager.workbook.Sheets(position))
+        
+        sheet.Name = name
+        
+        return success_response({
+            'sheet_name': name,
+            'position': sheet.Index,
+            'total_sheets': manager.workbook.Sheets.Count
+        }, f"시트 '{name}'가 추가되었습니다")
+        
+    except Exception as e:
+        return error_response(f"시트 추가 실패: {str(e)}")
+
+@thread_safe_excel
+def excel_delete_sheet(name: str) -> Response:
+    """시트 삭제"""
+    try:
+        manager = get_excel_manager()
+        
+        if not manager.ensure_com_connection():
+            return error_response("Excel 연결이 끊어졌습니다")
+        
+        if not manager.workbook:
+            return error_response("열려있는 워크북이 없습니다")
+        
+        # DisplayAlerts 임시 비활성화
+        old_alerts = manager.excel.DisplayAlerts
+        manager.excel.DisplayAlerts = False
+        
+        try:
+            manager.workbook.Sheets(name).Delete()
+        finally:
+            manager.excel.DisplayAlerts = old_alerts
+        
+        return success_response(
+            f"시트 '{name}'가 삭제되었습니다"
+        )
+        
+    except Exception as e:
+        return error_response(f"시트 삭제 실패: {str(e)}")
+
+@thread_safe_excel
+def excel_set_formula(sheet: str, cell: str, formula: str) -> Response:
+    """셀에 수식 설정"""
+    try:
+        manager = get_excel_manager()
+        
+        if not manager.ensure_com_connection():
+            return error_response("Excel 연결이 끊어졌습니다")
+        
+        if not manager.workbook:
+            return error_response("열려있는 워크북이 없습니다")
+        
+        # 시트 가져오기
+        try:
+            ws = manager.workbook.Worksheets(sheet)
+        except:
+            return error_response(f"시트 '{sheet}'를 찾을 수 없습니다")
+        
+        # 수식 설정 (=로 시작하도록 보장)
+        if not formula.startswith('='):
+            formula = '=' + formula
+        
+        ws.Range(cell).Formula = formula
+        value = ws.Range(cell).Value
+        
+        return success_response({
+            'cell': cell,
+            'formula': formula,
+            'calculated_value': value,
+            'sheet': sheet
+        }, f"수식이 {cell}에 설정되었습니다")
+        
+    except Exception as e:
+        return error_response(f"수식 설정 실패: {str(e)}")
+
+@thread_safe_excel
+def excel_format_cells(sheet: str, range_addr: str, format_options: Dict) -> Response:
+    """셀 서식 지정
+    
+    format_options:
+        - bold: bool
+        - italic: bool
+        - font_size: int
+        - font_color: int (RGB)
+        - bg_color: int (RGB)
+        - number_format: str (예: "#,##0.00")
+        - alignment: str ("left", "center", "right")
+        - wrap_text: bool
+    """
+    try:
+        manager = get_excel_manager()
+        
+        if not manager.ensure_com_connection():
+            return error_response("Excel 연결이 끊어졌습니다")
+        
+        if not manager.workbook:
+            return error_response("열려있는 워크북이 없습니다")
+        
+        # 시트 가져오기
+        try:
+            ws = manager.workbook.Worksheets(sheet)
+        except:
+            return error_response(f"시트 '{sheet}'를 찾을 수 없습니다")
+        
+        range_obj = ws.Range(range_addr)
+        applied = []
+        
+        # 폰트 서식
+        if 'bold' in format_options:
+            range_obj.Font.Bold = format_options['bold']
+            applied.append('굵게')
+        
+        if 'italic' in format_options:
+            range_obj.Font.Italic = format_options['italic']
+            applied.append('기울임')
+        
+        if 'font_size' in format_options:
+            range_obj.Font.Size = format_options['font_size']
+            applied.append(f'글꼴크기:{format_options["font_size"]}')
+        
+        if 'font_color' in format_options:
+            range_obj.Font.Color = format_options['font_color']
+            applied.append('글꼴색')
+        
+        # 배경색
+        if 'bg_color' in format_options:
+            range_obj.Interior.Color = format_options['bg_color']
+            applied.append('배경색')
+        
+        # 숫자 서식
+        if 'number_format' in format_options:
+            range_obj.NumberFormat = format_options['number_format']
+            applied.append('숫자서식')
+        
+        # 정렬
+        if 'alignment' in format_options:
+            align_map = {
+                'left': -4131,    # xlLeft
+                'center': -4108,  # xlCenter
+                'right': -4152    # xlRight
+            }
+            if format_options['alignment'] in align_map:
+                range_obj.HorizontalAlignment = align_map[format_options['alignment']]
+                applied.append(f'정렬:{format_options["alignment"]}')
+        
+        # 텍스트 줄바꿈
+        if 'wrap_text' in format_options:
+            range_obj.WrapText = format_options['wrap_text']
+            applied.append('텍스트줄바꿈')
+        
+        return success_response({
+            'range': range_addr,
+            'applied_formats': applied,
+            'sheet': sheet
+        }, f"{len(applied)}개 서식이 적용되었습니다")
+        
+    except Exception as e:
+        return error_response(f"서식 지정 실패: {str(e)}")
+
+@thread_safe_excel
+def excel_autofit(sheet: str, columns: bool = True, rows: bool = False) -> Response:
+    """열/행 자동 맞춤"""
+    try:
+        manager = get_excel_manager()
+        
+        if not manager.ensure_com_connection():
+            return error_response("Excel 연결이 끊어졌습니다")
+        
+        if not manager.workbook:
+            return error_response("열려있는 워크북이 없습니다")
+        
+        # 시트 가져오기
+        try:
+            ws = manager.workbook.Worksheets(sheet)
+        except:
+            return error_response(f"시트 '{sheet}'를 찾을 수 없습니다")
+        
+        applied = []
+        
+        if columns:
+            ws.Cells.EntireColumn.AutoFit()
+            applied.append('열')
+        
+        if rows:
+            ws.Cells.EntireRow.AutoFit()
+            applied.append('행')
+        
+        return success_response(
+            f"{', '.join(applied)} 자동 맞춤이 적용되었습니다"
+        )
+        
+    except Exception as e:
+        return error_response(f"자동 맞춤 실패: {str(e)}")
+
+@thread_safe_excel
+def excel_create_pivot_table(
+    source_sheet: str,
+    source_range: str,
+    target_sheet: str,
+    target_cell: str,
+    rows: List[str],
+    columns: List[str] = None,
+    values: List[Dict] = None
+) -> Response:
+    """피벗 테이블 생성
+    
+    Args:
+        source_sheet: 원본 데이터 시트
+        source_range: 원본 데이터 범위
+        target_sheet: 피벗 테이블을 생성할 시트
+        target_cell: 피벗 테이블 시작 위치
+        rows: 행 필드 목록
+        columns: 열 필드 목록 (선택사항)
+        values: 값 필드 설정 [{'field': 'Sales', 'function': 'Sum'}]
+    """
+    try:
+        manager = get_excel_manager()
+        
+        if not manager.ensure_com_connection():
+            return error_response("Excel 연결이 끊어졌습니다")
+        
+        if not manager.workbook:
+            return error_response("열려있는 워크북이 없습니다")
+        
+        # 시트 가져오기
+        try:
+            src_ws = manager.workbook.Worksheets(source_sheet)
+            tgt_ws = manager.workbook.Worksheets(target_sheet)
+        except Exception as e:
+            return error_response(f"시트를 찾을 수 없습니다: {str(e)}")
+        
+        # 피벗 캐시 생성
+        pc = manager.workbook.PivotCaches().Create(
+            SourceType=1,  # xlDatabase
+            SourceData=src_ws.Range(source_range)
+        )
+        
+        # 피벗 테이블 생성
+        pivot_name = f"PivotTable_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        pt = pc.CreatePivotTable(
+            TableDestination=tgt_ws.Range(target_cell),
+            TableName=pivot_name
+        )
+        
+        # 행 필드 추가
+        for field_name in rows:
+            field = pt.PivotFields(field_name)
+            field.Orientation = 1  # xlRowField
+        
+        # 열 필드 추가
+        if columns:
+            for field_name in columns:
+                field = pt.PivotFields(field_name)
+                field.Orientation = 2  # xlColumnField
+        
+        # 값 필드 추가
+        if values:
+            for value_config in values:
+                field = pt.PivotFields(value_config['field'])
+                field.Orientation = 4  # xlDataField
+                
+                # 집계 함수 설정
+                if 'function' in value_config:
+                    func_map = {
+                        'Sum': -4157,
+                        'Count': -4112,
+                        'Average': -4106,
+                        'Max': -4136,
+                        'Min': -4139
+                    }
+                    if value_config['function'] in func_map:
+                        field.Function = func_map[value_config['function']]
+                
+                if 'name' in value_config:
+                    field.Name = value_config['name']
+        
+        return success_response({
+            'pivot_name': pivot_name,
+            'source': f"{source_sheet}!{source_range}",
+            'target': f"{target_sheet}!{target_cell}",
+            'rows': rows,
+            'columns': columns or [],
+            'values': values or []
+        }, f"피벗 테이블 '{pivot_name}'이 생성되었습니다")
+        
+    except Exception as e:
+        return error_response(f"피벗 테이블 생성 실패: {str(e)}", traceback.format_exc())
+
+@thread_safe_excel
+def excel_sort_data(sheet: str, range_addr: str, key_column: str, ascending: bool = True) -> Response:
+    """데이터 정렬"""
+    try:
+        manager = get_excel_manager()
+        
+        if not manager.ensure_com_connection():
+            return error_response("Excel 연결이 끊어졌습니다")
+        
+        if not manager.workbook:
+            return error_response("열려있는 워크북이 없습니다")
+        
+        # 시트 가져오기
+        try:
+            ws = manager.workbook.Worksheets(sheet)
+        except:
+            return error_response(f"시트 '{sheet}'를 찾을 수 없습니다")
+        
+        range_obj = ws.Range(range_addr)
+        order_value = 1 if ascending else 2  # xlAscending or xlDescending
+        
+        range_obj.Sort(
+            Key1=ws.Range(key_column),
+            Order1=order_value,
+            Header=1  # xlYes
+        )
+        
+        return success_response(
+            f"데이터가 {key_column} 기준 {'오름차순' if ascending else '내림차순'}으로 정렬되었습니다"
+        )
+        
+    except Exception as e:
+        return error_response(f"데이터 정렬 실패: {str(e)}")
+
+@thread_safe_excel
+def excel_filter_data(sheet: str, range_addr: str, column: int, criteria: Any) -> Response:
+    """데이터 필터링"""
+    try:
+        manager = get_excel_manager()
+        
+        if not manager.ensure_com_connection():
+            return error_response("Excel 연결이 끊어졌습니다")
+        
+        if not manager.workbook:
+            return error_response("열려있는 워크북이 없습니다")
+        
+        # 시트 가져오기
+        try:
+            ws = manager.workbook.Worksheets(sheet)
+        except:
+            return error_response(f"시트 '{sheet}'를 찾을 수 없습니다")
+        
+        range_obj = ws.Range(range_addr)
+        range_obj.AutoFilter(Field=column, Criteria1=criteria)
+        
+        return success_response(
+            f"열 {column}에 '{criteria}' 필터가 적용되었습니다"
+        )
+        
+    except Exception as e:
+        return error_response(f"필터 적용 실패: {str(e)}")
+
+@thread_safe_excel
+def excel_import_csv(csv_path: str, sheet: str = None, start_cell: str = "A1") -> Response:
+    """CSV 파일 가져오기"""
+    try:
+        manager = get_excel_manager()
+        
+        if not manager.ensure_com_connection():
+            return error_response("Excel 연결이 끊어졌습니다")
+        
+        if not manager.workbook:
+            return error_response("열려있는 워크북이 없습니다")
+        
+        # CSV 파일 읽기
+        if not os.path.exists(csv_path):
+            return error_response(f"CSV 파일을 찾을 수 없습니다: {csv_path}")
+        
+        data = []
+        with open(csv_path, 'r', encoding='utf-8-sig') as f:
+            reader = csv.reader(f)
+            data = list(reader)
+        
+        if not data:
+            return error_response("CSV 파일이 비어있습니다")
+        
+        # 시트 선택 또는 현재 시트 사용
+        if sheet:
+            try:
+                ws = manager.workbook.Worksheets(sheet)
+            except:
+                return error_response(f"시트 '{sheet}'를 찾을 수 없습니다")
+        else:
+            ws = manager.workbook.ActiveSheet
+            sheet = ws.Name
+        
+        # 데이터 쓰기
+        start_range = ws.Range(start_cell)
+        rows = len(data)
+        cols = len(data[0]) if data else 0
+        
+        if rows > 0 and cols > 0:
+            end_cell = start_range.Offset(rows, cols).Offset(-1, -1)
+            range_obj = ws.Range(start_range, end_cell)
+            range_obj.Value = data
+        
+        return success_response({
+            'csv_file': csv_path,
+            'rows_imported': rows,
+            'cols_imported': cols,
+            'sheet': sheet,
+            'start_cell': start_cell
+        }, f"{rows}행 {cols}열의 데이터를 가져왔습니다")
+        
+    except Exception as e:
+        return error_response(f"CSV 가져오기 실패: {str(e)}", traceback.format_exc())
+
+@thread_safe_excel
+def excel_export_csv(csv_path: str, sheet: str = None, range_addr: str = None) -> Response:
+    """CSV 파일로 내보내기"""
+    try:
+        manager = get_excel_manager()
+        
+        if not manager.ensure_com_connection():
+            return error_response("Excel 연결이 끊어졌습니다")
+        
+        if not manager.workbook:
+            return error_response("열려있는 워크북이 없습니다")
+        
+        # 시트 선택
+        if sheet:
+            try:
+                ws = manager.workbook.Worksheets(sheet)
+            except:
+                return error_response(f"시트 '{sheet}'를 찾을 수 없습니다")
+        else:
+            ws = manager.workbook.ActiveSheet
+            sheet = ws.Name
+        
+        # 범위 선택
+        if range_addr:
+            range_obj = ws.Range(range_addr)
+        else:
+            range_obj = ws.UsedRange
+            range_addr = str(range_obj.Address)
+        
+        # 데이터 읽기
+        values = range_obj.Value
+        
+        # 데이터 정규화
+        if not values:
+            data = []
+        elif not isinstance(values, tuple):
+            data = [[values]]
+        elif values and not isinstance(values[0], tuple):
+            data = [list(values)]
+        else:
+            data = [list(row) for row in values]
+        
+        # CSV 파일로 저장
+        with open(csv_path, 'w', newline='', encoding='utf-8-sig') as f:
+            writer = csv.writer(f)
+            writer.writerows(data)
+        
+        return success_response({
+            'csv_file': csv_path,
+            'rows_exported': len(data),
+            'cols_exported': len(data[0]) if data else 0,
+            'sheet': sheet,
+            'range': range_addr
+        }, f"{len(data)}행의 데이터를 내보냈습니다")
+        
+    except Exception as e:
+        return error_response(f"CSV 내보내기 실패: {str(e)}", traceback.format_exc())
+
+@thread_safe_excel
+def excel_find_replace(sheet: str, find_text: str, replace_text: str, range_addr: str = None) -> Response:
+    """찾기 및 바꾸기"""
+    try:
+        manager = get_excel_manager()
+        
+        if not manager.ensure_com_connection():
+            return error_response("Excel 연결이 끊어졌습니다")
+        
+        if not manager.workbook:
+            return error_response("열려있는 워크북이 없습니다")
+        
+        # 시트 가져오기
+        try:
+            ws = manager.workbook.Worksheets(sheet)
+        except:
+            return error_response(f"시트 '{sheet}'를 찾을 수 없습니다")
+        
+        # 범위 선택
+        if range_addr:
+            search_range = ws.Range(range_addr)
+        else:
+            search_range = ws.UsedRange
+            range_addr = "UsedRange"
+        
+        # 찾기 및 바꾸기 실행
+        replaced = search_range.Replace(
+            What=find_text,
+            Replacement=replace_text,
+            LookAt=2,  # xlPart
+            SearchOrder=1,  # xlByRows
+            MatchCase=False
+        )
+        
+        return success_response(
+            f"'{find_text}'를 '{replace_text}'로 바꿨습니다 (범위: {range_addr})"
+        )
+        
+    except Exception as e:
+        return error_response(f"찾기/바꾸기 실패: {str(e)}")
+
+@thread_safe_excel
+def excel_save_as(file_path: str, file_format: str = 'xlsx') -> Response:
+    """다른 이름으로 저장"""
+    try:
+        manager = get_excel_manager()
+        
+        if not manager.ensure_com_connection():
+            return error_response("Excel 연결이 끊어졌습니다")
+        
+        if not manager.workbook:
+            return error_response("열려있는 워크북이 없습니다")
+        
+        # 파일 형식 매핑
+        format_map = {
+            'xlsx': 51,  # xlOpenXMLWorkbook
+            'xls': 56,   # xlExcel8
+            'csv': 6,    # xlCSV
+            'pdf': 0     # xlTypePDF
+        }
+        
+        file_format_value = format_map.get(file_format.lower(), 51)
+        
+        # 절대 경로로 변환
+        abs_path = os.path.abspath(file_path)
+        
+        # 저장
+        manager.workbook.SaveAs(abs_path, FileFormat=file_format_value)
+        manager.file_path = abs_path
+        
+        return success_response({
+            'file_path': abs_path,
+            'format': file_format
+        }, f"파일이 '{abs_path}'로 저장되었습니다")
+        
+    except Exception as e:
+        return error_response(f"저장 실패: {str(e)}")
 
 # 레거시 호환성을 위한 직접 export
 __all__ = [
@@ -566,5 +1182,17 @@ __all__ = [
     'excel_read_range',
     'excel_write_range',
     'excel_list_sheets',
+    'excel_add_sheet',
+    'excel_delete_sheet',
+    'excel_set_formula',
+    'excel_format_cells',
+    'excel_autofit',
+    'excel_create_pivot_table',
+    'excel_sort_data',
+    'excel_filter_data',
+    'excel_import_csv',
+    'excel_export_csv',
+    'excel_find_replace',
+    'excel_save_as',
     'get_excel_manager'
 ]

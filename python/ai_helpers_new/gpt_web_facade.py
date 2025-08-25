@@ -275,7 +275,7 @@ class GPTWebSearchFacade:
         return err(f"Search timeout after {timeout} seconds")
     
     def gather_web_results(self, task_ids: Optional[List[str]] = None,
-                          timeout: float = 60.0) -> Dict[str, Any]:
+                          timeout: float = 120.0) -> Dict[str, Any]:
         """
         여러 검색 결과 수집
         

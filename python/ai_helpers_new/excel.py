@@ -657,12 +657,17 @@ class ExcelFacade:
         self.manager = get_excel_manager()
 
     # 연결 관리
-    def connect(self, file_path: str = None) -> Response:
-        """Excel 파일에 연결"""
-        return excel_connect(file_path)
+    def connect(self, file_path: str = None, visible: bool = True) -> Response:
+        """독립 Excel 인스턴스 생성 (기존 Excel에 영향 없음)
+        
+        Args:
+            file_path: Excel 파일 경로 (None이면 빈 Excel)
+            visible: Excel을 화면에 표시 (기본: True)
+        """
+        return excel_connect(file_path, visible)
 
     def disconnect(self, save: bool = False) -> Response:
-        """Excel 연결 종료"""
+        """독립 Excel 인스턴스 종료 (다른 Excel에 영향 없음)"""
         return excel_disconnect(save)
 
     # 읽기 작업

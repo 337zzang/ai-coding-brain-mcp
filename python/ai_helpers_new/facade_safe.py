@@ -454,34 +454,81 @@ class UnifiedNamespace(SafeNamespace):
 
 
 class ExcelNamespace(SafeNamespace):
-    """Excel 자동화 네임스페이스 (Windows COM 기반)
-    pywin32를 사용한 Excel 조작 기능을 제공합니다.
+    """Excel 자동화 네임스페이스 v2.0 (Windows COM 기반)
+    새로운 ExcelFacade를 통한 완전한 Excel 제어 기능 제공
     """
     def __init__(self):
         super().__init__('excel')
-        module = self._get_module()
-        if module is None:
-            # 모듈이 없을 때 기본 동작
-            self.connect = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
-            self.read = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
-            self.write = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
-            self.close = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
-            self.create_sheet = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
-            self.delete_sheet = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
-            self.list_sheets = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
-            self.format_range = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
-            self.execute_macro = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
-        else:
-            # Excel 작업 함수들
-            self.connect = self._safe_getattr('connect')
-            self.read = self._safe_getattr('read')
-            self.write = self._safe_getattr('write')
-            self.close = self._safe_getattr('close')
-            self.create_sheet = self._safe_getattr('create_sheet')
-            self.delete_sheet = self._safe_getattr('delete_sheet')
-            self.list_sheets = self._safe_getattr('list_sheets')
-            self.format_range = self._safe_getattr('format_range')
-            self.execute_macro = self._safe_getattr('execute_macro')
+        
+        # excel 모듈에서 ExcelFacade 인스턴스 가져오기
+        try:
+            from . import excel as excel_module
+            if hasattr(excel_module, 'excel') and excel_module.excel is not None:
+                # 기존 facade 인스턴스 사용
+                facade = excel_module.excel
+                
+                # ExcelFacade의 모든 메서드를 직접 노출
+                # 연결 관리
+                self.connect = facade.connect
+                self.disconnect = facade.disconnect
+                self.check_session = facade.check_session
+                self.get_manager = facade.get_manager
+                
+                # 읽기/쓰기
+                self.read = facade.read
+                self.write = facade.write
+                self.read_range = facade.read_range
+                self.write_range = facade.write_range
+                
+                # 시트 관리
+                self.add_sheet = facade.add_sheet
+                self.delete_sheet = facade.delete_sheet
+                self.list_sheets = facade.list_sheets
+                
+                # 수식 관리
+                self.set_formula = facade.set_formula
+                
+                # 서식 지정
+                self.format_cells = facade.format_cells
+                self.autofit = facade.autofit
+                
+                # 데이터 처리
+                self.sort_data = facade.sort_data
+                self.filter_data = facade.filter_data
+                self.find_replace = facade.find_replace
+                
+                # CSV 처리
+                self.import_csv = facade.import_csv
+                self.export_csv = facade.export_csv
+                
+                # 파일 관리
+                self.save_as = facade.save_as
+                
+                # 고급 기능
+                self.create_pivot_table = facade.create_pivot_table
+                
+                # 기존 호환성을 위한 별칭
+                self.close = facade.disconnect  # close -> disconnect
+                self.create_sheet = facade.add_sheet  # create_sheet -> add_sheet
+                self.format_range = facade.format_cells  # format_range -> format_cells
+                self.execute_macro = lambda *args, **kwargs: {'ok': False, 'error': 'Macro execution not implemented'}
+                
+                return
+        except ImportError:
+            pass
+        
+        # 폴백: 모듈이 없을 때 기본 동작
+        self.connect = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+        self.disconnect = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+        self.check_session = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+        self.read = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+        self.write = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+        self.close = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+        self.add_sheet = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+        self.delete_sheet = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+        self.list_sheets = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+        self.format_cells = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
+        self.set_formula = lambda *args, **kwargs: {'ok': False, 'error': 'Excel module not available'}
 
 
 class JupyterNamespace(SafeNamespace):

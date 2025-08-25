@@ -455,18 +455,19 @@ def excel_session(file_path: Optional[str] = None):
 
 # 연결 관리 함수들
 @thread_safe_excel
-def excel_connect(file_path: Optional[str] = None) -> Response:
+def excel_connect(file_path: Optional[str] = None, visible: bool = True) -> Response:
     """
-    Excel 연결/생성
+    독립 Excel 인스턴스 생성 (기존 Excel에 영향 없음)
 
     Args:
         file_path: Excel 파일 경로 (None이면 빈 Excel)
+        visible: Excel을 화면에 표시할지 여부 (기본: True - 화면에 보임)
 
     Returns:
         Response with connection status
     """
     manager = get_excel_manager()
-    return manager.connect_or_create(file_path)
+    return manager.connect_or_create(file_path, visible)
 
 @thread_safe_excel
 def excel_disconnect(save: bool = True) -> Response:

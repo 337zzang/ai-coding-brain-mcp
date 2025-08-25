@@ -67,7 +67,7 @@ export const toolDefinitions: Tool[] = [
 ✅ Precision Code Editing: AST-based coordinate modification
    정밀 코드 수정: AST 기반 좌표로 정확한 수정
 
-📦 AI Helpers v3.0 API (USE EXACTLY AS SHOWN) / 정확한 API 이름:
+📦 AI Helpers v3.1 API (USE EXACTLY AS SHOWN) / 정확한 API 이름:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ┌─────────────┬──────────────────────────────────────────────────────────┐
 │ Module      │ EXACT Method Names (대소문자 구분)                       │

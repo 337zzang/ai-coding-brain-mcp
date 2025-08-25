@@ -39,7 +39,7 @@ class LLMBackgroundFacade(BackgroundFacade):
         super().__init__()
         self.llm_cache = {}  # LLM 결과 캐시
         self.active_llm_tasks = {}  # 활성 LLM 작업 추적
-        self.web_search = GPTWebSearchFacade()  # GPT 웹 검색 Facade
+        self.web_search_facade = GPTWebSearchFacade()  # GPT 웹 검색 Facade
     
     # ========== LLM 병렬 처리 ==========
     

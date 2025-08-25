@@ -259,6 +259,9 @@ def main():
           f"Critical {MEMORY_MANAGER.MEMORY_CRITICAL_THRESHOLD}%", file=sys.stderr)
     print("Ready for requests...", file=sys.stderr)
     
+    # Send ready signal to MCP handler
+    print("__READY__", flush=True)
+    
     while True:
         try:
             # 입력 읽기

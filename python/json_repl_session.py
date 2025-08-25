@@ -262,6 +262,16 @@ def main():
     # Send ready signal to MCP handler
     print("__READY__", flush=True)
     
+    # Claude Code 환경 감지
+    is_claude_code = os.environ.get('CLAUDE_CODE_ENV') == 'true' or \
+                     os.environ.get('MCP_MODE') == 'claude' or \
+                     not sys.stdin.isatty()
+    
+    if is_claude_code:
+        print("Claude Code 환경 감지됨 - stdin 대기 건너뜀", file=sys.stderr)
+        # Claude Code에서는 직접 함수 호출 방식 사용
+        return
+    
     while True:
         try:
             # 입력 읽기

@@ -77,7 +77,7 @@ class SmartSessionPool:
             return self.session
     
     def _init_namespace(self):
-        """네임스페이스 초기화"""
+        """네임스페이스 초기화 - 백그라운드 헬퍼 포함"""
         self.namespace = {
             '__builtins__': __builtins__,
             '__name__': '__main__',
@@ -92,6 +92,11 @@ class SmartSessionPool:
             'mem_report': lambda: print(get_memory_report()),
             'set_var': self.memory_manager.set_variable,
             'get_var': self.memory_manager.get_variable,
+            # 백그라운드 작업 함수 추가
+            'bg_run': self.run_background,
+            'bg_status': self.get_background_status,
+            'bg_result': self.get_background_result,
+            'bg_list': self.list_background_tasks,
         }
     
     def execute_with_memory_management(self, code: str) -> Dict[str, Any]:

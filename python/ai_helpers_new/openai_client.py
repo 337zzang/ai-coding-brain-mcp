@@ -112,14 +112,20 @@ class OpenAIWebSearchClient:
         last_error = None
         for attempt in range(self.max_retries):
             try:
-                # API 호출
-                completion = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    web_search_options={},  # 웹 검색 활성화
-                    temperature=temperature,
-                    max_tokens=max_tokens
-                )
+                # API 호출 (web search 모델은 temperature를 지원하지 않음)
+                create_params = {
+                    'model': self.model,
+                    'messages': messages,
+                    'web_search_options': {}  # 웹 검색 활성화
+                }
+                
+                # search 모델이 아닌 경우에만 temperature와 max_tokens 추가
+                if 'search' not in self.model.lower():
+                    create_params['temperature'] = temperature
+                    if max_tokens:
+                        create_params['max_tokens'] = max_tokens
+                
+                completion = self.client.chat.completions.create(**create_params)
                 
                 # 결과 처리
                 response_time = time.time() - start_time

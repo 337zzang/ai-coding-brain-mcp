@@ -22,6 +22,7 @@ from .llm import (
     ask_o3_practical,
     O3ContextBuilder
 )
+from .gpt_web_facade import GPTWebSearchFacade
 
 class LLMBackgroundFacade(BackgroundFacade):
     """

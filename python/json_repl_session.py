@@ -188,13 +188,100 @@ class SmartSessionPool:
                 }
             }
     
+    def run_background(self, code: str, task_name: str = None) -> str:
+        """백그라운드에서 코드 실행"""
+        import concurrent.futures
+        
+        if self.executor is None:
+            self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+        
+        task_id = f"bg_task_{self.task_counter}"
+        self.task_counter += 1
+        
+        # 백그라운드 작업 등록
+        future = self.executor.submit(self._execute_background, code)
+        self.background_tasks[task_id] = {
+            'future': future,
+            'name': task_name or task_id,
+            'start_time': datetime.now(),
+            'code': code[:100] + '...' if len(code) > 100 else code,
+            'status': 'running'
+        }
+        
+        self.stats['background_tasks'] += 1
+        print(f"[BG] 백그라운드 작업 시작: {task_id}", file=sys.stderr)
+        return task_id
+    
+    def _execute_background(self, code: str) -> Dict[str, Any]:
+        """백그라운드 실행 워커"""
+        try:
+            # 별도 네임스페이스에서 실행
+            bg_namespace = dict(self.namespace)
+            exec(code, bg_namespace)
+            return {'status': 'success', 'namespace': bg_namespace}
+        except Exception as e:
+            return {'status': 'error', 'error': str(e), 'traceback': traceback.format_exc()}
+    
+    def get_background_status(self, task_id: str = None) -> Dict[str, Any]:
+        """백그라운드 작업 상태 확인"""
+        if task_id:
+            if task_id in self.background_tasks:
+                task = self.background_tasks[task_id]
+                if task['future'].done():
+                    task['status'] = 'completed'
+                return {
+                    'task_id': task_id,
+                    'name': task['name'],
+                    'status': task['status'],
+                    'running_time': str(datetime.now() - task['start_time'])
+                }
+            return {'error': f'Task {task_id} not found'}
+        
+        # 전체 작업 상태
+        return {
+            'total': len(self.background_tasks),
+            'running': sum(1 for t in self.background_tasks.values() if not t['future'].done()),
+            'completed': sum(1 for t in self.background_tasks.values() if t['future'].done())
+        }
+    
+    def get_background_result(self, task_id: str) -> Dict[str, Any]:
+        """백그라운드 작업 결과 가져오기"""
+        if task_id not in self.background_tasks:
+            return {'error': f'Task {task_id} not found'}
+        
+        task = self.background_tasks[task_id]
+        if not task['future'].done():
+            return {'status': 'running', 'message': 'Task is still running'}
+        
+        try:
+            result = task['future'].result(timeout=0.1)
+            task['status'] = 'completed'
+            return result
+        except Exception as e:
+            return {'status': 'error', 'error': str(e)}
+    
+    def list_background_tasks(self) -> List[Dict[str, Any]]:
+        """백그라운드 작업 목록"""
+        tasks = []
+        for task_id, task in self.background_tasks.items():
+            tasks.append({
+                'id': task_id,
+                'name': task['name'],
+                'status': 'completed' if task['future'].done() else 'running',
+                'start_time': task['start_time'].isoformat(),
+                'code_preview': task['code']
+            })
+        return tasks
+    
     def get_stats_report(self) -> str:
         """통계 리포트 생성"""
+        bg_status = self.get_background_status()
         return f"""
 📊 세션 통계
 - 총 실행: {self.stats['total_executions']}회
 - 메모리 정리: {self.stats['memory_cleanups']}회
 - 최대 메모리: {self.stats['peak_memory_mb']:.1f}MB
+- 백그라운드 작업: {self.stats['background_tasks']}개 (실행중: {bg_status.get('running', 0)})
 """
 
 # 전역 세션 풀

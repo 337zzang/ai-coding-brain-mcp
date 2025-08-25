@@ -9,7 +9,7 @@ Created: 2025-08-24
 LLM 작업을 백그라운드 시스템과 통합하여 극대화된 AI 워크플로우 제공
 """
 
-from typing import Dict, Any, Optional, List, Callable, Union
+from typing import Dict, Any, Optional, List, Callable, Union, Tuple
 import time
 from datetime import datetime
 from .background_facade import BackgroundFacade

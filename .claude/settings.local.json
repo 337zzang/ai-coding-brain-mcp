@@ -93,7 +93,8 @@
       "Read(/C:\\Users\\Administrator\\.claude\\agents/**)",
       "Read(/C:\\Users\\Administrator\\.claude\\agents/**)",
       "Read(/C:\\Users\\Administrator\\.claude\\agents/**)",
-      "Read(/C:\\Users\\Administrator\\.claude\\agents/**)"
+      "Read(/C:\\Users\\Administrator\\.claude\\agents/**)",
+      "Read(/C:\\Users\\Administrator\\.claude/**)"
     ],
     "deny": [],
     "ask": [],

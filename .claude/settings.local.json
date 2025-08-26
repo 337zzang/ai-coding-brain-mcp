@@ -88,7 +88,12 @@
       "Read(/C:\\Users\\Administrator\\.claude/**)",
       "Read(/C:\\Users\\Administrator\\.claude/**)",
       "Read(/C:\\Users\\Administrator\\.claude/**)",
-      "Read(/C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp2\\python\\ai_helpers_new/**)"
+      "Read(/C:\\Users\\Administrator\\Desktop\\ai-coding-brain-mcp2\\python\\ai_helpers_new/**)",
+      "Read(/C:\\Users\\Administrator\\.claude/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\agents/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\agents/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\agents/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\agents/**)"
     ],
     "deny": [],
     "ask": [],

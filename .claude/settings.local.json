@@ -95,7 +95,11 @@
       "Read(/C:\\Users\\Administrator\\.claude\\agents/**)",
       "Read(/C:\\Users\\Administrator\\.claude\\agents/**)",
       "Read(/C:\\Users\\Administrator\\.claude/**)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Read(/C:\\Users\\Administrator\\.claude/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)"
     ],
     "deny": [],
     "ask": [],

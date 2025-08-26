@@ -169,7 +169,6 @@ class SmartSessionPool:
             }
             
         except Exception as e:
-            sys.stdout = old_stdout if 'old_stdout' in locals() else sys.stdout
             
             # 에러 시에도 메모리 상태 확인
             error_status = self.memory_manager.get_memory_status()
@@ -184,6 +183,10 @@ class SmartSessionPool:
                     'variables': error_status['variables_count']
                 }
             }
+        finally:
+            # stdout/stderr 복원 보장
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
     
     def run_background(self, code: str, task_name: str = None) -> str:
         """백그라운드에서 코드 실행"""
@@ -366,9 +369,42 @@ def process_json_request(request: Dict[str, Any]) -> Dict[str, Any]:
             }
         }
 
+def read_stdin_with_timeout(timeout=0.5):
+    """타임아웃과 함께 stdin 읽기"""
+    if sys.platform == 'win32':
+        # Windows에서는 threading 사용
+        import queue
+        q = queue.Queue()
+        
+        def read_input():
+            try:
+                line = sys.stdin.readline()
+                if line:
+                    q.put(line)
+                else:
+                    q.put(None)
+            except:
+                q.put(None)
+        
+        thread = threading.Thread(target=read_input)
+        thread.daemon = True
+        thread.start()
+        
+        try:
+            return q.get(timeout=timeout)
+        except queue.Empty:
+            return ""
+    else:
+        # Unix/Linux에서는 select 사용
+        if select.select([sys.stdin], [], [], timeout)[0]:
+            return sys.stdin.readline()
+        return ""
+
 def main():
     """메인 실행 루프 - 세션 영속성 보장"""
-    print("Enhanced JSON REPL with Memory Management", file=sys.stderr)
+    DEBUG = os.environ.get('DEBUG', '').lower() == 'true'
+    
+    print("Enhanced JSON REPL with Memory Management v4.1", file=sys.stderr)
     print(f"Memory Limits: {MEMORY_MANAGER.MAX_VARIABLES} vars, "
           f"{MEMORY_MANAGER.MAX_VAR_SIZE_MB}MB/var", file=sys.stderr)
     print(f"Thresholds: Warning {MEMORY_MANAGER.MEMORY_WARNING_THRESHOLD}%, "
@@ -388,18 +424,36 @@ def main():
         # 세션 풀 초기화
         SESSION_POOL.get_or_create_session()
         print("세션 풀 초기화 완료 - 요청 대기 중", file=sys.stderr)
-        # return 제거 - while 루프로 진입하여 요청 처리
     
-    # 일반 환경에서의 기존 처리
-    while True:
+    # 에러 카운터
+    error_counter = 0
+    max_errors = 5
+    idle_counter = 0
+    max_idle = 120  # 60초 (0.5초 * 120)
+    
+    # 메인 루프 - 타임아웃 방식
+    while error_counter < max_errors:
         try:
-            # 입력 읽기
-            line = sys.stdin.readline()
-            if not line:
+            # 타임아웃과 함께 입력 읽기
+            line = read_stdin_with_timeout(0.5)
+            
+            if line is None:  # EOF
                 break
             
-            # 디버그: 받은 요청 출력
-            print(f"[DEBUG] Received request: {line.strip()}", file=sys.stderr)
+            if not line:  # 타임아웃
+                idle_counter += 1
+                if idle_counter > max_idle:
+                    print(f"[TIMEOUT] {max_idle*0.5}초 동안 입력 없음 - 종료", file=sys.stderr)
+                    break
+                continue
+            
+            # 입력 받으면 카운터 리셋
+            idle_counter = 0
+            error_counter = 0
+            
+            # 디버그 출력 (조건부)
+            if DEBUG:
+                print(f"[DEBUG] Received request: {line.strip()[:100]}...", file=sys.stderr)
             
             # JSON 파싱
             request = json.loads(line.strip())
@@ -407,20 +461,20 @@ def main():
             # 요청 처리
             response = process_json_request(request)
             
-            # 디버그: 응답 전송 전
-            print(f"[DEBUG] Sending response: {json.dumps(response)[:200]}...", file=sys.stderr)
+            # 디버그 출력 (조건부)
+            if DEBUG:
+                print(f"[DEBUG] Sending response", file=sys.stderr)
             
             # 응답 전송
             response_json = json.dumps(response, ensure_ascii=False)
             print(response_json)
             sys.stdout.flush()
             
-            # 디버그: 응답 전송 완료
-            print(f"[DEBUG] Response sent, flushed stdout", file=sys.stderr)
-            
         except KeyboardInterrupt:
+            print("\n[INTERRUPT] 사용자 중단", file=sys.stderr)
             break
         except json.JSONDecodeError as e:
+            error_counter += 1
             error_response = {
                 'jsonrpc': '2.0',
                 'error': {
@@ -431,11 +485,16 @@ def main():
             print(json.dumps(error_response))
             sys.stdout.flush()
         except Exception as e:
-            print(f"Unexpected error: {e}", file=sys.stderr)
+            error_counter += 1
+            print(f"[ERROR {error_counter}/{max_errors}] {e}", file=sys.stderr)
+            if error_counter >= max_errors:
+                print(f"[FATAL] 연속 {max_errors}회 에러 - 종료", file=sys.stderr)
     
-    print("\nSession ended", file=sys.stderr)
+    # 정리
+    print("\n[EXIT] 세션 종료", file=sys.stderr)
     print(SESSION_POOL.get_stats_report(), file=sys.stderr)
     print(get_memory_report(), file=sys.stderr)
+    SESSION_POOL.cleanup()
 
 if __name__ == "__main__":
     main()

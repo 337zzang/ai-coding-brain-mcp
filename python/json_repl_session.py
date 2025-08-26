@@ -428,38 +428,21 @@ def main():
     # 에러 카운터
     error_counter = 0
     max_errors = 5
-    idle_counter = 0
-    max_idle = 120  # 60초 (0.5초 * 120)
-    is_first_request = True  # 첫 요청 플래그
+    request_count = 0
     
-    # 메인 루프 - 첫 요청은 블로킹, 이후 타임아웃
+    # 메인 루프 - 모든 요청을 블로킹으로 처리 (안정성 최우선)
     while error_counter < max_errors:
         try:
-            # 첫 요청은 블로킹으로 대기 (MCP 핸들러 호환성)
-            if is_first_request:
-                line = sys.stdin.readline()
-                is_first_request = False
-                if not line:  # EOF 체크
-                    break
-                if DEBUG:
-                    print("[FIRST] 첫 요청 블로킹 모드로 수신", file=sys.stderr)
-            else:
-                # 두 번째 요청부터 타임아웃 적용
-                line = read_stdin_with_timeout(0.5)
-                
-                if line is None:  # EOF
-                    break
-                
-                if not line:  # 타임아웃
-                    idle_counter += 1
-                    if idle_counter > max_idle:
-                        print(f"[TIMEOUT] {max_idle*0.5}초 동안 입력 없음 - 종료", file=sys.stderr)
-                        break
-                    continue
+            # 모든 요청을 블로킹으로 대기 (MCP 핸들러 완벽 호환)
+            line = sys.stdin.readline()
             
-            # 입력 받으면 카운터 리셋
-            idle_counter = 0
-            error_counter = 0
+            if not line:  # EOF
+                if DEBUG:
+                    print("[EOF] 입력 스트림 종료", file=sys.stderr)
+                break
+            
+            request_count += 1
+            error_counter = 0  # 성공적인 읽기 시 에러 카운터 리셋
             
             # 디버그 출력 (조건부)
             if DEBUG:

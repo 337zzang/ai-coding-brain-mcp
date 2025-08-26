@@ -104,6 +104,8 @@
       "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
       "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
       "Read(/C:\\Users\\Administrator\\.claude/**)",
+      "Read(/C:\\Users\\Administrator\\.claude/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
       "Read(/C:\\Users\\Administrator\\.claude/**)"
     ],
     "deny": [],

@@ -1,4 +1,5 @@
 # AI Coding Brain MCP
+<!-- Hook Test: 2025-08-26 15:20 -->
 
 > 🚀 An advanced Model Context Protocol (MCP) server that integrates AI-powered development workflows with intelligent task management
 

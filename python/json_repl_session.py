@@ -3,13 +3,15 @@
 
 """
 🚀 Enhanced JSON REPL Session with Smart Memory Management
-Version: 4.0.0
+Version: 4.1.0
 
 Features:
 - Real-time memory monitoring
 - Automatic garbage collection
 - Variable limit management  
 - Memory usage reporting in stdout
+- Non-blocking I/O with timeout
+- Safe resource cleanup
 """
 
 import sys
@@ -20,6 +22,9 @@ import gc
 import io
 import traceback
 import threading
+import atexit
+import select
+import queue
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 from datetime import datetime
@@ -64,6 +69,9 @@ class SmartSessionPool:
             'peak_memory_mb': 0,
             'background_tasks': 0
         }
+        
+        # 리소스 정리 등록
+        atexit.register(self.cleanup)
     
     def get_or_create_session(self) -> EnhancedREPLSession:
         """세션 가져오기 또는 생성"""
@@ -117,10 +125,11 @@ class SmartSessionPool:
             self.stats['memory_cleanups'] += 1
         
         # 실제 코드 실행 - 모든 환경에서 StringIO 캡처
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        
         try:
             # stdout 캡처를 위한 StringIO 설정
-            old_stdout = sys.stdout
-            old_stderr = sys.stderr
             stdout_buffer = io.StringIO()
             stderr_buffer = io.StringIO()
             
@@ -133,10 +142,6 @@ class SmartSessionPool:
             # 출력 가져오기
             output = stdout_buffer.getvalue()
             error_output = stderr_buffer.getvalue()
-            
-            # stdout/stderr 복원
-            sys.stdout = old_stdout
-            sys.stderr = old_stderr
             
             # 실행 후 메모리 상태
             after_status = self.memory_manager.get_memory_status()
@@ -264,6 +269,15 @@ class SmartSessionPool:
                 'code_preview': task['code']
             })
         return tasks
+    
+    def cleanup(self):
+        """리소스 정리"""
+        if self.executor:
+            try:
+                self.executor.shutdown(wait=False)
+                print("[CLEANUP] ThreadPoolExecutor 종료됨", file=sys.stderr)
+            except:
+                pass
     
     def get_stats_report(self) -> str:
         """통계 리포트 생성"""

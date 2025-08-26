@@ -1,0 +1,13 @@
+🧪 Git Hook 테스트 파일
+========================
+
+생성 시간: 2025-08-26
+목적: Stop Hook 테스트를 위한 uncommitted change 생성
+
+이 파일이 있으면:
+1. 세션 종료 시 Stop Hook 실행
+2. stop-git-simple.py가 Git 변경 감지
+3. stdout으로 subagent 호출 요청 출력
+4. Claude가 git-smart-manager 실행
+
+테스트 결과를 확인해보겠습니다!

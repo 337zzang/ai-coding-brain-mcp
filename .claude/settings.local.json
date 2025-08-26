@@ -106,14 +106,17 @@
       "Read(/C:\\Users\\Administrator\\.claude/**)",
       "Read(/C:\\Users\\Administrator\\.claude/**)",
       "Read(/C:\\Users\\Administrator\\.claude\\hooks/**)",
-      "Read(/C:\\Users\\Administrator\\.claude/**)"
+      "Read(/C:\\Users\\Administrator\\.claude/**)",
+      "Read(/C:\\Users\\Administrator\\.claude/**)",
+      "Read(/C:\\Users\\Administrator\\.claude\\agents/**)"
     ],
     "deny": [],
     "ask": [],
     "additionalDirectories": [
       "C:\\Users\\82106\\.claude\\agents",
       "C:\\Users\\82106\\.claude\\hooks",
-      "C:\\Users\\Administrator\\.claude\\logs"
+      "C:\\Users\\Administrator\\.claude\\logs",
+      "C:\\c\\Users\\Administrator\\.claude"
     ]
   },
   "outputStyle": "Explanatory"

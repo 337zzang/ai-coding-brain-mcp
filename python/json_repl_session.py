@@ -439,6 +439,8 @@ def main():
             if is_first_request:
                 line = sys.stdin.readline()
                 is_first_request = False
+                if not line:  # EOF 체크
+                    break
                 if DEBUG:
                     print("[FIRST] 첫 요청 블로킹 모드로 수신", file=sys.stderr)
             else:
